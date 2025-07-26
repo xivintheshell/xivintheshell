@@ -516,7 +516,7 @@ makeVPRWeaponskill("STEEL_FANGS", 1, {
 	replaceIf: STEEL_FANGS_REPLACEMENTS,
 	applicationDelay: 1.158,
 	potency: [
-		["NEVER", 140], // TODO verify
+		["NEVER", 180],
 		["MELEE_MASTERY_VPR", 200],
 	],
 	jobPotencyModifiers: (state) =>
@@ -530,7 +530,7 @@ makeVPRWeaponskill("REAVING_FANGS", 10, {
 	replaceIf: REAVING_FANGS_REPLACEMENTS,
 	applicationDelay: 1.293,
 	potency: [
-		["NEVER", 140], // TODO verify
+		["NEVER", 180],
 		["MELEE_MASTERY_VPR", 200],
 	],
 	jobPotencyModifiers: (state) =>
@@ -560,7 +560,7 @@ makeVPRWeaponskill("SWIFTSKINS_STING", 20, {
 	replaceIf: REAVING_FANGS_REPLACEMENTS,
 	applicationDelay: 1.16,
 	potency: [
-		["NEVER", 240], // TODO verify
+		["NEVER", 280],
 		["MELEE_MASTERY_VPR", 300],
 	],
 	// Swiftskin's Sting highlights when a flank buff is active, or if there is no flank/rear buff
@@ -619,12 +619,12 @@ finishers.forEach(([name, applicationDelay, location, consumes, applies, replace
 		replaceIf,
 		applicationDelay,
 		potency: [
-			["NEVER", 280], // TODO verify
+			["NEVER", 320],
 			["MELEE_MASTERY_II_VPR", 340],
 		],
 		positional: {
 			potency: [
-				["NEVER", 360], // TODO verify
+				["NEVER", 380],
 				["MELEE_MASTERY_II_VPR", 400],
 			],
 			location,

@@ -56,8 +56,8 @@ makeSCHResource("WHISPERING_DAWN", 1, { timeout: 21 });
 makeSCHResource("ANGELS_WHISPER", 1, { timeout: 21 });
 makeSCHResource("FEY_ILLUMINATION", 1, { timeout: 20 });
 makeSCHResource("SERAPHIC_ILLUMINATION", 1, { timeout: 20 });
-makeSCHResource("SACRED_SOIL", 1, { timeout: 30 });
-makeSCHResource("SACRED_SOIL_ZONE", 1, { timeout: 30 }); // TODO use short duration and periodically refresh
+makeSCHResource("SACRED_SOIL_ZONE", 1, { timeout: 30 });
+makeSCHResource("SACRED_SOIL_MIT", 1, { timeout: 4.96 });
 makeSCHResource("EMERGENCY_TACTICS", 1, { timeout: 15 });
 makeSCHResource("DISSIPATION", 1, { timeout: 30 });
 makeSCHResource("EXCOGITATION", 1, { timeout: 45 });
@@ -72,7 +72,7 @@ makeSCHResource("EXPEDIENCE", 1, { timeout: 10 });
 makeSCHResource("DESPERATE_MEASURES", 1, { timeout: 20 });
 makeSCHResource("BANEFUL_IMPACTION", 1, { timeout: 15 });
 makeSCHResource("SERAPHISM", 1, { timeout: 20 });
-makeSCHResource("SERAPHISM_REGEN", 1, { timeout: 20 }); // TODO use short duration and periodically refresh
+makeSCHResource("SERAPHISM_REGEN", 1, { timeout: 5 });
 
 // Trackers
 makeSCHResource("SERAPH_SUMMON_TIMER", 1, { timeout: 22 });
@@ -89,16 +89,14 @@ const PET_APPLICATION_DELAYS: Map<SCHActionKey, number> = new Map([
 	["ANGELS_WHISPER", 1.029],
 	// ["SERAPHIC_VEIL", 1.025],
 	["AETHERPACT", 0.668],
-	["FEY_ILLUMINATION", 1.3],
+	["FEY_ILLUMINATION", 1.205],
 ]);
 
 export class SCHState extends GameState {
-	aetherpactOffset: number;
 	nextEstimatedPetApplication: number | undefined;
 
 	constructor(config: GameConfig) {
 		super(config);
-		this.aetherpactOffset = this.nonProcRng() * 3.0;
 		this.nextEstimatedPetApplication = undefined;
 
 		const deploymentCd = this.hasTraitUnlocked("ENHANCED_DEPLOYMENT_TACTICS") ? 90 : 120;
@@ -146,7 +144,7 @@ export class SCHState extends GameState {
 				isHealing: true,
 				groupedEffects: [
 					{
-						effectName: "SACRED_SOIL_ZONE",
+						effectName: "SACRED_SOIL_MIT",
 						appliedBy: ["SACRED_SOIL"],
 						isGroundTargeted: true,
 					},
@@ -165,9 +163,11 @@ export class SCHState extends GameState {
 	}
 
 	override jobSpecificRegisterRecurringEvents() {
-		// Fey Union ticks every 3s after summon at a seemingly random interval.
-		const feyUnionEvent = () =>
-			new Event("tick fey union", 3, () => {
+		// Fey Union, soil regen/mit buff refresh, and Seraphism regen refresh ticks at the server
+		// HoT tick.
+		const tickEvent = () =>
+			new Event("sch special hot ticks", 3, () => {
+				// === FEY UNION ===
 				if (
 					this.hasResourceAvailable("FEY_UNION") &&
 					this.resources.get("FAERIE_GAUGE").available(10)
@@ -179,11 +179,19 @@ export class SCHState extends GameState {
 				if (!this.resources.get("FAERIE_GAUGE").available(10)) {
 					this.tryConsumeResource("FEY_UNION");
 				}
-				this.addEvent(feyUnionEvent());
+				// === SACRED SOIL ===
+				if (this.hasResourceAvailable("SACRED_SOIL_ZONE")) {
+					this.gainStatus("SACRED_SOIL_MIT");
+				}
+				// === SERAPHISM ===
+				if (this.hasResourceAvailable("SERAPHISM")) {
+					this.gainStatus("SERAPHISM_REGEN");
+				}
+				this.addEvent(tickEvent());
 			});
 		this.addEvent(
-			new Event("begin fey union ticks", this.aetherpactOffset, () =>
-				this.addEvent(feyUnionEvent()),
+			new Event("begin sch special hot ticks", this.hotTickOffset, () =>
+				this.addEvent(tickEvent()),
 			),
 		);
 	}
@@ -230,11 +238,9 @@ export class SCHState extends GameState {
 		}
 		this.addEvent(
 			new Event(petSkill + " pet snapshot", summonDelay, () => {
-				console.log(petSkill + " snapshot");
 				const effect = snapshot(this);
 				this.addEvent(
 					new Event(petSkill + " application", applicationDelay, () => {
-						console.log(petSkill + " apply");
 						effect(this);
 					}),
 				);
@@ -266,9 +272,8 @@ export class SCHState extends GameState {
 	}
 
 	maybeGainFaerieGauge() {
-		// Gauge is only gained if the fairy is currently summoned.
-		// TODO: verify if seraph affects this?
-		if (this.hasRealFairy()) {
+		// Gauge is only gained if eos/seraph is currently summoned.
+		if (!this.hasResourceAvailable("DISSIPATION")) {
 			this.resources.get("FAERIE_GAUGE").gain(10);
 		}
 	}
@@ -417,7 +422,7 @@ makeSCHSpell("BROIL_II", 64, {
 		otherSkill: "BROIL_III",
 		trait: "BROIL_MASTERY_III",
 	},
-	applicationDelay: 0, // TODO
+	applicationDelay: 0.8,
 	baseCastTime: 1.5,
 	manaCost: 400,
 	potency: 240,
@@ -432,7 +437,7 @@ makeSCHSpell("BROIL_III", 72, {
 		otherSkill: "BROIL_IV",
 		trait: "BROIL_MASTERY_IV",
 	},
-	applicationDelay: 0, // TODO
+	applicationDelay: 0.8,
 	baseCastTime: 1.5,
 	manaCost: 400,
 	potency: 255,
@@ -457,7 +462,7 @@ makeSCHSpell("BIO_II", 26, {
 		otherSkill: "BIOLYSIS",
 		trait: "CORRUPTION_MASTERY_II",
 	},
-	applicationDelay: 0, // TODO
+	applicationDelay: 1.15,
 	baseCastTime: 0,
 	manaCost: 300,
 	drawsAggro: true,
@@ -513,7 +518,7 @@ makeSCHSpell("ART_OF_WAR", 46, {
 		otherSkill: "ART_OF_WAR_II",
 		trait: "ART_OF_WAR_MASTERY",
 	},
-	applicationDelay: 0, // TODO
+	applicationDelay: 0.67,
 	baseCastTime: 0,
 	manaCost: 400,
 	potency: 165,
@@ -603,7 +608,7 @@ makeSCHSpell("SUCCOR", 35, {
 		otherSkill: "CONCITATION",
 		trait: "SUCCOR_MASTERY",
 	},
-	applicationDelay: 0, // TODO
+	applicationDelay: 1.12,
 	baseCastTime: 2,
 	manaCost: 900,
 	healingPotency: 200,
@@ -665,8 +670,6 @@ makeSCHResourceAbility("DISSIPATION", 60, "cd_DISSIPATION", {
 		state.warnLastPetGhost();
 		state.resources.get("AETHERFLOW").gain(3);
 		state.tryConsumeResource("SERAPHISM");
-		// TODO if we model the regen properly as reapplying from the buff, don't consume the regen portion
-		state.tryConsumeResource("SERAPHISM_REGEN");
 	},
 });
 
@@ -681,15 +684,33 @@ makeSCHAbility("LUSTRATE", 45, "cd_LUSTRATE", {
 	},
 });
 
+// For HoT calculation purposes, treat the max duration of sacred soil as 34.96s.
 makeSCHResourceAbility("SACRED_SOIL", 50, "cd_SACRED_SOIL", {
-	rscType: "SACRED_SOIL",
+	rscType: "SACRED_SOIL_ZONE",
 	applicationDelay: 0.62,
 	cooldown: 30,
-	healingPotency: 100,
 	validateAttempt: (state) => state.hasResourceAvailable("AETHERFLOW"),
-	onConfirm: (state) => {
+	onConfirm: (state, node) => {
 		state.maybeGainFaerieGauge();
 		state.tryConsumeResource("AETHERFLOW");
+		if (state.hasTraitUnlocked("ENHANCED_SACRED_SOIL")) {
+			state.addHoTPotencies(
+				{
+					node,
+					skillName: "SACRED_SOIL",
+					effectName: "SACRED_SOIL_MIT",
+					speedStat: "sps",
+					tickPotency: 100,
+				},
+				34.96 + 0.62,
+			);
+		}
+	},
+	onApplication: (state, node) => {
+		if (state.hasTraitUnlocked("ENHANCED_SACRED_SOIL")) {
+			state.applyHoT("SACRED_SOIL_MIT", node, 34.96);
+			state.gainStatus("SACRED_SOIL_MIT");
+		}
 	},
 });
 
@@ -874,8 +895,12 @@ makeSCHAbility("SUMMON_SERAPH", 80, "cd_SUMMON_SERAPH", {
 makeSCHAbility("CONSOLATION", 80, "cd_CONSOLATION", {
 	startOnHotbar: false,
 	applicationDelay: 0,
-	cooldown: 30,
-	maxCharges: 2,
+	cooldown: 1,
+	secondaryCooldown: {
+		cdName: "cd_CONSOLATION_INTERNAL",
+		cooldown: 30,
+		maxCharges: 2,
+	},
 	healingPotency: 250,
 	validateAttempt: (state) => state.hasResourceAvailable("SERAPH_SUMMON_TIMER"),
 	onConfirm: (state, node) => {
@@ -910,12 +935,13 @@ makeSCHAbility("EXPEDIENT", 90, "cd_EXPEDIENT", {
 	cooldown: 120,
 });
 
+// For HoT calculation purposes, treat the max duration of seraphism as 24.96s.
 makeSCHResourceAbility("SERAPHISM", 100, "cd_SERAPHISM", {
 	rscType: "SERAPHISM",
 	applicationDelay: 0,
 	cooldown: 180,
 	validateAttempt: (state) => !state.hasResourceAvailable("DISSIPATION"),
-	onConfirm: (state) => {
+	onConfirm: (state, node) => {
 		// Temporarily replace the cooldown object of etact
 		const oldEtactCd = state.cooldowns.get("cd_EMERGENCY_TACTICS");
 		oldEtactCd.restore(15);
@@ -926,6 +952,20 @@ makeSCHResourceAbility("SERAPHISM", 100, "cd_SERAPHISM", {
 				state.cooldowns.set(oldEtactCd),
 			),
 		);
+		state.addHoTPotencies(
+			{
+				node,
+				skillName: "SERAPHISM",
+				effectName: "SERAPHISM_REGEN",
+				speedStat: "sps",
+				tickPotency: 100,
+			},
+			24.96,
+		);
+	},
+	onApplication: (state, node) => {
+		state.applyHoT("SERAPHISM_REGEN", node, 24.96);
+		state.gainStatus("SERAPHISM_REGEN");
 	},
 });
 
