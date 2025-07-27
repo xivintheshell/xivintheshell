@@ -25,6 +25,7 @@ import {
 	TimelineDrawOptions,
 } from "./Common";
 import { BuffType } from "../Game/Common";
+import { ActionKey } from "../Game/Data";
 import { getSkillIconImage } from "./Skills";
 import { buffIconImages } from "./Buffs";
 import { controller } from "../Controller/Controller";
@@ -39,7 +40,7 @@ import { setEditingMarkerValues } from "./TimelineMarkers";
 import { getThemeColors, ThemeColors, ColorThemeContext } from "./ColorTheme";
 import { scrollEditorToFirstSelected } from "./TimelineEditor";
 import { bossIsUntargetable } from "../Controller/DamageStatistics";
-import { updateTimelineView } from "./Timeline";
+import { updateTimelineView, DragTargetContext } from "./Timeline";
 import { ShellJob } from "../Game/Data/Jobs";
 import { LIMIT_BREAK_ACTIONS } from "../Game/Data/Shared/LimitBreak";
 
@@ -75,6 +76,7 @@ let g_isClickUpdate = false;
 let g_clickEvent: any = undefined; // valid when isClickUpdate is true
 let g_isMouseDownUpdate = false;
 let g_newSelectionIndices: (number | null)[] | undefined = undefined;
+let g_draggedSkillName: ActionKey | undefined = undefined;
 let g_keyboardEvent: any = undefined;
 let g_mouseX = 0;
 let g_mouseY = 0;
@@ -122,6 +124,9 @@ let selectStartX = 0;
 let selectStartY = 0;
 // END CANVAS OVERLAY STATE
 
+// not used everywhere it could be used, be careful
+const SKILL_ICON_SIZE_PX = 28;
+
 // qol: event capture mask? So can provide a layer that overwrites keyboard event only and not affect the rest
 // all coordinates in canvas space
 function testInteraction(
@@ -154,6 +159,7 @@ const onClickTimelineBackground = () => {
 };
 
 const onMouseDownTimelineBackground = () => {
+	g_draggedSkillName = undefined;
 	controller.record.unselectAll();
 	controller.displayCurrentState();
 	bgSelecting = true;
@@ -837,7 +843,12 @@ function drawSkills(
 
 		function buildCover(existingCovers: number, collection: Rect[]) {
 			if (g_renderingProps.drawOptions.drawBuffIndicators) {
-				collection.push({ x: x, y: y + 28 + existingCovers * 4, w: 28, h: 4 });
+				collection.push({
+					x: x,
+					y: y + SKILL_ICON_SIZE_PX + existingCovers * 4,
+					w: SKILL_ICON_SIZE_PX,
+					h: 4,
+				});
 			}
 			return 1;
 		}
@@ -875,8 +886,8 @@ function drawSkills(
 	g_ctx.strokeStyle = "rgba(151, 85, 239, 0.4)";
 	g_ctx.beginPath();
 	snapshots.forEach((x) => {
-		g_ctx.moveTo(x, skillsTopY + 14);
-		g_ctx.lineTo(x, skillsTopY + 28);
+		g_ctx.moveTo(x, skillsTopY + SKILL_ICON_SIZE_PX / 2);
+		g_ctx.lineTo(x, skillsTopY + SKILL_ICON_SIZE_PX);
 	});
 	g_ctx.stroke();
 
@@ -911,14 +922,20 @@ function drawSkills(
 		skillHitboxes.clear();
 	}
 	skillIcons.forEach((icon) => {
-		g_ctx.drawImage(getSkillIconImage(icon.elem.skillName), icon.x, icon.y, 28, 28);
+		g_ctx.drawImage(
+			getSkillIconImage(icon.elem.skillName),
+			icon.x,
+			icon.y,
+			SKILL_ICON_SIZE_PX,
+			SKILL_ICON_SIZE_PX,
+		);
 		const node = icon.elem.node;
 		if (interactive) {
 			skillHitboxes.set(icon.elem.actionIndex, {
 				x: icon.x,
 				y: icon.y,
-				w: 28,
-				h: 28,
+				w: SKILL_ICON_SIZE_PX,
+				h: SKILL_ICON_SIZE_PX,
 			});
 		}
 
@@ -981,7 +998,7 @@ function drawSkills(
 
 		if (interactive) {
 			testInteraction(
-				{ x: icon.x, y: icon.y, w: 28, h: 28 },
+				{ x: icon.x, y: icon.y, w: SKILL_ICON_SIZE_PX, h: SKILL_ICON_SIZE_PX },
 				{
 					hoverTip: lines,
 					onClick: () => {
@@ -991,13 +1008,16 @@ function drawSkills(
 						);
 						scrollEditorToFirstSelected();
 					},
+					onMouseDown: () => {
+						g_draggedSkillName = icon.elem.skillName;
+					},
 					pointerMouse: true,
 					hoverImages: buffImages,
 				},
 			);
 		} else {
 			testInteraction(
-				{ x: icon.x, y: icon.y, w: 28, h: 28 },
+				{ x: icon.x, y: icon.y, w: SKILL_ICON_SIZE_PX, h: SKILL_ICON_SIZE_PX },
 				{
 					hoverTip: lines,
 					pointerMouse: false,
@@ -1642,7 +1662,6 @@ export function TimelineCanvas(props: {
 	visibleLeft: number;
 	visibleWidth: number;
 	version: number;
-	dragTargetDisplayTime: number | null;
 }) {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const overlayRef = useRef<HTMLCanvasElement | null>(null);
@@ -1655,8 +1674,9 @@ export function TimelineCanvas(props: {
 	const [mouseHovered, setMouseHovered] = useState(false);
 	const [clickCounter, setClickCounter] = useState(0);
 	const [keyCounter, setKeyCounter] = useState(0);
+	const [cancelDrag, setCancelDrag] = useState(false);
 	const activeColorTheme = useContext(ColorThemeContext);
-
+	const globalDragContext = useContext(DragTargetContext);
 	const lastSelectionBounds = useRef<(number | null)[]>([null, null]);
 	// initialization
 	useEffect(() => {
@@ -1726,6 +1746,10 @@ export function TimelineCanvas(props: {
 				g_isClickUpdate = true;
 				g_clickEvent = e;
 			}
+			g_draggedSkillName = undefined;
+			// Apparently we can't access the global context object from here, so we need to
+			// signal for the state change locally.
+			setCancelDrag(true);
 		};
 		timelineCanvasOnMouseDown = (x: number, y: number) => {
 			if (!controller.shouldLoop) {
@@ -1795,7 +1819,7 @@ export function TimelineCanvas(props: {
 	// Draw overlay stuff to avoid redrawing the main canvas
 	useEffect(() => {
 		const overlayContext = overlayRef.current?.getContext("2d");
-		const targetTime = props.dragTargetDisplayTime;
+		const targetTime = globalDragContext.dragTargetTime;
 		if (overlayContext) {
 			overlayContext.clearRect(
 				0,
@@ -1811,6 +1835,52 @@ export function TimelineCanvas(props: {
 					h: Math.abs(selectStartY - g_mouseY),
 				};
 				drawSelectionRect(overlayContext, selectionRect);
+			}
+			if (cancelDrag) {
+				setCancelDrag(false);
+				globalDragContext.setDragTarget(null, null);
+				g_draggedSkillName = undefined;
+			}
+			if (g_draggedSkillName !== undefined) {
+				// Linear search for the skill hitbox with the smallest x distance, and set it as the new drag target
+				let minDist = Infinity;
+				let minIdx = -1;
+				let lastXDist = undefined;
+				for (const [index, hitbox] of skillHitboxes.entries()) {
+					const xDist = Math.abs(g_mouseX - hitbox.x);
+					if (lastXDist !== undefined && xDist > lastXDist) {
+						break;
+					}
+					if (xDist < minDist) {
+						minDist = xDist;
+						minIdx = index;
+					}
+					lastXDist = xDist;
+				}
+				const targetIsSelected = minIdx !== -1 && controller.record.isInSelection(minIdx);
+				if (!targetIsSelected) {
+					// Draw the drop target cursor and image of the skill being dragged.
+					if (minIdx !== -1 && globalDragContext.dragTargetIndex !== minIdx) {
+						const rect = skillHitboxes.get(minIdx)!;
+						// I have no idea where the magic 20px number comes from
+						const targetTime =
+							StaticFn.timeFromPositionAndScale(rect.x - 20, g_renderingProps.scale) -
+							g_renderingProps.countdown;
+						globalDragContext.setDragTarget(minIdx, targetTime);
+					}
+					const tmpAlpha = overlayContext.globalAlpha;
+					overlayContext.globalAlpha = 0.4;
+					overlayContext.drawImage(
+						getSkillIconImage(g_draggedSkillName),
+						g_mouseX,
+						g_mouseY,
+						SKILL_ICON_SIZE_PX,
+						SKILL_ICON_SIZE_PX,
+					);
+					overlayContext.globalAlpha = tmpAlpha;
+				} else {
+					globalDragContext.setDragTarget(null, null);
+				}
 			}
 
 			if (targetTime !== null) {
@@ -1839,7 +1909,7 @@ export function TimelineCanvas(props: {
 				);
 			}
 		}
-	}, [props.dragTargetDisplayTime, mouseX, mouseY]);
+	}, [globalDragContext.dragTargetTime, mouseX, mouseY, cancelDrag]);
 
 	// One layer of canvas is responsible for drawing the majority of timeline components,
 	// while a second layer is responsible for drawing transient elements that do not require

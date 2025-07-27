@@ -28,7 +28,7 @@ export let scrollTimelineTo = (positionX: number) => {};
 const DRAG_LOCK_CACHE_KEY = "dragLock";
 
 const initialDragLockStr = getCachedValue(DRAG_LOCK_CACHE_KEY);
-const initialDragLock = initialDragLockStr === null || initialDragLockStr === "true";
+const initialDragLock = initialDragLockStr === "true";
 export const DragLockContext = createContext<{ value: boolean; setter: (value: boolean) => void }>({
 	value: initialDragLock,
 	setter: (value: boolean) => {},
@@ -82,14 +82,11 @@ function TimelineMain() {
 		updateVisibleRange();
 	}, []);
 
-	const dragContext = useContext(DragTargetContext);
-
 	const canvas = <TimelineCanvas
 		timelineHeight={timelineHeight}
 		visibleLeft={visibleLeft}
 		visibleWidth={visibleWidth}
 		version={version}
-		dragTargetDisplayTime={dragContext.dragTargetTime}
 	/>;
 	const isFirefox = navigator.userAgent.indexOf("Firefox") >= 0;
 	const colorContext = useContext(ColorThemeContext);

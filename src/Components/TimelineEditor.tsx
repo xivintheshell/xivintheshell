@@ -659,7 +659,6 @@ export function TimelineEditor() {
 				}}
 				draggable={!lockContext.value}
 				onDragStart={(e) => e.preventDefault()}
-				onDragEnter={() => console.log("entered last")}
 				onDragLeave={(e) => {
 					setEndDragTarget(false);
 					globalDragTarget.setDragTarget(null, null);
