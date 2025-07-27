@@ -438,32 +438,37 @@ function Buff(props: BuffProps) {
 	} else {
 		imgStyle = { height: 40 };
 	}
+	const mayNotBeCanceled = RESOURCES[props.rscType].mayNotBeCanceled;
+	const style: CSSProperties = {
+		display: "inline-block",
+		verticalAlign: "top",
+		filter: props.enabled ? "none" : "grayScale(100%)",
+	};
+	const img = <img
+		style={imgStyle}
+		src={"assets/" + buffIcons.get(assetName)}
+		alt={props.rscType}
+	/>;
 	return <div
 		title={localizeResourceType(props.rscType)}
 		className={props.className + " buff " + props.rscType}
 	>
-		<Clickable
-			content={
-				<img
-					style={imgStyle}
-					src={"assets/" + buffIcons.get(assetName)}
-					alt={props.rscType}
-				/>
-			}
-			style={{
-				display: "inline-block",
-				verticalAlign: "top",
-				filter: props.enabled ? "none" : "grayScale(100%)",
-			}}
-			onClickFn={() => {
-				if (props.onSelf) {
-					controller.requestToggleBuff(props.rscType);
-					controller.updateStatusDisplay(controller.game);
-					controller.updateSkillButtons(controller.game);
-					controller.autoSave();
-				}
-			}}
-		/>
+		{mayNotBeCanceled ? (
+			<div style={style}>{img}</div>
+		) : (
+			<Clickable
+				content={img}
+				style={style}
+				onClickFn={() => {
+					if (props.onSelf) {
+						controller.requestToggleBuff(props.rscType);
+						controller.updateStatusDisplay(controller.game);
+						controller.updateSkillButtons(controller.game);
+						controller.autoSave();
+					}
+				}}
+			/>
+		)}
 		{/* When the buff has no timer, we still want it to align with other buffs, so just pad some empty space */}
 		<span
 			className={"buff-label"}
