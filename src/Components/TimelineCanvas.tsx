@@ -113,10 +113,12 @@ let readback_pointerMouse = false;
 // all coordinates in canvas space
 function testInteraction(
 	rect: Rect,
-	hoverTip?: string[],
-	onClick?: () => void,
-	pointerMouse?: boolean,
-	hoverImages?: any[],
+	params?: {
+		hoverTip?: string[];
+		onClick?: () => void;
+		pointerMouse?: boolean;
+		hoverImages?: any[];
+	},
 ) {
 	if (
 		g_mouseX >= rect.x &&
@@ -124,10 +126,10 @@ function testInteraction(
 		g_mouseY >= rect.y &&
 		g_mouseY < rect.y + rect.h
 	) {
-		g_activeHoverTip = hoverTip;
-		g_activeHoverTipImages = hoverImages;
-		g_activeOnClick = onClick;
-		readback_pointerMouse = pointerMouse === true;
+		g_activeHoverTip = params?.hoverTip;
+		g_activeHoverTipImages = params?.hoverImages;
+		g_activeOnClick = params?.onClick;
+		readback_pointerMouse = params?.pointerMouse === true;
 	}
 }
 
@@ -292,8 +294,10 @@ function drawMarkers(
 						w: Math.max(markerWidth, TimelineDimensions.trackHeight),
 						h: TimelineDimensions.trackHeight,
 					},
-					["[" + timeStr + "] " + localizedDescription],
-					onClick,
+					{
+						hoverTip: ["[" + timeStr + "] " + localizedDescription],
+						onClick,
+					},
 				);
 			} else {
 				g_ctx.fillStyle = m.color;
@@ -324,8 +328,10 @@ function drawMarkers(
 						w: TimelineDimensions.trackHeight,
 						h: TimelineDimensions.trackHeight,
 					},
-					["[" + m.time + "] " + localizedDescription],
-					onClick,
+					{
+						hoverTip: ["[" + m.time + "] " + localizedDescription],
+						onClick,
+					},
 				);
 			}
 		}
@@ -347,9 +353,12 @@ function drawMPTickMarks(
 		g_ctx.moveTo(x, originY);
 		g_ctx.lineTo(x, originY + TimelineDimensions.renderSlotHeight());
 
-		testInteraction({ x: x - 2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight() }, [
-			"[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc,
-		]);
+		testInteraction(
+			{ x: x - 2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight() },
+			{
+				hoverTip: ["[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc],
+			},
+		);
 	});
 	g_ctx.stroke();
 }
@@ -369,9 +378,10 @@ function drawMeditateTickMarks(
 		g_ctx.moveTo(x, originY);
 		g_ctx.lineTo(x, originY + TimelineDimensions.renderSlotHeight());
 
-		testInteraction({ x: x - 2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight() }, [
-			"[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc,
-		]);
+		testInteraction(
+			{ x: x - 2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight() },
+			{ hoverTip: ["[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc] },
+		);
 	});
 	g_ctx.stroke();
 }
@@ -391,9 +401,10 @@ function drawAutoTickMarks(
 		g_ctx.moveTo(x, originY);
 		g_ctx.lineTo(x, originY + TimelineDimensions.renderSlotHeight());
 
-		testInteraction({ x: x - 2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight() }, [
-			"[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc,
-		]);
+		testInteraction(
+			{ x: x - 2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight() },
+			{ hoverTip: ["[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc] },
+		);
 	});
 	g_ctx.stroke();
 }
@@ -461,7 +472,7 @@ function drawWarningMarks(
 		}
 		testInteraction(
 			{ x: x - sideLength / 2, y: bottomY - sideLength, w: sideLength, h: sideLength },
-			[message],
+			{ hoverTip: [message] },
 		);
 	});
 }
@@ -590,13 +601,10 @@ function drawPotencyMarks(
 			mark.type === ElemType.HealingMark
 				? { x: x - 3, y: timelineOriginY + 6, w: 6, h: 6 }
 				: { x: x - 3, y: timelineOriginY, w: 6, h: 6 };
-		testInteraction(
-			interactionArea,
-			untargetable ? [time, ...info, untargetableStr] : [time, ...info],
-			undefined,
-			undefined,
-			buffImages,
-		);
+		testInteraction(interactionArea, {
+			hoverTip: untargetable ? [time, ...info, untargetableStr] : [time, ...info],
+			hoverImages: buffImages,
+		});
 	});
 }
 
@@ -622,7 +630,12 @@ function drawLucidMarks(
 			mark.displayTime.toFixed(3) +
 			"] " +
 			mark.sourceDesc.replace("{skill}", localizeSkillName("LUCID_DREAMING"));
-		testInteraction({ x: x - 3, y: timelineOriginY, w: 6, h: 6 }, [hoverText]);
+		testInteraction(
+			{ x: x - 3, y: timelineOriginY, w: 6, h: 6 },
+			{
+				hoverTip: [hoverText],
+			},
+		);
 	});
 }
 
@@ -827,7 +840,7 @@ function drawSkills(
 	g_ctx.beginPath();
 	purpleLockBars.forEach((r) => {
 		g_ctx.rect(r.x, r.y, r.w, r.h);
-		if (interactive) testInteraction(r, undefined, onClickTimelineBackground);
+		if (interactive) testInteraction(r, { onClick: onClickTimelineBackground });
 	});
 	g_ctx.fill();
 
@@ -846,7 +859,7 @@ function drawSkills(
 	g_ctx.beginPath();
 	gcdBars.forEach((r) => {
 		g_ctx.rect(r.x, r.y, r.w, r.h);
-		if (interactive) testInteraction(r, undefined, onClickTimelineBackground);
+		if (interactive) testInteraction(r, { onClick: onClickTimelineBackground });
 	});
 	g_ctx.fill();
 
@@ -855,7 +868,7 @@ function drawSkills(
 	g_ctx.beginPath();
 	greyLockBars.forEach((r) => {
 		g_ctx.rect(r.x, r.y, r.w, r.h);
-		if (interactive) testInteraction(r, undefined, onClickTimelineBackground);
+		if (interactive) testInteraction(r, { onClick: onClickTimelineBackground });
 	});
 	g_ctx.fill();
 
@@ -864,7 +877,7 @@ function drawSkills(
 		g_ctx.beginPath();
 		coverArray.forEach((r) => {
 			g_ctx.rect(r.x, r.y, r.w, r.h);
-			if (interactive) testInteraction(r, undefined, onClickTimelineBackground);
+			if (interactive) testInteraction(r, { onClick: onClickTimelineBackground });
 		});
 		g_ctx.fill();
 	});
@@ -874,7 +887,7 @@ function drawSkills(
 	g_ctx.beginPath();
 	buffCovers.forEach((r) => {
 		g_ctx.rect(r.x, r.y, r.w, r.h);
-		if (interactive) testInteraction(r, undefined, onClickTimelineBackground);
+		if (interactive) testInteraction(r, { onClick: onClickTimelineBackground });
 	});
 	g_ctx.fill();
 
@@ -944,24 +957,27 @@ function drawSkills(
 		if (interactive) {
 			testInteraction(
 				{ x: icon.x, y: icon.y, w: 28, h: 28 },
-				lines,
-				() => {
-					controller.timeline.onClickTimelineAction(
-						icon.elem.actionIndex,
-						g_clickEvent ? g_clickEvent.shiftKey : false,
-					);
-					scrollEditorToFirstSelected();
+				{
+					hoverTip: lines,
+					onClick: () => {
+						controller.timeline.onClickTimelineAction(
+							icon.elem.actionIndex,
+							g_clickEvent ? g_clickEvent.shiftKey : false,
+						);
+						scrollEditorToFirstSelected();
+					},
+					pointerMouse: true,
+					hoverImages: buffImages,
 				},
-				true,
-				buffImages,
 			);
 		} else {
 			testInteraction(
 				{ x: icon.x, y: icon.y, w: 28, h: 28 },
-				lines,
-				() => {},
-				false,
-				buffImages,
+				{
+					hoverTip: lines,
+					pointerMouse: false,
+					hoverImages: buffImages,
+				},
 			);
 		}
 	});
@@ -981,7 +997,15 @@ function drawSkills(
 // NOTE: unlike the other functions, this takes a ctx object as argument so we can reuse this
 // on the overlay canvas
 // eventually, all draw functions should do the same
-function drawCursor(g_ctx: CanvasRenderingContext2D, x: number, y1: number, y2: number, y3: number, color: string, tip: string) {
+function drawCursor(
+	g_ctx: CanvasRenderingContext2D,
+	x: number,
+	y1: number,
+	y2: number,
+	y3: number,
+	color: string,
+	tip: string,
+) {
 	// triangle
 	g_ctx.fillStyle = color;
 	g_ctx.beginPath();
@@ -1024,7 +1048,7 @@ function drawCursor(g_ctx: CanvasRenderingContext2D, x: number, y1: number, y2: 
 	g_ctx.lineTo(x, c_maxTimelineHeight);
 	g_ctx.stroke();
 
-	testInteraction({ x: x - 3, y: 0, w: 6, h: c_maxTimelineHeight }, [tip]);
+	testInteraction({ x: x - 3, y: 0, w: 6, h: c_maxTimelineHeight }, { hoverTip: [tip] });
 	g_ctx.setLineDash([]);
 }
 
@@ -1050,16 +1074,18 @@ export function drawRuler(originX: number, ignoreVisibleX = false): number {
 			w: xUpperBound - TimelineDimensions.leftBufferWidth,
 			h: TimelineDimensions.rulerHeight,
 		},
-		[displayTime.toFixed(3)],
-		() => {
-			if (
-				displayTime < controller.game.getDisplayTime() &&
-				displayTime >= -controller.game.config.countdown
-			) {
-				controller.displayHistoricalState(displayTime, undefined); // replay the actions as-is
-			} else {
-				controller.displayCurrentState();
-			}
+		{
+			hoverTip: [displayTime.toFixed(3)],
+			onClick: () => {
+				if (
+					displayTime < controller.game.getDisplayTime() &&
+					displayTime >= -controller.game.config.countdown
+				) {
+					controller.displayHistoricalState(displayTime, undefined); // replay the actions as-is
+				} else {
+					controller.displayCurrentState();
+				}
+			},
 		},
 	);
 
@@ -1345,16 +1371,14 @@ export function drawTimelines(
 		g_ctx.fillStyle =
 			slot === g_renderingProps.activeSlotIndex ? g_colors.accent : g_colors.bgMediumContrast;
 		g_ctx.fillRect(handle.x, handle.y, handle.w, handle.h);
-		testInteraction(
-			handle,
-			slot === g_renderingProps.activeSlotIndex
-				? undefined
-				: [localize({ en: "set active", zh: "设为当前" }) as string],
-			() => {
-				controller.setActiveSlot(slot);
-			},
-			true,
-		);
+		testInteraction(handle, {
+			hoverTip:
+				slot === g_renderingProps.activeSlotIndex
+					? undefined
+					: [localize({ en: "set active", zh: "设为当前" }) as string],
+			onClick: () => controller.setActiveSlot(slot),
+			pointerMouse: true,
+		});
 
 		// delete btn
 		if (g_renderingProps.slots.length > 1 && slot === g_renderingProps.activeSlotIndex) {
@@ -1368,15 +1392,14 @@ export function drawTimelines(
 				w: handle.w,
 				h: handle.w,
 			};
-			testInteraction(
-				deleteBtn,
-				[localize({ en: "delete", zh: "删除" }) as string],
-				() => {
+			testInteraction(deleteBtn, {
+				hoverTip: [localize({ en: "delete", zh: "删除" }) as string],
+				onClick: () => {
 					controller.timeline.removeSlot(slot);
 					controller.displayCurrentState();
 				},
-				true,
-			);
+				pointerMouse: true,
+			});
 		}
 	}
 	return TimelineDimensions.renderSlotHeight() * g_renderingProps.slots.length;
@@ -1461,15 +1484,13 @@ function drawAddSlotButton(originY: number) {
 			handle.y + handle.h - 4,
 		);
 
-		testInteraction(
-			handle,
-			undefined,
-			() => {
+		testInteraction(handle, {
+			onClick: () => {
 				controller.timeline.addSlot();
 				controller.displayCurrentState();
 			},
-			true,
-		);
+			pointerMouse: true,
+		});
 
 		// "Clone timeline slot" button
 		const cloneHandle: Rect = {
@@ -1492,15 +1513,13 @@ function drawAddSlotButton(originY: number) {
 			cloneHandle.y + cloneHandle.h - 4,
 		);
 
-		testInteraction(
-			cloneHandle,
-			undefined,
-			() => {
+		testInteraction(cloneHandle, {
+			onClick: () => {
 				controller.cloneActiveSlot();
 				controller.displayCurrentState();
 			},
-			true,
-		);
+			pointerMouse: true,
+		});
 
 		return TimelineDimensions.addSlotButtonHeight;
 	}
@@ -1519,8 +1538,7 @@ function drawEverything() {
 	g_ctx.fillRect(0, 0, g_visibleWidth + 1, g_renderingProps.timelineHeight + 1);
 	testInteraction(
 		{ x: 0, y: 0, w: g_visibleWidth, h: c_maxTimelineHeight },
-		undefined,
-		onClickTimelineBackground,
+		{ onClick: onClickTimelineBackground },
 	);
 
 	currentHeight += drawRuler(timelineOrigin);
@@ -1669,16 +1687,26 @@ export function TimelineCanvas(props: {
 	useEffect(() => {
 		const overlayContext = overlayRef.current?.getContext("2d");
 		const targetTime = props.dragTargetDisplayTime;
-		console.log(props.dragTargetDisplayTime)
+		console.log(props.dragTargetDisplayTime);
 		if (overlayContext) {
-			overlayContext.clearRect(0, 0, overlayRef.current?.width ?? 0, overlayRef.current?.height ?? 0);
+			overlayContext.clearRect(
+				0,
+				0,
+				overlayRef.current?.width ?? 0,
+				overlayRef.current?.height ?? 0,
+			);
 			if (targetTime !== null) {
 				// TODO share code with drawCursors
 				const timelineOrigin = -g_visibleLeft + TimelineDimensions.leftBufferWidth; // fragCoord.x (...) of rawTime=0.
-				const displayOriginX = timelineOrigin +
-					StaticFn.positionFromTimeAndScale(g_renderingProps.countdown, g_renderingProps.scale);
+				const displayOriginX =
+					timelineOrigin +
+					StaticFn.positionFromTimeAndScale(
+						g_renderingProps.countdown,
+						g_renderingProps.scale,
+					);
 				const slotHeight = TimelineDimensions.renderSlotHeight();
-				const activeSlotStartY = cursorStartY + g_renderingProps.activeSlotIndex * slotHeight;
+				const activeSlotStartY =
+					cursorStartY + g_renderingProps.activeSlotIndex * slotHeight;
 
 				const x =
 					displayOriginX +
@@ -1702,9 +1730,9 @@ export function TimelineCanvas(props: {
 	// Currently, this functionality is used ONLY for the vertical line used to represent the
 	// destination of a click+drag operation. Eventually this should probably be extended to
 	// include other cursors and skill highlights, but doing so requires significant refactors.
-	// Refactors also need to account for `swapCtx` functionality with 
+	// Refactors also need to account for `swapCtx` functionality with
 	// https://stackoverflow.com/questions/3008635/html5-canvas-element-multiple-layers
-	return <div style={{position:"relative"}}>
+	return <div style={{ position: "relative" }}>
 		<canvas
 			ref={canvasRef}
 			width={Math.ceil(scaledWidth)}

@@ -34,10 +34,10 @@ export const DragLockContext = createContext<{ value: boolean; setter: (value: b
 });
 
 export interface DragTarget {
-	dragTargetIndex: number | null,
-	dragTargetTime: number | null,
-	setDragTarget: (index: number | null, time: number | null) => void,
-};
+	dragTargetIndex: number | null;
+	dragTargetTime: number | null;
+	setDragTarget: (index: number | null, time: number | null) => void;
+}
 export const DragTargetContext = createContext<DragTarget>({
 	dragTargetIndex: null,
 	dragTargetTime: null,
@@ -79,7 +79,7 @@ function TimelineMain() {
 		setTimelineWidth(controller.timeline.getCanvasWidth());
 		setTimelineHeight(controller.timeline.getCanvasHeight());
 		updateVisibleRange();
-	}, [])
+	}, []);
 
 	const dragContext = useContext(DragTargetContext);
 
@@ -234,7 +234,7 @@ function TimelineTabs() {
 				setDragLock(!dragLock);
 			}}
 		>
-			drag lock{" "}
+			{localize({ en: "click+drag lock", zh: "单击并拖动锁" })}{" "}
 			<Help
 				topic="dragLock"
 				content={localize({
@@ -266,7 +266,10 @@ function TimelineTabs() {
 
 export function Timeline() {
 	const [dragLock, setDragLock] = useState(initialDragLock);
-	const [[dragTargetIndex, dragTargetTime], setDragTarget] = useState<(number | null)[]>([null, null])
+	const [[dragTargetIndex, dragTargetTime], setDragTarget] = useState<(number | null)[]>([
+		null,
+		null,
+	]);
 	return <div
 		style={{
 			bottom: 0,

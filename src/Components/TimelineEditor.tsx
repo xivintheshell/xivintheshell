@@ -19,7 +19,12 @@ import {
 	localizeSkillUnavailableReason,
 	getCurrentLanguage,
 } from "./Localization";
-import { TIMELINE_COLUMNS_HEIGHT, updateTimelineView, DragLockContext, DragTargetContext } from "./Timeline";
+import {
+	TIMELINE_COLUMNS_HEIGHT,
+	updateTimelineView,
+	DragLockContext,
+	DragTargetContext,
+} from "./Timeline";
 import { Columns } from "./Common";
 import { SkillReadyStatus } from "../Game/Common";
 
