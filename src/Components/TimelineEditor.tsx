@@ -19,7 +19,7 @@ import {
 	localizeSkillUnavailableReason,
 	getCurrentLanguage,
 } from "./Localization";
-import { TIMELINE_COLUMNS_HEIGHT, updateTimelineView, DragLockContext } from "./Timeline";
+import { TIMELINE_COLUMNS_HEIGHT, updateTimelineView, DragLockContext, DragTargetContext } from "./Timeline";
 import { Columns } from "./Common";
 import { SkillReadyStatus } from "../Game/Common";
 
@@ -36,22 +36,12 @@ export let updateActiveTimelineEditor = (slotSwapFn: () => void) => {
 
 const EditorDragContext = createContext<
 	(i: number) => {
-		start: DragEventHandler<HTMLTableRowElement>;
-		end: DragEventHandler<HTMLTableRowElement>;
-		enter: DragEventHandler<HTMLTableRowElement>;
-		leave: DragEventHandler<HTMLTableRowElement>;
 		drop: DragEventHandler<HTMLTableRowElement>;
-		over: DragEventHandler<HTMLTableRowElement>;
 		setSelected: (b: boolean) => void;
 	}
 >((i) => {
 	return {
-		start: (e) => {},
-		end: (e) => {},
-		enter: (e) => {},
-		leave: (e) => {},
 		drop: (e) => {},
-		over: (e) => {},
 		setSelected: (b) => {},
 	};
 });
@@ -93,7 +83,7 @@ const getDropTargetStyle = (colors: ThemeColors): CSSProperties => {
 	return {
 		borderTopWidth: "4px",
 		borderTopStyle: "solid",
-		borderColor: colors.editingValid,
+		borderColor: colors.dropTarget,
 	};
 };
 
@@ -180,7 +170,9 @@ function TimelineActionElement(props: {
 		</td>
 	) : undefined;
 	const [dragTarget, setDragTarget] = useState(false);
-	const ctx = useContext(EditorDragContext)(props.index);
+	const globalDragTarget = useContext(DragTargetContext);
+	const lockContext = useContext(DragLockContext);
+	const localEditorContext = useContext(EditorDragContext)(props.index);
 	return <tr
 		style={{
 			...TR_STYLE,
@@ -188,34 +180,32 @@ function TimelineActionElement(props: {
 			...(dragTarget ? getDropTargetStyle(colors) : {}),
 		}}
 		ref={props.refObj ?? null}
-		draggable={!useContext(DragLockContext).value}
+		draggable={!lockContext.value}
 		onDragStart={(e) => {
-			ctx.start(e);
-			ctx.setSelected(true);
+			localEditorContext.setSelected(true);
 			if (!props.isSelected) {
 				controller.timeline.onClickTimelineAction(props.index, false);
 			}
 		}}
-		onDragEnd={ctx.end}
-		onDragEnter={ctx.enter}
 		onDragLeave={(e) => {
-			ctx.leave(e);
 			setDragTarget(false);
+			globalDragTarget.setDragTarget(null, null);
 		}}
 		onDrop={(e) => {
-			ctx.drop(e);
+			localEditorContext.drop(e);
 			setDragTarget(false);
+			globalDragTarget.setDragTarget(null, null);
 		}}
 		onDragOver={(e) => {
 			if (!props.isSelected) {
 				// preventDefault enables this to receive drops
 				e.preventDefault();
-				ctx.over(e);
 				setDragTarget(true);
+				globalDragTarget.setDragTarget(props.index, props.usedAt);
 			}
 		}}
 		onClick={(e) => {
-			ctx.setSelected(true);
+			localEditorContext.setSelected(true);
 			if (props.recordIsDirty) {
 				// controller.record.onClickNode(props.index, e.shiftKey);
 				controller.timeline.onClickTimelineAction(props.index, e.shiftKey);
@@ -629,34 +619,19 @@ export function TimelineEditor() {
 	// This weird useRef structure lets us minimize the amount of re-rendering necessary by
 	// pushing CSS styling state down to each individual <tr> element. I did not empirically measure
 	// the performance difference, but it seems like this would cause a lot of overhead otherwise.
-	const dragDst = useRef<number | null>(null);
 	const dragHandlers = (i: number) => {
 		return {
-			start: (e: React.DragEvent) => {},
-			end: (e: React.DragEvent) => {
-				dragDst.current = null;
-			},
-			enter: (e: React.DragEvent) => {},
-			over: (e: React.DragEvent) => {
-				dragDst.current = i;
-			},
-			leave: (e: React.DragEvent) => {
-				dragDst.current = null;
-			},
 			drop: (e: React.DragEvent) => {
-				if (dragDst.current !== null) {
-					const start = controller.record.selectionStartIndex ?? 0;
-					let distance = i - (start ?? 0);
-					// If we need to move the item upwards, then we already have the correct offset.
-					// If it needs to move down, we need to subtract the length of the current selection.
-					if (distance > 0) {
-						distance -= controller.record.getSelectionLength();
-					}
-					if (distance !== 0) {
-						doRecordEdit((record) => record.moveSelected(distance));
-					}
+				const start = controller.record.selectionStartIndex ?? 0;
+				let distance = i - (start ?? 0);
+				// If we need to move the item upwards, then we already have the correct offset.
+				// If it needs to move down, we need to subtract the length of the current selection.
+				if (distance > 0) {
+					distance -= controller.record.getSelectionLength();
 				}
-				dragDst.current = null;
+				if (distance !== 0) {
+					doRecordEdit((record) => record.moveSelected(distance));
+				}
 			},
 			setSelected: (b: boolean) => {
 				bHandledSkillSelectionThisFrame.current = b;

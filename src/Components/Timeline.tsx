@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { useRef, createContext, useContext, useState, useEffect } from "react";
 import { FaLockOpen, FaLock } from "react-icons/fa6";
 import { controller } from "../Controller/Controller";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
@@ -33,140 +33,123 @@ export const DragLockContext = createContext<{ value: boolean; setter: (value: b
 	setter: (value: boolean) => {},
 });
 
+export interface DragTarget {
+	dragTargetIndex: number | null,
+	dragTargetTime: number | null,
+	setDragTarget: (index: number | null, time: number | null) => void,
+};
+export const DragTargetContext = createContext<DragTarget>({
+	dragTargetIndex: null,
+	dragTargetTime: null,
+	setDragTarget: (index, time) => {},
+});
+
 // the actual timeline canvas
-class TimelineMain extends React.Component {
-	myRef: React.RefObject<HTMLDivElement | null>;
-	updateVisibleRange: () => void;
-	state: {
-		timelineWidth: number;
-		timelineHeight: number;
-		visibleLeft: number;
-		visibleWidth: number;
-		version: number;
+function TimelineMain() {
+	const myRef = useRef<HTMLDivElement | null>(null);
+
+	const [timelineWidth, setTimelineWidth] = useState(11);
+	const [timelineHeight, setTimelineHeight] = useState(300);
+	const [visibleLeft, setVisibleLeft] = useState(23);
+	const [visibleWidth, setVisibleWidth] = useState(66);
+	const [version, setVersion] = useState(0);
+
+	const updateVisibleRange = () => {
+		if (myRef.current) {
+			setVisibleLeft(myRef.current.scrollLeft);
+			setVisibleWidth(myRef.current.clientWidth);
+		}
 	};
 
-	static contextType = ColorThemeContext;
+	// EXTERNAL HOOKS, DOING STATE MANAGEMENT CRIMES
+	updateTimelineView = () => {
+		setTimelineWidth(controller.timeline.getCanvasWidth());
+		setTimelineHeight(controller.timeline.getCanvasHeight());
+		setVersion(version + 1);
+	};
+	scrollTimelineTo = (positionX: number) => {
+		if (myRef.current != null) {
+			const clientWidth = myRef.current.clientWidth;
+			myRef.current.scrollLeft = positionX - clientWidth * 0.6;
+		}
+		updateVisibleRange();
+	};
 
-	constructor(props: {}) {
-		super(props);
-		this.state = {
-			timelineWidth: 11,
-			timelineHeight: 300,
-			visibleLeft: 23,
-			visibleWidth: 66,
-			version: 0,
-		};
-		this.myRef = React.createRef();
+	useEffect(() => {
+		setTimelineWidth(controller.timeline.getCanvasWidth());
+		setTimelineHeight(controller.timeline.getCanvasHeight());
+		updateVisibleRange();
+	}, [])
 
-		this.updateVisibleRange = () => {
-			if (this.myRef.current) {
-				this.setState({
-					visibleLeft: this.myRef.current.scrollLeft,
-					visibleWidth: this.myRef.current.clientWidth,
-				});
-			}
-		};
-	}
+	const dragContext = useContext(DragTargetContext);
 
-	componentDidMount() {
-		this.setState({
-			timelineWidth: controller.timeline.getCanvasWidth(),
-			timelineHeight: controller.timeline.getCanvasHeight(),
-		});
-		updateTimelineView = () => {
-			this.setState({
-				timelineWidth: controller.timeline.getCanvasWidth(),
-				timelineHeight: controller.timeline.getCanvasHeight(),
-				version: this.state.version + 1,
-			});
-		};
-
-		scrollTimelineTo = (positionX: number) => {
-			if (this.myRef.current != null) {
-				const clientWidth = this.myRef.current.clientWidth;
-				this.myRef.current.scrollLeft = positionX - clientWidth * 0.6;
-			}
-			this.updateVisibleRange();
-		};
-
-		this.updateVisibleRange();
-	}
-
-	componentWillUnmount() {
-		updateTimelineView = () => {};
-		scrollTimelineTo = (positionX) => {};
-	}
-
-	render() {
-		const canvas = <TimelineCanvas
-			timelineHeight={this.state.timelineHeight}
-			visibleLeft={this.state.visibleLeft}
-			visibleWidth={this.state.visibleWidth}
-			version={this.state.version}
-		/>;
-		const isFirefox = navigator.userAgent.indexOf("Firefox") >= 0;
-		// @ts-expect-error we need to read untyped this.context in place of a useContext hook
-		const bg = getThemeField(this.context, "bgMediumContrast");
-		return <div style={{ position: "relative" }}>
-			{canvas}
+	const canvas = <TimelineCanvas
+		timelineHeight={timelineHeight}
+		visibleLeft={visibleLeft}
+		visibleWidth={visibleWidth}
+		version={version}
+		dragTargetDisplayTime={dragContext.dragTargetTime}
+	/>;
+	const isFirefox = navigator.userAgent.indexOf("Firefox") >= 0;
+	const colorContext = useContext(ColorThemeContext);
+	const bg = getThemeField(colorContext, "bgMediumContrast");
+	return <div style={{ position: "relative" }}>
+		{canvas}
+		<div
+			tabIndex={0}
+			className={"visibleScrollbar"}
+			style={{
+				position: "relative",
+				width: "100%",
+				overflowX: "scroll",
+				overflowY: "clip",
+				outline: "1px solid " + bg,
+				cursor: timelineCanvasGetPointerMouse() ? "pointer" : "default",
+				paddingBottom: isFirefox ? 10 : 0,
+			}}
+			ref={myRef}
+			onScroll={(e) => {
+				if (myRef.current) {
+					myRef.current.scrollLeft = Math.min(
+						myRef.current.scrollWidth - myRef.current.clientWidth,
+						myRef.current.scrollLeft,
+					);
+					setVisibleLeft(myRef.current.scrollLeft);
+					setVisibleWidth(myRef.current.clientWidth);
+				}
+			}}
+			onMouseMove={(e) => {
+				if (myRef.current) {
+					const rect = myRef.current.getBoundingClientRect();
+					const x = e.clientX - rect.left;
+					const y = e.clientY - rect.top;
+					timelineCanvasOnMouseMove(x, y);
+				}
+			}}
+			onMouseEnter={(e) => {
+				timelineCanvasOnMouseEnter();
+			}}
+			onMouseLeave={(e) => {
+				timelineCanvasOnMouseLeave();
+			}}
+			onClick={(e) => {
+				timelineCanvasOnClick(e);
+			}}
+			onKeyDown={(e) => {
+				timelineCanvasOnKeyDown(e);
+			}}
+		>
 			<div
-				tabIndex={0}
-				className={"visibleScrollbar"}
 				style={{
 					position: "relative",
-					width: "100%",
-					overflowX: "scroll",
-					overflowY: "clip",
-					outline: "1px solid " + bg,
-					cursor: timelineCanvasGetPointerMouse() ? "pointer" : "default",
-					paddingBottom: isFirefox ? 10 : 0,
+					backgroundColor: "transparent",
+					width: timelineWidth,
+					height: timelineHeight,
+					pointerEvents: "none",
 				}}
-				ref={this.myRef}
-				onScroll={(e) => {
-					if (this.myRef.current) {
-						this.myRef.current.scrollLeft = Math.min(
-							this.myRef.current.scrollWidth - this.myRef.current.clientWidth,
-							this.myRef.current.scrollLeft,
-						);
-						this.setState({
-							visibleLeft: this.myRef.current.scrollLeft,
-							visibleWidth: this.myRef.current.clientWidth,
-						});
-					}
-				}}
-				onMouseMove={(e) => {
-					if (this.myRef.current) {
-						const rect = this.myRef.current.getBoundingClientRect();
-						const x = e.clientX - rect.left;
-						const y = e.clientY - rect.top;
-						timelineCanvasOnMouseMove(x, y);
-					}
-				}}
-				onMouseEnter={(e) => {
-					timelineCanvasOnMouseEnter();
-				}}
-				onMouseLeave={(e) => {
-					timelineCanvasOnMouseLeave();
-				}}
-				onClick={(e) => {
-					timelineCanvasOnClick(e);
-				}}
-				onKeyDown={(e) => {
-					timelineCanvasOnKeyDown(e);
-				}}
-			>
-				<div
-					style={{
-						position: "relative",
-						backgroundColor: "transparent",
-						width: this.state.timelineWidth,
-						height: this.state.timelineHeight,
-						pointerEvents: "none",
-					}}
-				/>
-			</div>
-		</div>;
-	}
+			/>
+		</div>
+	</div>;
 }
 
 export const TIMELINE_SETTINGS_HEIGHT = 320;
@@ -283,6 +266,7 @@ function TimelineTabs() {
 
 export function Timeline() {
 	const [dragLock, setDragLock] = useState(initialDragLock);
+	const [[dragTargetIndex, dragTargetTime], setDragTarget] = useState<(number | null)[]>([null, null])
 	return <div
 		style={{
 			bottom: 0,
@@ -303,8 +287,16 @@ export function Timeline() {
 				},
 			}}
 		>
-			<TimelineMain />
-			<TimelineTabs />
+			<DragTargetContext.Provider
+				value={{
+					dragTargetIndex: dragTargetIndex,
+					dragTargetTime: dragTargetTime,
+					setDragTarget: (index, time) => setDragTarget([index, time]),
+				}}
+			>
+				<TimelineMain />
+				<TimelineTabs />
+			</DragTargetContext.Provider>
 		</DragLockContext.Provider>
 	</div>;
 }

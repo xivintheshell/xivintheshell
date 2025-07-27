@@ -68,6 +68,8 @@ export type TimelineRenderingProps = {
 const c_maxTimelineHeight = 400;
 
 let g_ctx: CanvasRenderingContext2D;
+// Used to synchronize timeline canvas and overlay for drawing cursors. Very unidiomatic.
+let cursorStartY = 0;
 
 let g_visibleLeft = 0;
 let g_visibleWidth = 0;
@@ -976,7 +978,10 @@ function drawSkills(
 	g_ctx.globalAlpha = originalAlpha;
 }
 
-function drawCursor(x: number, y1: number, y2: number, y3: number, color: string, tip: string) {
+// NOTE: unlike the other functions, this takes a ctx object as argument so we can reuse this
+// on the overlay canvas
+// eventually, all draw functions should do the same
+function drawCursor(g_ctx: CanvasRenderingContext2D, x: number, y1: number, y2: number, y3: number, color: string, tip: string) {
 	// triangle
 	g_ctx.fillStyle = color;
 	g_ctx.beginPath();
@@ -1400,6 +1405,7 @@ function drawCursors(originX: number, timelineStartY: number) {
 				displayOriginX +
 				StaticFn.positionFromTimeAndScale(cursor.displayTime, g_renderingProps.scale);
 			drawCursor(
+				g_ctx,
 				x,
 				timelineStartY,
 				activeSlotStartY,
@@ -1417,6 +1423,7 @@ function drawCursors(originX: number, timelineStartY: number) {
 			displayOriginX +
 			StaticFn.positionFromTimeAndScale(cursor.displayTime, g_renderingProps.scale);
 		drawCursor(
+			g_ctx,
 			x,
 			timelineStartY,
 			activeSlotStartY,
@@ -1523,6 +1530,7 @@ function drawEverything() {
 
 	currentHeight += drawTimelines(timelineOrigin, currentHeight, false);
 
+	cursorStartY = timelineStartY;
 	currentHeight += drawCursors(timelineOrigin, timelineStartY);
 
 	currentHeight += drawAddSlotButton(currentHeight);
@@ -1564,8 +1572,10 @@ export function TimelineCanvas(props: {
 	visibleLeft: number;
 	visibleWidth: number;
 	version: number;
+	dragTargetDisplayTime: number | null;
 }) {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
+	const overlayRef = useRef<HTMLCanvasElement | null>(null);
 	const dpr = window.devicePixelRatio;
 	const scaledWidth = props.visibleWidth * dpr;
 	const scaledHeight = props.timelineHeight * dpr;
@@ -1656,19 +1666,76 @@ export function TimelineCanvas(props: {
 		dpr,
 	]);
 
-	return <canvas
-		ref={canvasRef}
-		width={Math.ceil(scaledWidth)}
-		height={Math.ceil(scaledHeight)}
-		tabIndex={0}
-		style={{
-			width: props.visibleWidth,
-			height: props.timelineHeight,
-			position: "absolute",
-			pointerEvents: "none",
-			cursor: readback_pointerMouse ? "pointer" : "default",
-		}}
-	/>;
+	useEffect(() => {
+		const overlayContext = overlayRef.current?.getContext("2d");
+		const targetTime = props.dragTargetDisplayTime;
+		console.log(props.dragTargetDisplayTime)
+		if (overlayContext) {
+			overlayContext.clearRect(0, 0, overlayRef.current?.width ?? 0, overlayRef.current?.height ?? 0);
+			if (targetTime !== null) {
+				// TODO share code with drawCursors
+				const timelineOrigin = -g_visibleLeft + TimelineDimensions.leftBufferWidth; // fragCoord.x (...) of rawTime=0.
+				const displayOriginX = timelineOrigin +
+					StaticFn.positionFromTimeAndScale(g_renderingProps.countdown, g_renderingProps.scale);
+				const slotHeight = TimelineDimensions.renderSlotHeight();
+				const activeSlotStartY = cursorStartY + g_renderingProps.activeSlotIndex * slotHeight;
+
+				const x =
+					displayOriginX +
+					StaticFn.positionFromTimeAndScale(targetTime, g_renderingProps.scale);
+				drawCursor(
+					overlayContext,
+					x,
+					cursorStartY,
+					activeSlotStartY,
+					activeSlotStartY + slotHeight,
+					g_colors.dropTarget,
+					localize({ en: "target: ", zh: "目标：" }) + targetTime.toFixed(3),
+				);
+			}
+		}
+	}, [props.dragTargetDisplayTime]);
+
+	// One layer of canvas is responsible for drawing the majority of timeline components,
+	// while a second layer is responsible for drawing transient elements that do not require
+	// re-rendering the rest of the timeline.
+	// Currently, this functionality is used ONLY for the vertical line used to represent the
+	// destination of a click+drag operation. Eventually this should probably be extended to
+	// include other cursors and skill highlights, but doing so requires significant refactors.
+	// Refactors also need to account for `swapCtx` functionality with 
+	// https://stackoverflow.com/questions/3008635/html5-canvas-element-multiple-layers
+	return <div style={{position:"relative"}}>
+		<canvas
+			ref={canvasRef}
+			width={Math.ceil(scaledWidth)}
+			height={Math.ceil(scaledHeight)}
+			tabIndex={0}
+			style={{
+				width: props.visibleWidth,
+				height: props.timelineHeight,
+				position: "absolute",
+				pointerEvents: "none",
+				cursor: readback_pointerMouse ? "pointer" : "default",
+				left: 0,
+				top: 0,
+				zIndex: 0,
+			}}
+		/>
+		<canvas
+			ref={overlayRef}
+			width={Math.ceil(scaledWidth)}
+			height={Math.ceil(scaledHeight)}
+			tabIndex={-1}
+			style={{
+				position: "absolute",
+				pointerEvents: "none",
+				left: 0,
+				top: 0,
+				zIndex: 1,
+				backgroundColor: "transparent",
+			}}
+		/>
+	</div>;
 }
 
 /**
