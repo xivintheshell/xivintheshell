@@ -202,10 +202,10 @@ function TimelineActionElement(props: {
 			globalDragTarget.setDragTarget(null, null);
 		}}
 		onDragOver={(e) => {
+			// preventDefault enables this to receive drops
+			e.preventDefault();
 			// Check if we're already the target to prevent extra re-renders
 			if (!props.isSelected && !dragTarget) {
-				// preventDefault enables this to receive drops
-				e.preventDefault();
 				setDragTarget(true);
 				globalDragTarget.setDragTarget(props.index, props.usedAt);
 			}
@@ -669,10 +669,10 @@ export function TimelineEditor() {
 					globalDragTarget.setDragTarget(null, null);
 				}}
 				onDragOver={(e) => {
+					// preventDefault enables this to receive drops
+					e.preventDefault();
 					// Check if we're already the target to prevent extra re-renders
 					if (!endDragTarget && controller.record.selectionEndIndex !== actionCount - 1) {
-						// preventDefault enables this to receive drops
-						e.preventDefault();
 						setEndDragTarget(true);
 						globalDragTarget.setDragTarget(
 							actionCount,
