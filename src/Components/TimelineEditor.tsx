@@ -41,6 +41,7 @@ const EditorDragContext = createContext<
 		enter: DragEventHandler<HTMLTableRowElement>;
 		leave: DragEventHandler<HTMLTableRowElement>;
 		drop: DragEventHandler<HTMLTableRowElement>;
+		over: DragEventHandler<HTMLTableRowElement>;
 		setSelected: (b: boolean) => void;
 	}
 >((i) => {
@@ -50,6 +51,7 @@ const EditorDragContext = createContext<
 		enter: (e) => {},
 		leave: (e) => {},
 		drop: (e) => {},
+		over: (e) => {},
 		setSelected: (b) => {},
 	};
 });
@@ -85,6 +87,14 @@ const ACTION_TD_STYLE: CSSProperties = {
 const TR_STYLE: CSSProperties = {
 	height: "1.6em",
 	userSelect: "none",
+};
+
+const getDropTargetStyle = (colors: ThemeColors): CSSProperties => {
+	return {
+		borderTopWidth: "4px",
+		borderTopStyle: "solid",
+		borderColor: colors.editingValid,
+	};
 };
 
 function adjustIndex(i: number | undefined) {
@@ -175,10 +185,7 @@ function TimelineActionElement(props: {
 		style={{
 			...TR_STYLE,
 			background: bgColor,
-			// add a border that doesn't affect element size on the bottom
-			borderTopWidth: dragTarget ? "2px" : undefined,
-			borderTopStyle: dragTarget ? "solid" : undefined,
-			borderColor: dragTarget ? colors.editingValid : undefined,
+			...(dragTarget ? getDropTargetStyle(colors) : {}),
 		}}
 		ref={props.refObj ?? null}
 		draggable={!useContext(DragLockContext).value}
@@ -190,10 +197,7 @@ function TimelineActionElement(props: {
 			}
 		}}
 		onDragEnd={ctx.end}
-		onDragEnter={(e) => {
-			ctx.enter(e);
-			setDragTarget(true);
-		}}
+		onDragEnter={ctx.enter}
 		onDragLeave={(e) => {
 			ctx.leave(e);
 			setDragTarget(false);
@@ -203,9 +207,12 @@ function TimelineActionElement(props: {
 			setDragTarget(false);
 		}}
 		onDragOver={(e) => {
-			// TODO filter out event source element
-			// preventDefault enables this to receive drops
-			e.preventDefault();
+			if (!props.isSelected) {
+				// preventDefault enables this to receive drops
+				e.preventDefault();
+				ctx.over(e);
+				setDragTarget(true);
+			}
 		}}
 		onClick={(e) => {
 			ctx.setSelected(true);
@@ -619,6 +626,9 @@ export function TimelineEditor() {
 	});
 
 	// We only allow dragging if an element is currently selected.
+	// This weird useRef structure lets us minimize the amount of re-rendering necessary by
+	// pushing CSS styling state down to each individual <tr> element. I did not empirically measure
+	// the performance difference, but it seems like this would cause a lot of overhead otherwise.
 	const dragDst = useRef<number | null>(null);
 	const dragHandlers = (i: number) => {
 		return {
@@ -626,24 +636,27 @@ export function TimelineEditor() {
 			end: (e: React.DragEvent) => {
 				dragDst.current = null;
 			},
-			enter: (e: React.DragEvent) => {
-				console.log("enter " + i);
+			enter: (e: React.DragEvent) => {},
+			over: (e: React.DragEvent) => {
 				dragDst.current = i;
 			},
 			leave: (e: React.DragEvent) => {
-				console.log("leave " + i);
 				dragDst.current = null;
 			},
 			drop: (e: React.DragEvent) => {
-				// TODO set above or below in dragover based on cursor position relative to self
-				if (dragDst !== null) {
+				if (dragDst.current !== null) {
 					const start = controller.record.selectionStartIndex ?? 0;
-					const distance = i - (start ?? 0);
+					let distance = i - (start ?? 0);
+					// If we need to move the item upwards, then we already have the correct offset.
+					// If it needs to move down, we need to subtract the length of the current selection.
+					if (distance > 0) {
+						distance -= controller.record.getSelectionLength();
+					}
 					if (distance !== 0) {
 						doRecordEdit((record) => record.moveSelected(distance));
 					}
-					console.log("drop " + i + " from " + start);
 				}
+				dragDst.current = null;
 			},
 			setSelected: (b: boolean) => {
 				bHandledSkillSelectionThisFrame.current = b;
