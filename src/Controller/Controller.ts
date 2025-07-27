@@ -1492,8 +1492,8 @@ class Controller {
 		if (!hasAtLeastOneSlot) {
 			this.timeline.addSlot();
 		}
-
-		this.setActiveSlot(0);
+		const initialActiveSlot = parseInt(getCachedValue("activeSlotIndex") ?? "0");
+		this.setActiveSlot(initialActiveSlot >= MAX_TIMELINE_SLOTS ? 0 : initialActiveSlot);
 	}
 
 	setActiveSlot(slot: number) {
@@ -1508,6 +1508,7 @@ class Controller {
 			console.assert(this.timeline.loadSlot(slot));
 		});
 		this.displayCurrentState();
+		setCachedValue("activeSlotIndex", slot.toString());
 	}
 
 	cloneActiveSlot() {

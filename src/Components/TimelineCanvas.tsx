@@ -74,6 +74,7 @@ let g_visibleWidth = 0;
 let g_isClickUpdate = false;
 let g_clickEvent: any = undefined; // valid when isClickUpdate is true
 let g_isMouseDownUpdate = false;
+let g_newSelectionIndices: (number | null)[] | undefined = undefined;
 let g_keyboardEvent: any = undefined;
 let g_mouseX = 0;
 let g_mouseY = 0;
@@ -1588,6 +1589,16 @@ function drawEverything() {
 				g_activeHoverTipImages,
 			);
 		}
+		if (g_newSelectionIndices) {
+			const [leftIndex, rightIndex] = g_newSelectionIndices;
+			if (leftIndex !== null && rightIndex !== null) {
+				controller.record.selectSingle(leftIndex);
+				controller.record.selectUntil(rightIndex);
+			} else {
+				controller.record.unselectAll();
+			}
+			controller.displayCurrentState();
+		}
 		if (g_isMouseDownUpdate && g_activeOnMouseDown) {
 			g_activeOnMouseDown();
 		}
@@ -1692,14 +1703,8 @@ export function TimelineCanvas(props: {
 					leftIndex !== lastSelectionBounds.current[0] ||
 					rightIndex !== lastSelectionBounds.current[1]
 				) {
-					if (leftIndex !== null && rightIndex !== null) {
-						controller.record.selectSingle(leftIndex);
-						controller.record.selectUntil(rightIndex);
-					} else {
-						controller.record.unselectAll();
-					}
-					controller.displayCurrentState();
 					lastSelectionBounds.current = [leftIndex, rightIndex];
+					g_newSelectionIndices = [leftIndex, rightIndex];
 				}
 			}
 		};
@@ -1770,6 +1775,7 @@ export function TimelineCanvas(props: {
 		// reset event flags
 		g_isClickUpdate = false;
 		g_isMouseDownUpdate = false;
+		g_newSelectionIndices = undefined;
 	}, [
 		// update when dependency props change
 		props.visibleLeft,

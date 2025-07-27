@@ -643,6 +643,53 @@ export function TimelineEditor() {
 			},
 		};
 	};
+	// Add a dummy footer <tr> at the end of the list to allow dragging an element to the end.
+	const [endDragTarget, setEndDragTarget] = useState(false);
+	const lockContext = useContext(DragLockContext);
+	const globalDragTarget = useContext(DragTargetContext);
+	if (actionsList.length > 0) {
+		const actionCount = actionsList.length;
+		const dragHandler = dragHandlers(actionCount);
+		actionsList.push(
+			<tr
+				key={actionCount}
+				tabIndex={-1}
+				style={{
+					height: "0.8em",
+					background: colors.bgHighContrast,
+					userSelect: "none",
+					...(endDragTarget ? getDropTargetStyle(colors) : {}),
+				}}
+				draggable={!lockContext.value}
+				onDragStart={(e) => e.preventDefault()}
+				onDragEnter={() => console.log("entered last")}
+				onDragLeave={(e) => {
+					setEndDragTarget(false);
+					globalDragTarget.setDragTarget(null, null);
+				}}
+				onDrop={(e) => {
+					setEndDragTarget(false);
+					dragHandler.drop(e);
+					globalDragTarget.setDragTarget(null, null);
+				}}
+				onDragOver={(e) => {
+					// preventDefault enables this to receive drops
+					if (controller.record.selectionEndIndex !== actionCount - 1) {
+						e.preventDefault();
+						setEndDragTarget(true);
+						globalDragTarget.setDragTarget(
+							actionCount,
+							controller.game.getDisplayTime(),
+						);
+					}
+				}}
+			>
+				<td style={{ border: "none" }}></td>
+				<td style={{ border: "none" }}></td>
+				<td style={{ border: "none" }}></td>
+			</tr>,
+		);
+	}
 
 	const thStyle: CSSProperties = {
 		backgroundColor: colors.bgHighContrast,
