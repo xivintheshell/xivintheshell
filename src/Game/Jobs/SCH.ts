@@ -102,6 +102,14 @@ export class SCHState extends GameState {
 		const recitationCd = this.hasTraitUnlocked("ENHANCED_RECITATION") ? 60 : 90;
 		this.cooldowns.set(new CoolDown("cd_DEPLOYMENT_TACTICS", deploymentCd, 1, 1));
 		this.cooldowns.set(new CoolDown("cd_RECITATION", recitationCd, 1, 1));
+		this.cooldowns.set(
+			new CoolDown(
+				"cd_SWIFTCAST",
+				this.hasTraitUnlocked("ENHANCED_SWIFTCAST") ? 40 : 60,
+				1,
+				1,
+			),
+		);
 
 		this.registerRecurringEvents([
 			{

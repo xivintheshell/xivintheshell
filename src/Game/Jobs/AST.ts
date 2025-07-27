@@ -93,6 +93,14 @@ export class ASTState extends GameState {
 		const ciStacks = this.hasTraitUnlocked("ENHANCED_CELESTIAL_INTERSECTION") ? 2 : 1;
 		this.cooldowns.set(new CoolDown("cd_ESSENTIAL_DIGNITY", 40, edStacks, edStacks));
 		this.cooldowns.set(new CoolDown("cd_CELESTIAL_INTERSECTION", 30, ciStacks, ciStacks));
+		this.cooldowns.set(
+			new CoolDown(
+				"cd_SWIFTCAST",
+				this.hasTraitUnlocked("ENHANCED_SWIFTCAST") ? 40 : 60,
+				1,
+				1,
+			),
+		);
 
 		this.registerRecurringEvents([
 			{

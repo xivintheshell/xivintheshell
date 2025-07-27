@@ -1,5 +1,11 @@
 [
 	{
+		"date": "7/26/25",
+		"changes": [
+			"[WHM][AST][SCH] Fixed a bug where Swiftcast's cooldown was set to 40s below level 100."
+		]
+	},
+	{
 		"date": "7/25/25",
 		"changes": [
 			"[SCH] Initial SCH implementation. Thanks to Caro for help with numbers and some mechanics.",

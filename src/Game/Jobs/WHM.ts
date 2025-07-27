@@ -77,6 +77,14 @@ export class WHMState extends GameState {
 		const tetraStacks = this.hasTraitUnlocked("ENHANCED_TETRAGRAMMATON") ? 2 : 1;
 		this.cooldowns.set(new CoolDown("cd_DIVINE_BENISON", 30, benisonStacks, benisonStacks));
 		this.cooldowns.set(new CoolDown("cd_TETRAGRAMMATON", 60, tetraStacks, tetraStacks));
+		this.cooldowns.set(
+			new CoolDown(
+				"cd_SWIFTCAST",
+				this.hasTraitUnlocked("ENHANCED_SWIFTCAST") ? 40 : 60,
+				1,
+				1,
+			),
+		);
 
 		this.registerRecurringEvents([
 			{
