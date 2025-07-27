@@ -174,15 +174,15 @@ function TimelineActionElement(props: {
 			{StaticFn.displayTime(props.usedAt, 3)}
 		</td>
 	) : undefined;
-	const [dragTarget, setDragTarget] = useState(false);
 	const globalDragTarget = useContext(DragTargetContext);
+	const isDragTarget = globalDragTarget.dragTargetIndex === props.index;
 	const lockContext = useContext(DragLockContext);
 	const localEditorContext = useContext(EditorDragContext)(props.index);
 	return <tr
 		style={{
 			...TR_STYLE,
 			background: bgColor,
-			...(dragTarget ? getDropTargetStyle(colors) : {}),
+			...(isDragTarget ? getDropTargetStyle(colors) : {}),
 		}}
 		ref={props.refObj ?? null}
 		draggable={!lockContext.value}
@@ -193,20 +193,17 @@ function TimelineActionElement(props: {
 			}
 		}}
 		onDragLeave={(e) => {
-			setDragTarget(false);
 			globalDragTarget.setDragTarget(null, null);
 		}}
 		onDrop={(e) => {
 			localEditorContext.drop(e);
-			setDragTarget(false);
 			globalDragTarget.setDragTarget(null, null);
 		}}
 		onDragOver={(e) => {
 			// preventDefault enables this to receive drops
 			e.preventDefault();
 			// Check if we're already the target to prevent extra re-renders
-			if (!props.isSelected && !dragTarget) {
-				setDragTarget(true);
+			if (!props.isSelected && !isDragTarget) {
 				globalDragTarget.setDragTarget(props.index, props.usedAt);
 			}
 		}}
@@ -641,12 +638,12 @@ export function TimelineEditor() {
 		};
 	};
 	// Add a dummy footer <tr> at the end of the list to allow dragging an element to the end.
-	const [endDragTarget, setEndDragTarget] = useState(false);
 	const lockContext = useContext(DragLockContext);
 	const globalDragTarget = useContext(DragTargetContext);
-	if (actionsList.length > 0) {
-		const actionCount = actionsList.length;
-		const dragHandler = dragHandlers(actionCount);
+	const actionCount = actionsList.length;
+	const dragHandler = dragHandlers(actionCount);
+	const isEndDragTarget = globalDragTarget.dragTargetIndex === actionCount;
+	if (actionCount > 0) {
 		actionsList.push(
 			<tr
 				key={actionCount}
@@ -655,16 +652,14 @@ export function TimelineEditor() {
 					height: "0.8em",
 					background: colors.bgHighContrast,
 					userSelect: "none",
-					...(endDragTarget ? getDropTargetStyle(colors) : {}),
+					...(isEndDragTarget ? getDropTargetStyle(colors) : {}),
 				}}
 				draggable={!lockContext.value}
 				onDragStart={(e) => e.preventDefault()}
 				onDragLeave={(e) => {
-					setEndDragTarget(false);
 					globalDragTarget.setDragTarget(null, null);
 				}}
 				onDrop={(e) => {
-					setEndDragTarget(false);
 					dragHandler.drop(e);
 					globalDragTarget.setDragTarget(null, null);
 				}}
@@ -672,8 +667,10 @@ export function TimelineEditor() {
 					// preventDefault enables this to receive drops
 					e.preventDefault();
 					// Check if we're already the target to prevent extra re-renders
-					if (!endDragTarget && controller.record.selectionEndIndex !== actionCount - 1) {
-						setEndDragTarget(true);
+					if (
+						!isEndDragTarget &&
+						controller.record.selectionEndIndex !== actionCount - 1
+					) {
 						globalDragTarget.setDragTarget(
 							actionCount,
 							controller.game.getDisplayTime(),

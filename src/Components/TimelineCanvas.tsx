@@ -1857,30 +1857,72 @@ export function TimelineCanvas(props: {
 					}
 					lastXDist = xDist;
 				}
-				const targetIsSelected = minIdx !== -1 && controller.record.isInSelection(minIdx);
-				if (!targetIsSelected) {
+				const originX = -g_visibleLeft + TimelineDimensions.leftBufferWidth;
+				// If the closest index turned out to be the last element, then also check against
+				// the end of the simulation.
+				let endDist = Infinity;
+				const cursors = g_renderingProps.sharedElements.filter(
+					(elem) => elem.type == ElemType.s_Cursor,
+				);
+				let endPos = undefined;
+				if (cursors.length > 0) {
+					endPos =
+						originX +
+						StaticFn.positionFromTimeAndScale(
+							cursors[cursors.length - 1].displayTime + g_renderingProps.countdown,
+							g_renderingProps.scale,
+						);
+					endDist = Math.abs(g_mouseX - endPos);
+				}
+				let rect = skillHitboxes.get(minIdx)!;
+				// This may look weird if the last element is a jump--may need to change later.
+				const allIndices = Array.from(skillHitboxes.keys());
+				let movingToEnd = false;
+				if (
+					endPos !== undefined &&
+					endDist < minDist &&
+					skillHitboxes.size > 0 &&
+					minIdx === allIndices[allIndices.length - 1]
+				) {
+					movingToEnd = true;
+					minIdx = allIndices[allIndices.length - 1] + 1;
+					rect = {
+						x: endPos,
+						y: 0,
+						w: 0,
+						h: 0,
+					};
+				}
+				// If we are not dragging the skill icon over itself, AND the selection does not contain
+				// the last element + the chosen drag target is the end sentinel, render the icon of the
+				// skill being dragged.
+				const skipDropPreview =
+					(minIdx !== -1 && controller.record.isInSelection(minIdx)) ||
+					(movingToEnd &&
+						controller.record.selectionEndIndex === allIndices[allIndices.length - 1]);
+				if (!skipDropPreview) {
 					// Draw the drop target cursor and image of the skill being dragged.
 					if (minIdx !== -1 && globalDragContext.dragTargetIndex !== minIdx) {
-						const rect = skillHitboxes.get(minIdx)!;
-						// I have no idea where the magic 20px number comes from
 						const targetTime =
-							StaticFn.timeFromPositionAndScale(rect.x - 20, g_renderingProps.scale) -
-							g_renderingProps.countdown;
+							StaticFn.timeFromPositionAndScale(
+								rect.x - originX,
+								g_renderingProps.scale,
+							) - g_renderingProps.countdown;
 						globalDragContext.setDragTarget(minIdx, targetTime);
 					}
-					const tmpAlpha = overlayContext.globalAlpha;
-					overlayContext.globalAlpha = 0.4;
-					overlayContext.drawImage(
-						getSkillIconImage(g_draggedSkillName),
-						g_mouseX,
-						g_mouseY,
-						SKILL_ICON_SIZE_PX,
-						SKILL_ICON_SIZE_PX,
-					);
-					overlayContext.globalAlpha = tmpAlpha;
 				} else {
 					globalDragContext.setDragTarget(null, null);
 				}
+				const tmpAlpha = overlayContext.globalAlpha;
+				overlayContext.globalAlpha = 0.4;
+				overlayContext.drawImage(
+					getSkillIconImage(g_draggedSkillName),
+					g_mouseX,
+					g_mouseY,
+					SKILL_ICON_SIZE_PX,
+					SKILL_ICON_SIZE_PX,
+				);
+				overlayContext.globalAlpha = tmpAlpha;
 			}
 
 			if (targetTime !== null) {
