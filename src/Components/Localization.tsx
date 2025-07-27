@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { BuffType, SkillUnavailableReason } from "../Game/Common";
 import { ContentNode } from "./Common";
 import { MdLanguage } from "react-icons/md";
@@ -367,12 +367,10 @@ export function localizeModifierTag(modifierType: PotencyModifierType): string {
 	return localize(modifierTags.get(modifierType) ?? { en: "unknown" }) as string;
 }
 
-export let getCurrentLanguage: () => Language = () => {
-	return "en";
-};
-let setCurrentLanguage: (lang: Language) => void = (lang) => {};
+// TODO convert this into a context
+export let getCurrentLanguage: () => Language = () => "en";
 
-function LanguageOption(props: { lang: Language }) {
+function LanguageOption(props: { lang: Language; setCurrentLanguage: (lang: Language) => void }) {
 	let text = "English";
 	if (props.lang === "zh") text = "中文";
 	if (props.lang === "ja") text = "日本語";
@@ -386,75 +384,51 @@ function LanguageOption(props: { lang: Language }) {
 			borderTop: props.lang === getCurrentLanguage() ? "1px solid " + colors.text : "none",
 		}}
 		onClick={() => {
-			setCurrentLanguage(props.lang);
+			props.setCurrentLanguage(props.lang);
 		}}
 	>
 		{text}
 	</div>;
 }
 
-export class SelectLanguage extends React.Component {
-	state: {
-		lang: Language;
+export function SelectLanguage() {
+	const savedLang = getCachedValue("language");
+	const startLang = savedLang === "zh" || savedLang === "ja" ? savedLang : "en";
+	const [lang, setLang] = useState<Language>(startLang);
+	const setCurrentLanguage = (lang: Language) => {
+		setLang(lang);
+		setCachedValue("language", lang);
 	};
-	constructor(props: {}) {
-		super(props);
-		let lang: Language = "en";
-		const savedLang = getCachedValue("language");
-		if (savedLang === "zh" || savedLang === "ja") lang = savedLang;
-		this.state = {
-			lang: lang,
+	useEffect(() => {
+		getCurrentLanguage = () => lang;
+		return () => {
+			getCurrentLanguage = () => "en";
 		};
-	}
+	});
+	useEffect(() => {
+		controller.updateAllDisplay();
+	}, [lang]);
 
-	componentDidMount() {
-		getCurrentLanguage = () => {
-			return this.state.lang;
-		};
-		setCurrentLanguage = (lang: Language) => {
-			this.setState({ lang: lang });
-			setCachedValue("language", lang);
-		};
-	}
-	componentDidUpdate(
-		prevProps: Readonly<{}>,
-		prevState: Readonly<{ lang: Language }>,
-		snapshot?: any,
-	) {
-		if (prevState.lang !== this.state.lang) {
-			controller.updateAllDisplay();
-		}
-	}
-
-	componentWillUnmount() {
-		getCurrentLanguage = () => {
-			return "en";
-		};
-		setCurrentLanguage = (lang) => {};
-	}
-
-	render() {
-		return <div
+	return <div
+		style={{
+			display: "inline-block",
+			position: "absolute",
+			right: 68,
+		}}
+	>
+		<span
 			style={{
 				display: "inline-block",
-				position: "absolute",
-				right: 68,
+				fontSize: 17,
+				position: "relative",
+				marginRight: 2,
 			}}
 		>
-			<span
-				style={{
-					display: "inline-block",
-					fontSize: 17,
-					position: "relative",
-					marginRight: 2,
-				}}
-			>
-				<MdLanguage />
-			</span>
-			<div style={{ display: "inline-block", fontSize: 14, position: "relative", top: -4 }}>
-				<LanguageOption lang={"en"} />|
-				<LanguageOption lang={"zh"} />
-			</div>
-		</div>;
-	}
+			<MdLanguage />
+		</span>
+		<div style={{ display: "inline-block", fontSize: 14, position: "relative", top: -4 }}>
+			<LanguageOption lang={"en"} setCurrentLanguage={setCurrentLanguage} />|
+			<LanguageOption lang={"zh"} setCurrentLanguage={setCurrentLanguage} />
+		</div>
+	</div>;
 }
