@@ -1029,7 +1029,7 @@ function drawCursor(
 	y2: number,
 	y3: number,
 	color: string,
-	tip: string,
+	tip?: string,
 ) {
 	// triangle
 	g_ctx.fillStyle = color;
@@ -1073,7 +1073,10 @@ function drawCursor(
 	g_ctx.lineTo(x, c_maxTimelineHeight);
 	g_ctx.stroke();
 
-	testInteraction({ x: x - 3, y: 0, w: 6, h: c_maxTimelineHeight }, { hoverTip: [tip] });
+	testInteraction(
+		{ x: x - 3, y: 0, w: 6, h: c_maxTimelineHeight },
+		tip !== undefined ? { hoverTip: [tip] } : undefined,
+	);
 	g_ctx.setLineDash([]);
 }
 
@@ -1833,7 +1836,6 @@ export function TimelineCanvas(props: {
 					activeSlotStartY,
 					activeSlotStartY + slotHeight,
 					g_colors.dropTarget,
-					localize({ en: "target: ", zh: "目标：" }) + targetTime.toFixed(3),
 				);
 			}
 		}

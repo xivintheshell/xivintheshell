@@ -202,7 +202,8 @@ function TimelineActionElement(props: {
 			globalDragTarget.setDragTarget(null, null);
 		}}
 		onDragOver={(e) => {
-			if (!props.isSelected) {
+			// Check if we're already the target to prevent extra re-renders
+			if (!props.isSelected && !dragTarget) {
 				// preventDefault enables this to receive drops
 				e.preventDefault();
 				setDragTarget(true);
@@ -620,10 +621,6 @@ export function TimelineEditor() {
 		);
 	});
 
-	// We only allow dragging if an element is currently selected.
-	// This weird useRef structure lets us minimize the amount of re-rendering necessary by
-	// pushing CSS styling state down to each individual <tr> element. I did not empirically measure
-	// the performance difference, but it seems like this would cause a lot of overhead otherwise.
 	const dragHandlers = (i: number) => {
 		return {
 			drop: (e: React.DragEvent) => {
@@ -673,8 +670,9 @@ export function TimelineEditor() {
 					globalDragTarget.setDragTarget(null, null);
 				}}
 				onDragOver={(e) => {
-					// preventDefault enables this to receive drops
-					if (controller.record.selectionEndIndex !== actionCount - 1) {
+					// Check if we're already the target to prevent extra re-renders
+					if (!endDragTarget && controller.record.selectionEndIndex !== actionCount - 1) {
+						// preventDefault enables this to receive drops
 						e.preventDefault();
 						setEndDragTarget(true);
 						globalDragTarget.setDragTarget(
