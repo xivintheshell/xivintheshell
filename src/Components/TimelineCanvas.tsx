@@ -68,13 +68,12 @@ export type TimelineRenderingProps = {
 const c_maxTimelineHeight = 400;
 
 let g_ctx: CanvasRenderingContext2D;
-// Used to synchronize timeline canvas and overlay for drawing cursors. Very unidiomatic.
-let cursorStartY = 0;
 
 let g_visibleLeft = 0;
 let g_visibleWidth = 0;
 let g_isClickUpdate = false;
 let g_clickEvent: any = undefined; // valid when isClickUpdate is true
+let g_isMouseDownUpdate = false;
 let g_keyboardEvent: any = undefined;
 let g_mouseX = 0;
 let g_mouseY = 0;
@@ -86,6 +85,7 @@ let g_colors: ThemeColors;
 let g_activeHoverTip: string[] | undefined = undefined;
 let g_activeHoverTipImages: any[] | undefined = undefined;
 let g_activeOnClick: (() => void) | undefined = undefined;
+let g_activeOnMouseDown: (() => void) | undefined = undefined;
 
 let g_renderingProps: TimelineRenderingProps = {
 	timelineWidth: 0,
@@ -109,6 +109,18 @@ let g_renderingProps: TimelineRenderingProps = {
 let cachedPointerMouse = false;
 let readback_pointerMouse = false;
 
+// BEGIN CANVAS OVERLAY STATE
+// Used to synchronize timeline canvas and overlay for drawing cursors. Very unidiomatic.
+let cursorStartY = 0;
+// Used to determine whether a selection overlaps a given skill. Very unidiomatic.
+// Needs to be re-populated every time we re-draw the active timeline in `drawSkills`.
+const skillHitboxes = new Map<number, Rect>();
+// Determines whether we're drawing a rectangle to highlight multiple skills on the canvas.
+let bgSelecting = false;
+let selectStartX = 0;
+let selectStartY = 0;
+// END CANVAS OVERLAY STATE
+
 // qol: event capture mask? So can provide a layer that overwrites keyboard event only and not affect the rest
 // all coordinates in canvas space
 function testInteraction(
@@ -116,6 +128,7 @@ function testInteraction(
 	params?: {
 		hoverTip?: string[];
 		onClick?: () => void;
+		onMouseDown?: () => void;
 		pointerMouse?: boolean;
 		hoverImages?: any[];
 	},
@@ -129,14 +142,20 @@ function testInteraction(
 		g_activeHoverTip = params?.hoverTip;
 		g_activeHoverTipImages = params?.hoverImages;
 		g_activeOnClick = params?.onClick;
+		g_activeOnMouseDown = params?.onMouseDown;
 		readback_pointerMouse = params?.pointerMouse === true;
 	}
 }
 
 const onClickTimelineBackground = () => {
-	// clicked on background:
+	// always fires after both mousedown + mouseup
+	bgSelecting = false;
+};
+
+const onMouseDownTimelineBackground = () => {
 	controller.record.unselectAll();
 	controller.displayCurrentState();
+	bgSelecting = true;
 };
 
 function drawTip(lines: string[], canvasWidth: number, canvasHeight: number, images?: any[]) {
@@ -835,13 +854,19 @@ function drawSkills(
 		g_ctx.fillText("x" + c.count.toString(), c.x, c.y);
 	});
 
+	const rectWithBgInteract = (r: Rect) => {
+		g_ctx.rect(r.x, r.y, r.w, r.h);
+		if (interactive)
+			testInteraction(r, {
+				onClick: onClickTimelineBackground,
+				onMouseDown: onMouseDownTimelineBackground,
+			});
+	};
+
 	// purple
 	g_ctx.fillStyle = g_colors.timeline.castBar;
 	g_ctx.beginPath();
-	purpleLockBars.forEach((r) => {
-		g_ctx.rect(r.x, r.y, r.w, r.h);
-		if (interactive) testInteraction(r, { onClick: onClickTimelineBackground });
-	});
+	purpleLockBars.forEach(rectWithBgInteract);
 	g_ctx.fill();
 
 	// snapshot bar
@@ -857,45 +882,44 @@ function drawSkills(
 	// green
 	g_ctx.fillStyle = g_colors.timeline.gcdBar;
 	g_ctx.beginPath();
-	gcdBars.forEach((r) => {
-		g_ctx.rect(r.x, r.y, r.w, r.h);
-		if (interactive) testInteraction(r, { onClick: onClickTimelineBackground });
-	});
+	gcdBars.forEach(rectWithBgInteract);
 	g_ctx.fill();
 
 	// grey
 	g_ctx.fillStyle = g_colors.timeline.lockBar;
 	g_ctx.beginPath();
-	greyLockBars.forEach((r) => {
-		g_ctx.rect(r.x, r.y, r.w, r.h);
-		if (interactive) testInteraction(r, { onClick: onClickTimelineBackground });
-	});
+	greyLockBars.forEach(rectWithBgInteract);
 	g_ctx.fill();
 
 	covers.forEach((coverArray, buffType) => {
 		g_ctx.fillStyle = coverInfo.get(buffType)!.color;
 		g_ctx.beginPath();
-		coverArray.forEach((r) => {
-			g_ctx.rect(r.x, r.y, r.w, r.h);
-			if (interactive) testInteraction(r, { onClick: onClickTimelineBackground });
-		});
+		coverArray.forEach(rectWithBgInteract);
 		g_ctx.fill();
 	});
 
 	// buffCovers
 	g_ctx.fillStyle = g_colors.timeline.buffCover;
 	g_ctx.beginPath();
-	buffCovers.forEach((r) => {
-		g_ctx.rect(r.x, r.y, r.w, r.h);
-		if (interactive) testInteraction(r, { onClick: onClickTimelineBackground });
-	});
+	buffCovers.forEach(rectWithBgInteract);
 	g_ctx.fill();
 
 	// icons
 	g_ctx.beginPath();
+	if (interactive) {
+		skillHitboxes.clear();
+	}
 	skillIcons.forEach((icon) => {
 		g_ctx.drawImage(getSkillIconImage(icon.elem.skillName), icon.x, icon.y, 28, 28);
 		const node = icon.elem.node;
+		if (interactive) {
+			skillHitboxes.set(icon.elem.actionIndex, {
+				x: icon.x,
+				y: icon.y,
+				w: 28,
+				h: 28,
+			});
+		}
 
 		const lines: string[] = [];
 		const buffImages: HTMLImageElement[] = [];
@@ -1187,6 +1211,19 @@ export function drawMarkerTracks(originX: number, originY: number, ignoreVisible
 	return numTracks * TimelineDimensions.trackHeight;
 }
 
+function drawSelectionRect(g_ctx: CanvasRenderingContext2D, rect: Rect) {
+	g_ctx.fillStyle = "rgba(147, 112, 219, 0.15)";
+	g_ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+	g_ctx.strokeStyle = "rgba(147, 112, 219, 0.5)";
+	g_ctx.lineWidth = 1;
+	g_ctx.beginPath();
+	g_ctx.moveTo(rect.x, rect.y);
+	g_ctx.lineTo(rect.x, rect.y + rect.h);
+	g_ctx.moveTo(rect.x + rect.w, rect.y);
+	g_ctx.lineTo(rect.x + rect.w, rect.y + rect.h);
+	g_ctx.stroke();
+}
+
 export function drawTimelines(
 	originX: number,
 	originY: number,
@@ -1306,7 +1343,6 @@ export function drawTimelines(
 
 		// selection rect
 		if (g_renderingProps.showSelection && isActiveSlot && !isImageExportMode) {
-			g_ctx.fillStyle = "rgba(147, 112, 219, 0.15)";
 			const selectionLeftPx =
 				displayOriginX +
 				StaticFn.positionFromTimeAndScale(
@@ -1318,23 +1354,12 @@ export function drawTimelines(
 					g_renderingProps.selectionStartDisplayTime,
 				g_renderingProps.scale,
 			);
-			g_ctx.fillRect(
-				selectionLeftPx,
-				currentY,
-				selectionWidthPx,
-				TimelineDimensions.renderSlotHeight(),
-			);
-			g_ctx.strokeStyle = "rgba(147, 112, 219, 0.5)";
-			g_ctx.lineWidth = 1;
-			g_ctx.beginPath();
-			g_ctx.moveTo(selectionLeftPx, currentY);
-			g_ctx.lineTo(selectionLeftPx, currentY + TimelineDimensions.renderSlotHeight());
-			g_ctx.moveTo(selectionLeftPx + selectionWidthPx, currentY);
-			g_ctx.lineTo(
-				selectionLeftPx + selectionWidthPx,
-				currentY + TimelineDimensions.renderSlotHeight(),
-			);
-			g_ctx.stroke();
+			drawSelectionRect(g_ctx, {
+				x: selectionLeftPx,
+				y: currentY,
+				w: selectionWidthPx,
+				h: TimelineDimensions.renderSlotHeight(),
+			});
 		}
 	}
 	// countdown grey rect
@@ -1538,7 +1563,7 @@ function drawEverything() {
 	g_ctx.fillRect(0, 0, g_visibleWidth + 1, g_renderingProps.timelineHeight + 1);
 	testInteraction(
 		{ x: 0, y: 0, w: g_visibleWidth, h: c_maxTimelineHeight },
-		{ onClick: onClickTimelineBackground },
+		{ onClick: onClickTimelineBackground, onMouseDown: onMouseDownTimelineBackground },
 	);
 
 	currentHeight += drawRuler(timelineOrigin);
@@ -1563,6 +1588,9 @@ function drawEverything() {
 				g_activeHoverTipImages,
 			);
 		}
+		if (g_isMouseDownUpdate && g_activeOnMouseDown) {
+			g_activeOnMouseDown();
+		}
 		if (g_isClickUpdate && g_activeOnClick) {
 			g_activeOnClick();
 		}
@@ -1579,11 +1607,21 @@ export let timelineCanvasOnMouseMove: (x: number, y: number) => void = (x: numbe
 export let timelineCanvasOnMouseEnter: () => void = () => {};
 export let timelineCanvasOnMouseLeave: () => void = () => {};
 export let timelineCanvasOnClick: (e: any) => void = (e: any) => {};
+export let timelineCanvasOnMouseDown: (x: number, y: number) => void = (x, y) => {};
 export let timelineCanvasOnKeyDown: (e: any) => void = (e: any) => {};
 
 export const timelineCanvasGetPointerMouse: () => boolean = () => {
 	return readback_pointerMouse;
 };
+
+// https://stackoverflow.com/a/16012490
+function rectsOverlap(a: Rect, b: Rect): boolean {
+	const aLeftOfB = a.x + a.w < b.x;
+	const aRightOfB = a.x > b.x + b.w;
+	const aAboveB = a.y + a.h < b.y;
+	const aBelowB = a.y > b.y + b.h;
+	return !(aLeftOfB || aRightOfB || aAboveB || aBelowB);
+}
 
 export function TimelineCanvas(props: {
 	timelineHeight: number;
@@ -1605,6 +1643,7 @@ export function TimelineCanvas(props: {
 	const [keyCounter, setKeyCounter] = useState(0);
 	const activeColorTheme = useContext(ColorThemeContext);
 
+	const lastSelectionBounds = useRef<(number | null)[]>([null, null]);
 	// initialization
 	useEffect(() => {
 		timelineCanvasOnMouseMove = (x: number, y: number) => {
@@ -1612,6 +1651,57 @@ export function TimelineCanvas(props: {
 			g_mouseY = y;
 			setMouseX(g_mouseX);
 			setMouseY(g_mouseY);
+			if (bgSelecting) {
+				// Re-compute which skills are currently selected.
+				// We do this by iterating the leftmost and rightmost skill icon "hitboxes" to find our
+				// bounds. Since the y-ranges of oGCD and GCD skills are always fixed, we could potentially
+				// split hitboxes for those skills into separate lists as an optimization.
+				// However, since the total number of skills will always be relativly small, I view this
+				// as a premature optimization.
+				const selectionRect = {
+					x: Math.min(selectStartX, x),
+					y: Math.min(selectStartY, y),
+					w: Math.abs(selectStartX - x),
+					h: Math.abs(selectStartY - y),
+				};
+				let leftIndex = null;
+				let rightIndex = null;
+				// Check "left" bound:
+				for (const [actionIndex, rect] of skillHitboxes.entries()) {
+					if (rectsOverlap(rect, selectionRect)) {
+						leftIndex = actionIndex;
+						rightIndex = actionIndex;
+						break;
+					}
+				}
+				if (rightIndex !== null) {
+					// Check "right" bound:
+					for (const [actionIndex, rect] of Array.from(
+						skillHitboxes.entries(),
+					).reverse()) {
+						if (rightIndex >= actionIndex) {
+							break;
+						}
+						if (rectsOverlap(rect, selectionRect)) {
+							rightIndex = actionIndex;
+							break;
+						}
+					}
+				}
+				if (
+					leftIndex !== lastSelectionBounds.current[0] ||
+					rightIndex !== lastSelectionBounds.current[1]
+				) {
+					if (leftIndex !== null && rightIndex !== null) {
+						controller.record.selectSingle(leftIndex);
+						controller.record.selectUntil(rightIndex);
+					} else {
+						controller.record.unselectAll();
+					}
+					controller.displayCurrentState();
+					lastSelectionBounds.current = [leftIndex, rightIndex];
+				}
+			}
 		};
 		timelineCanvasOnMouseEnter = () => {
 			setMouseHovered(true);
@@ -1627,6 +1717,13 @@ export function TimelineCanvas(props: {
 				setClickCounter((c) => c + 1);
 				g_isClickUpdate = true;
 				g_clickEvent = e;
+			}
+		};
+		timelineCanvasOnMouseDown = (x: number, y: number) => {
+			if (!controller.shouldLoop) {
+				g_isMouseDownUpdate = true;
+				selectStartX = x;
+				selectStartY = y;
 			}
 		};
 		timelineCanvasOnKeyDown = (e: any) => {
@@ -1646,6 +1743,7 @@ export function TimelineCanvas(props: {
 	useEffect(() => {
 		g_activeHoverTip = undefined;
 		g_activeOnClick = undefined;
+		g_activeOnMouseDown = undefined;
 		g_visibleLeft = props.visibleLeft;
 		g_visibleWidth = props.visibleWidth;
 		g_colors = getThemeColors(activeColorTheme);
@@ -1671,6 +1769,7 @@ export function TimelineCanvas(props: {
 
 		// reset event flags
 		g_isClickUpdate = false;
+		g_isMouseDownUpdate = false;
 	}, [
 		// update when dependency props change
 		props.visibleLeft,
@@ -1684,10 +1783,10 @@ export function TimelineCanvas(props: {
 		dpr,
 	]);
 
+	// Draw overlay stuff to avoid redrawing the main canvas
 	useEffect(() => {
 		const overlayContext = overlayRef.current?.getContext("2d");
 		const targetTime = props.dragTargetDisplayTime;
-		console.log(props.dragTargetDisplayTime);
 		if (overlayContext) {
 			overlayContext.clearRect(
 				0,
@@ -1695,6 +1794,16 @@ export function TimelineCanvas(props: {
 				overlayRef.current?.width ?? 0,
 				overlayRef.current?.height ?? 0,
 			);
+			if (bgSelecting) {
+				const selectionRect = {
+					x: Math.min(selectStartX, g_mouseX),
+					y: Math.min(selectStartY, g_mouseY),
+					w: Math.abs(selectStartX - g_mouseX),
+					h: Math.abs(selectStartY - g_mouseY),
+				};
+				drawSelectionRect(overlayContext, selectionRect);
+			}
+
 			if (targetTime !== null) {
 				// TODO share code with drawCursors
 				const timelineOrigin = -g_visibleLeft + TimelineDimensions.leftBufferWidth; // fragCoord.x (...) of rawTime=0.
@@ -1722,7 +1831,7 @@ export function TimelineCanvas(props: {
 				);
 			}
 		}
-	}, [props.dragTargetDisplayTime]);
+	}, [props.dragTargetDisplayTime, mouseX, mouseY]);
 
 	// One layer of canvas is responsible for drawing the majority of timeline components,
 	// while a second layer is responsible for drawing transient elements that do not require

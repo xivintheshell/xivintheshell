@@ -13,6 +13,7 @@ import {
 	timelineCanvasOnMouseEnter,
 	timelineCanvasOnMouseLeave,
 	timelineCanvasOnMouseMove,
+	timelineCanvasOnMouseDown,
 } from "./TimelineCanvas";
 import { localize } from "./Localization";
 import { getCurrentThemeColors, getThemeField, ColorThemeContext } from "./ColorTheme";
@@ -124,6 +125,14 @@ function TimelineMain() {
 					const x = e.clientX - rect.left;
 					const y = e.clientY - rect.top;
 					timelineCanvasOnMouseMove(x, y);
+				}
+			}}
+			onMouseDown={(e) => {
+				if (myRef.current) {
+					const rect = myRef.current.getBoundingClientRect();
+					const x = e.clientX - rect.left;
+					const y = e.clientY - rect.top;
+					timelineCanvasOnMouseDown(x, y);
 				}
 			}}
 			onMouseEnter={(e) => {
