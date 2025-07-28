@@ -10,7 +10,7 @@ import React, {
 } from "react";
 import { controller } from "../Controller/Controller";
 import { ActionNode, ActionType, Record, RecordValidStatus } from "../Controller/Record";
-import { StaticFn } from "./Common";
+import { StaticFn, Columns } from "./Common";
 import { getCurrentThemeColors, ThemeColors } from "./ColorTheme";
 import {
 	localize,
@@ -25,7 +25,7 @@ import {
 	DragLockContext,
 	DragTargetContext,
 } from "./Timeline";
-import { Columns } from "./Common";
+import { getSkill } from "../Game/Skills";
 import { SkillReadyStatus } from "../Game/Common";
 
 // about 0.25
@@ -202,7 +202,21 @@ function TimelineActionElement(props: {
 		onDragOver={(e) => {
 			// preventDefault enables this to receive drops
 			e.preventDefault();
-			globalDragTarget.setDragTarget(props.index, props.usedAt);
+			// If the action being dragged is an oGCD, place it at the end of the PRIOR node's
+			// animation lock.
+			// This is not fully robust and doesn't account for GCDs moved around wait events,
+			// but it's good enough.
+			let targetTime = props.usedAt;
+			const priorNode =
+				props.index > 0 ? controller.record.actions[props.index - 1] : undefined;
+			if (
+				priorNode?.tmp_endLockTime !== undefined &&
+				props.node.info.type === ActionType.Skill &&
+				getSkill(controller.game.job, props.node.info.skillName).cdName === "cd_GCD"
+			) {
+				targetTime = priorNode.tmp_endLockTime - controller.gameConfig.countdown;
+			}
+			globalDragTarget.setDragTarget(props.index, targetTime);
 		}}
 		onClick={(e) => {
 			localEditorContext.setSelected(true);

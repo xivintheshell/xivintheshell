@@ -25,7 +25,6 @@ import {
 	TimelineDrawOptions,
 } from "./Common";
 import { BuffType } from "../Game/Common";
-import { ActionKey } from "../Game/Data";
 import { getSkillIconImage } from "./Skills";
 import { buffIconImages } from "./Buffs";
 import { controller } from "../Controller/Controller";
@@ -76,7 +75,7 @@ let g_isClickUpdate = false;
 let g_clickEvent: any = undefined; // valid when isClickUpdate is true
 let g_isMouseDownUpdate = false;
 let g_newSelectionIndices: (number | null)[] | undefined = undefined;
-let g_draggedSkillName: ActionKey | undefined = undefined;
+let g_draggedSkillElem: SkillElem | undefined = undefined;
 let g_keyboardEvent: any = undefined;
 let g_mouseX = 0;
 let g_mouseY = 0;
@@ -159,7 +158,7 @@ const onClickTimelineBackground = () => {
 };
 
 const onMouseDownTimelineBackground = () => {
-	g_draggedSkillName = undefined;
+	g_draggedSkillElem = undefined;
 	controller.record.unselectAll();
 	controller.displayCurrentState();
 	bgSelecting = true;
@@ -1002,7 +1001,7 @@ function drawSkills(
 				{
 					hoverTip: lines,
 					onClick: () => {
-						if (g_draggedSkillName === undefined) {
+						if (g_draggedSkillElem === undefined) {
 							controller.timeline.onClickTimelineAction(
 								icon.elem.actionIndex,
 								g_clickEvent ? g_clickEvent.shiftKey : false,
@@ -1012,7 +1011,7 @@ function drawSkills(
 					},
 					onMouseDown: () => {
 						if (!g_clickEvent?.shiftKey) {
-							g_draggedSkillName = icon.elem.skillName;
+							g_draggedSkillElem = icon.elem;
 							if (!controller.record.isInSelection(icon.elem.actionIndex)) {
 								controller.record.selectSingle(icon.elem.actionIndex);
 							}
@@ -1847,7 +1846,7 @@ export function TimelineCanvas(props: {
 				setCancelDrag(false);
 				const targetIndex = globalDragContext.dragTargetIndex;
 				globalDragContext.setDragTarget(null, null);
-				g_draggedSkillName = undefined;
+				g_draggedSkillElem = undefined;
 				if (targetIndex !== null) {
 					// Confirm the skill movement, and reset global drag state.
 					const start = controller.record.selectionStartIndex ?? 0;
@@ -1876,7 +1875,7 @@ export function TimelineCanvas(props: {
 					g_renderingProps.countdown,
 					g_renderingProps.scale,
 				);
-			if (g_draggedSkillName !== undefined && !lockContext.value) {
+			if (g_draggedSkillElem !== undefined && !lockContext.value) {
 				// Linear search for the skill hitbox with the smallest x distance, and set it as the new drag target
 				let minDist = Infinity;
 				let minIdx = -1;
@@ -1922,6 +1921,22 @@ export function TimelineCanvas(props: {
 				}
 				// Draw the drop target cursor and image of the skill being dragged.
 				if (minIdx !== -1 && globalDragContext.dragTargetIndex !== minIdx) {
+					// If the action being dragged is an oGCD, place it at the end of the PRIOR node's
+					// animation lock.
+					// This is not fully robust and doesn't account for GCDs moved around wait events,
+					// but it's good enough.
+					if (minIdx > 0 && !g_draggedSkillElem.isGCD) {
+						const priorNode = controller.record.actions[minIdx - 1];
+						if (priorNode.tmp_endLockTime !== undefined) {
+							// node locks use absolute time (ignore countdown)
+							targetX =
+								timelineOriginX +
+								StaticFn.positionFromTimeAndScale(
+									priorNode.tmp_endLockTime,
+									g_renderingProps.scale,
+								);
+						}
+					}
 					const targetTime =
 						StaticFn.timeFromPositionAndScale(
 							targetX - timelineOriginX,
@@ -1932,7 +1947,7 @@ export function TimelineCanvas(props: {
 				const tmpAlpha = overlayContext.globalAlpha;
 				overlayContext.globalAlpha = 0.4;
 				overlayContext.drawImage(
-					getSkillIconImage(g_draggedSkillName),
+					getSkillIconImage(g_draggedSkillElem.skillName),
 					g_mouseX,
 					g_mouseY,
 					SKILL_ICON_SIZE_PX,
