@@ -249,14 +249,16 @@ function TimelineTabs() {
 					zh: <div>锁定是，禁止用单击并拖动来改变技能轴。</div>,
 				})}
 			/>{" "}
-			<IconContext.Provider value={{
-				color: dragLock ? getThemeField(colors, "accent") as string : undefined,
-				style: {
-					width: 12,
-					height: 12,
-					verticalAlign: "baseline",
-				},
-			}}>
+			<IconContext.Provider
+				value={{
+					color: dragLock ? (getThemeField(colors, "accent") as string) : undefined,
+					style: {
+						width: 12,
+						height: 12,
+						verticalAlign: "baseline",
+					},
+				}}
+			>
 				{dragLock ? <FaLock /> : <FaLockOpen />}
 			</IconContext.Provider>
 		</div>
