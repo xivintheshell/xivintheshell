@@ -1340,10 +1340,13 @@ export class Config extends React.Component {
 				<tbody>
 					<tr>
 						<th>{localize({ en: "GCD time", zh: "GCD时间" })}</th>
-						<th>{localize({ en: "FPS tax", zh: "帧率税" })}</th>
+						<th>{localize({ en: "After FPS tax", zh: "帧率税后" })}</th>
 					</tr>
 					{[2.5, 3.0, 3.5, 4.0].map((recast, i) => <tr key={"gcdPreview" + i.toString()}>
-						<td>{this.getDefaultGcd(recast).toFixed(2)}</td>
+						<td>
+							{this.getDefaultGcd(recast).toFixed(2)} ({recast.toFixed(2)}{" "}
+							{localize({ en: "base", zh: "原始" })})
+						</td>
 						<td>{this.getDefaultGcdTax(recast).toFixed(3)}</td>
 					</tr>)}
 				</tbody>
