@@ -202,10 +202,7 @@ function TimelineActionElement(props: {
 		onDragOver={(e) => {
 			// preventDefault enables this to receive drops
 			e.preventDefault();
-			// Check if we're already the target to prevent extra re-renders
-			if (!props.isSelected && !isDragTarget) {
-				globalDragTarget.setDragTarget(props.index, props.usedAt);
-			}
+			globalDragTarget.setDragTarget(props.index, props.usedAt);
 		}}
 		onClick={(e) => {
 			localEditorContext.setSelected(true);
@@ -666,16 +663,7 @@ export function TimelineEditor() {
 				onDragOver={(e) => {
 					// preventDefault enables this to receive drops
 					e.preventDefault();
-					// Check if we're already the target to prevent extra re-renders
-					if (
-						!isEndDragTarget &&
-						controller.record.selectionEndIndex !== actionCount - 1
-					) {
-						globalDragTarget.setDragTarget(
-							actionCount,
-							controller.game.getDisplayTime(),
-						);
-					}
+					globalDragTarget.setDragTarget(actionCount, controller.game.getDisplayTime());
 				}}
 			>
 				<td style={{ border: "none" }}></td>

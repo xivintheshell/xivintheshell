@@ -38,7 +38,7 @@ import {
 } from "./Localization";
 import { setEditingMarkerValues } from "./TimelineMarkers";
 import { getThemeColors, ThemeColors, ColorThemeContext } from "./ColorTheme";
-import { scrollEditorToFirstSelected } from "./TimelineEditor";
+import { scrollEditorToFirstSelected, updateInvalidStatus } from "./TimelineEditor";
 import { bossIsUntargetable } from "../Controller/DamageStatistics";
 import { updateTimelineView, DragTargetContext } from "./Timeline";
 import { ShellJob } from "../Game/Data/Jobs";
@@ -1002,14 +1002,21 @@ function drawSkills(
 				{
 					hoverTip: lines,
 					onClick: () => {
-						controller.timeline.onClickTimelineAction(
-							icon.elem.actionIndex,
-							g_clickEvent ? g_clickEvent.shiftKey : false,
-						);
-						scrollEditorToFirstSelected();
+						if (g_draggedSkillName === undefined) {
+							controller.timeline.onClickTimelineAction(
+								icon.elem.actionIndex,
+								g_clickEvent ? g_clickEvent.shiftKey : false,
+							);
+							scrollEditorToFirstSelected();
+						}
 					},
 					onMouseDown: () => {
-						g_draggedSkillName = icon.elem.skillName;
+						if (!g_clickEvent?.shiftKey) {
+							g_draggedSkillName = icon.elem.skillName;
+							if (!controller.record.isInSelection(icon.elem.actionIndex)) {
+								controller.record.selectSingle(icon.elem.actionIndex);
+							}
+						}
 					},
 					pointerMouse: true,
 					hoverImages: buffImages,
@@ -1746,7 +1753,6 @@ export function TimelineCanvas(props: {
 				g_isClickUpdate = true;
 				g_clickEvent = e;
 			}
-			g_draggedSkillName = undefined;
 			// Apparently we can't access the global context object from here, so we need to
 			// signal for the state change locally.
 			setCancelDrag(true);
@@ -1838,9 +1844,37 @@ export function TimelineCanvas(props: {
 			}
 			if (cancelDrag) {
 				setCancelDrag(false);
+				const targetIndex = globalDragContext.dragTargetIndex;
 				globalDragContext.setDragTarget(null, null);
 				g_draggedSkillName = undefined;
+				if (targetIndex !== null) {
+					// Confirm the skill movement, and reset global drag state.
+					const start = controller.record.selectionStartIndex ?? 0;
+					let distance = targetIndex - (start ?? 0);
+					// If we need to move the item upwards, then we already have the correct offset.
+					// If it needs to move down, we need to subtract the length of the current selection.
+					if (distance > 0) {
+						distance -= controller.record.getSelectionLength();
+					}
+					if (distance !== 0) {
+						// Even though we're automatically saving the edit, go through the whole song
+						// and dance of pretending an edit was made so state is properly synchronized.
+						controller.record.moveSelected(distance);
+						controller.checkRecordValidity(controller.record, 0, true);
+						controller.autoSave();
+						updateInvalidStatus();
+						updateTimelineView();
+						controller.displayCurrentState();
+					}
+				}
 			}
+			const timelineOriginX = -g_visibleLeft + TimelineDimensions.leftBufferWidth;
+			const displayOriginX =
+				timelineOriginX +
+				StaticFn.positionFromTimeAndScale(
+					g_renderingProps.countdown,
+					g_renderingProps.scale,
+				);
 			if (g_draggedSkillName !== undefined) {
 				// Linear search for the skill hitbox with the smallest x distance, and set it as the new drag target
 				let minDist = Infinity;
@@ -1857,7 +1891,6 @@ export function TimelineCanvas(props: {
 					}
 					lastXDist = xDist;
 				}
-				const originX = -g_visibleLeft + TimelineDimensions.leftBufferWidth;
 				// If the closest index turned out to be the last element, then also check against
 				// the end of the simulation.
 				let endDist = Infinity;
@@ -1867,51 +1900,33 @@ export function TimelineCanvas(props: {
 				let endPos = undefined;
 				if (cursors.length > 0) {
 					endPos =
-						originX +
+						timelineOriginX +
 						StaticFn.positionFromTimeAndScale(
 							cursors[cursors.length - 1].displayTime + g_renderingProps.countdown,
 							g_renderingProps.scale,
 						);
 					endDist = Math.abs(g_mouseX - endPos);
 				}
-				let rect = skillHitboxes.get(minIdx)!;
+				let targetX = skillHitboxes.get(minIdx)!.x;
 				// This may look weird if the last element is a jump--may need to change later.
 				const allIndices = Array.from(skillHitboxes.keys());
-				let movingToEnd = false;
 				if (
 					endPos !== undefined &&
 					endDist < minDist &&
 					skillHitboxes.size > 0 &&
 					minIdx === allIndices[allIndices.length - 1]
 				) {
-					movingToEnd = true;
 					minIdx = allIndices[allIndices.length - 1] + 1;
-					rect = {
-						x: endPos,
-						y: 0,
-						w: 0,
-						h: 0,
-					};
+					targetX = endPos;
 				}
-				// If we are not dragging the skill icon over itself, AND the selection does not contain
-				// the last element + the chosen drag target is the end sentinel, render the icon of the
-				// skill being dragged.
-				const skipDropPreview =
-					(minIdx !== -1 && controller.record.isInSelection(minIdx)) ||
-					(movingToEnd &&
-						controller.record.selectionEndIndex === allIndices[allIndices.length - 1]);
-				if (!skipDropPreview) {
-					// Draw the drop target cursor and image of the skill being dragged.
-					if (minIdx !== -1 && globalDragContext.dragTargetIndex !== minIdx) {
-						const targetTime =
-							StaticFn.timeFromPositionAndScale(
-								rect.x - originX,
-								g_renderingProps.scale,
-							) - g_renderingProps.countdown;
-						globalDragContext.setDragTarget(minIdx, targetTime);
-					}
-				} else {
-					globalDragContext.setDragTarget(null, null);
+				// Draw the drop target cursor and image of the skill being dragged.
+				if (minIdx !== -1 && globalDragContext.dragTargetIndex !== minIdx) {
+					const targetTime =
+						StaticFn.timeFromPositionAndScale(
+							targetX - timelineOriginX,
+							g_renderingProps.scale,
+						) - g_renderingProps.countdown;
+					globalDragContext.setDragTarget(minIdx, targetTime);
 				}
 				const tmpAlpha = overlayContext.globalAlpha;
 				overlayContext.globalAlpha = 0.4;
@@ -1926,18 +1941,9 @@ export function TimelineCanvas(props: {
 			}
 
 			if (targetTime !== null) {
-				// TODO share code with drawCursors
-				const timelineOrigin = -g_visibleLeft + TimelineDimensions.leftBufferWidth; // fragCoord.x (...) of rawTime=0.
-				const displayOriginX =
-					timelineOrigin +
-					StaticFn.positionFromTimeAndScale(
-						g_renderingProps.countdown,
-						g_renderingProps.scale,
-					);
 				const slotHeight = TimelineDimensions.renderSlotHeight();
 				const activeSlotStartY =
 					cursorStartY + g_renderingProps.activeSlotIndex * slotHeight;
-
 				const x =
 					displayOriginX +
 					StaticFn.positionFromTimeAndScale(targetTime, g_renderingProps.scale);

@@ -199,8 +199,14 @@ export function IntroSection(props: { job: ShellJob }) {
 								(effective when not running in real-time).
 							</li>
 							<li style={smallGap}>
-								Click on a buff applied to self to remove it. Unless it's ley lines,
-								in which case it can be re-enabled.
+								Click on a buff applied to self to remove it. Clicking on
+								ground-targeted buffs like BLM's Ley Lines, DRK's Salt and Darkness,
+								and SCH's Sacred Soil temporarily disables their effects, and
+								clicking enable re-enables them.
+							</li>
+							<li style={smallGap}>
+								Click and drag skills in the visual timeline, or use the "Timeline
+								Editor" tab at the bottom of the page to manually re-arrange them.
 							</li>
 						</ul>,
 						zh: <ul>
@@ -215,6 +221,7 @@ export function IntroSection(props: { job: ShellJob }) {
 								按 <ButtonIndicator text={"u"} />{" "}
 								删除时间线上的最后一个操作（实时模式下此操作无效）。
 							</li>
+							{/* TODO update before merging */}
 							<li style={smallGap}>
 								左键单击可以移除自己身上的buff。黑魔纹除外，黑魔纹在单击关闭后可以被再次点击开启。
 							</li>

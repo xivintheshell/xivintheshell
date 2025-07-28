@@ -276,6 +276,24 @@ export function Timeline() {
 		null,
 		null,
 	]);
+	const childDragTargetSetter = (index: number | null, time: number | null) => {
+		// Don't render the drag target indicators if the proposed move would have a distance of 0.
+		const start = controller.record.selectionStartIndex ?? 0;
+		let distance = (index ?? 0) - (start ?? 0);
+		// If we need to move the item upwards, then we already have the correct offset.
+		// If it needs to move down, we need to subtract the length of the current selection.
+		if (distance > 0) {
+			distance -= controller.record.getSelectionLength();
+		}
+		if (distance === 0 || (index !== null && controller.record.isInSelection(index))) {
+			index = null;
+			time = null;
+		}
+		// Prevent re-renders if the values are not new.
+		if (index !== dragTargetIndex || time !== dragTargetTime) {
+			setDragTarget([index, time]);
+		}
+	};
 	return <div
 		style={{
 			bottom: 0,
@@ -300,7 +318,7 @@ export function Timeline() {
 				value={{
 					dragTargetIndex: dragTargetIndex,
 					dragTargetTime: dragTargetTime,
-					setDragTarget: (index, time) => setDragTarget([index, time]),
+					setDragTarget: childDragTargetSetter,
 				}}
 			>
 				<TimelineMain />
