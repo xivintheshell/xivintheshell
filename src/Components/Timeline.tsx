@@ -1,5 +1,6 @@
 import React, { useRef, createContext, useContext, useState, useEffect } from "react";
 import { FaLockOpen, FaLock } from "react-icons/fa6";
+import { IconContext } from "react-icons";
 import { controller } from "../Controller/Controller";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
 import { Help, Slider, Tabs, TABS_TITLE_HEIGHT } from "./Common";
@@ -162,6 +163,7 @@ export const TIMELINE_SETTINGS_HEIGHT = 320;
 export const TIMELINE_COLUMNS_HEIGHT = TIMELINE_SETTINGS_HEIGHT - 40;
 function TimelineTabs() {
 	const { value: dragLock, setter: setDragLock } = useContext(DragLockContext);
+	const colors = useContext(ColorThemeContext);
 	return <div
 		style={{
 			position: "relative",
@@ -223,12 +225,11 @@ function TimelineTabs() {
 			height={TIMELINE_SETTINGS_HEIGHT}
 			defaultSelectedIndex={undefined}
 		/>
-		{/* TODO add description and style properly w/ bg shading */}
 		<div
 			style={{
 				position: "absolute",
 				top: 0,
-				right: 300,
+				right: 280,
 				height: TABS_TITLE_HEIGHT,
 				lineHeight: `${TABS_TITLE_HEIGHT}px`,
 				verticalAlign: "middle",
@@ -240,15 +241,24 @@ function TimelineTabs() {
 				setDragLock(!dragLock);
 			}}
 		>
-			{localize({ en: "click+drag lock", zh: "单击并拖动锁" })}{" "}
+			{localize({ en: "drag lock", zh: "拖动锁" })}{" "}
 			<Help
 				topic="dragLock"
 				content={localize({
-					en: <p>When locked, disables click/drag to rearrange timeline skills.</p>,
-					zh: <p>锁定是，禁止用单击并拖动来改变技能轴。</p>,
+					en: <div>When locked, disables click/drag to rearrange timeline skills.</div>,
+					zh: <div>锁定是，禁止用单击并拖动来改变技能轴。</div>,
 				})}
 			/>{" "}
-			{dragLock ? <FaLock /> : <FaLockOpen />}
+			<IconContext.Provider value={{
+				color: dragLock ? getThemeField(colors, "accent") as string : undefined,
+				style: {
+					width: 12,
+					height: 12,
+					verticalAlign: "baseline",
+				},
+			}}>
+				{dragLock ? <FaLock /> : <FaLockOpen />}
+			</IconContext.Provider>
 		</div>
 		<Slider
 			uniqueName={"timelineDisplayScale"}
@@ -277,17 +287,22 @@ export function Timeline() {
 		null,
 	]);
 	const childDragTargetSetter = (index: number | null, time: number | null) => {
-		// Don't render the drag target indicators if the proposed move would have a distance of 0.
-		const start = controller.record.selectionStartIndex ?? 0;
-		let distance = (index ?? 0) - (start ?? 0);
-		// If we need to move the item upwards, then we already have the correct offset.
-		// If it needs to move down, we need to subtract the length of the current selection.
-		if (distance > 0) {
-			distance -= controller.record.getSelectionLength();
-		}
-		if (distance === 0 || (index !== null && controller.record.isInSelection(index))) {
+		if (dragLock) {
 			index = null;
 			time = null;
+		} else {
+			// Don't render the drag target indicators if the proposed move would have a distance of 0.
+			const start = controller.record.selectionStartIndex ?? 0;
+			let distance = (index ?? 0) - (start ?? 0);
+			// If we need to move the item upwards, then we already have the correct offset.
+			// If it needs to move down, we need to subtract the length of the current selection.
+			if (distance > 0) {
+				distance -= controller.record.getSelectionLength();
+			}
+			if (distance === 0 || (index !== null && controller.record.isInSelection(index))) {
+				index = null;
+				time = null;
+			}
 		}
 		// Prevent re-renders if the values are not new.
 		if (index !== dragTargetIndex || time !== dragTargetTime) {

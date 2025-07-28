@@ -40,7 +40,7 @@ import { setEditingMarkerValues } from "./TimelineMarkers";
 import { getThemeColors, ThemeColors, ColorThemeContext } from "./ColorTheme";
 import { scrollEditorToFirstSelected, updateInvalidStatus } from "./TimelineEditor";
 import { bossIsUntargetable } from "../Controller/DamageStatistics";
-import { updateTimelineView, DragTargetContext } from "./Timeline";
+import { updateTimelineView, DragTargetContext, DragLockContext } from "./Timeline";
 import { ShellJob } from "../Game/Data/Jobs";
 import { LIMIT_BREAK_ACTIONS } from "../Game/Data/Shared/LimitBreak";
 
@@ -1684,6 +1684,7 @@ export function TimelineCanvas(props: {
 	const [cancelDrag, setCancelDrag] = useState(false);
 	const activeColorTheme = useContext(ColorThemeContext);
 	const globalDragContext = useContext(DragTargetContext);
+	const lockContext = useContext(DragLockContext);
 	const lastSelectionBounds = useRef<(number | null)[]>([null, null]);
 	// initialization
 	useEffect(() => {
@@ -1875,7 +1876,7 @@ export function TimelineCanvas(props: {
 					g_renderingProps.countdown,
 					g_renderingProps.scale,
 				);
-			if (g_draggedSkillName !== undefined) {
+			if (g_draggedSkillName !== undefined && !lockContext.value) {
 				// Linear search for the skill hitbox with the smallest x distance, and set it as the new drag target
 				let minDist = Infinity;
 				let minIdx = -1;
@@ -1957,7 +1958,7 @@ export function TimelineCanvas(props: {
 				);
 			}
 		}
-	}, [globalDragContext.dragTargetTime, mouseX, mouseY, cancelDrag]);
+	}, [lockContext.value, globalDragContext.dragTargetTime, mouseX, mouseY, cancelDrag]);
 
 	// One layer of canvas is responsible for drawing the majority of timeline components,
 	// while a second layer is responsible for drawing transient elements that do not require
