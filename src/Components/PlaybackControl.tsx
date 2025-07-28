@@ -16,7 +16,7 @@ import {
 	ShellVersion,
 	TickMode,
 } from "../Controller/Common";
-import { FIXED_BASE_CASTER_TAX, LevelSync, ProcMode } from "../Game/Common";
+import { LevelSync, ProcMode } from "../Game/Common";
 import { getAllResources, getResourceInfo, ResourceOverrideData } from "../Game/Resources";
 import { localize, localizeResourceType } from "./Localization";
 import {
@@ -25,7 +25,7 @@ import {
 	getCurrentThemeColors,
 	ColorThemeContext,
 } from "./ColorTheme";
-import { SerializedConfig } from "../Game/GameConfig";
+import { SerializedConfig, GameConfig, DEFAULT_CONFIG } from "../Game/GameConfig";
 import { XIVMath } from "../Game/XIVMath";
 import { FaCheck } from "react-icons/fa6";
 import {
@@ -38,6 +38,7 @@ import {
 	IMPLEMENTATION_LEVELS,
 } from "../Game/Data/Jobs";
 import { ResourceKey, CooldownKey } from "../Game/Data";
+import { getGameState } from "../Game/Jobs";
 
 export let updateConfigDisplay = (config: SerializedConfig) => {};
 
@@ -54,21 +55,6 @@ function getTableStyle(bgHighContrastColor: string) {
 			width: 33%
 		}
 	`;
-}
-
-// helper that prob won't be used elsewhere
-function getCastTaxPreview(level: LevelSync, baseCastTime: number, spsStr: string, fpsStr: string) {
-	const sps = parseFloat(spsStr);
-	const fps = parseFloat(fpsStr);
-	if (isNaN(sps) || isNaN(fps)) {
-		return "n/a";
-	}
-	const adjustedCastTime = XIVMath.preTaxCastTime(level, sps, baseCastTime);
-	return (
-		XIVMath.afterFpsTax(fps, adjustedCastTime) -
-		adjustedCastTime +
-		XIVMath.afterFpsTax(fps, FIXED_BASE_CASTER_TAX)
-	).toFixed(3);
 }
 
 // key, rscType, rscInfo
@@ -149,54 +135,6 @@ export function ConfigSummary(props: { job: ShellJob; dirty: boolean }) {
 		};
 	}, []);
 
-	const castTimesTableDesc = localize({
-		en: "Unlike GCDs that have 2 digits of precision, cast times have 3. See About this tool/Implementation notes.",
-		zh: "不同于GCD那样精确到小数点后2位，咏唱时间会精确到小数点后3位。详见 关于/实现细节",
-	});
-	const preTaxFn = (t: number) => {
-		return controller.gameConfig.adjustedCastTime(t).toFixed(3);
-	};
-	const afterTaxFn = (t: number) => {
-		const preTax = controller.gameConfig.adjustedCastTime(t);
-		return controller.gameConfig.getAfterTaxCastTime(preTax).toFixed(3);
-	};
-	const castTimesChart = <div>
-		<style>{getTableStyle(getCurrentThemeColors().bgHighContrast)}</style>
-		<table>
-			<tbody>
-				<tr>
-					<th>{localize({ en: "Base", zh: "基准" })}</th>
-					<th>{localize({ en: "Pre-tax", zh: "税前" })}</th>
-					<th>{localize({ en: "After-tax", zh: "税后" })}</th>
-				</tr>
-				<tr>
-					<td>2.5</td>
-					<td>{preTaxFn(2.5)}</td>
-					<td>{afterTaxFn(2.5)}</td>
-				</tr>
-				<tr>
-					<td>2.8</td>
-					<td>{preTaxFn(2.8)}</td>
-					<td>{afterTaxFn(2.8)}</td>
-				</tr>
-				<tr>
-					<td>3.0</td>
-					<td>{preTaxFn(3.0)}</td>
-					<td>{afterTaxFn(3.0)}</td>
-				</tr>
-				<tr>
-					<td>3.5</td>
-					<td>{preTaxFn(3.5)}</td>
-					<td>{afterTaxFn(3.5)}</td>
-				</tr>
-				<tr>
-					<td>4.0</td>
-					<td>{preTaxFn(4.0)}</td>
-					<td>{afterTaxFn(4.0)}</td>
-				</tr>
-			</tbody>
-		</table>
-	</div>;
 	const lucidTickOffset = controller.game.lucidTickOffset.toFixed(3);
 	const lucidOffsetDesc = localize({
 		en: "the random time offset of lucid dreaming ticks relative to mp ticks",
@@ -290,21 +228,6 @@ export function ConfigSummary(props: { job: ShellJob; dirty: boolean }) {
 				.adjustedSksGCD(5, controller.game.inherentSpeedModifier())
 				.toFixed(2)}
 		</div>}
-
-		{props.job === "BLM" ? (
-			// TODO modify for PCT and other jobs
-			<Expandable
-				title={"castTimesTable"}
-				titleNode={
-					<span style={{ textDecoration: props.dirty ? "line-through" : "none" }}>
-						{localize({ en: "Cast times table", zh: "咏唱时间表" })}{" "}
-						<Help topic={"castTimesTable"} content={castTimesTableDesc} />
-					</span>
-				}
-				defaultShow={false}
-				content={castTimesChart}
-			/>
-		) : undefined}
 
 		<p>
 			{localize({ en: "Procs", zh: "随机数模式" })}: {procMode}
@@ -542,7 +465,6 @@ type ConfigState = {
 	overrideEnabled: boolean;
 
 	dirty: boolean;
-	b1TaxPreview: string;
 	gcdPreview: string;
 	taxedGcdPreview: string;
 	sksGcdPreview: string;
@@ -612,7 +534,6 @@ export class Config extends React.Component {
 			overrideEnabled: true,
 			/////////
 			dirty: false,
-			b1TaxPreview: "n/a",
 			gcdPreview: "n/a",
 			taxedGcdPreview: "n/a",
 			sksGcdPreview: "n/a",
@@ -620,11 +541,9 @@ export class Config extends React.Component {
 		};
 
 		this.updateTaxPreview = (spsStr: string, fpsStr: string, levelStr: string) => {
-			const b1TaxPreview = getCastTaxPreview(parseFloat(levelStr), 2.5, spsStr, fpsStr);
 			const { gcdStr, taxedGcdStr } = this.getGcdTaxPreview(spsStr, fpsStr, levelStr);
 
 			this.setState({
-				b1TaxPreview: b1TaxPreview,
 				gcdPreview: gcdStr,
 				taxedGcdPreview: taxedGcdStr,
 			});
@@ -636,7 +555,7 @@ export class Config extends React.Component {
 				sksStr,
 				fpsStr,
 				levelStr,
-				controller.game.inherentSpeedModifier(),
+				this.getSpeedModifier(),
 			);
 
 			this.setState({
@@ -903,6 +822,28 @@ export class Config extends React.Component {
 		};
 	}
 
+	private getSpeedModifier(): number | undefined {
+		const dummyConfig: GameConfig = new GameConfig({ ...DEFAULT_CONFIG, job: this.state.job });
+		return getGameState(dummyConfig).inherentSpeedModifier();
+	}
+
+	private getDefaultGcd(base: number): number {
+		const isSps =
+			JOBS[this.state.job].role === "CASTER" || JOBS[this.state.job].role === "HEALER";
+		return XIVMath.preTaxGcd(
+			parseFloat(this.state.level) as LevelSync,
+			isSps ? parseFloat(this.state.spellSpeed) : parseFloat(this.state.skillSpeed),
+			base,
+			this.getSpeedModifier(),
+		);
+	}
+
+	private getDefaultGcdTax(base: number): number {
+		// Returns the approxmiate duration of the GCD after applying innate haste buffs
+		// and FPS adjustments.
+		return XIVMath.afterFpsTax(parseFloat(this.state.fps), this.getDefaultGcd(base));
+	}
+
 	private getGcdTaxPreview(
 		speedStr: string,
 		fpsStr: string,
@@ -955,18 +896,12 @@ export class Config extends React.Component {
 					config.skillSpeed.toString(),
 					config.fps.toString(),
 					config.level.toString(),
-					controller.game.inherentSpeedModifier(),
+					this.getSpeedModifier(),
 				);
 			this.setState({
 				dirty: false,
 				imported: false,
 				importedFields: [],
-				b1TaxPreview: getCastTaxPreview(
-					config.level,
-					2.5,
-					`${config.spellSpeed}`,
-					`${config.fps}`,
-				),
 				gcdPreview: spsGcd.toFixed(2),
 				taxedGcdPreview: XIVMath.afterFpsTax(config.fps, spsGcd).toFixed(3),
 				sksGcdPreview,
@@ -1387,49 +1322,33 @@ export class Config extends React.Component {
 		const colors = getThemeColors(this.context);
 		const fpsAndCorrectionColor =
 			this.state.shellVersion >= ShellVersion.FpsTax ? colors.text : colors.warning;
-		const level = parseFloat(this.state.level);
-		const b1TaxDesc = <div>
+		const isSps =
+			JOBS[this.state.job].role === "CASTER" || JOBS[this.state.job].role === "HEALER";
+		const speedStr = {
+			en: isSps ? "spell" : "skill",
+			zh: isSps ? "咏" : "技",
+		};
+		const gcdTaxDesc = <div>
 			<style>{getTableStyle(colors.bgHighContrast)}</style>
 			<div style={{ marginBottom: 10 }}>
 				{localize({
-					en: "Preview numbers based on your current spell speed and FPS input:",
-					zh: "根据当前输入的咏速和帧率，你将得到如下读条+帧率税：",
+					en: `Preview numbers based on your current ${speedStr.en} speed and FPS input:`,
+					zh: `根据当前输入的${speedStr.zh}速和帧率，你将得到如下帧率税：`,
 				})}
 			</div>
 			<table>
 				<tbody>
 					<tr>
-						<th>{localize({ en: "Base cast time", zh: "基础读条时间" })}</th>
-						<th>{localize({ en: "Caster + FPS tax", zh: "读条税+帧率税" })}</th>
+						<th>{localize({ en: "GCD time", zh: "GCD时间" })}</th>
+						<th>{localize({ en: "After FPS tax", zh: "帧率税后" })}</th>
 					</tr>
-					<tr>
-						<td>2.5</td>
-						<td>{this.state.b1TaxPreview}</td>
-					</tr>
-					<tr>
-						<td>2.8</td>
+					{[2.5, 3.0, 3.5, 4.0].map((recast, i) => <tr key={"gcdPreview" + i.toString()}>
 						<td>
-							{getCastTaxPreview(level, 2.8, this.state.spellSpeed, this.state.fps)}
+							{this.getDefaultGcd(recast).toFixed(2)} ({recast.toFixed(2)}{" "}
+							{localize({ en: "base", zh: "原始" })})
 						</td>
-					</tr>
-					<tr>
-						<td>3.0</td>
-						<td>
-							{getCastTaxPreview(level, 3.0, this.state.spellSpeed, this.state.fps)}
-						</td>
-					</tr>
-					<tr>
-						<td>3.5</td>
-						<td>
-							{getCastTaxPreview(level, 3.5, this.state.spellSpeed, this.state.fps)}
-						</td>
-					</tr>
-					<tr>
-						<td>4.0</td>
-						<td>
-							{getCastTaxPreview(level, 4.0, this.state.spellSpeed, this.state.fps)}
-						</td>
-					</tr>
+						<td>{this.getDefaultGcdTax(recast).toFixed(3)}</td>
+					</tr>)}
 				</tbody>
 			</table>
 		</div>;
@@ -1668,8 +1587,13 @@ export class Config extends React.Component {
 				/>
 				<span>
 					{" "}
-					({localize({ en: "2.5s total tax", zh: "2.5s读条+帧率税" })}:{" "}
-					{this.state.b1TaxPreview} <Help topic={"b1TaxPreview"} content={b1TaxDesc} />)
+					(
+					{localize({
+						en: `${this.getDefaultGcd(2.5).toFixed(2)}s w/ tax`,
+						zh: `${this.getDefaultGcd(2.5)}s+帧率税`,
+					})}
+					: {this.getDefaultGcdTax(2.5).toFixed(3)}{" "}
+					<Help topic={"gcdTaxPreview"} content={gcdTaxDesc} />)
 				</span>
 			</div>
 			<Input
