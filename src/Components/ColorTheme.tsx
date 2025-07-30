@@ -342,7 +342,7 @@ const DARK_THEME_COLORS: ThemeColors = {
 	},
 	editingValid: "#ffdc00", // yellow
 	editingInvalid: "#ff0000", // red
-	dropTarget: "darkblue",
+	dropTarget: "lightblue", // default cursor is white while in dark mode
 	realTime: "mediumseagreen",
 	historical: "#ff8c00", // darkorange
 	fileDownload: "#798c3f",

@@ -164,6 +164,16 @@ export const TIMELINE_COLUMNS_HEIGHT = TIMELINE_SETTINGS_HEIGHT - 40;
 function TimelineTabs() {
 	const { value: dragLock, setter: setDragLock } = useContext(DragLockContext);
 	const colors = useContext(ColorThemeContext);
+	// On displays < 1024px in width, do not render the drag lock due to its absolute positioning.
+	// While we do not go out of our way to support mobile devices, rendering the drag lock on smaller
+	// screens makes the marker and editor tabs completely inaccessible on mobile.
+	// On smaller desktop or laptop displays, the drag lock prompt may also clip the button that
+	// minimizes the tabset. I [sz] experience this when the browser is on my second monitor with
+	// a dev console open to more than half the screen.
+	// TODO: use actual layout styling instead so we don't have to deal with this
+	const renderDragLock = window.innerWidth > 1024;
+	// Similarly, the horizontal scale slider uses absolute positioning and clips into the tabs at about 800px.
+	const renderScaleSlider = window.innerWidth > 800;
 	return <div
 		style={{
 			position: "relative",
@@ -225,7 +235,7 @@ function TimelineTabs() {
 			height={TIMELINE_SETTINGS_HEIGHT}
 			defaultSelectedIndex={undefined}
 		/>
-		<div
+		{renderDragLock && <div
 			style={{
 				position: "absolute",
 				top: 0,
@@ -261,8 +271,8 @@ function TimelineTabs() {
 			>
 				{dragLock ? <FaLock /> : <FaLockOpen />}
 			</IconContext.Provider>
-		</div>
-		<Slider
+		</div>}
+		{renderScaleSlider && <Slider
 			uniqueName={"timelineDisplayScale"}
 			description={localize({ en: "horizontal scale ", zh: "水平缩放 " })}
 			defaultValue={"0.4"}
@@ -278,7 +288,7 @@ function TimelineTabs() {
 				controller.timeline.setHorizontalScale(parseFloat(newVal));
 				controller.scrollToTime();
 			}}
-		/>
+		/>}
 	</div>;
 }
 

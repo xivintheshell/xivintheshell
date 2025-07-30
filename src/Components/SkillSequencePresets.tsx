@@ -104,8 +104,7 @@ export function SkillSequencePresets() {
 			updateSkillSequencePresetsView = () => {};
 		};
 	}, []);
-	const hasSelection =
-		controller && controller.record && controller.record.getFirstSelection() !== undefined;
+	const hasSelection = controller.record.getFirstSelection() !== undefined;
 
 	const bg = getThemeField(colors, "bgMediumContrast");
 	const content = <div>

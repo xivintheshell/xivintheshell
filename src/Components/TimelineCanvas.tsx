@@ -1056,6 +1056,7 @@ function drawCursor(
 	y3: number,
 	color: string,
 	tip?: string,
+	width?: number,
 ) {
 	// triangle
 	g_ctx.fillStyle = color;
@@ -1083,6 +1084,10 @@ function drawCursor(
 	g_ctx.lineTo(x, y2);
 	g_ctx.stroke();
 
+	const oldWidth = g_ctx.lineWidth;
+	if (width !== undefined) {
+		g_ctx.lineWidth = width;
+	}
 	// active slot
 	g_ctx.strokeStyle = color;
 	g_ctx.setLineDash([]);
@@ -1090,6 +1095,8 @@ function drawCursor(
 	g_ctx.moveTo(x, y2);
 	g_ctx.lineTo(x, y3);
 	g_ctx.stroke();
+
+	g_ctx.lineWidth = oldWidth;
 
 	// after active slot
 	g_ctx.strokeStyle = color + "9f";
@@ -1970,6 +1977,8 @@ export function TimelineCanvas(props: {
 					activeSlotStartY,
 					activeSlotStartY + slotHeight,
 					g_colors.dropTarget,
+					undefined,
+					4,
 				);
 			}
 		}
