@@ -1013,7 +1013,10 @@ function drawSkills(
 						if (!g_clickEvent?.shiftKey) {
 							g_draggedSkillElem = icon.elem;
 							if (!controller.record.isInSelection(icon.elem.actionIndex)) {
-								controller.timeline.onClickTimelineAction(icon.elem.actionIndex, false);
+								controller.timeline.onClickTimelineAction(
+									icon.elem.actionIndex,
+									false,
+								);
 								scrollEditorToFirstSelected();
 							}
 						}
