@@ -152,11 +152,6 @@ function testInteraction(
 	}
 }
 
-const onClickTimelineBackground = () => {
-	// always fires after both mousedown + mouseup
-	bgSelecting = false;
-};
-
 const onMouseDownTimelineBackground = () => {
 	g_draggedSkillElem = undefined;
 	controller.record.unselectAll();
@@ -869,7 +864,6 @@ function drawSkills(
 		g_ctx.rect(r.x, r.y, r.w, r.h);
 		if (interactive)
 			testInteraction(r, {
-				onClick: onClickTimelineBackground,
 				onMouseDown: onMouseDownTimelineBackground,
 			});
 	};
@@ -1002,11 +996,20 @@ function drawSkills(
 					hoverTip: lines,
 					onClick: () => {
 						if (g_draggedSkillElem === undefined) {
-							controller.timeline.onClickTimelineAction(
-								icon.elem.actionIndex,
-								g_clickEvent ? g_clickEvent.shiftKey : false,
-							);
-							scrollEditorToFirstSelected();
+							// If we're not dragging a skill to rearrange, perform a selection action.
+							if (bgSelecting) {
+								// If we're ending a selection box, select this element without scrolling.
+								controller.timeline.onClickTimelineAction(
+									icon.elem.actionIndex,
+									true,
+								);
+							} else {
+								controller.timeline.onClickTimelineAction(
+									icon.elem.actionIndex,
+									g_clickEvent ? g_clickEvent.shiftKey : false,
+								);
+								scrollEditorToFirstSelected();
+							}
 						}
 					},
 					onMouseDown: () => {
@@ -1604,7 +1607,7 @@ function drawEverything() {
 	g_ctx.fillRect(0, 0, g_visibleWidth + 1, g_renderingProps.timelineHeight + 1);
 	testInteraction(
 		{ x: 0, y: 0, w: g_visibleWidth, h: c_maxTimelineHeight },
-		{ onClick: onClickTimelineBackground, onMouseDown: onMouseDownTimelineBackground },
+		{ onMouseDown: onMouseDownTimelineBackground },
 	);
 
 	currentHeight += drawRuler(timelineOrigin);
@@ -1644,6 +1647,11 @@ function drawEverything() {
 		}
 		if (g_isClickUpdate && g_activeOnClick) {
 			g_activeOnClick();
+		}
+		if (g_isClickUpdate) {
+			// Always end a background selection operation when the mouse is released, regardless of
+			// what element the cursor is hovering.
+			bgSelecting = false;
 		}
 	}
 }
