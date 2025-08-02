@@ -9,6 +9,7 @@ import { SkillSequencePresets } from "./SkillSequencePresets";
 import { HELP_CHANNEL_URL, IntroSection } from "./IntroSection";
 import { getLastChangeDate } from "./Changelog";
 import { localize, localizeDate, SelectLanguage } from "./Localization";
+import { SocialLinks } from "./SocialLinks";
 import { Expandable, Tabs } from "./Common";
 import {
 	getCachedColorTheme,
@@ -249,6 +250,8 @@ export default class Main extends React.Component<{ command?: string }> {
 				<SkillsWindow />
 			</div>
 		</div>;
+		// Hide external links if the page is too thin.
+		const renderLinks = window.innerWidth > 1024;
 		return <div
 			style={{
 				position: "fixed",
@@ -376,8 +379,21 @@ export default class Main extends React.Component<{ command?: string }> {
 								marginTop: 40,
 							}}
 						>
-							<SelectLanguage />
-							<SelectColorTheme setColorTheme={this.setColorTheme} />
+							<div
+								style={{
+									position: "absolute",
+									display: "flex",
+									flexWrap: "wrap",
+									justifySelf: "right",
+									justifyContent: "space-between",
+									alignItems: "flex-start",
+									gap: "1.4em",
+								}}
+							>
+								{renderLinks && <SocialLinks />}
+								<SelectLanguage />
+								<SelectColorTheme setColorTheme={this.setColorTheme} />
+							</div>
 							<div>
 								<h3 style={{ marginTop: 20, marginBottom: 6 }}>
 									{betaPrefix}XIV in the Shell

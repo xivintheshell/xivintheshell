@@ -381,7 +381,6 @@ function LanguageOption(props: { lang: Language }) {
 		style={{
 			display: "inline-block",
 			cursor: "pointer",
-			verticalAlign: "middle",
 			textDecoration: props.lang === getCurrentLanguage() ? "none" : "underline",
 			borderTop: props.lang === getCurrentLanguage() ? "1px solid " + colors.text : "none",
 		}}
@@ -437,8 +436,6 @@ export class SelectLanguage extends React.Component {
 		return <div
 			style={{
 				display: "inline-block",
-				position: "absolute",
-				right: 68,
 			}}
 		>
 			<span
@@ -451,7 +448,7 @@ export class SelectLanguage extends React.Component {
 			>
 				<MdLanguage />
 			</span>
-			<div style={{ display: "inline-block", fontSize: 14, position: "relative", top: -4 }}>
+			<div style={{ display: "inline-block", fontSize: 14, verticalAlign: "top" }}>
 				<LanguageOption lang={"en"} />|
 				<LanguageOption lang={"zh"} />
 			</div>

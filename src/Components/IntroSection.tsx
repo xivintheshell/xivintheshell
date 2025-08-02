@@ -8,7 +8,9 @@ import { ShellJob } from "../Game/Data/Jobs";
 
 const THIS_DOMAIN = isBetaSite ? "https://beta.xivintheshell.com" : "https://xivintheshell.com";
 
-const GITHUB_URL = "https://github.com/xivintheshell/xivintheshell";
+export const GITHUB_URL = "https://github.com/xivintheshell/xivintheshell";
+export const BSKY_URL = "https://bsky.app/profile/xivintheshell.com";
+export const BLOG_URL = "https://blog.xivintheshell.com";
 
 // #xiv_in_the_shell_support in the Balance discord
 export const HELP_CHANNEL_URL =
