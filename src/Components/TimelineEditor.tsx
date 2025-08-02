@@ -1,7 +1,16 @@
-import React, { CSSProperties, useState, useEffect, useRef, useReducer } from "react";
+import React, {
+	CSSProperties,
+	useState,
+	useEffect,
+	useRef,
+	useReducer,
+	useContext,
+	createContext,
+	DragEventHandler,
+} from "react";
 import { controller } from "../Controller/Controller";
 import { ActionNode, ActionType, Record, RecordValidStatus } from "../Controller/Record";
-import { StaticFn } from "./Common";
+import { StaticFn, Columns } from "./Common";
 import { getCurrentThemeColors, ThemeColors } from "./ColorTheme";
 import {
 	localize,
@@ -10,8 +19,13 @@ import {
 	localizeSkillUnavailableReason,
 	getCurrentLanguage,
 } from "./Localization";
-import { TIMELINE_COLUMNS_HEIGHT, updateTimelineView } from "./Timeline";
-import { Columns } from "./Common";
+import {
+	TIMELINE_COLUMNS_HEIGHT,
+	updateTimelineView,
+	DragLockContext,
+	DragTargetContext,
+} from "./Timeline";
+import { getSkill } from "../Game/Skills";
 import { SkillReadyStatus } from "../Game/Common";
 
 // about 0.25
@@ -25,10 +39,17 @@ export let updateActiveTimelineEditor = (slotSwapFn: () => void) => {
 	slotSwapFn();
 };
 
-let bHandledSkillSelectionThisFrame: boolean = false;
-function setHandledSkillSelectionThisFrame(handled: boolean) {
-	bHandledSkillSelectionThisFrame = handled;
-}
+const EditorDragContext = createContext<
+	(i: number) => {
+		drop: DragEventHandler<HTMLTableRowElement>;
+		setSelected: (b: boolean) => void;
+	}
+>((i) => {
+	return {
+		drop: (e) => {},
+		setSelected: (b) => {},
+	};
+});
 
 const getBorderStyling = (colors: ThemeColors) => {
 	return {
@@ -61,6 +82,14 @@ const ACTION_TD_STYLE: CSSProperties = {
 const TR_STYLE: CSSProperties = {
 	height: "1.6em",
 	userSelect: "none",
+};
+
+const getDropTargetStyle = (colors: ThemeColors): CSSProperties => {
+	return {
+		borderTopWidth: "4px",
+		borderTopStyle: "solid",
+		borderColor: colors.dropTarget,
+	};
 };
 
 function adjustIndex(i: number | undefined) {
@@ -145,11 +174,52 @@ function TimelineActionElement(props: {
 			{StaticFn.displayTime(props.usedAt, 3)}
 		</td>
 	) : undefined;
+	const globalDragTarget = useContext(DragTargetContext);
+	const isDragTarget = globalDragTarget.dragTargetIndex === props.index;
+	const lockContext = useContext(DragLockContext);
+	const localEditorContext = useContext(EditorDragContext)(props.index);
 	return <tr
-		style={{ ...TR_STYLE, background: bgColor }}
+		style={{
+			...TR_STYLE,
+			background: bgColor,
+			...(isDragTarget ? getDropTargetStyle(colors) : {}),
+		}}
 		ref={props.refObj ?? null}
+		draggable={!lockContext.value}
+		onDragStart={(e) => {
+			localEditorContext.setSelected(true);
+			if (!props.isSelected) {
+				controller.timeline.onClickTimelineAction(props.index, false);
+			}
+		}}
+		onDragLeave={(e) => {
+			globalDragTarget.setDragTarget(null, null);
+		}}
+		onDrop={(e) => {
+			localEditorContext.drop(e);
+			globalDragTarget.setDragTarget(null, null);
+		}}
+		onDragOver={(e) => {
+			// preventDefault enables this to receive drops
+			e.preventDefault();
+			// If the action being dragged is an oGCD, place it at the end of the PRIOR node's
+			// animation lock.
+			// This is not fully robust and doesn't account for GCDs moved around wait events,
+			// but it's good enough.
+			let targetTime = props.usedAt;
+			const priorNode =
+				props.index > 0 ? controller.record.actions[props.index - 1] : undefined;
+			if (
+				priorNode?.tmp_endLockTime !== undefined &&
+				props.node.info.type === ActionType.Skill &&
+				getSkill(controller.game.job, props.node.info.skillName).cdName === "cd_GCD"
+			) {
+				targetTime = priorNode.tmp_endLockTime - controller.gameConfig.countdown;
+			}
+			globalDragTarget.setDragTarget(props.index, targetTime);
+		}}
 		onClick={(e) => {
-			setHandledSkillSelectionThisFrame(true);
+			localEditorContext.setSelected(true);
 			if (props.recordIsDirty) {
 				// controller.record.onClickNode(props.index, e.shiftKey);
 				controller.timeline.onClickTimelineAction(props.index, e.shiftKey);
@@ -179,6 +249,7 @@ export function TimelineEditor() {
 	);
 	const [firstEditedNodeIndex, setFirstEditedNodeIndex] = useState<number | undefined>(undefined);
 	const [, forceUpdate] = useReducer((x) => x + 1, 0);
+	const bHandledSkillSelectionThisFrame = useRef(false);
 	// In previous versions of XIV in the Shell, when using the timeline editor, we created a
 	// copy of the record within the TimelineEditor object, and did not reflect any staged
 	// edits in the timeline canvas.
@@ -249,7 +320,7 @@ export function TimelineEditor() {
 		return <button
 			style={{ display: "block", marginTop: 10, marginLeft: buttonMarginLeft }}
 			onClick={(e) => {
-				setHandledSkillSelectionThisFrame(true);
+				bHandledSkillSelectionThisFrame.current = true;
 				// discard edits
 				if (!isDirty) {
 					console.error("attempted to discard edits while timeline editor was not dirty");
@@ -368,7 +439,7 @@ export function TimelineEditor() {
 				<button
 					style={{ display: "block", marginTop: 10, marginLeft: buttonMarginLeft }}
 					onClick={(e) => {
-						setHandledSkillSelectionThisFrame(true);
+						bHandledSkillSelectionThisFrame.current = true;
 
 						// would show only after editing properties
 						// apply edits to timeline
@@ -455,7 +526,7 @@ export function TimelineEditor() {
 	};
 	const doRecordEdit = (action: (record: Record) => number | undefined) => {
 		if (controller.record.getFirstSelection()) {
-			setHandledSkillSelectionThisFrame(true);
+			bHandledSkillSelectionThisFrame.current = true;
 			const copy = getRecordCopy();
 			let currentEditedNodeIndex = firstEditedNodeIndex;
 			const firstEditedNode = action(copy);
@@ -557,16 +628,75 @@ export function TimelineEditor() {
 			/>,
 		);
 	});
+
+	const dragHandlers = (i: number) => {
+		return {
+			drop: (e: React.DragEvent) => {
+				const start = controller.record.selectionStartIndex ?? 0;
+				let distance = i - (start ?? 0);
+				// If we need to move the item upwards, then we already have the correct offset.
+				// If it needs to move down, we need to subtract the length of the current selection.
+				if (distance > 0) {
+					distance -= controller.record.getSelectionLength();
+				}
+				if (distance !== 0) {
+					doRecordEdit((record) => record.moveSelected(distance));
+				}
+			},
+			setSelected: (b: boolean) => {
+				bHandledSkillSelectionThisFrame.current = b;
+			},
+		};
+	};
+	// Add a dummy footer <tr> at the end of the list to allow dragging an element to the end.
+	const lockContext = useContext(DragLockContext);
+	const globalDragTarget = useContext(DragTargetContext);
+	const actionCount = actionsList.length;
+	const dragHandler = dragHandlers(actionCount);
+	const isEndDragTarget = globalDragTarget.dragTargetIndex === actionCount;
+	if (actionCount > 0) {
+		actionsList.push(
+			<tr
+				key={actionCount}
+				tabIndex={-1}
+				style={{
+					height: "0.8em",
+					background: colors.bgHighContrast,
+					userSelect: "none",
+					...(isEndDragTarget ? getDropTargetStyle(colors) : {}),
+				}}
+				draggable={!lockContext.value}
+				onDragStart={(e) => e.preventDefault()}
+				onDragLeave={(e) => {
+					globalDragTarget.setDragTarget(null, null);
+				}}
+				onDrop={(e) => {
+					dragHandler.drop(e);
+					globalDragTarget.setDragTarget(null, null);
+				}}
+				onDragOver={(e) => {
+					// preventDefault enables this to receive drops
+					e.preventDefault();
+					globalDragTarget.setDragTarget(actionCount, controller.game.getDisplayTime());
+				}}
+			>
+				<td style={{ border: "none" }}></td>
+				<td style={{ border: "none" }}></td>
+				<td style={{ border: "none" }}></td>
+			</tr>,
+		);
+	}
+
 	const thStyle: CSSProperties = {
 		backgroundColor: colors.bgHighContrast,
 	};
 	return <div
 		onClick={(evt) => {
-			if (!evt.shiftKey && !bHandledSkillSelectionThisFrame) {
+			if (!evt.shiftKey && !bHandledSkillSelectionThisFrame.current) {
 				controller.record.unselectAll();
 				controller.displayCurrentState();
 			}
-			setHandledSkillSelectionThisFrame(false);
+			bHandledSkillSelectionThisFrame.current = false;
 		}}
 	>
 		<Columns contentHeight={TIMELINE_COLUMNS_HEIGHT}>
@@ -618,7 +748,11 @@ export function TimelineEditor() {
 								</th>
 							</tr>
 						</thead>
-						<tbody>{actionsList}</tbody>
+						<tbody>
+							<EditorDragContext.Provider value={dragHandlers}>
+								{actionsList}
+							</EditorDragContext.Provider>
+						</tbody>
 					</table>,
 					defaultSize: 40,
 					fullBorder: true,

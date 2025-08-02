@@ -1,4 +1,4 @@
-import React, { useState, FormEvent, FormEventHandler } from "react";
+import React, { useContext, useState, FormEvent, FormEventHandler } from "react";
 import { Tooltip } from "@base-ui-components/react/tooltip";
 import { Clickable, ContentNode, Help, parseTime, ValueChangeEvent } from "./Common";
 import { Debug, SkillReadyStatus, SkillUnavailableReason } from "../Game/Common";
@@ -204,286 +204,261 @@ type SkillButtonProps = {
 	targetCount: number;
 };
 
-class SkillButton extends React.Component {
-	props: SkillButtonProps;
-	state: {
-		skillDescription: React.ReactElement;
-	};
-	handleMouseEnter: () => void;
-
-	static contextType = ColorThemeContext;
-
-	constructor(props: SkillButtonProps) {
-		super(props);
-		this.props = props;
-		this.state = {
-			skillDescription: <div />,
-		};
-		this.handleMouseEnter = () => {
-			const info = controller.getSkillInfo({
-				game: controller.getDisplayedGame(),
-				skillName: this.props.skillName,
-			});
-			// @ts-expect-error we need to read untyped this.context in place of a useContext hook
-			const colors = getThemeColors(this.context);
-			const s: ContentNode[] = [];
-			if (info.status.ready()) {
-				let en = "ready (" + info.stacksAvailable;
-				let zh = "可释放 (" + info.stacksAvailable;
-				if (info.timeTillNextStackReady > 0) {
-					en += ") (next stack ready in " + info.timeTillNextStackReady.toFixed(3);
-					zh += ") (下一层" + info.timeTillNextStackReady.toFixed(3) + "秒后转好";
-				}
-				en += ")";
-				zh += ")";
-				s.push(localize({ en: en, zh: zh }));
-			} else {
-				if (
-					info.status.unavailableReasons.includes(
-						SkillUnavailableReason.RequirementsNotMet,
-					)
-				) {
-					s.push(
-						localizeSkillUnavailableReason(SkillUnavailableReason.RequirementsNotMet),
-					);
-				}
-				if (info.status.unavailableReasons.includes(SkillUnavailableReason.NotEnoughMP)) {
-					s.push(
-						localizeSkillUnavailableReason(SkillUnavailableReason.NotEnoughMP) +
-							localize({
-								en: " (needs " + info.capturedManaCost + ")",
-								zh: " （需" + info.capturedManaCost + "）",
-							}),
-					);
-				}
-				if (info.status.unavailableReasons.includes(SkillUnavailableReason.Blocked)) {
-					const nextStackReadyIn = Math.max(
-						info.timeTillNextStackReady,
-						info.timeTillSecondaryReady ?? 0,
-					);
-					const s1 = localize({
-						en: "possibly ready in " + info.timeTillAvailable.toFixed(3),
-						zh: "预计" + info.timeTillAvailable.toFixed(3) + "秒后可释放",
-					});
-					const s2 = localize({
-						en: " (next stack ready in " + nextStackReadyIn.toFixed(3) + ")",
-						zh: "（" + nextStackReadyIn.toFixed(3) + "秒后转好下一层CD）",
-					});
-					s.push(
-						<>
-							{s1}
-							{info.stacksAvailable < info.maxStacks ? s2 : undefined}
-						</>,
-					);
-				}
-				if (info.status.unavailableReasons.includes(SkillUnavailableReason.NotInCombat)) {
-					s.push(localizeSkillUnavailableReason(SkillUnavailableReason.NotInCombat));
-				}
-			}
-			// if ready, also show captured cast time & time till damage application
-			const actualCastTime = info.instantCast ? 0 : info.castTime;
-			let infoString = "";
-			if (info.status.ready()) {
-				infoString += localize({ en: "cast: ", zh: "读条：" }) + actualCastTime.toFixed(3);
-				if (info.llCovered && actualCastTime > Debug.epsilon) infoString += " (LL)";
-				infoString +=
-					localize({ en: ", cast+delay: ", zh: " 读条+生效延迟：" }) +
-					info.timeTillDamageApplication.toFixed(3);
-			}
-			const content = <div
-				style={{
-					color: controller.displayingUpToDateGameState ? colors.text : colors.historical,
-				}}
-			>
-				<div className="paragraph">
-					<b>{localizeSkillName(this.props.skillName)}</b>
-				</div>
-				<div className="paragraph">
-					{s.map((line, i) => <span key={i}>
-						{line}
-						<br />
-					</span>)}
-				</div>
-				<div className="paragraph">{infoString}</div>
-			</div>;
-			this.setState({ skillDescription: content });
-		};
-	}
-	render() {
-		const iconStyle: React.CSSProperties = {
-			width: 48,
-			height: 48,
-			verticalAlign: "top",
-			position: "relative",
-			display: "inline-block",
-		};
-		const iconImgStyle: React.CSSProperties = {
-			width: 40,
-			height: 40,
-			position: "absolute",
-			top: 2,
-			left: "50%",
-			marginLeft: -20,
-		};
-		let readyOverlay = "transparent";
-		if (!this.props.readyAsideFromCd) {
-			readyOverlay = "rgba(0, 0, 0, 0.6)";
-		}
-
-		// The numbers used to indicate remaining stacks are an in-game font, and not an icon
-		// available in xivapi. We instead just pick a large sans serif font, and render the number
-		// in white w/ red border if there's at least 1 stack, and red w/ black border at 0 stacks.
+function SkillButton(props: SkillButtonProps) {
+	const [skillDescription, setSkillDescription] = useState(<div />);
+	const colorContext = useContext(ColorThemeContext);
+	const handleMouseEnter = () => {
 		const info = controller.getSkillInfo({
 			game: controller.getDisplayedGame(),
-			skillName: this.props.skillName,
+			skillName: props.skillName,
 		});
-		const readyStacks = info.stacksAvailable;
-		const maxStacks = info.maxStacks;
-		let stacksOverlay;
-		const skillBoxPx = 48;
-		const fontSizePx = skillBoxPx / 3 + 4;
-
-		let textShadow: string;
-		let fontColor: string;
-		if (readyStacks > 0) {
-			// expensive but whatever if it ever becomes a performance problem I'll just turn the icons into a canvas
-			// the red/orange border
-			textShadow =
-				"0 0 2px rgba(255, 50, 0, 1), 0 0 3px rgba(255, 100, 0, 1), 0 0 5px rgba(255, 100, 0, 1)";
-			// darken background
-			const darkenLayers = readyStacks === maxStacks ? 5 : 3;
-			for (let i = 0; i < darkenLayers; i++) {
-				textShadow += `, 0 0 10px black`;
+		const colors = getThemeColors(colorContext);
+		const s: ContentNode[] = [];
+		if (info.status.ready()) {
+			let en = "ready (" + info.stacksAvailable;
+			let zh = "可释放 (" + info.stacksAvailable;
+			if (info.timeTillNextStackReady > 0) {
+				en += ") (next stack ready in " + info.timeTillNextStackReady.toFixed(3);
+				zh += ") (下一层" + info.timeTillNextStackReady.toFixed(3) + "秒后转好";
 			}
-			fontColor = "white";
+			en += ")";
+			zh += ")";
+			s.push(localize({ en: en, zh: zh }));
 		} else {
-			textShadow = "0 0 4px black, 0 0 8px black";
-			fontColor = "rgb(223,60,60)";
+			if (
+				info.status.unavailableReasons.includes(SkillUnavailableReason.RequirementsNotMet)
+			) {
+				s.push(localizeSkillUnavailableReason(SkillUnavailableReason.RequirementsNotMet));
+			}
+			if (info.status.unavailableReasons.includes(SkillUnavailableReason.NotEnoughMP)) {
+				s.push(
+					localizeSkillUnavailableReason(SkillUnavailableReason.NotEnoughMP) +
+						localize({
+							en: " (needs " + info.capturedManaCost + ")",
+							zh: " （需" + info.capturedManaCost + "）",
+						}),
+				);
+			}
+			if (info.status.unavailableReasons.includes(SkillUnavailableReason.Blocked)) {
+				const nextStackReadyIn = Math.max(
+					info.timeTillNextStackReady,
+					info.timeTillSecondaryReady ?? 0,
+				);
+				const s1 = localize({
+					en: "possibly ready in " + info.timeTillAvailable.toFixed(3),
+					zh: "预计" + info.timeTillAvailable.toFixed(3) + "秒后可释放",
+				});
+				const s2 = localize({
+					en: " (next stack ready in " + nextStackReadyIn.toFixed(3) + ")",
+					zh: "（" + nextStackReadyIn.toFixed(3) + "秒后转好下一层CD）",
+				});
+				s.push(
+					<>
+						{s1}
+						{info.stacksAvailable < info.maxStacks ? s2 : undefined}
+					</>,
+				);
+			}
+			if (info.status.unavailableReasons.includes(SkillUnavailableReason.NotInCombat)) {
+				s.push(localizeSkillUnavailableReason(SkillUnavailableReason.NotInCombat));
+			}
 		}
+		// if ready, also show captured cast time & time till damage application
+		const actualCastTime = info.instantCast ? 0 : info.castTime;
+		let infoString = "";
+		if (info.status.ready()) {
+			infoString += localize({ en: "cast: ", zh: "读条：" }) + actualCastTime.toFixed(3);
+			if (info.llCovered && actualCastTime > Debug.epsilon) infoString += " (LL)";
+			infoString +=
+				localize({ en: ", cast+delay: ", zh: " 读条+生效延迟：" }) +
+				info.timeTillDamageApplication.toFixed(3);
+		}
+		const content = <div
+			style={{
+				color: controller.displayingUpToDateGameState ? colors.text : colors.historical,
+			}}
+		>
+			<div className="paragraph">
+				<b>{localizeSkillName(props.skillName)}</b>
+			</div>
+			<div className="paragraph">
+				{s.map((line, i) => <span key={i}>
+					{line}
+					<br />
+				</span>)}
+			</div>
+			<div className="paragraph">{infoString}</div>
+		</div>;
+		setSkillDescription(content);
+	};
+	const iconStyle: React.CSSProperties = {
+		width: 48,
+		height: 48,
+		verticalAlign: "top",
+		position: "relative",
+		display: "inline-block",
+	};
+	const iconImgStyle: React.CSSProperties = {
+		width: 40,
+		height: 40,
+		position: "absolute",
+		top: 2,
+		left: "50%",
+		marginLeft: -20,
+	};
+	let readyOverlay = "transparent";
+	if (!props.readyAsideFromCd) {
+		readyOverlay = "rgba(0, 0, 0, 0.6)";
+	}
 
-		if (maxStacks > 1) {
-			stacksOverlay = <div
-				tabIndex={-1}
+	// The numbers used to indicate remaining stacks are an in-game font, and not an icon
+	// available in xivapi. We instead just pick a large sans serif font, and render the number
+	// in white w/ red border if there's at least 1 stack, and red w/ black border at 0 stacks.
+	const info = controller.getSkillInfo({
+		game: controller.getDisplayedGame(),
+		skillName: props.skillName,
+	});
+	const readyStacks = info.stacksAvailable;
+	const maxStacks = info.maxStacks;
+	let stacksOverlay;
+	const skillBoxPx = 48;
+	const fontSizePx = skillBoxPx / 3 + 4;
+
+	let textShadow: string;
+	let fontColor: string;
+	if (readyStacks > 0) {
+		// expensive but whatever if it ever becomes a performance problem I'll just turn the icons into a canvas
+		// the red/orange border
+		textShadow =
+			"0 0 2px rgba(255, 50, 0, 1), 0 0 3px rgba(255, 100, 0, 1), 0 0 5px rgba(255, 100, 0, 1)";
+		// darken background
+		const darkenLayers = readyStacks === maxStacks ? 5 : 3;
+		for (let i = 0; i < darkenLayers; i++) {
+			textShadow += `, 0 0 10px black`;
+		}
+		fontColor = "white";
+	} else {
+		textShadow = "0 0 4px black, 0 0 8px black";
+		fontColor = "rgb(223,60,60)";
+	}
+
+	if (maxStacks > 1) {
+		stacksOverlay = <div
+			tabIndex={-1}
+			style={{
+				fontFamily: "Goldman Regular",
+				color: fontColor,
+				// should take up a little over 1/3 of the icon
+				fontSize: `${fontSizePx}px`,
+				textShadow: textShadow,
+				// center in this square
+				width: fontSizePx,
+				textAlign: "center",
+				// offset to account for stretch transformation + font size
+				bottom: 2,
+				right: 1,
+				zIndex: 3,
+				position: "absolute",
+			}}
+		>
+			{readyStacks}
+		</div>;
+	} else {
+		stacksOverlay = <></>;
+	}
+	const progressShadeCircle = <ProgressCircleDark
+		diameter={38}
+		progress={props.cdProgress}
+		color={props.ready ? "rgba(0, 0, 0, 0)" : "rgba(0, 0, 0, 0.6)"}
+	/>;
+	const progressOutline = <ProgressCircleOutline
+		diameter={38}
+		progress={props.cdProgress}
+		color={props.ready ? "rgba(0, 0, 0, 0)" : "rgba(255, 255, 255, 1.0)"}
+	/>;
+	const secondaryOutline = props.secondaryCdProgress && <SecondaryProgressCircle
+		diameter={32}
+		progress={props.secondaryCdProgress}
+		color={"rgba(250,186,47,255)"}
+	/>;
+	const proc = <img
+		hidden={!props.highlight}
+		src="/misc/proc.png"
+		alt="skill proc"
+		style={{
+			position: "absolute",
+			width: 44,
+			height: 44,
+			top: 0,
+			left: 2,
+			zIndex: 2,
+		}}
+	/>;
+	const icon = <div onMouseEnter={handleMouseEnter}>
+		<div style={iconStyle}>
+			{" "}
+			{/* "overlay" layers */}
+			<SkillIconImage style={iconImgStyle} skillName={props.skillName} />
+			<div
 				style={{
-					fontFamily: "Goldman Regular",
-					color: fontColor,
-					// should take up a little over 1/3 of the icon
-					fontSize: `${fontSizePx}px`,
-					textShadow: textShadow,
-					// center in this square
-					width: fontSizePx,
-					textAlign: "center",
-					// offset to account for stretch transformation + font size
-					bottom: 2,
-					right: 1,
-					zIndex: 3,
 					position: "absolute",
+					width: 40,
+					height: 41,
+					top: 1,
+					left: "50%",
+					marginLeft: -20,
+					borderRadius: 3,
+					overflow: "hidden",
+					zIndex: 1,
+					background: readyOverlay,
 				}}
 			>
-				{readyStacks}
-			</div>;
-		} else {
-			stacksOverlay = <></>;
-		}
-		const progressShadeCircle = <ProgressCircleDark
-			diameter={38}
-			progress={this.props.cdProgress}
-			color={this.props.ready ? "rgba(0, 0, 0, 0)" : "rgba(0, 0, 0, 0.6)"}
-		/>;
-		const progressOutline = <ProgressCircleOutline
-			diameter={38}
-			progress={this.props.cdProgress}
-			color={this.props.ready ? "rgba(0, 0, 0, 0)" : "rgba(255, 255, 255, 1.0)"}
-		/>;
-		const secondaryOutline = this.props.secondaryCdProgress && <SecondaryProgressCircle
-			diameter={32}
-			progress={this.props.secondaryCdProgress}
-			color={"rgba(250,186,47,255)"}
-		/>;
-		const proc = <img
-			hidden={!this.props.highlight}
-			src="/misc/proc.png"
-			alt="skill proc"
-			style={{
-				position: "absolute",
-				width: 44,
-				height: 44,
-				top: 0,
-				left: 2,
-				zIndex: 2,
-			}}
-		/>;
-		const icon = <div onMouseEnter={this.handleMouseEnter}>
-			<div style={iconStyle}>
-				{" "}
-				{/* "overlay" layers */}
-				<SkillIconImage style={iconImgStyle} skillName={this.props.skillName} />
-				<div
-					style={{
-						position: "absolute",
-						width: 40,
-						height: 41,
-						top: 1,
-						left: "50%",
-						marginLeft: -20,
-						borderRadius: 3,
-						overflow: "hidden",
-						zIndex: 1,
-						background: readyOverlay,
-					}}
-				>
-					{this.props.cdProgress > 1 - Debug.epsilon ||
-						!this.props.readyAsideFromCd ||
-						progressShadeCircle}
-					{this.props.cdProgress > 1 - Debug.epsilon || progressOutline}
-					{!this.props.secondaryCdProgress ||
-						this.props.secondaryCdProgress > 1 - Debug.epsilon ||
-						secondaryOutline}
-				</div>
-				<div
-					style={{
-						// skill icon overlay
-						position: "absolute",
-						width: skillBoxPx,
-						height: skillBoxPx,
-						background: "url('/misc/skillIcon_overlay.png') no-repeat",
-					}}
-				/>
+				{props.cdProgress > 1 - Debug.epsilon ||
+					!props.readyAsideFromCd ||
+					progressShadeCircle}
+				{props.cdProgress > 1 - Debug.epsilon || progressOutline}
+				{!props.secondaryCdProgress ||
+					props.secondaryCdProgress > 1 - Debug.epsilon ||
+					secondaryOutline}
 			</div>
-			{proc}
-			{stacksOverlay}
-		</div>;
-		const tooltipTrigger = <span
-			title={ACTIONS[this.props.skillName].name}
-			className="skillButton"
-		>
-			<Clickable
-				onClickFn={
-					controller.displayingUpToDateGameState
-						? () => {
-								controller.requestUseSkill({
-									skillName: this.props.skillName,
-									targetCount: this.props.targetCount,
-								});
-								controller.updateAllDisplay();
-							}
-						: undefined
-				}
-				content={icon}
-				style={controller.displayingUpToDateGameState ? {} : { cursor: "not-allowed" }}
+			<div
+				style={{
+					// skill icon overlay
+					position: "absolute",
+					width: skillBoxPx,
+					height: skillBoxPx,
+					background: "url('/misc/skillIcon_overlay.png') no-repeat",
+				}}
 			/>
-		</span>;
-		return <Tooltip.Root delay={0} hoverable={false}>
-			<Tooltip.Trigger render={tooltipTrigger} />
-			<Tooltip.Portal container={document.getElementById("skillsWindowAnchor")}>
-				<Tooltip.Positioner sideOffset={3} side="top" className="tooltip-positioner">
-					<Tooltip.Popup className="info-tooltip tooltip">
-						{this.state.skillDescription}
-					</Tooltip.Popup>
-				</Tooltip.Positioner>
-			</Tooltip.Portal>
-		</Tooltip.Root>;
-	}
+		</div>
+		{proc}
+		{stacksOverlay}
+	</div>;
+	const tooltipTrigger = <span title={ACTIONS[props.skillName].name} className="skillButton">
+		<Clickable
+			onClickFn={
+				controller.displayingUpToDateGameState
+					? () => {
+							controller.requestUseSkill({
+								skillName: props.skillName,
+								targetCount: props.targetCount,
+							});
+							controller.updateAllDisplay();
+						}
+					: undefined
+			}
+			content={icon}
+			style={controller.displayingUpToDateGameState ? {} : { cursor: "not-allowed" }}
+		/>
+	</span>;
+	return <Tooltip.Root delay={0} hoverable={false}>
+		<Tooltip.Trigger render={tooltipTrigger} />
+		<Tooltip.Portal container={document.getElementById("skillsWindowAnchor")}>
+			<Tooltip.Positioner sideOffset={3} side="top" className="tooltip-positioner">
+				<Tooltip.Popup className="info-tooltip tooltip">{skillDescription}</Tooltip.Popup>
+			</Tooltip.Positioner>
+		</Tooltip.Portal>
+	</Tooltip.Root>;
 }
 
 enum WaitSince {

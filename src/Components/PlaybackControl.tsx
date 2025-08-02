@@ -44,11 +44,11 @@ export let updateConfigDisplay = (config: SerializedConfig) => {};
 
 function getTableStyle(bgHighContrastColor: string) {
 	return `
-		table {
+		.castTimeTable {
 			border-collapse: collapse;
 			width: 100%;
 		}
-		th, td {
+		.castTimeTable th, .castTimeTable td {
 			text-align: center;
 			padding: 0.15em;
 			border: 1px solid ${bgHighContrastColor};
@@ -1336,7 +1336,7 @@ export class Config extends React.Component {
 					zh: `根据当前输入的${speedStr.zh}速和帧率，你将得到如下帧率税：`,
 				})}
 			</div>
-			<table>
+			<table className="castTimeTable">
 				<tbody>
 					<tr>
 						<th>{localize({ en: "GCD time", zh: "GCD时间" })}</th>

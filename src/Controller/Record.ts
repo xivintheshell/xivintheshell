@@ -676,7 +676,7 @@ export class Record extends Line {
 		// do nothing if no node is selected
 	}
 	onClickNode(index: number, bShift: boolean) {
-		if (bShift) {
+		if (bShift && this.selectionStartIndex !== undefined) {
 			this.selectUntil(index);
 		} else {
 			// if this is already the only selected node, unselect it
