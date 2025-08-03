@@ -159,10 +159,6 @@ const onMouseDownTimelineBackground = () => {
 	g_bgSelecting = true;
 };
 
-const onMouseUpTimelineBackground = () => {
-	g_cancelDrag = true;
-};
-
 function drawTip(lines: string[], canvasWidth: number, canvasHeight: number, images?: any[]) {
 	if (!lines.length) return;
 
@@ -868,7 +864,6 @@ function drawSkills(
 		g_ctx.rect(r.x, r.y, r.w, r.h);
 		if (interactive)
 			testInteraction(r, {
-				onMouseUp: onMouseUpTimelineBackground,
 				onMouseDown: onMouseDownTimelineBackground,
 			});
 	};
@@ -1644,7 +1639,7 @@ function drawEverything(dragTargetTime: number | null) {
 	g_ctx.fillRect(0, 0, g_visibleWidth + 1, g_renderingProps.timelineHeight + 1);
 	testInteraction(
 		{ x: 0, y: 0, w: g_visibleWidth, h: c_maxTimelineHeight },
-		{ onMouseUp: onMouseUpTimelineBackground, onMouseDown: onMouseDownTimelineBackground },
+		{ onMouseDown: onMouseDownTimelineBackground },
 	);
 
 	currentHeight += drawRuler(timelineOrigin);
@@ -1705,7 +1700,7 @@ function drawEverything(dragTargetTime: number | null) {
 export let timelineCanvasOnMouseMove: (x: number, y: number) => void = (x: number, y: number) => {};
 export let timelineCanvasOnMouseEnter: () => void = () => {};
 export let timelineCanvasOnMouseLeave: () => void = () => {};
-export let timelineCanvasOnMouseUp: (e: any) => void = (e: any) => {};
+export let timelineCanvasOnMouseUp: (e: any, x: number, y: number) => void = (e, x, y) => {};
 export let timelineCanvasOnMouseDown: (x: number, y: number) => void = (x, y) => {};
 export let timelineCanvasOnKeyDown: (e: any) => void = (e: any) => {};
 
@@ -1813,12 +1808,35 @@ export function TimelineCanvas(props: {
 			g_bgSelecting = false;
 		};
 		// ignore KB & M input when in the middle of using a skill (for simplicity)
-		timelineCanvasOnMouseUp = (e: any) => {
+		timelineCanvasOnMouseUp = (e: any, x: number, y: number) => {
 			if (!controller.shouldLoop) {
 				setClickCounter((c) => c + 1);
 				g_isMouseUpUpdate = true;
 			}
 			g_mouseUpShift = e.shiftKey;
+			g_cancelDrag = true;
+			// HACK: do not emit the cancelDrag flag if the drag occurred on top of a selected skill
+			// hitbox. This is necessary to ensure correctness for both shift-click multi-selects,
+			// and releasing a drag on top of the existing selection.
+			// g_cancelDrag must then be set within the skill element's mouseUp
+			if (controller.record.selectionStartIndex !== undefined) {
+				for (
+					let i = controller.record.selectionStartIndex;
+					i <= controller.record.selectionEndIndex!;
+					i++
+				) {
+					const hitbox = g_skillHitboxes.get(i)!;
+					if (
+						hitbox.x < x &&
+						x < hitbox.x + hitbox.w &&
+						hitbox.y < y &&
+						y < hitbox.y + hitbox.h
+					) {
+						g_cancelDrag = false;
+						break;
+					}
+				}
+			}
 		};
 		timelineCanvasOnMouseDown = (x: number, y: number) => {
 			if (!controller.shouldLoop) {
@@ -1906,16 +1924,14 @@ export function TimelineCanvas(props: {
 				(elem) => elem.type == ElemType.s_Cursor,
 			);
 			let endPos = undefined;
+			const endTime = cursors[cursors.length - 1].displayTime + g_renderingProps.countdown;
 			if (cursors.length > 0) {
 				endPos =
 					timelineOriginX +
-					StaticFn.positionFromTimeAndScale(
-						cursors[cursors.length - 1].displayTime + g_renderingProps.countdown,
-						g_renderingProps.scale,
-					);
+					StaticFn.positionFromTimeAndScale(endTime, g_renderingProps.scale);
 				endDist = Math.abs(g_mouseX - endPos);
 			}
-			let targetX = g_skillHitboxes.get(minIdx)!.x;
+			let targetTime: number | null = null;
 			// This may look weird if the last element is a jump--may need to change later.
 			const allIndices = Array.from(g_skillHitboxes.keys());
 			if (
@@ -1925,31 +1941,26 @@ export function TimelineCanvas(props: {
 				minIdx === allIndices[allIndices.length - 1]
 			) {
 				minIdx = allIndices[allIndices.length - 1] + 1;
-				targetX = endPos;
+				targetTime = endTime - g_renderingProps.countdown;
 			}
 			// Draw the drop target cursor and image of the skill being dragged.
 			if (minIdx !== -1 && globalDragContext.dragTargetIndex !== minIdx) {
-				// If the action being dragged is an oGCD, place it at the end of the PRIOR node's
-				// animation lock.
-				// This is not fully robust and doesn't account for GCDs moved around wait events,
-				// but it's good enough.
-				if (minIdx > 0 && !g_draggedSkillElem.isGCD) {
-					const priorNode = controller.record.actions[minIdx - 1];
-					if (priorNode.tmp_endLockTime !== undefined) {
-						// node locks use absolute time (ignore countdown)
-						targetX =
-							timelineOriginX +
-							StaticFn.positionFromTimeAndScale(
-								priorNode.tmp_endLockTime,
-								g_renderingProps.scale,
-							);
+				if (targetTime === null) {
+					// If the action being dragged is an oGCD, place it at the end of the PRIOR node's
+					// animation lock.
+					// This is not fully robust and doesn't account for GCDs moved around wait events,
+					// but it's good enough.
+					if (minIdx > 0 && !g_draggedSkillElem.isGCD) {
+						const priorNode = controller.record.actions[minIdx - 1];
+						targetTime = priorNode.tmp_endLockTime ?? null;
+					} else {
+						targetTime = controller.record.actions[minIdx].tmp_startLockTime ?? null;
+					}
+					// node locks use absolute time (must subtract countdown)
+					if (targetTime !== null) {
+						targetTime -= controller.gameConfig.countdown;
 					}
 				}
-				const targetTime =
-					StaticFn.timeFromPositionAndScale(
-						targetX - timelineOriginX,
-						g_renderingProps.scale,
-					) - g_renderingProps.countdown;
 				globalDragContext.setDragTarget(minIdx, targetTime);
 			}
 		}

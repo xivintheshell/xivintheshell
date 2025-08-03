@@ -140,7 +140,12 @@ function TimelineMain() {
 				timelineCanvasOnMouseLeave();
 			}}
 			onMouseUp={(e) => {
-				timelineCanvasOnMouseUp(e);
+				if (myRef.current) {
+					const rect = myRef.current.getBoundingClientRect();
+					const x = e.clientX - rect.left;
+					const y = e.clientY - rect.top;
+					timelineCanvasOnMouseUp(e, x, y);
+				}
 			}}
 			onKeyDown={(e) => {
 				timelineCanvasOnKeyDown(e);
