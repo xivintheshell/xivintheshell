@@ -120,6 +120,7 @@ let g_bgSelecting = false;
 let g_selectStartX = 0;
 let g_selectStartY = 0;
 let g_cancelDrag = false;
+let g_dragLock = false;
 // END CLICK+DRAG STATE
 
 // not used everywhere it could be used, be careful
@@ -1015,7 +1016,7 @@ function drawSkills(
 					},
 					onMouseDown: () => {
 						// Do not attempt to select an element if a mouseUp fired on the same frame.
-						if (!g_isMouseUpUpdate) {
+						if (!g_isMouseUpUpdate && !g_dragLock) {
 							g_draggedSkillElem = icon.elem;
 						}
 					},
@@ -1847,6 +1848,7 @@ export function TimelineCanvas(props: {
 		g_visibleLeft = props.visibleLeft;
 		g_visibleWidth = props.visibleWidth;
 		g_colors = getThemeColors(activeColorTheme);
+		g_dragLock = lockContext.value;
 
 		cachedPointerMouse = readback_pointerMouse;
 
