@@ -9,12 +9,12 @@ import { TimelineEditor } from "./TimelineEditor";
 import {
 	TimelineCanvas,
 	timelineCanvasGetPointerMouse,
-	timelineCanvasOnClick,
 	timelineCanvasOnKeyDown,
 	timelineCanvasOnMouseEnter,
 	timelineCanvasOnMouseLeave,
 	timelineCanvasOnMouseMove,
 	timelineCanvasOnMouseDown,
+	timelineCanvasOnMouseUp,
 } from "./TimelineCanvas";
 import { localize } from "./Localization";
 import { getCurrentThemeColors, getThemeField, ColorThemeContext } from "./ColorTheme";
@@ -139,8 +139,8 @@ function TimelineMain() {
 			onMouseLeave={(e) => {
 				timelineCanvasOnMouseLeave();
 			}}
-			onClick={(e) => {
-				timelineCanvasOnClick(e);
+			onMouseUp={(e) => {
+				timelineCanvasOnMouseUp(e);
 			}}
 			onKeyDown={(e) => {
 				timelineCanvasOnKeyDown(e);
@@ -256,7 +256,7 @@ function TimelineTabs() {
 				topic="dragLock"
 				content={localize({
 					en: <div>When locked, disables click/drag to rearrange timeline skills.</div>,
-					zh: <div>锁定是，禁止用单击并拖动来改变技能轴。</div>,
+					zh: <div>锁定时，禁止用单击并拖动来改变技能轴。</div>,
 				})}
 			/>{" "}
 			<IconContext.Provider

@@ -1,13 +1,14 @@
 [
 	{
-		"date": "7/27/25",
+		"date": "8/2/25",
 		"changes": [
 			"Updated FPS adjustment preview tooltip to use GCD time instead of cast times.",
 			"[BETA] The active timeline slot is now saved across page reloads.",
 			"[BETA] Click and drag to rearrange skills, both in the visual timeline and timeline editor table.",
-			"[BETA] Click on the background of the visual timeline to select multiple skills.",
+			"[BETA] Click and drag on the background of the visual timeline to select multiple skills.",
 			"[BETA] Use the \"drag lock\" switch to the right of the display settings tabs to disable click+drag behavior."
-		]
+		],
+		"level": "major"
 	},
 	{
 		"date": "7/26/25",
