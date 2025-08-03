@@ -71,7 +71,7 @@ let g_ctx: CanvasRenderingContext2D;
 
 let g_visibleLeft = 0;
 let g_visibleWidth = 0;
-let g_isClickUpdate = false;
+let g_isMouseUpUpdate = false;
 let g_clickEvent: any = undefined; // valid when isClickUpdate is true
 let g_isMouseDownUpdate = false;
 let g_newSelectionIndices: (number | null)[] | undefined = undefined;
@@ -994,15 +994,11 @@ function drawSkills(
 				{
 					hoverTip: lines,
 					onMouseUp: () => {
+						// If we're not dragging a skill to rearrange, perform a selection action.
 						if (g_draggedSkillElem === undefined) {
-							// If we're not dragging a skill to rearrange, perform a selection action.
-							if (g_bgSelecting) {
-								// If we're ending a selection box, select this element without scrolling.
-								controller.timeline.onClickTimelineAction(
-									icon.elem.actionIndex,
-									true,
-								);
-							} else {
+							// If we're doing a click+drag box, this skill was already selected,
+							// and there's no need to re-select it.
+							if (!g_bgSelecting) {
 								controller.timeline.onClickTimelineAction(
 									icon.elem.actionIndex,
 									g_clickEvent ? g_clickEvent.shiftKey : false,
@@ -1012,7 +1008,8 @@ function drawSkills(
 						}
 					},
 					onMouseDown: () => {
-						if (!g_clickEvent?.shiftKey) {
+						// Do not attempt to select an element if a mouseUp fired on the same frame.
+						if (!g_isMouseUpUpdate && !g_clickEvent?.shiftKey) {
 							g_draggedSkillElem = icon.elem;
 							if (!controller.record.isInSelection(icon.elem.actionIndex)) {
 								controller.timeline.onClickTimelineAction(
@@ -1688,10 +1685,10 @@ function drawEverything(dragTargetTime: number | null) {
 		if (g_isMouseDownUpdate && g_activeOnMouseDown) {
 			g_activeOnMouseDown();
 		}
-		if (g_isClickUpdate && g_activeOnMouseUp) {
+		if (g_isMouseUpUpdate && g_activeOnMouseUp) {
 			g_activeOnMouseUp();
 		}
-		if (g_isClickUpdate) {
+		if (g_isMouseUpUpdate) {
 			// Always end a background selection operation when the mouse is released, regardless of
 			// what element the cursor is hovering.
 			g_bgSelecting = false;
@@ -1810,7 +1807,7 @@ export function TimelineCanvas(props: {
 		timelineCanvasOnMouseUp = (e: any) => {
 			if (!controller.shouldLoop) {
 				setClickCounter((c) => c + 1);
-				g_isClickUpdate = true;
+				g_isMouseUpUpdate = true;
 				g_clickEvent = e;
 			}
 			// Apparently we can't access the global context object from here, so we need to
@@ -1877,9 +1874,7 @@ export function TimelineCanvas(props: {
 					controller.displayCurrentState();
 				}
 			}
-		}
-
-		if (g_draggedSkillElem !== undefined && !lockContext.value) {
+		} else if (g_draggedSkillElem !== undefined && !lockContext.value) {
 			// If we're currently dragging a skill, update the position of the cursor to draw.
 			const timelineOriginX = -g_visibleLeft + TimelineDimensions.leftBufferWidth;
 			// Linear search for the skill hitbox with the smallest x distance, and set it as the new drag target
@@ -1967,7 +1962,7 @@ export function TimelineCanvas(props: {
 		}
 
 		// reset event flags
-		g_isClickUpdate = false;
+		g_isMouseUpUpdate = false;
 		g_isMouseDownUpdate = false;
 		g_newSelectionIndices = undefined;
 	}, [
