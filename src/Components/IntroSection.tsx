@@ -199,8 +199,14 @@ export function IntroSection(props: { job: ShellJob }) {
 								(effective when not running in real-time).
 							</li>
 							<li style={smallGap}>
-								Click on a buff applied to self to remove it. Unless it's ley lines,
-								in which case it can be re-enabled.
+								Click on a buff applied to self to remove it. Clicking on certain
+								ground-targeted buffs like BLM's Ley Lines, DRK's Salt and Darkness,
+								and SCH's Sacred Soil temporarily disables their effects. Clicking
+								enable re-enables them.
+							</li>
+							<li style={smallGap}>
+								Click and drag in the visual timeline or use the "Timeline Editor"
+								tab at the bottom of the page to re-arrange skills.
 							</li>
 						</ul>,
 						zh: <ul>
@@ -216,7 +222,10 @@ export function IntroSection(props: { job: ShellJob }) {
 								删除时间线上的最后一个操作（实时模式下此操作无效）。
 							</li>
 							<li style={smallGap}>
-								左键单击可以移除自己身上的buff。黑魔纹除外，黑魔纹在单击关闭后可以被再次点击开启。
+								左键单击可以移除自己身上的buff。地面区域类的buff，像“黑魔纹”（如暗黑骑士的”腐秽大地“和学者的”野战治疗阵“），在单击关闭后可以被再次点击开启。
+							</li>
+							<li style={smallGap}>
+								在时间轴可视化窗口和下方的“时间轴编辑器“内，可以通过拖动选中技能以改变技能顺序。
 							</li>
 						</ul>,
 						ja: <ul>

@@ -1,5 +1,21 @@
 [
 	{
+		"date": "8/3/25",
+		"changes": [
+			"The active timeline slot is now saved across page reloads.",
+			"Click and drag to rearrange skills, both in the visual timeline and timeline editor table.",
+			"Click and drag on the background of the visual timeline to select multiple skills.",
+			"Use the \"drag lock\" switch to the right of the display settings tabs to disable click+drag behavior."
+		],
+		"changes_zh": [
+			"选定的时间轴现在会在重新加载后保存。",
+			"在时间轴可视化窗口和下方的“时间轴编辑器“内，可以点击并拖动来选择多个技能。",
+			"可以通过拖动选中技能以改变技能顺序。",
+			"“显示设置”右边的“拖动锁”可以禁用拖动功能。"
+		],
+		"level": "major"
+	},
+	{
 		"date": "7/27/25",
 		"changes": [
 			"Updated FPS adjustment preview tooltip to use GCD time instead of cast times."

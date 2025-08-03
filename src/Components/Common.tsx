@@ -528,57 +528,40 @@ type SliderProps = {
 	description?: ContentNode;
 	style?: CSSProperties;
 };
-type SliderState = {
-	value: string;
-};
-export class Slider extends React.Component {
-	props: SliderProps = {
-		uniqueName: "anonSlider",
-		defaultValue: "default slider value",
-		description: "default description",
+export function Slider(props: SliderProps) {
+	const description = props.description ?? "default description";
+	const [value, setValue] = useState(props.defaultValue ?? "");
+	const onChange = (e: ChangeEvent<{ value: string }>) => {
+		setValue(e.target.value);
+		if (props.onChange) {
+			props.onChange(e.target.value);
+		}
+		setCachedValue("slider: " + props.uniqueName, e.target.value);
 	};
-	state: SliderState;
-	onChange: (e: ChangeEvent<{ value: string }>) => void;
-	constructor(inProps: SliderProps) {
-		super(inProps);
-		this.props = inProps;
-		this.state = {
-			value: inProps.defaultValue ?? "",
-		};
-		this.onChange = (e: ChangeEvent<{ value: string }>) => {
-			this.setState({ value: e.target.value });
-			if (this.props.onChange) {
-				this.props.onChange(e.target.value);
-			}
-			setCachedValue("slider: " + this.props.uniqueName, e.target.value);
-		};
-	}
-	componentDidMount() {
-		let initialValue = this.state.value;
-		const str = getCachedValue("slider: " + this.props.uniqueName);
+	useEffect(() => {
+		let initialValue = value;
+		const str = getCachedValue("slider: " + props.uniqueName);
 		if (str !== null) {
 			initialValue = str;
-			this.setState({ value: initialValue });
+			setValue(str);
 		}
-		if (this.props.onChange) {
-			this.props.onChange(initialValue);
+		if (props.onChange) {
+			props.onChange(initialValue);
 		}
-	}
-	render() {
-		return <div style={{ ...{ display: "inline-block" }, ...this.props.style }}>
-			<span>{this.props.description ?? ""}</span>
-			<input
-				size={10}
-				type="range"
-				value={this.state.value}
-				min={0.05}
-				max={1}
-				step={0.025}
-				onChange={this.onChange}
-				style={{ position: "relative", outline: "none" }}
-			/>
-		</div>;
-	}
+	}, []);
+	return <div style={{ ...{ display: "inline-block" }, ...props.style }}>
+		<span>{description ?? ""}</span>
+		<input
+			size={10}
+			type="range"
+			value={value}
+			min={0.05}
+			max={1}
+			step={0.025}
+			onChange={onChange}
+			style={{ position: "relative", outline: "none" }}
+		/>
+	</div>;
 }
 
 export function Checkbox(props: {
@@ -618,24 +601,6 @@ export function Checkbox(props: {
 	</div>;
 }
 
-export class ScrollAnchor extends React.Component {
-	myRef: React.RefObject<HTMLDivElement>;
-	constructor(props: {}) {
-		super(props);
-		// @ts-expect-error for some reason, newer versions allow the type to be RefObject<elem | null>
-		this.myRef = React.createRef();
-	}
-	scroll() {
-		if (this.myRef.current) {
-			this.myRef.current.scrollIntoView({ behavior: "smooth" });
-		}
-	}
-	render() {
-		this.scroll();
-		return <div ref={this.myRef} />;
-	}
-}
-
 type ExpandableProps = {
 	title: string;
 	autoIndent?: boolean;
@@ -646,54 +611,39 @@ type ExpandableProps = {
 	onExpand?: () => void;
 	onCollapse?: () => void;
 };
-type ExpandableState = {
-	show: boolean;
-};
-export class Expandable extends React.Component {
-	props: ExpandableProps = { title: "(expand me)" };
-	state: ExpandableState = { show: false };
-	autoIndent: boolean = true;
-	onClick: () => void;
-	constructor(inProps: ExpandableProps) {
-		super(inProps);
-		this.props = inProps;
-		if (inProps.autoIndent === false) this.autoIndent = false;
-		this.onClick = () => {
-			const newShow = !this.state.show;
-			this.setState({ show: newShow });
-			if (this.props.onExpand && newShow) this.props.onExpand();
-			if (this.props.onCollapse && !newShow) this.props.onCollapse();
-			setCachedValue("exp: " + inProps.title, (newShow ? 1 : 0).toString());
-		};
+export function Expandable(props: ExpandableProps) {
+	const [show, setShow] = useState(props.defaultShow ?? false);
+	const autoIndent = props.autoIndent ?? true;
+	const onClick = () => {
+		const newShow = !show;
+		setShow(newShow);
+		if (props.onExpand && newShow) props.onExpand();
+		if (props.onCollapse && !newShow) props.onCollapse();
+		setCachedValue("exp: " + props.title, (newShow ? 1 : 0).toString());
+	};
 
-		const expanded = getCachedValue("exp: " + inProps.title);
-		let show: boolean = inProps.defaultShow ?? false;
+	useEffect(() => {
+		const expanded = getCachedValue("exp: " + props.title);
 		if (expanded !== null) {
-			show = parseInt(expanded) === 1;
+			setShow(parseInt(expanded) === 1);
 		}
-		this.state = {
-			show: show,
-		};
-	}
-	render() {
-		const indentDivStyle = this.autoIndent
-			? { margin: 10, paddingLeft: 6, marginBottom: 20 }
-			: {};
-		return <div style={this.props.noMargin ? {} : { marginTop: 10, marginBottom: 10 }}>
-			<Clickable
-				content={
-					<span>
-						<span>{this.state.show ? "- " : "+ "}</span>
-						{this.props.titleNode ? this.props.titleNode : this.props.title}
-					</span>
-				}
-				onClickFn={this.onClick}
-			/>
-			<div style={{ position: "relative", display: this.state.show ? "block" : "none" }}>
-				<div style={indentDivStyle}>{this.props.content}</div>
-			</div>
-		</div>;
-	}
+	}, []);
+
+	const indentDivStyle = autoIndent ? { margin: 10, paddingLeft: 6, marginBottom: 20 } : {};
+	return <div style={props.noMargin ? {} : { marginTop: 10, marginBottom: 10 }}>
+		<Clickable
+			content={
+				<span>
+					<span>{show ? "- " : "+ "}</span>
+					{props.titleNode ?? props.title}
+				</span>
+			}
+			onClickFn={onClick}
+		/>
+		<div style={{ position: "relative", display: show ? "block" : "none" }}>
+			<div style={indentDivStyle}>{props.content}</div>
+		</div>
+	</div>;
 }
 
 type LoadJsonFromFileOrUrlProps = {

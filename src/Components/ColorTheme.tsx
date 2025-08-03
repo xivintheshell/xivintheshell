@@ -238,6 +238,7 @@ export type ThemeColors = {
 	jobAccents: JobAccentColors;
 	editingValid: string;
 	editingInvalid: string;
+	dropTarget: string;
 	realTime: string;
 	historical: string;
 	fileDownload: string;
@@ -341,6 +342,7 @@ const DARK_THEME_COLORS: ThemeColors = {
 	},
 	editingValid: "#ffdc00", // yellow
 	editingInvalid: "#ff0000", // red
+	dropTarget: "#5579f1",
 	realTime: "mediumseagreen",
 	historical: "#ff8c00", // darkorange
 	fileDownload: "#798c3f",
@@ -590,6 +592,7 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 	},
 	editingValid: "#ffdc00", // yellow
 	editingInvalid: "#ff0000", // red
+	dropTarget: "#4665ff",
 	realTime: "mediumseagreen",
 	historical: "#ff8c00", // darkorange
 	fileDownload: "#798c3f",

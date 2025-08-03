@@ -37,9 +37,9 @@ import {
 } from "./Localization";
 import { setEditingMarkerValues } from "./TimelineMarkers";
 import { getThemeColors, ThemeColors, ColorThemeContext } from "./ColorTheme";
-import { scrollEditorToFirstSelected } from "./TimelineEditor";
+import { scrollEditorToFirstSelected, updateInvalidStatus } from "./TimelineEditor";
 import { bossIsUntargetable } from "../Controller/DamageStatistics";
-import { updateTimelineView } from "./Timeline";
+import { updateTimelineView, DragTargetContext, DragLockContext } from "./Timeline";
 import { ShellJob } from "../Game/Data/Jobs";
 import { LIMIT_BREAK_ACTIONS } from "../Game/Data/Shared/LimitBreak";
 
@@ -71,8 +71,11 @@ let g_ctx: CanvasRenderingContext2D;
 
 let g_visibleLeft = 0;
 let g_visibleWidth = 0;
-let g_isClickUpdate = false;
-let g_clickEvent: any = undefined; // valid when isClickUpdate is true
+let g_isMouseUpUpdate = false;
+let g_mouseUpShift = false;
+let g_isMouseDownUpdate = false;
+let g_newSelectionIndices: (number | null)[] | undefined = undefined;
+let g_draggedSkillElem: SkillElem | undefined = undefined;
 let g_keyboardEvent: any = undefined;
 let g_mouseX = 0;
 let g_mouseY = 0;
@@ -83,7 +86,8 @@ let g_colors: ThemeColors;
 // updated on mouse enter/leave, updated and reset on every draw
 let g_activeHoverTip: string[] | undefined = undefined;
 let g_activeHoverTipImages: any[] | undefined = undefined;
-let g_activeOnClick: (() => void) | undefined = undefined;
+let g_activeOnMouseUp: (() => void) | undefined = undefined;
+let g_activeOnMouseDown: (() => void) | undefined = undefined;
 
 let g_renderingProps: TimelineRenderingProps = {
 	timelineWidth: 0,
@@ -107,14 +111,32 @@ let g_renderingProps: TimelineRenderingProps = {
 let cachedPointerMouse = false;
 let readback_pointerMouse = false;
 
+// BEGIN CLICK+DRAG STATE
+// Used to determine whether a selection overlaps a given skill. Very unidiomatic.
+// Needs to be re-populated every time we re-draw the active timeline in `drawSkills`.
+const g_skillHitboxes = new Map<number, Rect>();
+// Determines whether we're drawing a rectangle to highlight multiple skills on the canvas.
+let g_bgSelecting = false;
+let g_selectStartX = 0;
+let g_selectStartY = 0;
+let g_cancelDrag = false;
+let g_dragLock = false;
+// END CLICK+DRAG STATE
+
+// not used everywhere it could be used, be careful
+const SKILL_ICON_SIZE_PX = 28;
+
 // qol: event capture mask? So can provide a layer that overwrites keyboard event only and not affect the rest
 // all coordinates in canvas space
 function testInteraction(
 	rect: Rect,
-	hoverTip?: string[],
-	onClick?: () => void,
-	pointerMouse?: boolean,
-	hoverImages?: any[],
+	params?: {
+		hoverTip?: string[];
+		onMouseUp?: () => void;
+		onMouseDown?: () => void;
+		pointerMouse?: boolean;
+		hoverImages?: any[];
+	},
 ) {
 	if (
 		g_mouseX >= rect.x &&
@@ -122,17 +144,19 @@ function testInteraction(
 		g_mouseY >= rect.y &&
 		g_mouseY < rect.y + rect.h
 	) {
-		g_activeHoverTip = hoverTip;
-		g_activeHoverTipImages = hoverImages;
-		g_activeOnClick = onClick;
-		readback_pointerMouse = pointerMouse === true;
+		g_activeHoverTip = params?.hoverTip;
+		g_activeHoverTipImages = params?.hoverImages;
+		g_activeOnMouseUp = params?.onMouseUp;
+		g_activeOnMouseDown = params?.onMouseDown;
+		readback_pointerMouse = params?.pointerMouse === true;
 	}
 }
 
-const onClickTimelineBackground = () => {
-	// clicked on background:
+const onMouseDownTimelineBackground = () => {
+	g_draggedSkillElem = undefined;
 	controller.record.unselectAll();
 	controller.displayCurrentState();
+	g_bgSelecting = true;
 };
 
 function drawTip(lines: string[], canvasWidth: number, canvasHeight: number, images?: any[]) {
@@ -240,7 +264,7 @@ function drawMarkers(
 
 			const left =
 				timelineOrigin + StaticFn.positionFromTimeAndScale(m.time + countdown, scale);
-			const onClick = () => {
+			const onMouseUp = () => {
 				const success = controller.timeline.deleteMarker(m);
 				console.assert(success);
 				controller.updateStats();
@@ -290,8 +314,10 @@ function drawMarkers(
 						w: Math.max(markerWidth, TimelineDimensions.trackHeight),
 						h: TimelineDimensions.trackHeight,
 					},
-					["[" + timeStr + "] " + localizedDescription],
-					onClick,
+					{
+						hoverTip: ["[" + timeStr + "] " + localizedDescription],
+						onMouseUp,
+					},
 				);
 			} else {
 				g_ctx.fillStyle = m.color;
@@ -322,8 +348,10 @@ function drawMarkers(
 						w: TimelineDimensions.trackHeight,
 						h: TimelineDimensions.trackHeight,
 					},
-					["[" + m.time + "] " + localizedDescription],
-					onClick,
+					{
+						hoverTip: ["[" + m.time + "] " + localizedDescription],
+						onMouseUp,
+					},
 				);
 			}
 		}
@@ -345,9 +373,12 @@ function drawMPTickMarks(
 		g_ctx.moveTo(x, originY);
 		g_ctx.lineTo(x, originY + TimelineDimensions.renderSlotHeight());
 
-		testInteraction({ x: x - 2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight() }, [
-			"[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc,
-		]);
+		testInteraction(
+			{ x: x - 2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight() },
+			{
+				hoverTip: ["[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc],
+			},
+		);
 	});
 	g_ctx.stroke();
 }
@@ -367,9 +398,10 @@ function drawMeditateTickMarks(
 		g_ctx.moveTo(x, originY);
 		g_ctx.lineTo(x, originY + TimelineDimensions.renderSlotHeight());
 
-		testInteraction({ x: x - 2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight() }, [
-			"[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc,
-		]);
+		testInteraction(
+			{ x: x - 2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight() },
+			{ hoverTip: ["[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc] },
+		);
 	});
 	g_ctx.stroke();
 }
@@ -389,9 +421,10 @@ function drawAutoTickMarks(
 		g_ctx.moveTo(x, originY);
 		g_ctx.lineTo(x, originY + TimelineDimensions.renderSlotHeight());
 
-		testInteraction({ x: x - 2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight() }, [
-			"[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc,
-		]);
+		testInteraction(
+			{ x: x - 2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight() },
+			{ hoverTip: ["[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc] },
+		);
 	});
 	g_ctx.stroke();
 }
@@ -459,7 +492,7 @@ function drawWarningMarks(
 		}
 		testInteraction(
 			{ x: x - sideLength / 2, y: bottomY - sideLength, w: sideLength, h: sideLength },
-			[message],
+			{ hoverTip: [message] },
 		);
 	});
 }
@@ -588,13 +621,10 @@ function drawPotencyMarks(
 			mark.type === ElemType.HealingMark
 				? { x: x - 3, y: timelineOriginY + 6, w: 6, h: 6 }
 				: { x: x - 3, y: timelineOriginY, w: 6, h: 6 };
-		testInteraction(
-			interactionArea,
-			untargetable ? [time, ...info, untargetableStr] : [time, ...info],
-			undefined,
-			undefined,
-			buffImages,
-		);
+		testInteraction(interactionArea, {
+			hoverTip: untargetable ? [time, ...info, untargetableStr] : [time, ...info],
+			hoverImages: buffImages,
+		});
 	});
 }
 
@@ -620,7 +650,12 @@ function drawLucidMarks(
 			mark.displayTime.toFixed(3) +
 			"] " +
 			mark.sourceDesc.replace("{skill}", localizeSkillName("LUCID_DREAMING"));
-		testInteraction({ x: x - 3, y: timelineOriginY, w: 6, h: 6 }, [hoverText]);
+		testInteraction(
+			{ x: x - 3, y: timelineOriginY, w: 6, h: 6 },
+			{
+				hoverTip: [hoverText],
+			},
+		);
 	});
 }
 
@@ -802,7 +837,12 @@ function drawSkills(
 
 		function buildCover(existingCovers: number, collection: Rect[]) {
 			if (g_renderingProps.drawOptions.drawBuffIndicators) {
-				collection.push({ x: x, y: y + 28 + existingCovers * 4, w: 28, h: 4 });
+				collection.push({
+					x: x,
+					y: y + SKILL_ICON_SIZE_PX + existingCovers * 4,
+					w: SKILL_ICON_SIZE_PX,
+					h: 4,
+				});
 			}
 			return 1;
 		}
@@ -820,13 +860,18 @@ function drawSkills(
 		g_ctx.fillText("x" + c.count.toString(), c.x, c.y);
 	});
 
+	const rectWithBgInteract = (r: Rect) => {
+		g_ctx.rect(r.x, r.y, r.w, r.h);
+		if (interactive)
+			testInteraction(r, {
+				onMouseDown: onMouseDownTimelineBackground,
+			});
+	};
+
 	// purple
 	g_ctx.fillStyle = g_colors.timeline.castBar;
 	g_ctx.beginPath();
-	purpleLockBars.forEach((r) => {
-		g_ctx.rect(r.x, r.y, r.w, r.h);
-		if (interactive) testInteraction(r, undefined, onClickTimelineBackground);
-	});
+	purpleLockBars.forEach(rectWithBgInteract);
 	g_ctx.fill();
 
 	// snapshot bar
@@ -834,53 +879,58 @@ function drawSkills(
 	g_ctx.strokeStyle = "rgba(151, 85, 239, 0.4)";
 	g_ctx.beginPath();
 	snapshots.forEach((x) => {
-		g_ctx.moveTo(x, skillsTopY + 14);
-		g_ctx.lineTo(x, skillsTopY + 28);
+		g_ctx.moveTo(x, skillsTopY + SKILL_ICON_SIZE_PX / 2);
+		g_ctx.lineTo(x, skillsTopY + SKILL_ICON_SIZE_PX);
 	});
 	g_ctx.stroke();
 
 	// green
 	g_ctx.fillStyle = g_colors.timeline.gcdBar;
 	g_ctx.beginPath();
-	gcdBars.forEach((r) => {
-		g_ctx.rect(r.x, r.y, r.w, r.h);
-		if (interactive) testInteraction(r, undefined, onClickTimelineBackground);
-	});
+	gcdBars.forEach(rectWithBgInteract);
 	g_ctx.fill();
 
 	// grey
 	g_ctx.fillStyle = g_colors.timeline.lockBar;
 	g_ctx.beginPath();
-	greyLockBars.forEach((r) => {
-		g_ctx.rect(r.x, r.y, r.w, r.h);
-		if (interactive) testInteraction(r, undefined, onClickTimelineBackground);
-	});
+	greyLockBars.forEach(rectWithBgInteract);
 	g_ctx.fill();
 
 	covers.forEach((coverArray, buffType) => {
 		g_ctx.fillStyle = coverInfo.get(buffType)!.color;
 		g_ctx.beginPath();
-		coverArray.forEach((r) => {
-			g_ctx.rect(r.x, r.y, r.w, r.h);
-			if (interactive) testInteraction(r, undefined, onClickTimelineBackground);
-		});
+		coverArray.forEach(rectWithBgInteract);
 		g_ctx.fill();
 	});
 
 	// buffCovers
 	g_ctx.fillStyle = g_colors.timeline.buffCover;
 	g_ctx.beginPath();
-	buffCovers.forEach((r) => {
-		g_ctx.rect(r.x, r.y, r.w, r.h);
-		if (interactive) testInteraction(r, undefined, onClickTimelineBackground);
-	});
+	buffCovers.forEach(rectWithBgInteract);
 	g_ctx.fill();
 
 	// icons
 	g_ctx.beginPath();
+	if (interactive) {
+		g_skillHitboxes.clear();
+	}
 	skillIcons.forEach((icon) => {
-		g_ctx.drawImage(getSkillIconImage(icon.elem.skillName), icon.x, icon.y, 28, 28);
+		g_ctx.drawImage(
+			getSkillIconImage(icon.elem.skillName),
+			icon.x,
+			icon.y,
+			SKILL_ICON_SIZE_PX,
+			SKILL_ICON_SIZE_PX,
+		);
 		const node = icon.elem.node;
+		if (interactive) {
+			g_skillHitboxes.set(icon.elem.actionIndex, {
+				x: icon.x,
+				y: icon.y,
+				w: SKILL_ICON_SIZE_PX,
+				h: SKILL_ICON_SIZE_PX,
+			});
+		}
 
 		const lines: string[] = [];
 		const buffImages: HTMLImageElement[] = [];
@@ -941,25 +991,42 @@ function drawSkills(
 
 		if (interactive) {
 			testInteraction(
-				{ x: icon.x, y: icon.y, w: 28, h: 28 },
-				lines,
-				() => {
-					controller.timeline.onClickTimelineAction(
-						icon.elem.actionIndex,
-						g_clickEvent ? g_clickEvent.shiftKey : false,
-					);
-					scrollEditorToFirstSelected();
+				{ x: icon.x, y: icon.y, w: SKILL_ICON_SIZE_PX, h: SKILL_ICON_SIZE_PX },
+				{
+					hoverTip: lines,
+					onMouseUp: () => {
+						// If we're not dragging a skill to rearrange, perform a selection action.
+						if (g_draggedSkillElem === undefined) {
+							// If we're doing a click+drag box, this skill was already selected,
+							// and there's no need to re-select it.
+							if (!g_bgSelecting) {
+								controller.timeline.onClickTimelineAction(
+									icon.elem.actionIndex,
+									g_mouseUpShift,
+								);
+								scrollEditorToFirstSelected();
+							}
+						}
+						g_cancelDrag = true;
+					},
+					onMouseDown: () => {
+						// Do not attempt to select an element if a mouseUp fired on the same frame.
+						if (!g_isMouseUpUpdate && !g_dragLock) {
+							g_draggedSkillElem = icon.elem;
+						}
+					},
+					pointerMouse: true,
+					hoverImages: buffImages,
 				},
-				true,
-				buffImages,
 			);
 		} else {
 			testInteraction(
-				{ x: icon.x, y: icon.y, w: 28, h: 28 },
-				lines,
-				() => {},
-				false,
-				buffImages,
+				{ x: icon.x, y: icon.y, w: SKILL_ICON_SIZE_PX, h: SKILL_ICON_SIZE_PX },
+				{
+					hoverTip: lines,
+					pointerMouse: false,
+					hoverImages: buffImages,
+				},
 			);
 		}
 	});
@@ -976,7 +1043,15 @@ function drawSkills(
 	g_ctx.globalAlpha = originalAlpha;
 }
 
-function drawCursor(x: number, y1: number, y2: number, y3: number, color: string, tip: string) {
+function drawCursor(
+	x: number,
+	y1: number,
+	y2: number,
+	y3: number,
+	color: string,
+	tip?: string,
+	width?: number,
+) {
 	// triangle
 	g_ctx.fillStyle = color;
 	g_ctx.beginPath();
@@ -1003,6 +1078,10 @@ function drawCursor(x: number, y1: number, y2: number, y3: number, color: string
 	g_ctx.lineTo(x, y2);
 	g_ctx.stroke();
 
+	const oldWidth = g_ctx.lineWidth;
+	if (width !== undefined) {
+		g_ctx.lineWidth = width;
+	}
 	// active slot
 	g_ctx.strokeStyle = color;
 	g_ctx.setLineDash([]);
@@ -1010,6 +1089,8 @@ function drawCursor(x: number, y1: number, y2: number, y3: number, color: string
 	g_ctx.moveTo(x, y2);
 	g_ctx.lineTo(x, y3);
 	g_ctx.stroke();
+
+	g_ctx.lineWidth = oldWidth;
 
 	// after active slot
 	g_ctx.strokeStyle = color + "9f";
@@ -1019,7 +1100,10 @@ function drawCursor(x: number, y1: number, y2: number, y3: number, color: string
 	g_ctx.lineTo(x, c_maxTimelineHeight);
 	g_ctx.stroke();
 
-	testInteraction({ x: x - 3, y: 0, w: 6, h: c_maxTimelineHeight }, [tip]);
+	testInteraction(
+		{ x: x - 3, y: 0, w: 6, h: c_maxTimelineHeight },
+		tip !== undefined ? { hoverTip: [tip] } : undefined,
+	);
 	g_ctx.setLineDash([]);
 }
 
@@ -1045,16 +1129,18 @@ export function drawRuler(originX: number, ignoreVisibleX = false): number {
 			w: xUpperBound - TimelineDimensions.leftBufferWidth,
 			h: TimelineDimensions.rulerHeight,
 		},
-		[displayTime.toFixed(3)],
-		() => {
-			if (
-				displayTime < controller.game.getDisplayTime() &&
-				displayTime >= -controller.game.config.countdown
-			) {
-				controller.displayHistoricalState(displayTime, undefined); // replay the actions as-is
-			} else {
-				controller.displayCurrentState();
-			}
+		{
+			hoverTip: [displayTime.toFixed(3)],
+			onMouseUp: () => {
+				if (
+					displayTime < controller.game.getDisplayTime() &&
+					displayTime >= -controller.game.config.countdown
+				) {
+					controller.displayHistoricalState(displayTime, undefined); // replay the actions as-is
+				} else {
+					controller.displayCurrentState();
+				}
+			},
 		},
 	);
 
@@ -1154,6 +1240,19 @@ export function drawMarkerTracks(originX: number, originY: number, ignoreVisible
 	);
 
 	return numTracks * TimelineDimensions.trackHeight;
+}
+
+function drawSelectionRect(g_ctx: CanvasRenderingContext2D, rect: Rect) {
+	g_ctx.fillStyle = "rgba(147, 112, 219, 0.15)";
+	g_ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+	g_ctx.strokeStyle = "rgba(147, 112, 219, 0.5)";
+	g_ctx.lineWidth = 1;
+	g_ctx.beginPath();
+	g_ctx.moveTo(rect.x, rect.y);
+	g_ctx.lineTo(rect.x, rect.y + rect.h);
+	g_ctx.moveTo(rect.x + rect.w, rect.y);
+	g_ctx.lineTo(rect.x + rect.w, rect.y + rect.h);
+	g_ctx.stroke();
 }
 
 export function drawTimelines(
@@ -1275,7 +1374,6 @@ export function drawTimelines(
 
 		// selection rect
 		if (g_renderingProps.showSelection && isActiveSlot && !isImageExportMode) {
-			g_ctx.fillStyle = "rgba(147, 112, 219, 0.15)";
 			const selectionLeftPx =
 				displayOriginX +
 				StaticFn.positionFromTimeAndScale(
@@ -1287,23 +1385,12 @@ export function drawTimelines(
 					g_renderingProps.selectionStartDisplayTime,
 				g_renderingProps.scale,
 			);
-			g_ctx.fillRect(
-				selectionLeftPx,
-				currentY,
-				selectionWidthPx,
-				TimelineDimensions.renderSlotHeight(),
-			);
-			g_ctx.strokeStyle = "rgba(147, 112, 219, 0.5)";
-			g_ctx.lineWidth = 1;
-			g_ctx.beginPath();
-			g_ctx.moveTo(selectionLeftPx, currentY);
-			g_ctx.lineTo(selectionLeftPx, currentY + TimelineDimensions.renderSlotHeight());
-			g_ctx.moveTo(selectionLeftPx + selectionWidthPx, currentY);
-			g_ctx.lineTo(
-				selectionLeftPx + selectionWidthPx,
-				currentY + TimelineDimensions.renderSlotHeight(),
-			);
-			g_ctx.stroke();
+			drawSelectionRect(g_ctx, {
+				x: selectionLeftPx,
+				y: currentY,
+				w: selectionWidthPx,
+				h: TimelineDimensions.renderSlotHeight(),
+			});
 		}
 	}
 	// countdown grey rect
@@ -1340,16 +1427,14 @@ export function drawTimelines(
 		g_ctx.fillStyle =
 			slot === g_renderingProps.activeSlotIndex ? g_colors.accent : g_colors.bgMediumContrast;
 		g_ctx.fillRect(handle.x, handle.y, handle.w, handle.h);
-		testInteraction(
-			handle,
-			slot === g_renderingProps.activeSlotIndex
-				? undefined
-				: [localize({ en: "set active", zh: "设为当前" }) as string],
-			() => {
-				controller.setActiveSlot(slot);
-			},
-			true,
-		);
+		testInteraction(handle, {
+			hoverTip:
+				slot === g_renderingProps.activeSlotIndex
+					? undefined
+					: [localize({ en: "set active", zh: "设为当前" }) as string],
+			onMouseUp: () => controller.setActiveSlot(slot),
+			pointerMouse: true,
+		});
 
 		// delete btn
 		if (g_renderingProps.slots.length > 1 && slot === g_renderingProps.activeSlotIndex) {
@@ -1363,15 +1448,14 @@ export function drawTimelines(
 				w: handle.w,
 				h: handle.w,
 			};
-			testInteraction(
-				deleteBtn,
-				[localize({ en: "delete", zh: "删除" }) as string],
-				() => {
+			testInteraction(deleteBtn, {
+				hoverTip: [localize({ en: "delete", zh: "删除" }) as string],
+				onMouseUp: () => {
 					controller.timeline.removeSlot(slot);
 					controller.displayCurrentState();
 				},
-				true,
-			);
+				pointerMouse: true,
+			});
 		}
 	}
 	return TimelineDimensions.renderSlotHeight() * g_renderingProps.slots.length;
@@ -1429,6 +1513,53 @@ function drawCursors(originX: number, timelineStartY: number) {
 	return 0;
 }
 
+// Draw selection boxes and the cursor used to represent the target of a drop operation.
+function drawClickDragInteractions(timelineStartY: number, dragTargetTime: number | null) {
+	if (g_bgSelecting) {
+		const selectionRect = {
+			x: Math.min(g_selectStartX, g_mouseX),
+			y: Math.min(g_selectStartY, g_mouseY),
+			w: Math.abs(g_selectStartX - g_mouseX),
+			h: Math.abs(g_selectStartY - g_mouseY),
+		};
+		drawSelectionRect(g_ctx, selectionRect);
+	}
+	const timelineOriginX = -g_visibleLeft + TimelineDimensions.leftBufferWidth;
+	const displayOriginX =
+		timelineOriginX +
+		StaticFn.positionFromTimeAndScale(g_renderingProps.countdown, g_renderingProps.scale);
+	if (g_draggedSkillElem) {
+		// Draw a slightly transparent image of the skill being dragged.
+		const tmpAlpha = g_ctx.globalAlpha;
+		g_ctx.globalAlpha = 0.4;
+		g_ctx.drawImage(
+			getSkillIconImage(g_draggedSkillElem.skillName),
+			g_mouseX,
+			g_mouseY,
+			SKILL_ICON_SIZE_PX,
+			SKILL_ICON_SIZE_PX,
+		);
+		g_ctx.globalAlpha = tmpAlpha;
+	}
+	const targetTime = dragTargetTime;
+	if (targetTime !== null) {
+		// Draw a cursor at the destination time of a drag/drop.
+		const slotHeight = TimelineDimensions.renderSlotHeight();
+		const activeSlotStartY = timelineStartY + g_renderingProps.activeSlotIndex * slotHeight;
+		const x =
+			displayOriginX + StaticFn.positionFromTimeAndScale(targetTime, g_renderingProps.scale);
+		drawCursor(
+			x,
+			timelineStartY,
+			activeSlotStartY,
+			activeSlotStartY + slotHeight,
+			g_colors.dropTarget,
+			undefined,
+			4,
+		);
+	}
+}
+
 function drawAddSlotButton(originY: number) {
 	if (g_renderingProps.slots.length < MAX_TIMELINE_SLOTS) {
 		// "Add timeline slot" button
@@ -1454,15 +1585,13 @@ function drawAddSlotButton(originY: number) {
 			handle.y + handle.h - 4,
 		);
 
-		testInteraction(
-			handle,
-			undefined,
-			() => {
+		testInteraction(handle, {
+			onMouseUp: () => {
 				controller.timeline.addSlot();
 				controller.displayCurrentState();
 			},
-			true,
-		);
+			pointerMouse: true,
+		});
 
 		// "Clone timeline slot" button
 		const cloneHandle: Rect = {
@@ -1485,15 +1614,13 @@ function drawAddSlotButton(originY: number) {
 			cloneHandle.y + cloneHandle.h - 4,
 		);
 
-		testInteraction(
-			cloneHandle,
-			undefined,
-			() => {
+		testInteraction(cloneHandle, {
+			onMouseUp: () => {
 				controller.cloneActiveSlot();
 				controller.displayCurrentState();
 			},
-			true,
-		);
+			pointerMouse: true,
+		});
 
 		return TimelineDimensions.addSlotButtonHeight;
 	}
@@ -1502,7 +1629,7 @@ function drawAddSlotButton(originY: number) {
 
 // background layer:
 // white bg, tracks bg, ruler bg, ruler marks, numbers on ruler: update only when canvas size change, countdown grey
-function drawEverything() {
+function drawEverything(dragTargetTime: number | null) {
 	const timelineOrigin = -g_visibleLeft + TimelineDimensions.leftBufferWidth; // fragCoord.x (...) of rawTime=0.
 	let currentHeight = 0;
 
@@ -1512,8 +1639,7 @@ function drawEverything() {
 	g_ctx.fillRect(0, 0, g_visibleWidth + 1, g_renderingProps.timelineHeight + 1);
 	testInteraction(
 		{ x: 0, y: 0, w: g_visibleWidth, h: c_maxTimelineHeight },
-		undefined,
-		onClickTimelineBackground,
+		{ onMouseDown: onMouseDownTimelineBackground },
 	);
 
 	currentHeight += drawRuler(timelineOrigin);
@@ -1524,6 +1650,10 @@ function drawEverything() {
 	currentHeight += drawTimelines(timelineOrigin, currentHeight, false);
 
 	currentHeight += drawCursors(timelineOrigin, timelineStartY);
+
+	// Click/drag interactions do not affect the canvas's height, and should be drawn below
+	// slot buttons and tooltips.
+	drawClickDragInteractions(timelineStartY, dragTargetTime);
 
 	currentHeight += drawAddSlotButton(currentHeight);
 
@@ -1537,8 +1667,26 @@ function drawEverything() {
 				g_activeHoverTipImages,
 			);
 		}
-		if (g_isClickUpdate && g_activeOnClick) {
-			g_activeOnClick();
+		if (g_newSelectionIndices) {
+			const [leftIndex, rightIndex] = g_newSelectionIndices;
+			if (leftIndex !== null && rightIndex !== null) {
+				controller.record.selectSingle(leftIndex);
+				controller.record.selectUntil(rightIndex);
+			} else {
+				controller.record.unselectAll();
+			}
+			controller.displayCurrentState();
+		}
+		if (g_isMouseDownUpdate && g_activeOnMouseDown) {
+			g_activeOnMouseDown();
+		}
+		if (g_isMouseUpUpdate && g_activeOnMouseUp) {
+			g_activeOnMouseUp();
+		}
+		if (g_isMouseUpUpdate) {
+			// Always end a background selection operation when the mouse is released, regardless of
+			// what element the cursor is hovering.
+			g_bgSelecting = false;
 		}
 	}
 }
@@ -1552,12 +1700,22 @@ function drawEverything() {
 export let timelineCanvasOnMouseMove: (x: number, y: number) => void = (x: number, y: number) => {};
 export let timelineCanvasOnMouseEnter: () => void = () => {};
 export let timelineCanvasOnMouseLeave: () => void = () => {};
-export let timelineCanvasOnClick: (e: any) => void = (e: any) => {};
+export let timelineCanvasOnMouseUp: (e: any, x: number, y: number) => void = (e, x, y) => {};
+export let timelineCanvasOnMouseDown: (x: number, y: number) => void = (x, y) => {};
 export let timelineCanvasOnKeyDown: (e: any) => void = (e: any) => {};
 
 export const timelineCanvasGetPointerMouse: () => boolean = () => {
 	return readback_pointerMouse;
 };
+
+// https://stackoverflow.com/a/16012490
+function rectsOverlap(a: Rect, b: Rect): boolean {
+	const aLeftOfB = a.x + a.w < b.x;
+	const aRightOfB = a.x > b.x + b.w;
+	const aAboveB = a.y + a.h < b.y;
+	const aBelowB = a.y > b.y + b.h;
+	return !(aLeftOfB || aRightOfB || aAboveB || aBelowB);
+}
 
 export function TimelineCanvas(props: {
 	timelineHeight: number;
@@ -1576,7 +1734,9 @@ export function TimelineCanvas(props: {
 	const [clickCounter, setClickCounter] = useState(0);
 	const [keyCounter, setKeyCounter] = useState(0);
 	const activeColorTheme = useContext(ColorThemeContext);
-
+	const globalDragContext = useContext(DragTargetContext);
+	const lockContext = useContext(DragLockContext);
+	const lastSelectionBounds = useRef<(number | null)[]>([null, null]);
 	// initialization
 	useEffect(() => {
 		timelineCanvasOnMouseMove = (x: number, y: number) => {
@@ -1584,6 +1744,59 @@ export function TimelineCanvas(props: {
 			g_mouseY = y;
 			setMouseX(g_mouseX);
 			setMouseY(g_mouseY);
+			if (g_bgSelecting) {
+				// Re-compute which skills are currently selected.
+				// We do this by iterating the leftmost and rightmost skill icon "hitboxes" to find our
+				// bounds. Since the y-ranges of oGCD and GCD skills are always fixed, we could potentially
+				// split hitboxes for those skills into separate lists as an optimization.
+				// However, since the total number of skills will always be relatively small, I view this
+				// as a premature optimization.
+				const selectionRect = {
+					x: Math.min(g_selectStartX, x),
+					y: Math.min(g_selectStartY, y),
+					w: Math.abs(g_selectStartX - x),
+					h: Math.abs(g_selectStartY - y),
+				};
+				let leftIndex = null;
+				let rightIndex = null;
+				// Check "left" bound:
+				for (const [actionIndex, rect] of g_skillHitboxes.entries()) {
+					if (rectsOverlap(rect, selectionRect)) {
+						leftIndex = actionIndex;
+						rightIndex = actionIndex;
+						break;
+					}
+				}
+				if (rightIndex !== null) {
+					// Check "right" bound:
+					for (const [actionIndex, rect] of Array.from(
+						g_skillHitboxes.entries(),
+					).reverse()) {
+						if (rightIndex >= actionIndex) {
+							break;
+						}
+						if (rectsOverlap(rect, selectionRect)) {
+							rightIndex = actionIndex;
+							break;
+						}
+					}
+				}
+				if (
+					leftIndex !== lastSelectionBounds.current[0] ||
+					rightIndex !== lastSelectionBounds.current[1]
+				) {
+					lastSelectionBounds.current = [leftIndex, rightIndex];
+					g_newSelectionIndices = [leftIndex, rightIndex];
+				}
+			}
+			// If we began a skill element drag that is not in the current selection,
+			// then select the skill being dragged.
+			if (
+				g_draggedSkillElem &&
+				!controller.record.isInSelection(g_draggedSkillElem.actionIndex)
+			) {
+				controller.timeline.onClickTimelineAction(g_draggedSkillElem.actionIndex, false);
+			}
 		};
 		timelineCanvasOnMouseEnter = () => {
 			setMouseHovered(true);
@@ -1592,13 +1805,44 @@ export function TimelineCanvas(props: {
 		timelineCanvasOnMouseLeave = () => {
 			setMouseHovered(false);
 			g_mouseHovered = false;
+			g_bgSelecting = false;
 		};
 		// ignore KB & M input when in the middle of using a skill (for simplicity)
-		timelineCanvasOnClick = (e: any) => {
+		timelineCanvasOnMouseUp = (e: any, x: number, y: number) => {
 			if (!controller.shouldLoop) {
 				setClickCounter((c) => c + 1);
-				g_isClickUpdate = true;
-				g_clickEvent = e;
+				g_isMouseUpUpdate = true;
+			}
+			g_mouseUpShift = e.shiftKey;
+			g_cancelDrag = true;
+			// HACK: do not emit the cancelDrag flag if the drag occurred on top of a selected skill
+			// hitbox. This is necessary to ensure correctness for both shift-click multi-selects,
+			// and releasing a drag on top of the existing selection.
+			// g_cancelDrag must then be set within the skill element's mouseUp
+			if (controller.record.selectionStartIndex !== undefined) {
+				for (
+					let i = controller.record.selectionStartIndex;
+					i <= controller.record.selectionEndIndex!;
+					i++
+				) {
+					const hitbox = g_skillHitboxes.get(i)!;
+					if (
+						hitbox.x < x &&
+						x < hitbox.x + hitbox.w &&
+						hitbox.y < y &&
+						y < hitbox.y + hitbox.h
+					) {
+						g_cancelDrag = false;
+						break;
+					}
+				}
+			}
+		};
+		timelineCanvasOnMouseDown = (x: number, y: number) => {
+			if (!controller.shouldLoop) {
+				g_isMouseDownUpdate = true;
+				g_selectStartX = x;
+				g_selectStartY = y;
 			}
 		};
 		timelineCanvasOnKeyDown = (e: any) => {
@@ -1617,22 +1861,116 @@ export function TimelineCanvas(props: {
 
 	useEffect(() => {
 		g_activeHoverTip = undefined;
-		g_activeOnClick = undefined;
+		g_activeOnMouseUp = undefined;
+		g_activeOnMouseDown = undefined;
 		g_visibleLeft = props.visibleLeft;
 		g_visibleWidth = props.visibleWidth;
 		g_colors = getThemeColors(activeColorTheme);
+		g_dragLock = lockContext.value;
 
 		cachedPointerMouse = readback_pointerMouse;
 
 		// gather global values
 		g_renderingProps = controller.getTimelineRenderingProps();
 
+		if (g_cancelDrag) {
+			// If we're no longer dragging a skill, stop dragging stuff.
+			g_cancelDrag = false;
+			const targetIndex = globalDragContext.dragTargetIndex;
+			globalDragContext.setDragTarget(null, null);
+			g_draggedSkillElem = undefined;
+			if (targetIndex !== null) {
+				// Confirm the skill movement, and reset global drag state.
+				const start = controller.record.selectionStartIndex ?? 0;
+				let distance = targetIndex - (start ?? 0);
+				// If we need to move the item upwards, then we already have the correct offset.
+				// If it needs to move down, we need to subtract the length of the current selection.
+				if (distance > 0) {
+					distance -= controller.record.getSelectionLength();
+				}
+				if (distance !== 0) {
+					// Even though we're automatically saving the edit, go through the whole song
+					// and dance of pretending an edit was made so state is properly synchronized.
+					controller.record.moveSelected(distance);
+					controller.checkRecordValidity(controller.record, 0, true);
+					controller.autoSave();
+					updateInvalidStatus();
+					updateTimelineView();
+					controller.displayCurrentState();
+				}
+			}
+		} else if (g_draggedSkillElem !== undefined && !lockContext.value) {
+			// If we're currently dragging a skill, update the position of the cursor to draw.
+			const timelineOriginX = -g_visibleLeft + TimelineDimensions.leftBufferWidth;
+			// Linear search for the skill hitbox with the smallest x distance, and set it as the new drag target
+			let minDist = Infinity;
+			let minIdx = -1;
+			let lastXDist = undefined;
+			for (const [index, hitbox] of g_skillHitboxes.entries()) {
+				const xDist = Math.abs(g_mouseX - hitbox.x);
+				if (lastXDist !== undefined && xDist > lastXDist) {
+					break;
+				}
+				if (xDist < minDist) {
+					minDist = xDist;
+					minIdx = index;
+				}
+				lastXDist = xDist;
+			}
+			// If the closest index turned out to be the last element, then also check against
+			// the end of the simulation.
+			let endDist = Infinity;
+			const cursors = g_renderingProps.sharedElements.filter(
+				(elem) => elem.type == ElemType.s_Cursor,
+			);
+			let endPos = undefined;
+			const endTime = cursors[cursors.length - 1].displayTime + g_renderingProps.countdown;
+			if (cursors.length > 0) {
+				endPos =
+					timelineOriginX +
+					StaticFn.positionFromTimeAndScale(endTime, g_renderingProps.scale);
+				endDist = Math.abs(g_mouseX - endPos);
+			}
+			let targetTime: number | null = null;
+			// This may look weird if the last element is a jump--may need to change later.
+			const allIndices = Array.from(g_skillHitboxes.keys());
+			if (
+				endPos !== undefined &&
+				endDist < minDist &&
+				g_skillHitboxes.size > 0 &&
+				minIdx === allIndices[allIndices.length - 1]
+			) {
+				minIdx = allIndices[allIndices.length - 1] + 1;
+				targetTime = endTime - g_renderingProps.countdown;
+			}
+			// Draw the drop target cursor and image of the skill being dragged.
+			if (minIdx !== -1 && globalDragContext.dragTargetIndex !== minIdx) {
+				if (targetTime === null) {
+					// If the action being dragged is an oGCD, place it at the end of the PRIOR node's
+					// animation lock.
+					// This is not fully robust and doesn't account for GCDs moved around wait events,
+					// but it's good enough.
+					if (minIdx > 0 && !g_draggedSkillElem.isGCD) {
+						const priorNode = controller.record.actions[minIdx - 1];
+						targetTime = priorNode.tmp_endLockTime ?? null;
+					} else {
+						targetTime = controller.record.actions[minIdx].tmp_startLockTime ?? null;
+					}
+					// node locks use absolute time (must subtract countdown)
+					if (targetTime !== null) {
+						targetTime -= controller.gameConfig.countdown;
+					}
+				}
+				globalDragContext.setDragTarget(minIdx, targetTime);
+			}
+		}
+
 		// draw
 		const currentContext = canvasRef.current?.getContext("2d", { alpha: false });
 		if (currentContext) {
 			g_ctx = currentContext;
 			g_ctx.scale(dpr, dpr);
-			drawEverything();
+			drawEverything(globalDragContext.dragTargetTime);
 			g_ctx.scale(1 / dpr, 1 / dpr);
 		}
 
@@ -1642,7 +1980,9 @@ export function TimelineCanvas(props: {
 		}
 
 		// reset event flags
-		g_isClickUpdate = false;
+		g_isMouseUpUpdate = false;
+		g_isMouseDownUpdate = false;
+		g_newSelectionIndices = undefined;
 	}, [
 		// update when dependency props change
 		props.visibleLeft,
@@ -1654,21 +1994,36 @@ export function TimelineCanvas(props: {
 		keyCounter,
 		props.version,
 		dpr,
+		lockContext.value,
+		globalDragContext.dragTargetTime,
 	]);
 
-	return <canvas
-		ref={canvasRef}
-		width={Math.ceil(scaledWidth)}
-		height={Math.ceil(scaledHeight)}
-		tabIndex={0}
-		style={{
-			width: props.visibleWidth,
-			height: props.timelineHeight,
-			position: "absolute",
-			pointerEvents: "none",
-			cursor: readback_pointerMouse ? "pointer" : "default",
-		}}
-	/>;
+	// One layer of canvas is responsible for drawing the majority of timeline components,
+	// while a second layer is responsible for drawing transient elements that do not require
+	// re-rendering the rest of the timeline.
+	// Currently, this functionality is used ONLY for the vertical line used to represent the
+	// destination of a click+drag operation. Eventually this should probably be extended to
+	// include other cursors and skill highlights, but doing so requires significant refactors.
+	// Refactors also need to account for `swapCtx` functionality with
+	// https://stackoverflow.com/questions/3008635/html5-canvas-element-multiple-layers
+	return <div style={{ position: "relative" }}>
+		<canvas
+			ref={canvasRef}
+			width={Math.ceil(scaledWidth)}
+			height={Math.ceil(scaledHeight)}
+			tabIndex={0}
+			style={{
+				width: props.visibleWidth,
+				height: props.timelineHeight,
+				position: "absolute",
+				pointerEvents: "none",
+				cursor: readback_pointerMouse ? "pointer" : "default",
+				left: 0,
+				top: 0,
+				zIndex: 0,
+			}}
+		/>
+	</div>;
 }
 
 /**
