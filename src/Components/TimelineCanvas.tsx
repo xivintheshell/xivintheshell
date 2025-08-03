@@ -72,7 +72,7 @@ let g_ctx: CanvasRenderingContext2D;
 let g_visibleLeft = 0;
 let g_visibleWidth = 0;
 let g_isMouseUpUpdate = false;
-let g_clickEvent: any = undefined; // valid when isClickUpdate is true
+let g_mouseUpShift = false;
 let g_isMouseDownUpdate = false;
 let g_newSelectionIndices: (number | null)[] | undefined = undefined;
 let g_draggedSkillElem: SkillElem | undefined = undefined;
@@ -156,6 +156,10 @@ const onMouseDownTimelineBackground = () => {
 	controller.record.unselectAll();
 	controller.displayCurrentState();
 	g_bgSelecting = true;
+};
+
+const onMouseUpTimelineBackground = () => {
+	g_cancelDrag = true;
 };
 
 function drawTip(lines: string[], canvasWidth: number, canvasHeight: number, images?: any[]) {
@@ -863,6 +867,7 @@ function drawSkills(
 		g_ctx.rect(r.x, r.y, r.w, r.h);
 		if (interactive)
 			testInteraction(r, {
+				onMouseUp: onMouseUpTimelineBackground,
 				onMouseDown: onMouseDownTimelineBackground,
 			});
 	};
@@ -1001,23 +1006,17 @@ function drawSkills(
 							if (!g_bgSelecting) {
 								controller.timeline.onClickTimelineAction(
 									icon.elem.actionIndex,
-									g_clickEvent ? g_clickEvent.shiftKey : false,
+									g_mouseUpShift,
 								);
 								scrollEditorToFirstSelected();
 							}
 						}
+						g_cancelDrag = true;
 					},
 					onMouseDown: () => {
 						// Do not attempt to select an element if a mouseUp fired on the same frame.
-						if (!g_isMouseUpUpdate && !g_clickEvent?.shiftKey) {
+						if (!g_isMouseUpUpdate) {
 							g_draggedSkillElem = icon.elem;
-							if (!controller.record.isInSelection(icon.elem.actionIndex)) {
-								controller.timeline.onClickTimelineAction(
-									icon.elem.actionIndex,
-									false,
-								);
-								scrollEditorToFirstSelected();
-							}
 						}
 					},
 					pointerMouse: true,
@@ -1644,7 +1643,7 @@ function drawEverything(dragTargetTime: number | null) {
 	g_ctx.fillRect(0, 0, g_visibleWidth + 1, g_renderingProps.timelineHeight + 1);
 	testInteraction(
 		{ x: 0, y: 0, w: g_visibleWidth, h: c_maxTimelineHeight },
-		{ onMouseDown: onMouseDownTimelineBackground },
+		{ onMouseUp: onMouseUpTimelineBackground, onMouseDown: onMouseDownTimelineBackground },
 	);
 
 	currentHeight += drawRuler(timelineOrigin);
@@ -1794,6 +1793,14 @@ export function TimelineCanvas(props: {
 					g_newSelectionIndices = [leftIndex, rightIndex];
 				}
 			}
+			// If we began a skill element drag that is not in the current selection,
+			// then select the skill being dragged.
+			if (
+				g_draggedSkillElem &&
+				!controller.record.isInSelection(g_draggedSkillElem.actionIndex)
+			) {
+				controller.timeline.onClickTimelineAction(g_draggedSkillElem.actionIndex, false);
+			}
 		};
 		timelineCanvasOnMouseEnter = () => {
 			setMouseHovered(true);
@@ -1802,17 +1809,15 @@ export function TimelineCanvas(props: {
 		timelineCanvasOnMouseLeave = () => {
 			setMouseHovered(false);
 			g_mouseHovered = false;
+			g_bgSelecting = false;
 		};
 		// ignore KB & M input when in the middle of using a skill (for simplicity)
 		timelineCanvasOnMouseUp = (e: any) => {
 			if (!controller.shouldLoop) {
 				setClickCounter((c) => c + 1);
 				g_isMouseUpUpdate = true;
-				g_clickEvent = e;
 			}
-			// Apparently we can't access the global context object from here, so we need to
-			// signal for the state change locally.
-			g_cancelDrag = true;
+			g_mouseUpShift = e.shiftKey;
 		};
 		timelineCanvasOnMouseDown = (x: number, y: number) => {
 			if (!controller.shouldLoop) {
@@ -1849,7 +1854,7 @@ export function TimelineCanvas(props: {
 		g_renderingProps = controller.getTimelineRenderingProps();
 
 		if (g_cancelDrag) {
-			// If we're not longer dragging a skill, stop dragging stuff.
+			// If we're no longer dragging a skill, stop dragging stuff.
 			g_cancelDrag = false;
 			const targetIndex = globalDragContext.dragTargetIndex;
 			globalDragContext.setDragTarget(null, null);

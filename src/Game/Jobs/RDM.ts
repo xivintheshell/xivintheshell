@@ -444,8 +444,19 @@ const giCondition: ConditionalSkillReplace<RDMState> = {
 		state.getFinisherCounter() < 1 && state.hasResourceAvailable("GRAND_IMPACT_READY"),
 };
 
+const joltReplaces: ConditionalSkillReplace<RDMState>[] = [
+	{
+		newSkill: "JOLT_II",
+		condition: (state) =>
+			state.getFinisherCounter() < 1 && !state.hasResourceAvailable("GRAND_IMPACT_READY"),
+	},
+	scorchCondition,
+	resoCondition,
+	giCondition,
+];
+
 makeSpell_RDM("JOLT_II", 62, {
-	replaceIf: [scorchCondition, resoCondition, giCondition],
+	replaceIf: joltReplaces,
 	autoUpgrade: { trait: "RED_MAGIC_MASTERY_III", otherSkill: "JOLT_III" },
 	baseCastTime: 2.0,
 	baseManaCost: 200,
@@ -457,7 +468,7 @@ makeSpell_RDM("JOLT_II", 62, {
 });
 
 makeSpell_RDM("JOLT_III", 84, {
-	replaceIf: [scorchCondition, resoCondition, giCondition],
+	replaceIf: joltReplaces,
 	autoDowngrade: { trait: "RED_MAGIC_MASTERY_III", otherSkill: "JOLT_II" },
 	baseCastTime: 2.0,
 	baseManaCost: 200,
@@ -633,6 +644,7 @@ makeSpell_RDM("IMPACT", 66, {
 });
 
 makeSpell_RDM("GRAND_IMPACT", 96, {
+	replaceIf: joltReplaces,
 	startOnHotbar: false,
 	baseCastTime: 0,
 	baseManaCost: 0,
@@ -911,6 +923,7 @@ makeSpell_RDM("VERFLARE", 68, {
 
 makeSpell_RDM("SCORCH", 80, {
 	startOnHotbar: false,
+	replaceIf: joltReplaces,
 	baseCastTime: 0,
 	baseManaCost: 400,
 	falloff: 0.6,
@@ -926,6 +939,7 @@ makeSpell_RDM("SCORCH", 80, {
 
 makeSpell_RDM("RESOLUTION", 90, {
 	startOnHotbar: false,
+	replaceIf: joltReplaces,
 	baseCastTime: 0,
 	baseManaCost: 400,
 	falloff: 0.6,
