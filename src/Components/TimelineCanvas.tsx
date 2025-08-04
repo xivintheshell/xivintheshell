@@ -2330,8 +2330,7 @@ export function TimelineCanvas(props: {
 	// 3. An "interactive" layer for elements like tooltips that display when the user interacts
 	// selection box, skill selection highlight, drag/drop target cursor, drag/drop skill icon
 	//
-	// These are currently NOT re-rendered separately, as we did not find performance of bulk
-	// redraws to be bad enough to require optimizations here.
+	// Only the interactive layer is currently re-drawn independently.
 	//
 	// https://stackoverflow.com/questions/3008635/html5-canvas-element-multiple-layers
 	const canvasStyle: CSSProperties = {
