@@ -67,7 +67,6 @@ function TimelineMain() {
 
 	const updateVisibleRange = () => {
 		if (myRef.current) {
-			console.log("set w", myRef.current.clientWidth);
 			setVisibleLeft(myRef.current.scrollLeft);
 			setVisibleWidth(myRef.current.clientWidth);
 		}

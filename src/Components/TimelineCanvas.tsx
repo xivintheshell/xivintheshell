@@ -634,6 +634,8 @@ function drawLucidMarks(params: MarkerDrawParams<LucidMarkElem>) {
 }
 
 type Rect = { x: number; y: number; w: number; h: number };
+
+// returns a map of action id -> skill hitboxes
 function drawSkills(params: {
 	ctx: CanvasRenderingContext2D;
 	viewInfo: ViewInfo;
@@ -645,7 +647,7 @@ function drawSkills(params: {
 	// otherwise, we still need a hover handler for damage info on skills in inactive timelines
 	// that are drawn with interactive=false
 	testInteraction: InteractionHandler;
-}) {
+}): Map<number, Rect> {
 	const { ctx, viewInfo, timelineOriginX, timelineOriginY, elems, interactive, testInteraction } =
 		params;
 	const { colors, renderingProps } = viewInfo;
@@ -980,10 +982,6 @@ function drawSkills(params: {
 						}
 					},
 					onMouseDown: (info: MouseInteractionInfo) => {
-						// Do not attempt to select an element if a mouseUp fired on the same frame.
-						// if (!g_isMouseUpUpdate && !g_dragLock) {
-						// 	g_draggedSkillElem = icon.elem;
-						// }
 						if (!info.dragLock) {
 							info.setDraggedSkillElem(icon.elem);
 						}
@@ -1014,6 +1012,20 @@ function drawSkills(params: {
 	});
 	ctx.fill();
 	ctx.globalAlpha = originalAlpha;
+
+	return new Map(
+		interactive
+			? skillIcons.map((icon) => [
+					icon.elem.actionIndex,
+					{
+						x: icon.x,
+						y: icon.y,
+						w: SKILL_ICON_SIZE_PX,
+						h: SKILL_ICON_SIZE_PX,
+					},
+				])
+			: [],
+	);
 }
 
 function drawCursor(params: {
@@ -1260,12 +1272,14 @@ export function drawTimelines(params: {
 	originY: number;
 	isImageExportMode: boolean;
 	testInteraction: InteractionHandler;
-}): number {
+}): Map<number, Rect> {
 	const { ctx, viewInfo, originX, originY, isImageExportMode, testInteraction } = params;
 	const { colors, renderingProps } = viewInfo;
 	// fragCoord.x of displayTime=0
 	const displayOriginX =
 		originX + StaticFn.positionFromTimeAndScale(renderingProps.countdown, renderingProps.scale);
+
+	let skillHitboxes = new Map();
 
 	for (let slot = 0; slot < renderingProps.slots.length; slot++) {
 		const isActiveSlot = slot === renderingProps.activeSlotIndex;
@@ -1348,11 +1362,14 @@ export function drawTimelines(params: {
 		});
 
 		// skills
-		drawSkills({
+		const tempHitboxes = drawSkills({
 			...markDrawBase,
 			elems: (elemBins.get(ElemType.Skill) as SkillElem[]) ?? [],
 			interactive: isActiveSlot,
 		});
+		if (isActiveSlot) {
+			skillHitboxes = tempHitboxes;
+		}
 
 		// background areas for currently-selected skills
 		if (renderingProps.showSelection && isActiveSlot && !isImageExportMode) {
@@ -1393,7 +1410,8 @@ export function drawTimelines(params: {
 
 	if (isImageExportMode) {
 		// In image export mode, don't render slot selection bars
-		return TimelineDimensions.renderSlotHeight();
+		// and don't return any hitbox information
+		return new Map();
 	}
 
 	// slot selection bars
@@ -1439,7 +1457,7 @@ export function drawTimelines(params: {
 			});
 		}
 	}
-	return TimelineDimensions.renderSlotHeight() * renderingProps.slots.length;
+	return skillHitboxes;
 }
 
 function drawCursors(params: {
@@ -1686,7 +1704,7 @@ function drawLive(params: {
 	viewInfo: ViewInfo;
 	mouseX: number;
 	testInteraction: InteractionHandler;
-}) {
+}): Map<number, Rect> {
 	const { ctx, viewInfo, mouseX, testInteraction } = params;
 	const { renderingProps, colors, visibleLeft, visibleWidth } = viewInfo;
 	const timelineOrigin = -visibleLeft + TimelineDimensions.leftBufferWidth; // fragCoord.x (...) of rawTime=0.
@@ -1708,7 +1726,7 @@ function drawLive(params: {
 		testInteraction,
 	});
 	currentHeight += getMarkerTracksHeight();
-	drawTimelines({
+	return drawTimelines({
 		ctx,
 		viewInfo,
 		originX: timelineOrigin,
@@ -1950,21 +1968,7 @@ export function TimelineCanvas(props: {
 		const w = props.visibleWidth - left;
 		ctx.clearRect(left, 0, w, c_maxTimelineHeight);
 	};
-
-	const redrawInteractive = () => {
-		const ctx = interactiveCanvasRef.current?.getContext("2d", { alpha: true });
-		if (ctx) {
-			clearCtx(ctx);
-			clearLayer(interactionLayers.current.interactive);
-			drawInteractive({
-				ctx,
-				...getDrawState(false),
-				testInteraction: makeTestInteraction("interactive"),
-			});
-		}
-	};
-
-	const getDrawState = (shiftKey: boolean) => {
+	const getDrawState = () => {
 		return {
 			viewInfo: {
 				renderingProps: controller.getTimelineRenderingProps(),
@@ -1980,13 +1984,26 @@ export function TimelineCanvas(props: {
 			activeHoverTip: activeHoverDraw.current.tip,
 			activeHoverImages: activeHoverDraw.current.images,
 			mouseInteractionInfo: {
-				shiftKey,
+				shiftKey: false,
 				dragLock: lockContext.value,
+				draggedSkillElem: draggedSkillElem.current,
 				bgSelecting: bgSelecting.current,
 				setDraggedSkillElem,
 				setBgSelecting,
 			},
 		};
+	};
+	const redrawInteractive = () => {
+		const ctx = interactiveCanvasRef.current?.getContext("2d", { alpha: true });
+		if (ctx) {
+			clearCtx(ctx);
+			clearLayer(interactionLayers.current.interactive);
+			drawInteractive({
+				ctx,
+				...getDrawState(),
+				testInteraction: makeTestInteraction("interactive"),
+			});
+		}
 	};
 
 	// If performance ver becomes an issue, convert these to use useCallback().
@@ -1998,7 +2015,7 @@ export function TimelineCanvas(props: {
 			mouseY.current = y;
 			// If we're over an element with a hover tooltip, draw it.
 			activeHoverDraw.current = findMouseItem(x, y, getAllZones("mouseHover")) ?? {};
-			if (bgSelecting) {
+			if (bgSelecting.current) {
 				// Re-compute which skills are currently selected.
 				// We do this by iterating the leftmost and rightmost skill icon "hitboxes" to find our
 				// bounds. Since the y-ranges of oGCD and GCD skills are always fixed, we could potentially
@@ -2049,18 +2066,90 @@ export function TimelineCanvas(props: {
 					controller.displayCurrentState();
 				}
 			}
-			props.setPointerMouse(findMouseItem(x, y, getAllZones("pointer")) ?? false);
-			// If we began a skill element drag that is not in the current selection,
-			// then select the skill being dragged.
-			if (
-				draggedSkillElem.current &&
-				!controller.record.isInSelection(draggedSkillElem.current.actionIndex)
-			) {
-				controller.timeline.onClickTimelineAction(
-					draggedSkillElem.current.actionIndex,
-					false,
+			if (draggedSkillElem.current) {
+				// If we began a skill element drag that is not in the current selection,
+				// then select the skill being dragged.
+				if (!controller.record.isInSelection(draggedSkillElem.current.actionIndex)) {
+					controller.timeline.onClickTimelineAction(
+						draggedSkillElem.current.actionIndex,
+						false,
+					);
+				}
+				// If we're currently dragging a skill, update the position of the cursor to draw.
+				const timelineOriginX = -props.visibleLeft + TimelineDimensions.leftBufferWidth;
+				// Linear search for the skill hitbox with the smallest x distance, and set it as the new drag target
+				let minDist = Infinity;
+				let minIdx = -1;
+				let lastXDist = undefined;
+				const hitboxes = skillHitboxes.current;
+				const entries = Array.from(hitboxes.entries());
+				for (let i = 0; i < entries.length; i++) {
+					const [index, hitbox] = entries[i];
+					let xDist = Math.abs(mouseX.current - hitbox.x);
+					// Do not use the right border for the final action in the timeline because
+					// in some cases, the sim end cursor will not be past this position.
+					if (i !== entries.length - 1) {
+						xDist = Math.min(xDist, Math.abs(mouseX.current - hitbox.x - hitbox.w));
+					}
+					if (lastXDist !== undefined && xDist > lastXDist) {
+						break;
+					}
+					if (xDist < minDist) {
+						minDist = xDist;
+						minIdx = index;
+					}
+					lastXDist = xDist;
+				}
+				// If the closest index turned out to be the last element, then also check against
+				// the end of the simulation.
+				let endDist = Infinity;
+				const renderingProps = controller.getTimelineRenderingProps();
+				const cursors = renderingProps.sharedElements.filter(
+					(elem) => elem.type == ElemType.s_Cursor,
 				);
+				let endPos = undefined;
+				const endTime = cursors[cursors.length - 1].displayTime + renderingProps.countdown;
+				if (cursors.length > 0) {
+					endPos =
+						timelineOriginX +
+						StaticFn.positionFromTimeAndScale(endTime, renderingProps.scale);
+					endDist = Math.abs(mouseX.current - endPos);
+				}
+				let targetTime: number | null = null;
+				// This may look weird if the last element is a jump--may need to change later.
+				const allIndices = Array.from(hitboxes.keys());
+				if (
+					endPos !== undefined &&
+					endDist < minDist &&
+					hitboxes.size > 0 &&
+					minIdx === allIndices[allIndices.length - 1]
+				) {
+					minIdx = allIndices[allIndices.length - 1] + 1;
+					targetTime = endTime - renderingProps.countdown;
+				}
+				if (minIdx !== -1 && globalDragContext.dragTargetIndex !== minIdx) {
+					if (targetTime === null) {
+						// If the action being dragged is an oGCD, place it at the end of the PRIOR node's
+						// animation lock.
+						// This is not fully robust and doesn't account for GCDs moved around wait events,
+						// but it's good enough.
+						if (minIdx > 0 && !draggedSkillElem.current.isGCD) {
+							const priorNode = controller.record.actions[minIdx - 1];
+							targetTime = priorNode.tmp_endLockTime ?? null;
+						} else {
+							targetTime =
+								controller.record.actions[minIdx].tmp_startLockTime ?? null;
+						}
+						// node locks use absolute time (must subtract countdown)
+						if (targetTime !== null) {
+							targetTime -= controller.gameConfig.countdown;
+						}
+					}
+					globalDragContext.setDragTarget(minIdx, targetTime);
+				}
 			}
+			// Update whether the cursor should be a pointer.
+			props.setPointerMouse(findMouseItem(x, y, getAllZones("pointer")) ?? false);
 			redrawInteractive();
 		},
 		onMouseEnter: () => {},
@@ -2071,20 +2160,6 @@ export function TimelineCanvas(props: {
 		onMouseUp: (e: any, x: number, y: number) => {
 			mouseX.current = x;
 			mouseY.current = y;
-			if (!controller.shouldLoop) {
-				// Only handle mouseup events if we're not currently in an animation.
-				findMouseItem(
-					x,
-					y,
-					getAllZones("mouseUp"),
-				)?.({
-					shiftKey: e.shiftKey,
-					dragLock: lockContext.value,
-					bgSelecting: bgSelecting.current,
-					setDraggedSkillElem,
-					setBgSelecting,
-				});
-			}
 			// Always end a background selection operation when the mouse is released, regardless of
 			// what element the cursor is hovering.
 			bgSelecting.current = false;
@@ -2092,7 +2167,8 @@ export function TimelineCanvas(props: {
 			if (draggedSkillElem.current) {
 				const targetIndex = globalDragContext.dragTargetIndex;
 				globalDragContext.setDragTarget(null, null);
-				draggedSkillElem.current = undefined;
+				setDraggedSkillElem(undefined);
+				let manualRedrawInteractive = true;
 				if (targetIndex !== null) {
 					// Confirm the skill movement, and reset global drag state.
 					const start = controller.record.selectionStartIndex ?? 0;
@@ -2111,8 +2187,30 @@ export function TimelineCanvas(props: {
 						updateInvalidStatus();
 						updateTimelineView();
 						controller.displayCurrentState();
+						manualRedrawInteractive = false;
 					}
 				}
+				if (manualRedrawInteractive) {
+					// If we modified the timeline, a redraw request to the whole canvas was already made.
+					// Otherwise, we need to redraw to remove the dragged skill icon.
+					redrawInteractive();
+				}
+			}
+			if (!controller.shouldLoop) {
+				// Only handle mouseup events if we're not currently in an animation.
+				// This must run AFTER the prior drag check to ensure dropping an icon on top
+				// of a skill hitbox works properly.
+				findMouseItem(
+					x,
+					y,
+					getAllZones("mouseUp"),
+				)?.({
+					shiftKey: e.shiftKey,
+					dragLock: lockContext.value,
+					bgSelecting: bgSelecting.current,
+					setDraggedSkillElem,
+					setBgSelecting,
+				});
 			}
 		},
 		onMouseDown: (x: number, y: number) => {
@@ -2149,10 +2247,12 @@ export function TimelineCanvas(props: {
 		},
 	};
 
-	// initialization
-	useEffect(() => {
-		props.setCallbacks(callbacks);
-	}, []);
+	// Update callbacks when global contexts change? Not quite sure why this is necessary, but
+	// they seem to read stale values otherwise.
+	useEffect(
+		() => props.setCallbacks(callbacks),
+		[globalDragContext.dragTargetTime, lockContext.value],
+	);
 
 	const redrawEverything = () => {
 		const [liveCtx, interactiveCtx, lowUpdateCtx] = [
@@ -2161,8 +2261,7 @@ export function TimelineCanvas(props: {
 			lowUpdateCanvasRef,
 		].map((ref, i) => ref.current?.getContext("2d", { alpha: i !== 0 }));
 		if (liveCtx && interactiveCtx && lowUpdateCtx) {
-			// Hitboxes are re-computed when testInteraction is called
-			skillHitboxes.current.clear();
+			// Event trigger zones are re-computed when testInteraction is called
 			clearLayer(interactionLayers.current.live);
 			clearLayer(interactionLayers.current.interactive);
 			clearLayer(interactionLayers.current.lowUpdate);
@@ -2175,7 +2274,7 @@ export function TimelineCanvas(props: {
 				visibleWidth: props.visibleWidth,
 			};
 			liveCtx.scale(dpr, dpr);
-			drawLive({
+			skillHitboxes.current = drawLive({
 				ctx: liveCtx,
 				viewInfo,
 				mouseX: mouseX.current,
@@ -2185,7 +2284,7 @@ export function TimelineCanvas(props: {
 			interactiveCtx.scale(dpr, dpr);
 			drawInteractive({
 				ctx: interactiveCtx,
-				...getDrawState(false),
+				...getDrawState(),
 				testInteraction: makeTestInteraction("interactive"),
 			});
 			interactiveCtx.scale(1 / dpr, 1 / dpr);
@@ -2199,6 +2298,19 @@ export function TimelineCanvas(props: {
 		}
 	};
 
+	// Redraw cursors when the timeline editor sets a drag target time.
+	useEffect(redrawInteractive, [globalDragContext.dragTargetTime]);
+
+	// It should be impossible to update the lock context while dragging... but clear state just in case.
+	useEffect(() => {
+		if (!lockContext.value) {
+			redrawInteractive();
+			globalDragContext.setDragTarget(null, null);
+			setDraggedSkillElem(undefined);
+		}
+	}, [lockContext.value]);
+
+	// Redraw everything when a mouse position changes, or an animation frame is requested by props.version.
 	useEffect(redrawEverything, [mouseX, mouseY, props.version, dpr]);
 
 	// When the selection window changes, we need to update the callbacks as well to ensure
