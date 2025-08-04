@@ -411,8 +411,6 @@ export function SelectLanguage() {
 	return <div
 		style={{
 			display: "inline-block",
-			position: "absolute",
-			right: 68,
 		}}
 	>
 		<span
