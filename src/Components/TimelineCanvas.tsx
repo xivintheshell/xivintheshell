@@ -71,6 +71,8 @@ const c_maxTimelineHeight = 400;
 const SKILL_ICON_SIZE_PX = 28;
 
 interface MouseInteractionInfo {
+	x: number;
+	y: number;
 	shiftKey: boolean;
 	dragLock: boolean;
 	draggedSkillElem?: SkillElem;
@@ -105,7 +107,7 @@ interface MarkerDrawParams<T extends SlotTimelineElem> {
 type InteractionHandler = (
 	rect: Rect,
 	params: {
-		hoverTip?: string[];
+		hoverTip?: string[] | ((info: MouseInteractionInfo) => string[]);
 		onMouseUp?: (info: MouseInteractionInfo) => void;
 		onMouseDown?: (info: MouseInteractionInfo) => void;
 		pointerMouse?: boolean;
@@ -289,7 +291,7 @@ function drawMarkers(params: {
 						h: TimelineDimensions.trackHeight,
 					},
 					{
-						hoverTip: ["[" + timeStr + "] " + localizedDescription],
+						hoverTip: [`[${timeStr}] ${localizedDescription}`],
 						onMouseUp,
 					},
 				);
@@ -323,7 +325,7 @@ function drawMarkers(params: {
 						h: TimelineDimensions.trackHeight,
 					},
 					{
-						hoverTip: ["[" + m.time + "] " + localizedDescription],
+						hoverTip: [`[${m.time}] ${localizedDescription}`],
 						onMouseUp,
 					},
 				);
@@ -354,7 +356,7 @@ function drawMPTickMarks(params: MarkerDrawParams<MPTickMarkElem>) {
 		testInteraction(
 			{ x: x - 2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight() },
 			{
-				hoverTip: ["[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc],
+				hoverTip: [`[${tick.displayTime.toFixed(3)}] ${tick.sourceDesc}`],
 			},
 		);
 	});
@@ -382,7 +384,7 @@ function drawMeditateTickMarks(params: MarkerDrawParams<MeditateTickMarkElem>) {
 
 		testInteraction(
 			{ x: x - 2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight() },
-			{ hoverTip: ["[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc] },
+			{ hoverTip: [`[${tick.displayTime.toFixed(3)}] ${tick.sourceDesc}`] },
 		);
 	});
 	ctx.stroke();
@@ -409,7 +411,7 @@ function drawAutoTickMarks(params: MarkerDrawParams<AutoTickMarkElem>) {
 
 		testInteraction(
 			{ x: x - 2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight() },
-			{ hoverTip: ["[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc] },
+			{ hoverTip: [`[${tick.displayTime.toFixed(3)}] ${tick.sourceDesc}`] },
 		);
 	});
 	ctx.stroke();
@@ -1100,11 +1102,10 @@ export function drawRuler(params: {
 	ctx: CanvasRenderingContext2D;
 	viewInfo: ViewInfo;
 	originX: number;
-	mouseX: number;
 	ignoreVisibleX?: boolean;
 	testInteraction: InteractionHandler;
 }): number {
-	const { ctx, viewInfo, originX, mouseX, testInteraction } = params;
+	const { ctx, viewInfo, originX, testInteraction } = params;
 	const ignoreVisibleX = params.ignoreVisibleX ?? false;
 	const { colors, renderingProps, visibleWidth } = viewInfo;
 	// If we're in image export mode, ignore the visibility limit
@@ -1117,9 +1118,6 @@ export function drawRuler(params: {
 	// ruler bg
 	ctx.fillStyle = colors.timeline.ruler;
 	ctx.fillRect(0, 0, xUpperBound, TimelineDimensions.rulerHeight);
-	const displayTime =
-		StaticFn.timeFromPositionAndScale(mouseX - originX, renderingProps.scale) -
-		renderingProps.countdown;
 	// leave the left most section not clickable
 	testInteraction(
 		{
@@ -1129,8 +1127,16 @@ export function drawRuler(params: {
 			h: TimelineDimensions.rulerHeight,
 		},
 		{
-			hoverTip: [displayTime.toFixed(3)],
-			onMouseUp: () => {
+			hoverTip: (info) => {
+				const displayTime =
+					StaticFn.timeFromPositionAndScale(info.x - originX, renderingProps.scale) -
+					renderingProps.countdown;
+				return [displayTime.toFixed(3)];
+			},
+			onMouseUp: (info) => {
+				const displayTime =
+					StaticFn.timeFromPositionAndScale(info.x - originX, renderingProps.scale) -
+					renderingProps.countdown;
 				if (
 					displayTime < controller.game.getDisplayTime() &&
 					displayTime >= -controller.game.config.countdown
@@ -1702,10 +1708,9 @@ function getTimelineStartY(): number {
 function drawLive(params: {
 	ctx: CanvasRenderingContext2D;
 	viewInfo: ViewInfo;
-	mouseX: number;
 	testInteraction: InteractionHandler;
 }): Map<number, Rect> {
-	const { ctx, viewInfo, mouseX, testInteraction } = params;
+	const { ctx, viewInfo, testInteraction } = params;
 	const { renderingProps, colors, visibleLeft, visibleWidth } = viewInfo;
 	const timelineOrigin = -visibleLeft + TimelineDimensions.leftBufferWidth; // fragCoord.x (...) of rawTime=0.
 	let currentHeight = 0;
@@ -1721,7 +1726,6 @@ function drawLive(params: {
 	currentHeight += drawRuler({
 		ctx,
 		originX: timelineOrigin,
-		mouseX,
 		viewInfo,
 		testInteraction,
 	});
@@ -1856,7 +1860,10 @@ function findMouseItem<T>(x: number, y: number, zones: Map<Rect, T>): T | undefi
 interface InteractionLayer {
 	mouseDown: Map<Rect, (interactionInfo: MouseInteractionInfo) => void>;
 	mouseUp: Map<Rect, (interactionInfo: MouseInteractionInfo) => void>;
-	mouseHover: Map<Rect, { tip?: string[]; images?: any[] }>;
+	mouseHover: Map<
+		Rect,
+		{ tip?: string[] | ((interactionInfo: MouseInteractionInfo) => string[]); images?: any[] }
+	>;
 	pointer: Map<Rect, boolean>;
 }
 
@@ -1904,7 +1911,10 @@ export function TimelineCanvas(props: {
 	const mouseY = useRef(0);
 	const selectStartX = useRef<number>(0);
 	const selectStartY = useRef<number>(0);
-	const activeHoverDraw = useRef<{ tip?: string[]; images?: any[] }>({});
+	const activeHoverDraw = useRef<{
+		tip?: string[] | ((info: MouseInteractionInfo) => string[]);
+		images?: any[];
+	}>({});
 
 	// Track hitboxes for interactable objects on the canvas.
 	// These are reset when a simulation update occurs. In the future, we can prune these more
@@ -1938,7 +1948,7 @@ export function TimelineCanvas(props: {
 		(
 			rect: Rect,
 			params: {
-				hoverTip?: string[];
+				hoverTip?: string[] | ((info: MouseInteractionInfo) => string[]);
 				onMouseUp?: (info: MouseInteractionInfo) => void;
 				onMouseDown?: (info: MouseInteractionInfo) => void;
 				pointerMouse?: boolean;
@@ -1969,6 +1979,17 @@ export function TimelineCanvas(props: {
 		ctx.clearRect(left, 0, w, c_maxTimelineHeight);
 	};
 	const getDrawState = () => {
+		const tip = activeHoverDraw.current.tip;
+		const interaction: MouseInteractionInfo = {
+			x: mouseX.current,
+			y: mouseY.current,
+			shiftKey: false,
+			dragLock: lockContext.value,
+			draggedSkillElem: draggedSkillElem.current,
+			bgSelecting: bgSelecting.current,
+			setDraggedSkillElem,
+			setBgSelecting,
+		};
 		return {
 			viewInfo: {
 				renderingProps: controller.getTimelineRenderingProps(),
@@ -1981,16 +2002,10 @@ export function TimelineCanvas(props: {
 			mouseY: mouseY.current,
 			selectStartX: selectStartX.current,
 			selectStartY: selectStartY.current,
-			activeHoverTip: activeHoverDraw.current.tip,
+			activeHoverTip:
+				tip !== undefined ? (Array.isArray(tip) ? tip : tip(interaction)) : undefined,
 			activeHoverImages: activeHoverDraw.current.images,
-			mouseInteractionInfo: {
-				shiftKey: false,
-				dragLock: lockContext.value,
-				draggedSkillElem: draggedSkillElem.current,
-				bgSelecting: bgSelecting.current,
-				setDraggedSkillElem,
-				setBgSelecting,
-			},
+			mouseInteractionInfo: interaction,
 		};
 	};
 	const redrawInteractive = () => {
@@ -2205,6 +2220,8 @@ export function TimelineCanvas(props: {
 					y,
 					getAllZones("mouseUp"),
 				)?.({
+					x,
+					y,
 					shiftKey: e.shiftKey,
 					dragLock: lockContext.value,
 					bgSelecting: bgSelecting.current,
@@ -2226,6 +2243,8 @@ export function TimelineCanvas(props: {
 					y,
 					mouseDownZones,
 				)?.({
+					x,
+					y,
 					shiftKey: false,
 					dragLock: lockContext.value,
 					bgSelecting: bgSelecting.current,
@@ -2277,7 +2296,6 @@ export function TimelineCanvas(props: {
 			skillHitboxes.current = drawLive({
 				ctx: liveCtx,
 				viewInfo,
-				mouseX: mouseX.current,
 				testInteraction: makeTestInteraction("live"),
 			});
 			liveCtx.scale(1 / dpr, 1 / dpr);

@@ -75,7 +75,6 @@ function createMockCanvas(includeTime: boolean, g_colors: ThemeColors): HTMLCanv
 			ctx: oneRowCtx,
 			viewInfo,
 			originX: 0,
-			mouseX: 0,
 			ignoreVisibleX: true,
 			testInteraction: () => {},
 		});
