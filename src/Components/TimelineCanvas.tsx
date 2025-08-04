@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useReducer, useState, useContext, CSSProperties } from "react";
+import React, { useEffect, useRef, useReducer, useContext, CSSProperties } from "react";
 import {
 	AutoTickMarkElem,
 	CursorElem,
@@ -34,7 +34,12 @@ import { setEditingMarkerValues } from "./TimelineMarkers";
 import { getThemeColors, ThemeColors, ColorThemeContext } from "./ColorTheme";
 import { scrollEditorToFirstSelected, updateInvalidStatus } from "./TimelineEditor";
 import { bossIsUntargetable } from "../Controller/DamageStatistics";
-import { updateTimelineView, DragTargetContext, DragLockContext } from "./Timeline";
+import {
+	updateTimelineView,
+	DragTargetContext,
+	DragLockContext,
+	CanvasCallbacks,
+} from "./Timeline";
 import { ShellJob } from "../Game/Data/Jobs";
 import { LIMIT_BREAK_ACTIONS } from "../Game/Data/Shared/LimitBreak";
 
@@ -62,8 +67,6 @@ export type TimelineRenderingProps = {
 
 const c_maxTimelineHeight = 400;
 
-let readback_pointerMouse = false;
-
 // not used everywhere it could be used, be careful
 const SKILL_ICON_SIZE_PX = 28;
 
@@ -77,7 +80,6 @@ interface MouseInteractionInfo {
 }
 
 const onMouseDownTimelineBackground = (info: MouseInteractionInfo) => {
-	console.log("bg click");
 	info.setDraggedSkillElem(undefined);
 	controller.record.unselectAll();
 	controller.displayCurrentState();
@@ -101,7 +103,6 @@ interface MarkerDrawParams<T extends SlotTimelineElem> {
 }
 
 type InteractionHandler = (
-	ctx: CanvasRenderingContext2D,
 	rect: Rect,
 	params: {
 		hoverTip?: string[];
@@ -281,7 +282,6 @@ function drawMarkers(params: {
 				}
 				const timeStr = m.time + " - " + parseFloat((m.time + m.duration).toFixed(3));
 				testInteraction(
-					ctx,
 					{
 						x: left,
 						y: top,
@@ -316,7 +316,6 @@ function drawMarkers(params: {
 					);
 				}
 				testInteraction(
-					ctx,
 					{
 						x: left - TimelineDimensions.trackHeight / 2,
 						y: top,
@@ -353,7 +352,6 @@ function drawMPTickMarks(params: MarkerDrawParams<MPTickMarkElem>) {
 		ctx.lineTo(x, originY + TimelineDimensions.renderSlotHeight());
 
 		testInteraction(
-			ctx,
 			{ x: x - 2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight() },
 			{
 				hoverTip: ["[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc],
@@ -383,7 +381,6 @@ function drawMeditateTickMarks(params: MarkerDrawParams<MeditateTickMarkElem>) {
 		ctx.lineTo(x, originY + TimelineDimensions.renderSlotHeight());
 
 		testInteraction(
-			ctx,
 			{ x: x - 2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight() },
 			{ hoverTip: ["[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc] },
 		);
@@ -411,7 +408,6 @@ function drawAutoTickMarks(params: MarkerDrawParams<AutoTickMarkElem>) {
 		ctx.lineTo(x, originY + TimelineDimensions.renderSlotHeight());
 
 		testInteraction(
-			ctx,
 			{ x: x - 2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight() },
 			{ hoverTip: ["[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc] },
 		);
@@ -478,7 +474,6 @@ function drawWarningMarks(params: MarkerDrawParams<WarningMarkElem>) {
 				break;
 		}
 		testInteraction(
-			ctx,
 			{ x: x - sideLength / 2, y: bottomY - sideLength, w: sideLength, h: sideLength },
 			{ hoverTip: [message] },
 		);
@@ -606,7 +601,7 @@ function drawPotencyMarks(params: MarkerDrawParams<PotencyMarkElem>) {
 			mark.type === ElemType.HealingMark
 				? { x: x - 3, y: timelineOriginY + 6, w: 6, h: 6 }
 				: { x: x - 3, y: timelineOriginY, w: 6, h: 6 };
-		testInteraction(ctx, interactionArea, {
+		testInteraction(interactionArea, {
 			hoverTip: untargetable ? [time, ...info, untargetableStr] : [time, ...info],
 			hoverImages: buffImages,
 		});
@@ -630,7 +625,6 @@ function drawLucidMarks(params: MarkerDrawParams<LucidMarkElem>) {
 		// hover text
 		const hoverText = `[${mark.displayTime.toFixed(3)}] ${mark.sourceDesc.replace("{skill}", localizeSkillName("LUCID_DREAMING"))}`;
 		testInteraction(
-			ctx,
 			{ x: x - 3, y: timelineOriginY, w: 6, h: 6 },
 			{
 				hoverTip: [hoverText],
@@ -852,7 +846,7 @@ function drawSkills(params: {
 	const rectWithBgInteract = (r: Rect) => {
 		ctx.rect(r.x, r.y, r.w, r.h);
 		if (interactive)
-			testInteraction(ctx, r, {
+			testInteraction(r, {
 				onMouseDown: onMouseDownTimelineBackground,
 			});
 	};
@@ -968,7 +962,6 @@ function drawSkills(params: {
 
 		if (interactive) {
 			testInteraction(
-				ctx,
 				{ x: icon.x, y: icon.y, w: SKILL_ICON_SIZE_PX, h: SKILL_ICON_SIZE_PX },
 				{
 					hoverTip: lines,
@@ -1001,7 +994,6 @@ function drawSkills(params: {
 			);
 		} else {
 			testInteraction(
-				ctx,
 				{ x: icon.x, y: icon.y, w: SKILL_ICON_SIZE_PX, h: SKILL_ICON_SIZE_PX },
 				{
 					hoverTip: lines,
@@ -1087,11 +1079,7 @@ function drawCursor(params: {
 	ctx.stroke();
 
 	if (tip !== undefined) {
-		testInteraction?.(
-			ctx,
-			{ x: x - 3, y: 0, w: 6, h: c_maxTimelineHeight },
-			{ hoverTip: [tip] },
-		);
+		testInteraction?.({ x: x - 3, y: 0, w: 6, h: c_maxTimelineHeight }, { hoverTip: [tip] });
 	}
 	ctx.setLineDash([]);
 }
@@ -1122,7 +1110,6 @@ export function drawRuler(params: {
 		renderingProps.countdown;
 	// leave the left most section not clickable
 	testInteraction(
-		ctx,
 		{
 			x: TimelineDimensions.leftBufferWidth,
 			y: 0,
@@ -1367,7 +1354,7 @@ export function drawTimelines(params: {
 			interactive: isActiveSlot,
 		});
 
-		// selection rect
+		// background areas for currently-selected skills
 		if (renderingProps.showSelection && isActiveSlot && !isImageExportMode) {
 			const selectionLeftPx =
 				displayOriginX +
@@ -1421,7 +1408,7 @@ export function drawTimelines(params: {
 		ctx.fillStyle =
 			slot === renderingProps.activeSlotIndex ? colors.accent : colors.bgMediumContrast;
 		ctx.fillRect(handle.x, handle.y, handle.w, handle.h);
-		testInteraction(ctx, handle, {
+		testInteraction(handle, {
 			hoverTip:
 				slot === renderingProps.activeSlotIndex
 					? undefined
@@ -1442,7 +1429,7 @@ export function drawTimelines(params: {
 				w: handle.w,
 				h: handle.w,
 			};
-			testInteraction(ctx, deleteBtn, {
+			testInteraction(deleteBtn, {
 				hoverTip: [localize({ en: "delete", zh: "删除" }) as string],
 				onMouseUp: () => {
 					controller.timeline.removeSlot(slot);
@@ -1532,7 +1519,6 @@ function drawClickDragInteractions(params: {
 	interactionInfo: MouseInteractionInfo;
 	dragTargetTime: number | null;
 }) {
-	console.log("draw click drag");
 	const {
 		ctx,
 		viewInfo,
@@ -1628,7 +1614,7 @@ function drawAddSlotButton(params: {
 			handle.y + handle.h - 4,
 		);
 
-		testInteraction(ctx, handle, {
+		testInteraction(handle, {
 			onMouseUp: () => {
 				controller.timeline.addSlot();
 				controller.displayCurrentState();
@@ -1657,7 +1643,7 @@ function drawAddSlotButton(params: {
 			cloneHandle.y + cloneHandle.h - 4,
 		);
 
-		testInteraction(ctx, cloneHandle, {
+		testInteraction(cloneHandle, {
 			onMouseUp: () => {
 				controller.cloneActiveSlot();
 				controller.displayCurrentState();
@@ -1670,14 +1656,94 @@ function drawAddSlotButton(params: {
 	return 0;
 }
 
+// Drawing is split into three layers to make state management easier to reason about.
+// These layers all actually be on the same canvas in some scenarios, as for image export.
+// The z-index of the canvas HTML elements ensures proper order across the different levels.
+// Layer 1: background elements, skills, tick marks, and things updated by simulation
+// Layer 2: relatively static elements like buttons and marker tracks
+// Layer 3: tooltips and cursors only displayed during interactions
+
+function getMarkerTracksHeight(): number {
+	let numTracks = 0;
+	let hasUntargetableTrack = false;
+	for (const marker of controller.timeline.getAllMarkers()) {
+		const k = marker.track;
+		numTracks = Math.max(numTracks, k + 1);
+		if (k === UntargetableMarkerTrack) hasUntargetableTrack = true;
+	}
+	if (hasUntargetableTrack) numTracks += 1;
+	return numTracks * TimelineDimensions.trackHeight;
+}
+
+function getTimelineStartY(): number {
+	return TimelineDimensions.rulerHeight + getMarkerTracksHeight();
+}
+
 // background layer:
 // white bg, tracks bg, ruler bg, ruler marks, numbers on ruler: update only when canvas size change, countdown grey
-function drawEverything(params: {
-	layers: {
-		liveCtx: CanvasRenderingContext2D;
-		interactiveCtx: CanvasRenderingContext2D;
-		lowUpdateCtx: CanvasRenderingContext2D;
-	};
+function drawLive(params: {
+	ctx: CanvasRenderingContext2D;
+	viewInfo: ViewInfo;
+	mouseX: number;
+	testInteraction: InteractionHandler;
+}) {
+	const { ctx, viewInfo, mouseX, testInteraction } = params;
+	const { renderingProps, colors, visibleLeft, visibleWidth } = viewInfo;
+	const timelineOrigin = -visibleLeft + TimelineDimensions.leftBufferWidth; // fragCoord.x (...) of rawTime=0.
+	let currentHeight = 0;
+
+	// background white
+	ctx.fillStyle = colors.background;
+	// add 1 here because this scaled dimension from dpr may not perfectly cover the entire canvas
+	ctx.fillRect(0, 0, visibleWidth + 1, renderingProps.timelineHeight + 1);
+	testInteraction(
+		{ x: 0, y: 0, w: visibleWidth, h: c_maxTimelineHeight },
+		{ onMouseDown: onMouseDownTimelineBackground },
+	);
+	currentHeight += drawRuler({
+		ctx,
+		originX: timelineOrigin,
+		mouseX,
+		viewInfo,
+		testInteraction,
+	});
+	currentHeight += getMarkerTracksHeight();
+	drawTimelines({
+		ctx,
+		viewInfo,
+		originX: timelineOrigin,
+		originY: currentHeight,
+		isImageExportMode: false,
+		testInteraction,
+	});
+}
+
+function drawLowUpdate(params: {
+	ctx: CanvasRenderingContext2D;
+	viewInfo: ViewInfo;
+	testInteraction: InteractionHandler;
+}) {
+	const { ctx, viewInfo, testInteraction } = params;
+	const timelineOrigin = -viewInfo.visibleLeft + TimelineDimensions.leftBufferWidth;
+	drawMarkerTracks({
+		ctx,
+		viewInfo,
+		originX: timelineOrigin,
+		originY: TimelineDimensions.rulerHeight,
+		testInteraction,
+	});
+	drawAddSlotButton({
+		ctx,
+		viewInfo,
+		originY:
+			getTimelineStartY() +
+			TimelineDimensions.renderSlotHeight() * viewInfo.renderingProps.slots.length,
+		testInteraction,
+	});
+}
+
+function drawInteractive(params: {
+	ctx: CanvasRenderingContext2D;
 	viewInfo: ViewInfo;
 	dragTargetTime: number | null;
 	activeHoverTip?: string[];
@@ -1690,7 +1756,7 @@ function drawEverything(params: {
 	testInteraction: InteractionHandler;
 }) {
 	const {
-		layers: { liveCtx, interactiveCtx, lowUpdateCtx },
+		ctx,
 		viewInfo,
 		dragTargetTime,
 		activeHoverTip,
@@ -1702,55 +1768,10 @@ function drawEverything(params: {
 		mouseInteractionInfo,
 		testInteraction,
 	} = params;
-	const { renderingProps, colors, visibleLeft, visibleWidth } = viewInfo;
-	const timelineOrigin = -visibleLeft + TimelineDimensions.leftBufferWidth; // fragCoord.x (...) of rawTime=0.
-	let currentHeight = 0;
-
-	// Drawing is split into three layers to make state management easier to reason about.
-	// These layers all actually be on the same canvas in some scenarios, as for image export.
-	// We may alternate performing draw operations between these canvases to ensure elements are
-	// at the expected y-positions; the z-index of the canvas HTML elements ensures proper order
-	// across the different levels.
-	// Layer 1: background elements, skills, tick marks, and things updated by simulation
-	// Layer 2: relatively static elements like buttons and marker tracks
-	// Layer 3: tooltips and cursors only displayed during interactions
-
-	// background white
-	liveCtx.fillStyle = colors.background;
-	// add 1 here because this scaled dimension from dpr may not perfectly cover the entire canvas
-	liveCtx.fillRect(0, 0, visibleWidth + 1, renderingProps.timelineHeight + 1);
-	testInteraction(
-		liveCtx,
-		{ x: 0, y: 0, w: visibleWidth, h: c_maxTimelineHeight },
-		{ onMouseDown: onMouseDownTimelineBackground },
-	);
-	currentHeight += drawRuler({
-		ctx: liveCtx,
-		originX: timelineOrigin,
-		viewInfo,
-		testInteraction,
-		mouseX,
-	});
-	currentHeight += drawMarkerTracks({
-		ctx: lowUpdateCtx,
-		viewInfo,
-		originX: timelineOrigin,
-		originY: currentHeight,
-		testInteraction,
-	});
-	const timelineStartY = currentHeight;
-
-	currentHeight += drawTimelines({
-		ctx: liveCtx,
-		viewInfo,
-		originX: timelineOrigin,
-		originY: currentHeight,
-		isImageExportMode: false,
-		testInteraction,
-	});
-
+	const timelineOrigin = -viewInfo.visibleLeft + TimelineDimensions.leftBufferWidth;
+	const timelineStartY = getTimelineStartY();
 	drawCursors({
-		ctx: interactiveCtx,
+		ctx,
 		viewInfo,
 		originX: timelineOrigin,
 		timelineStartY: timelineStartY,
@@ -1760,7 +1781,7 @@ function drawEverything(params: {
 	// Click/drag interactions should be drawn beneath slot buttons and tooltips.
 	if (mouseInteractionInfo) {
 		drawClickDragInteractions({
-			ctx: interactiveCtx,
+			ctx,
 			viewInfo,
 			timelineStartY,
 			mouseX,
@@ -1772,16 +1793,9 @@ function drawEverything(params: {
 		});
 	}
 
-	currentHeight += drawAddSlotButton({
-		ctx: lowUpdateCtx,
-		viewInfo,
-		originY: currentHeight,
-		testInteraction,
-	});
-
 	if (activeHoverTip !== undefined) {
 		drawTip({
-			ctx: interactiveCtx,
+			ctx,
 			viewInfo,
 			lines: activeHoverTip,
 			images: activeHoverImages,
@@ -1797,17 +1811,6 @@ function drawEverything(params: {
 // cursor, selection: can update in real time; on top of everything else
 // transparent interactive layer: only render when not in real time, html DOM
 // current layering is mostly for state cleanliness, and can be further separated to reduce the number of draws
-
-export let timelineCanvasOnMouseMove: (x: number, y: number) => void = (x: number, y: number) => {};
-export let timelineCanvasOnMouseEnter: () => void = () => {};
-export let timelineCanvasOnMouseLeave: () => void = () => {};
-export let timelineCanvasOnMouseUp: (e: any, x: number, y: number) => void = (e, x, y) => {};
-export let timelineCanvasOnMouseDown: (x: number, y: number) => void = (x, y) => {};
-export let timelineCanvasOnKeyDown: (e: any) => void = (e: any) => {};
-
-export const timelineCanvasGetPointerMouse: () => boolean = () => {
-	return readback_pointerMouse;
-};
 
 // Check if two rectangles overlap.
 // https://stackoverflow.com/a/16012490
@@ -1832,17 +1835,6 @@ function findMouseItem<T>(x: number, y: number, zones: Map<Rect, T>): T | undefi
 	return undefined;
 }
 
-function getTimelineStartY(): number {
-	let numTracks = 0;
-	let hasUntargetableTrack = false;
-	for (const k of controller.timeline.getAllMarkers().keys()) {
-		numTracks = Math.max(numTracks, k + 1);
-		if (k === UntargetableMarkerTrack) hasUntargetableTrack = true;
-	}
-	if (hasUntargetableTrack) numTracks += 1;
-	return TimelineDimensions.rulerHeight + numTracks * TimelineDimensions.trackHeight;
-}
-
 interface InteractionLayer {
 	mouseDown: Map<Rect, (interactionInfo: MouseInteractionInfo) => void>;
 	mouseUp: Map<Rect, (interactionInfo: MouseInteractionInfo) => void>;
@@ -1859,17 +1851,29 @@ function newInteractionLayer(): InteractionLayer {
 	};
 }
 
+function clearLayer(layer: InteractionLayer) {
+	(["mouseDown", "mouseHover", "mouseUp", "pointer"] as (keyof InteractionLayer)[]).forEach(
+		(zone) => layer[zone].clear(),
+	);
+}
+
 export function TimelineCanvas(props: {
 	timelineHeight: number;
 	visibleLeft: number;
 	visibleWidth: number;
 	version: number;
+	pointerMouse: boolean;
+	setCallbacks: (c: CanvasCallbacks) => void;
+	setPointerMouse: (b: boolean) => void;
 }) {
+	// Most objects here use useRef rather than useState because we synchronize against a canvas object
+	// rather than react-rendered DOM items.
 	const liveCanvasRef = useRef<HTMLCanvasElement | null>(null);
 	const interactiveCanvasRef = useRef<HTMLCanvasElement | null>(null);
 	const lowUpdateCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
 	const dpr = window.devicePixelRatio;
+
 	const scaledWidth = props.visibleWidth * dpr;
 	const scaledHeight = props.timelineHeight * dpr;
 
@@ -1903,12 +1907,93 @@ export function TimelineCanvas(props: {
 	}
 
 	const draggedSkillElem = useRef<SkillElem | undefined>(undefined);
+	const setDraggedSkillElem = (e: SkillElem | undefined) => {
+		draggedSkillElem.current = e;
+	};
 
 	const bgSelecting = useRef(false);
+	const setBgSelecting = (b: boolean) => {
+		bgSelecting.current = b;
+	};
+	const makeTestInteraction: (k: "live" | "interactive" | "lowUpdate") => InteractionHandler =
+		(k) =>
+		(
+			rect: Rect,
+			params: {
+				hoverTip?: string[];
+				onMouseUp?: (info: MouseInteractionInfo) => void;
+				onMouseDown?: (info: MouseInteractionInfo) => void;
+				pointerMouse?: boolean;
+				hoverImages?: any[];
+			},
+		) => {
+			const { hoverTip, onMouseUp, onMouseDown, pointerMouse, hoverImages } = params;
+			const layer = interactionLayers.current[k];
+			if (hoverTip || hoverImages) {
+				layer.mouseHover.set(rect, {
+					tip: hoverTip,
+					images: hoverImages,
+				});
+			}
+			if (onMouseUp) {
+				layer.mouseUp.set(rect, onMouseUp);
+			}
+			if (onMouseDown) {
+				layer.mouseDown.set(rect, onMouseDown);
+			}
+			if (pointerMouse !== undefined) {
+				layer.pointer.set(rect, pointerMouse);
+			}
+		};
+	const clearCtx = (ctx: CanvasRenderingContext2D) => {
+		const left = -props.visibleLeft - TimelineDimensions.leftBufferWidth;
+		const w = props.visibleWidth - left;
+		ctx.clearRect(left, 0, w, c_maxTimelineHeight);
+	};
 
-	// initialization
-	useEffect(() => {
-		timelineCanvasOnMouseMove = (x: number, y: number) => {
+	const redrawInteractive = () => {
+		const ctx = interactiveCanvasRef.current?.getContext("2d", { alpha: true });
+		if (ctx) {
+			clearCtx(ctx);
+			clearLayer(interactionLayers.current.interactive);
+			drawInteractive({
+				ctx,
+				...getDrawState(false),
+				testInteraction: makeTestInteraction("interactive"),
+			});
+		}
+	};
+
+	const getDrawState = (shiftKey: boolean) => {
+		return {
+			viewInfo: {
+				renderingProps: controller.getTimelineRenderingProps(),
+				colors: getThemeColors(activeColorTheme),
+				visibleLeft: props.visibleLeft,
+				visibleWidth: props.visibleWidth,
+			},
+			dragTargetTime: globalDragContext.dragTargetTime,
+			mouseX: mouseX.current,
+			mouseY: mouseY.current,
+			selectStartX: selectStartX.current,
+			selectStartY: selectStartY.current,
+			activeHoverTip: activeHoverDraw.current.tip,
+			activeHoverImages: activeHoverDraw.current.images,
+			mouseInteractionInfo: {
+				shiftKey,
+				dragLock: lockContext.value,
+				bgSelecting: bgSelecting.current,
+				setDraggedSkillElem,
+				setBgSelecting,
+			},
+		};
+	};
+
+	// If performance ver becomes an issue, convert these to use useCallback().
+	// NOTE: props.setCallbacks must be set whenever window dimensions change, or else the
+	// helper functions used here will read stale values of props.
+	const callbacks: CanvasCallbacks = {
+		onMouseMove: (x: number, y: number) => {
 			mouseX.current = x;
 			mouseY.current = y;
 			// If we're over an element with a hover tooltip, draw it.
@@ -1964,7 +2049,7 @@ export function TimelineCanvas(props: {
 					controller.displayCurrentState();
 				}
 			}
-			readback_pointerMouse = findMouseItem(x, y, getAllZones("pointer")) ?? false;
+			props.setPointerMouse(findMouseItem(x, y, getAllZones("pointer")) ?? false);
 			// If we began a skill element drag that is not in the current selection,
 			// then select the skill being dragged.
 			if (
@@ -1976,18 +2061,18 @@ export function TimelineCanvas(props: {
 					false,
 				);
 			}
-		};
-		timelineCanvasOnMouseEnter = () => {};
-		timelineCanvasOnMouseLeave = () => {
+			redrawInteractive();
+		},
+		onMouseEnter: () => {},
+		onMouseLeave: () => {
 			bgSelecting.current = false;
-		};
+		},
 		// ignore KB & M input when in the middle of using a skill (for simplicity)
-		timelineCanvasOnMouseUp = (e: any, x: number, y: number) => {
+		onMouseUp: (e: any, x: number, y: number) => {
 			mouseX.current = x;
 			mouseY.current = y;
 			if (!controller.shouldLoop) {
 				// Only handle mouseup events if we're not currently in an animation.
-				forceUpdate();
 				findMouseItem(
 					x,
 					y,
@@ -1996,12 +2081,8 @@ export function TimelineCanvas(props: {
 					shiftKey: e.shiftKey,
 					dragLock: lockContext.value,
 					bgSelecting: bgSelecting.current,
-					setDraggedSkillElem: (elem) => {
-						draggedSkillElem.current = elem;
-					},
-					setBgSelecting: (b) => {
-						bgSelecting.current = b;
-					},
+					setDraggedSkillElem,
+					setBgSelecting,
 				});
 			}
 			// Always end a background selection operation when the mouse is released, regardless of
@@ -2033,14 +2114,13 @@ export function TimelineCanvas(props: {
 					}
 				}
 			}
-		};
-		timelineCanvasOnMouseDown = (x: number, y: number) => {
+		},
+		onMouseDown: (x: number, y: number) => {
 			mouseX.current = x;
 			mouseY.current = y;
 			if (!controller.shouldLoop) {
 				// Only handle mousedown events if we're not currently in an animation.
 				const mouseDownZones = getAllZones("mouseDown");
-				console.log("mousedown", mouseDownZones.size);
 				selectStartX.current = x;
 				selectStartY.current = y;
 				findMouseItem(
@@ -2051,16 +2131,12 @@ export function TimelineCanvas(props: {
 					shiftKey: false,
 					dragLock: lockContext.value,
 					bgSelecting: bgSelecting.current,
-					setDraggedSkillElem: (elem) => {
-						draggedSkillElem.current = elem;
-					},
-					setBgSelecting: (b) => {
-						bgSelecting.current = b;
-					},
+					setDraggedSkillElem,
+					setBgSelecting,
 				});
 			}
-		};
-		timelineCanvasOnKeyDown = (e: any) => {
+		},
+		onKeyDown: (e: any) => {
 			if (!controller.shouldLoop) {
 				if (e.key === "Backspace" || e.key === "Delete") {
 					forceUpdate();
@@ -2070,7 +2146,12 @@ export function TimelineCanvas(props: {
 					}
 				}
 			}
-		};
+		},
+	};
+
+	// initialization
+	useEffect(() => {
+		props.setCallbacks(callbacks);
 	}, []);
 
 	const redrawEverything = () => {
@@ -2079,105 +2160,53 @@ export function TimelineCanvas(props: {
 			interactiveCanvasRef,
 			lowUpdateCanvasRef,
 		].map((ref, i) => ref.current?.getContext("2d", { alpha: i !== 0 }));
-
-		const testInteraction: InteractionHandler = (
-			ctx: CanvasRenderingContext2D,
-			rect: Rect,
-			params: {
-				hoverTip?: string[];
-				onMouseUp?: (info: MouseInteractionInfo) => void;
-				onMouseDown?: (info: MouseInteractionInfo) => void;
-				pointerMouse?: boolean;
-				hoverImages?: any[];
-			},
-		) => {
-			// This function is called by child draw functions to register some kind of hitbox.
-			// When it is called, we register them to the appropriate map.
-			const { hoverTip, onMouseUp, onMouseDown, pointerMouse, hoverImages } = params;
-			let layer: InteractionLayer;
-			if (ctx === liveCtx) {
-				layer = interactionLayers.current.live;
-			} else if (ctx === interactiveCtx) {
-				layer = interactionLayers.current.interactive;
-			} else if (ctx === lowUpdateCtx) {
-				layer = interactionLayers.current.lowUpdate;
-			} else {
-				return;
-			}
-			if (hoverTip || hoverImages) {
-				layer.mouseHover.set(rect, {
-					tip: hoverTip,
-					images: hoverImages,
-				});
-			}
-			if (onMouseUp) {
-				layer.mouseUp.set(rect, onMouseUp);
-			}
-			if (onMouseDown) {
-				layer.mouseDown.set(rect, onMouseDown);
-			}
-			if (pointerMouse !== undefined) {
-				layer.pointer.set(rect, pointerMouse);
-			}
-		};
-
 		if (liveCtx && interactiveCtx && lowUpdateCtx) {
 			// Hitboxes are re-computed when testInteraction is called
 			skillHitboxes.current.clear();
-			(
-				["mouseDown", "mouseHover", "mouseUp", "pointer"] as (keyof InteractionLayer)[]
-			).forEach((zone) => {
-				interactionLayers.current.live[zone].clear();
-				interactionLayers.current.interactive[zone].clear();
-				interactionLayers.current.lowUpdate[zone].clear();
-			});
+			clearLayer(interactionLayers.current.live);
+			clearLayer(interactionLayers.current.interactive);
+			clearLayer(interactionLayers.current.lowUpdate);
 			// Don't need to clearRect the live ctx because we do an explicit background fillRect
-			[interactiveCtx, lowUpdateCtx].forEach((ctx) =>
-				ctx.clearRect(0, 0, canvasWidth, canvasHeight),
-			);
-			drawEverything({
-				layers: {
-					liveCtx,
-					interactiveCtx,
-					lowUpdateCtx,
-				},
-				viewInfo: {
-					renderingProps: controller.getTimelineRenderingProps(),
-					colors: getThemeColors(activeColorTheme),
-					visibleLeft: props.visibleLeft,
-					visibleWidth: props.visibleWidth,
-				},
-				dragTargetTime: null,
+			[interactiveCtx, lowUpdateCtx].forEach((ctx) => clearCtx(ctx));
+			const viewInfo = {
+				renderingProps: controller.getTimelineRenderingProps(),
+				colors: getThemeColors(activeColorTheme),
+				visibleLeft: props.visibleLeft,
+				visibleWidth: props.visibleWidth,
+			};
+			liveCtx.scale(dpr, dpr);
+			drawLive({
+				ctx: liveCtx,
+				viewInfo,
 				mouseX: mouseX.current,
-				mouseY: mouseY.current,
-				selectStartX: selectStartX.current,
-				selectStartY: selectStartY.current,
-				activeHoverTip: activeHoverDraw.current.tip,
-				activeHoverImages: activeHoverDraw.current.images,
-				mouseInteractionInfo: {
-					shiftKey: false,
-					dragLock: lockContext.value,
-					bgSelecting: bgSelecting.current,
-					setDraggedSkillElem: (elem) => {
-						draggedSkillElem.current = elem;
-					},
-					setBgSelecting: (b) => {
-						bgSelecting.current = b;
-					},
-				},
-				testInteraction,
+				testInteraction: makeTestInteraction("live"),
 			});
+			liveCtx.scale(1 / dpr, 1 / dpr);
+			interactiveCtx.scale(dpr, dpr);
+			drawInteractive({
+				ctx: interactiveCtx,
+				...getDrawState(false),
+				testInteraction: makeTestInteraction("interactive"),
+			});
+			interactiveCtx.scale(1 / dpr, 1 / dpr);
+			lowUpdateCtx.scale(dpr, dpr);
+			drawLowUpdate({
+				ctx: lowUpdateCtx,
+				viewInfo,
+				testInteraction: makeTestInteraction("lowUpdate"),
+			});
+			lowUpdateCtx.scale(1 / dpr, 1 / dpr);
 		}
 	};
 
-	useEffect(redrawEverything, [
-		props.visibleLeft,
-		props.visibleWidth,
-		mouseX,
-		mouseY,
-		props.version,
-		dpr,
-	]);
+	useEffect(redrawEverything, [mouseX, mouseY, props.version, dpr]);
+
+	// When the selection window changes, we need to update the callbacks as well to ensure
+	// they don't read stale values of the window dimensions.
+	useEffect(() => {
+		redrawEverything();
+		props.setCallbacks(callbacks);
+	}, [props.visibleLeft, props.visibleWidth]);
 
 	// For ease of reasoning about state, the canvas is split into 3 layers:
 	// 1. A "live" layer for elements that must be redrawn when a timeline or simulation changes:
@@ -2198,7 +2227,7 @@ export function TimelineCanvas(props: {
 		height: props.timelineHeight,
 		position: "absolute",
 		pointerEvents: "none",
-		cursor: readback_pointerMouse ? "pointer" : "default",
+		cursor: props.pointerMouse ? "pointer" : "default",
 		left: 0,
 		top: 0,
 	};
