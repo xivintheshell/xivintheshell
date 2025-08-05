@@ -88,7 +88,7 @@ export const TANKS = ensureRecord<Job>()({
 	},
 	DRK: {
 		role: "TANK",
-		implementationLevel: "TESTING",
+		implementationLevel: "LIVE",
 		usesMp: true,
 		limitBreak: "DARK_FORCE",
 		limitBreakBuff: "DARK_FORCE",
@@ -135,7 +135,7 @@ export type HealerKey = keyof Healers;
 export const MELEE = ensureRecord<Job>()({
 	MNK: {
 		role: "MELEE",
-		implementationLevel: "TESTING",
+		implementationLevel: "LIVE",
 		limitBreak: "FINAL_HEAVEN",
 	},
 	DRG: {
@@ -145,7 +145,7 @@ export const MELEE = ensureRecord<Job>()({
 	},
 	NIN: {
 		role: "MELEE",
-		implementationLevel: "TESTING",
+		implementationLevel: "LIVE",
 		limitBreak: "CHIMATSURI",
 	},
 	SAM: {
@@ -160,7 +160,7 @@ export const MELEE = ensureRecord<Job>()({
 	},
 	VPR: {
 		role: "MELEE",
-		implementationLevel: "TESTING",
+		implementationLevel: "LIVE",
 		limitBreak: "WORLD_SWALLOWER",
 	},
 });
