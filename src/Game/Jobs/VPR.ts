@@ -699,7 +699,7 @@ makeVPRWeaponskill("REAWAKEN", 90, {
 	replaceIf: REAWAKEN_REPLACEMENTS,
 	applicationDelay: 0.625,
 	potency: 750,
-	falloff: 0.6,
+	falloff: 0.65,
 	baseRecastTime: 2.2,
 	highlightIf: (state) =>
 		state.hasResourceAvailable("SERPENT_OFFERINGS", 50) ||
@@ -733,7 +733,7 @@ makeVPRWeaponskill("OUROBOROS", 96, {
 	replaceIf: REAWAKEN_REPLACEMENTS,
 	applicationDelay: 2.313,
 	potency: 1150,
-	falloff: 0.6,
+	falloff: 0.65,
 	baseRecastTime: 3,
 	highlightIf: (state) => state.hasResourceExactly("ANGUINE_TRIBUTE", 1),
 	onConfirm: (state) => state.cancelReawaken(),
@@ -766,7 +766,7 @@ makeVPRWeaponskill("VICEWINDER", 65, {
 makeVPRWeaponskill("UNCOILED_FURY", 82, {
 	applicationDelay: 0.804,
 	potency: 680,
-	falloff: 0.5,
+	falloff: 0.6,
 	baseRecastTime: 3.5,
 	highlightIf: (state) => state.hasResourceAvailable("RATTLING_COIL"),
 	validateAttempt: (state) => state.hasResourceAvailable("RATTLING_COIL"),
@@ -1084,7 +1084,7 @@ const fangsAndBloods: Array<
 		"fang",
 		1.04,
 		120,
-		0.5,
+		0.6,
 		"UNCOILED_OGCD_READY",
 		"POISED_FOR_TWINFANG",
 		Modifiers.Poised,
@@ -1096,7 +1096,7 @@ const fangsAndBloods: Array<
 		"blood",
 		0.977,
 		120,
-		0.5,
+		0.6,
 		"UNCOILED_OGCD_READY",
 		"POISED_FOR_TWINBLOOD",
 		Modifiers.Poised,
@@ -1159,7 +1159,7 @@ generations.forEach(([name, applicationDelay, replaceIf], i) => {
 		startOnHotbar: false,
 		applicationDelay,
 		potency: 420,
-		falloff: 0.6,
+		falloff: 0.65,
 		baseRecastTime: 2,
 		combo: {
 			resource: "REAWAKEN_COMBO",
@@ -1187,7 +1187,7 @@ legacies.forEach(([name, applicationDelay]) => {
 		applicationDelay,
 		cooldown: 1,
 		potency: 320,
-		falloff: 0.6,
+		falloff: 0.65,
 		highlightIf: (state) => true,
 		onConfirm: (state) => state.tryConsumeResource("LEGACY_READY", true),
 	});

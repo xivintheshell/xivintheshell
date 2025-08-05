@@ -474,8 +474,10 @@ makeResourceAbility_MCH("REASSEMBLE", 10, "cd_REASSEMBLE", {
 	maxCharges: 2, // charges reduced as needed in constructor by trait
 });
 
+const TOOL_POTENCY = 620;
+
 makeWeaponskill_MCH("DRILL", 58, {
-	potency: 600,
+	potency: TOOL_POTENCY,
 	applicationDelay: 1.15,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	secondaryCooldown: {
@@ -502,7 +504,7 @@ makeWeaponskill_MCH("HOT_SHOT", 4, {
 });
 makeWeaponskill_MCH("AIR_ANCHOR", 76, {
 	startOnHotbar: false,
-	potency: 600,
+	potency: TOOL_POTENCY,
 	applicationDelay: 1.15,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	onConfirm: (state) => state.gainResource("BATTERY_GAUGE", 20),
@@ -520,8 +522,8 @@ makeWeaponskill_MCH("CHAIN_SAW", 90, {
 			condition: (state) => state.hasResourceAvailable("EXCAVATOR_READY"),
 		},
 	],
-	potency: 600,
-	falloff: 0.35,
+	potency: TOOL_POTENCY,
+	falloff: 0.25,
 	applicationDelay: 1.03,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	onConfirm: (state) => {
@@ -538,8 +540,8 @@ makeWeaponskill_MCH("CHAIN_SAW", 90, {
 });
 makeWeaponskill_MCH("EXCAVATOR", 90, {
 	startOnHotbar: false,
-	potency: 600,
-	falloff: 0.35,
+	potency: TOOL_POTENCY,
+	falloff: 0.25,
 	applicationDelay: 1.07,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	onConfirm: (state) => {
@@ -571,7 +573,7 @@ makeAbility_MCH("BARREL_STABILIZER", 66, "cd_BARREL_STABILIZER", {
 makeWeaponskill_MCH("FULL_METAL_FIELD", 100, {
 	startOnHotbar: false,
 	potency: 900,
-	falloff: 0.3,
+	falloff: 0.25,
 	applicationDelay: 1.02,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	onConfirm: (state) => state.tryConsumeResource("FULL_METAL_MACHINIST"),
@@ -675,7 +677,7 @@ makeAbility_MCH("GAUSS_ROUND", 15, "cd_DOUBLE_CHECK", {
 });
 makeAbility_MCH("DOUBLE_CHECK", 92, "cd_DOUBLE_CHECK", {
 	startOnHotbar: false,
-	potency: 170,
+	potency: 180,
 	falloff: 0.3,
 	applicationDelay: 0.71,
 	cooldown: 30,
@@ -695,7 +697,7 @@ makeAbility_MCH("RICOCHET", 50, "cd_CHECKMATE", {
 });
 makeAbility_MCH("CHECKMATE", 92, "cd_CHECKMATE", {
 	startOnHotbar: false,
-	potency: 170,
+	potency: 180,
 	falloff: 0.3,
 	applicationDelay: 0.71,
 	cooldown: 30,
@@ -898,7 +900,7 @@ makeWeaponskill_MCH("BIOBLASTER", 58, {
 makeWeaponskill_MCH("AUTO_CROSSBOW", 52, {
 	potency: [
 		["NEVER", 140],
-		["MARKSMANS_MASTERY_II", 160],
+		["MARKSMANS_MASTERY_II", 180],
 	],
 	falloff: 0,
 	applicationDelay: 0.89,
@@ -916,7 +918,7 @@ makeWeaponskill_MCH("FLAMETHROWER", 70, {
 			node,
 			effectName: "FLAMETHROWER",
 			skillName: "FLAMETHROWER",
-			tickPotency: 100,
+			tickPotency: 120,
 			tickFrequency: 1,
 			speedStat: "sks",
 		});

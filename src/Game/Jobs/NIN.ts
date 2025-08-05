@@ -1022,7 +1022,7 @@ makeNINWeaponskill("FLEETING_RAIJU", 90, {
 
 makeNINAbility("DOKUMORI", 66, "cd_DOKUMORI", {
 	applicationDelay: 1.07,
-	potency: 300,
+	potency: 400,
 	falloff: 0,
 	cooldown: 120,
 	onConfirm: (state) => {
@@ -1065,7 +1065,7 @@ makeNINAbility("KUNAIS_BANE", 92, "cd_TRICK_ATTACK", {
 	startOnHotbar: false,
 	applicationDelay: 1.29,
 	cooldown: 60,
-	potency: 600,
+	potency: 700,
 	falloff: 0,
 	highlightIf: TRICK_CONDITION,
 	validateAttempt: TRICK_CONDITION,
@@ -1137,7 +1137,7 @@ makeNINAbility("ZESHO_MEPPO", 96, "cd_BHAVACAKRA", {
 makeNINAbility("HELLFROG_MEDIUM", 62, "cd_BHAVACAKRA", {
 	applicationDelay: 0.8,
 	cooldown: 1,
-	potency: 160,
+	potency: 250,
 	falloff: 0,
 	highlightIf: AT_LEAST_50_NINKI,
 	validateAttempt: AT_LEAST_50_NINKI,
@@ -1154,7 +1154,7 @@ makeNINAbility("DEATHFROG_MEDIUM", 96, "cd_BHAVACAKRA", {
 	startOnHotbar: false,
 	applicationDelay: 0.8,
 	cooldown: 1,
-	potency: 260,
+	potency: 400,
 	falloff: 0,
 	highlightIf: (state) => state.hasResourceAvailable("HIGI") && AT_LEAST_50_NINKI(state),
 	validateAttempt: (state) => state.hasResourceAvailable("HIGI") && AT_LEAST_50_NINKI(state),
@@ -1192,7 +1192,7 @@ makeNINResourceAbility("BUNSHIN", 80, "cd_BUNSHIN", {
 
 makeNINWeaponskill("PHANTOM_KAMAITACHI", 80, {
 	startOnHotbar: false,
-	potency: 600,
+	potency: 700,
 	falloff: 0,
 	applicationDelay: 1.57,
 	highlightIf: (state) => state.hasResourceAvailable("PHANTOM_KAMAITACHI_READY"),

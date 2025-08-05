@@ -10,15 +10,15 @@ it(
 		time: 65.92 + 10,
 		lastDamageApplicationTime: 65.88 + 10,
 		totalPotency: {
-			applied: 12981.74,
-			pending: 567.28,
+			applied: 13111.1962,
+			pending: 602.735,
 		},
 		gcdSkills: {
 			applied: 30,
 			pending: 0,
 		},
 		mainTableSummary: {
-			totalPotencyWithoutPot: 12421.84,
+			totalPotencyWithoutPot: 12543.205,
 		},
 		dotTables: new Map([
 			[
@@ -30,8 +30,8 @@ it(
 						dotCoverageTimeFraction: 0.9779,
 						cumulativeGap: 1.457,
 						cumulativeOverride: 4.733,
-						totalPotencyWithoutPot: 1941.841,
-						totalPotPotency: 129.5,
+						totalPotencyWithoutPot: 2063.21,
+						totalPotPotency: 137.59,
 					},
 				},
 			],

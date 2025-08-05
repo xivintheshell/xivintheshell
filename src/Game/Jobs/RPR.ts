@@ -756,7 +756,7 @@ makeRPRWeaponskill("PLENTIFUL_HARVEST", 88, {
 	potency: 720,
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
-	falloff: 0.4,
+	falloff: 0.2,
 	applicationDelay: 1.16,
 	highlightIf: (state) => state.hasResourceAvailable("IMMORTAL_SACRIFICE", 1),
 	validateAttempt: (state) =>
@@ -780,7 +780,7 @@ makeRPRSpell("COMMUNIO", 90, {
 	aspect: Aspect.Other,
 	castTime: 1.3,
 	recastTime: 2.5,
-	falloff: 0.4,
+	falloff: 0.2,
 	applicationDelay: 1.16,
 	validateAttempt: (state) => state.hasResourceAvailable("ENSHROUDED"),
 	highlightIf: (state) =>
@@ -936,7 +936,7 @@ makeRPRAbility("SACRIFICIUM", 92, "cd_SACRIFICIUM", {
 	isPhysical: false,
 	potency: 600,
 	startOnHotbar: false,
-	falloff: 0.4,
+	falloff: 0.2,
 	applicationDelay: 0.76,
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable("OBLATIO"),
@@ -1016,7 +1016,7 @@ makeResourceAbility("RPR", "ENSHROUD", 80, "cd_ENSHROUD", {
 	},
 	applicationDelay: 0,
 	startOnHotbar: true,
-	cooldown: 15,
+	cooldown: 5,
 	validateAttempt: (state) => {
 		return state.hasResourceAvailable("SHROUD", 50) || state.hasResourceAvailable("IDEAL_HOST");
 	},
@@ -1029,7 +1029,7 @@ makeRPRWeaponskill("PERFECTIO", 100, {
 	potency: 1300,
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
-	falloff: 0.4,
+	falloff: 0.2,
 	applicationDelay: 1.29,
 	startOnHotbar: false,
 	highlightIf: (state) => state.hasResourceAvailable("PERFECTIO_PARATA"),
