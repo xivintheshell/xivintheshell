@@ -909,7 +909,7 @@ makeAbility_DRG("STARDIVER", 80, "cd_STARDIVER", {
 		["NEVER", 720],
 		["MELEE_MASTERY_DRG", 840],
 	],
-	falloff: 0.5,
+	falloff: 0.4,
 	cooldown: 30,
 	validateAttempt: (state) => state.hasResourceAvailable("LIFE_OF_THE_DRAGON"),
 	onConfirm: (state) => {
@@ -924,7 +924,7 @@ makeAbility_DRG("STARCROSS", 100, "cd_STARCROSS", {
 	replaceIf: [stardiverCondition],
 	applicationDelay: 0.98,
 	potency: 1000,
-	falloff: 0.5,
+	falloff: 0.4,
 	cooldown: 1,
 	validateAttempt: (state) =>
 		state.hasResourceAvailable("STARCROSS_READY") &&

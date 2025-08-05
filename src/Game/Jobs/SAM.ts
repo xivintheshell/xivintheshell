@@ -820,7 +820,7 @@ makeGCD_SAM("OGI_NAMIKIRI", 90, {
 			condition: (state) => state.hasResourceAvailable("KAESHI_OGI_READY"),
 		},
 	],
-	falloff: 0.5,
+	falloff: 0.4,
 	applicationDelay: 0.49,
 	basePotency: [
 		["NEVER", 860],
@@ -839,7 +839,7 @@ makeGCD_SAM("OGI_NAMIKIRI", 90, {
 
 makeGCD_SAM("KAESHI_NAMIKIRI", 90, {
 	startOnHotbar: false,
-	falloff: 0.5,
+	falloff: 0.4,
 	applicationDelay: 0.49,
 	basePotency: [
 		["NEVER", 860],
@@ -932,7 +932,7 @@ makeAbility_SAM("HISSATSU_SENEI", 72, "cd_SENEI_GUREN", {
 makeAbility_SAM("HISSATSU_GUREN", 70, "cd_SENEI_GUREN", {
 	cooldown: 60,
 	potency: 400,
-	falloff: 0.25,
+	falloff: 0,
 	validateAttempt: (state) => state.resources.get("KENKI").available(25),
 	onConfirm: (state) => state.resources.get("KENKI").consume(25),
 	highlightIf: (state) => state.resources.get("KENKI").available(25),
@@ -954,7 +954,7 @@ makeAbility_SAM("SHOHA", 80, "cd_SHOHA", {
 		["NEVER", 560],
 		["WAY_OF_THE_SAMURAI_III", 640],
 	],
-	falloff: 0.5,
+	falloff: 0.4,
 	applicationDelay: 0.58,
 	validateAttempt: (state) => state.resources.get("MEDITATION").available(3),
 	onConfirm: (state) => state.tryConsumeResource("MEDITATION", true),
@@ -1018,7 +1018,7 @@ makeAbility_SAM("TENGENTSU_POP", 82, "cd_THIRD_EYE_POP", {
 makeAbility_SAM("ZANSHIN", 96, "cd_ZANSHIN", {
 	startOnHotbar: false,
 	cooldown: 1,
-	falloff: 0.5,
+	falloff: 0.4,
 	applicationDelay: 1.03,
 	potency: 940,
 	validateAttempt: (state) =>

@@ -769,7 +769,7 @@ makeMNKWeaponskill("MASTERFUL_BLITZ", 60, {
 		replaceIf: BLITZ_REPLACES,
 		highlightIf: (state) => true,
 		potency,
-		falloff: 0.4,
+		falloff: 0.35,
 		onConfirm: combineEffects(clearBeastChakra, (state) => {
 			state.tryConsumeResource("LUNAR_NADI");
 			state.tryConsumeResource("SOLAR_NADI");
@@ -804,7 +804,7 @@ makeMNKWeaponskill("MASTERFUL_BLITZ", 60, {
 		replaceIf: BLITZ_REPLACES,
 		highlightIf: (state) => true,
 		potency,
-		falloff: 0.4,
+		falloff: 0.35,
 		onConfirm: combineEffects(clearBeastChakra, gainNadi("lunar")),
 	});
 });
@@ -849,7 +849,7 @@ makeMNKWeaponskill("CELESTIAL_REVOLUTION", 60, {
 		replaceIf: BLITZ_REPLACES,
 		highlightIf: (state) => true,
 		potency,
-		falloff: 0.4,
+		falloff: 0.35,
 		onConfirm: combineEffects(clearBeastChakra, gainNadi("solar")),
 	});
 });
@@ -1082,7 +1082,7 @@ makeMNKWeaponskill("WINDS_REPLY", 96, {
 	startOnHotbar: false,
 	applicationDelay: 1.2,
 	potency: 1040,
-	falloff: 0.4,
+	falloff: 0.35,
 	highlightIf: (state) => state.hasResourceAvailable("WINDS_RUMINATION"),
 	validateAttempt: (state) => state.hasResourceAvailable("WINDS_RUMINATION"),
 	onConfirm: (state) => state.tryConsumeResource("WINDS_RUMINATION"),
@@ -1092,7 +1092,7 @@ makeMNKWeaponskill("FIRES_REPLY", 100, {
 	startOnHotbar: false,
 	applicationDelay: 1.42,
 	potency: 1400,
-	falloff: 0.4,
+	falloff: 0.35,
 	highlightIf: (state) => state.hasResourceAvailable("FIRES_RUMINATION"),
 	validateAttempt: (state) => state.hasResourceAvailable("FIRES_RUMINATION"),
 	onConfirm: (state) => {
