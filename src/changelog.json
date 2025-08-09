@@ -8,6 +8,16 @@
 		"level": "minor"
 	},
 	{
+		"date": "8/4/25",
+		"changes": [
+			"Updated for patch 7.3."
+		],
+		"changes_zh": [
+			"更新至7.3版本。"
+		],
+		"level": "major"
+	},
+	{
 		"date": "8/3/25",
 		"changes": [
 			"The active timeline slot is now saved across page reloads.",

@@ -1,11 +1,11 @@
 import { controller } from "../Controller/Controller";
 import { LevelSync } from "../Game/Common";
 import { getSkill } from "../Game/Skills";
-import { DEFAULT_PCT_CONFIG } from "../Game/GameConfig";
+import { makeDefaultConfig } from "../Game/GameConfig";
 
 // test the potency of Fire in Red since it gets changed by trait at every level sync
 const testRedPotency = (level: LevelSync, expectedPotency: number) => {
-	const newConfig = { ...DEFAULT_PCT_CONFIG };
+	const newConfig = makeDefaultConfig("PCT");
 	newConfig["level"] = level;
 	controller.setConfigAndRestart(newConfig);
 	const red = getSkill("PCT", "FIRE_IN_RED");
@@ -13,17 +13,17 @@ const testRedPotency = (level: LevelSync, expectedPotency: number) => {
 };
 
 it("has correct potencies at level 70", () => {
-	testRedPotency(LevelSync.lvl70, 330);
+	testRedPotency(LevelSync.lvl70, 310);
 });
 
 it("has correct potencies at level 80", () => {
-	testRedPotency(LevelSync.lvl80, 400);
+	testRedPotency(LevelSync.lvl80, 380);
 });
 
 it("has correct potencies at level 90", () => {
-	testRedPotency(LevelSync.lvl90, 450);
+	testRedPotency(LevelSync.lvl90, 420);
 });
 
 it("has correct potencies at level 100", () => {
-	testRedPotency(LevelSync.lvl100, 520);
+	testRedPotency(LevelSync.lvl100, 490);
 });

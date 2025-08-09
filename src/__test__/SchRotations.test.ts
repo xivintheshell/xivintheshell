@@ -174,7 +174,7 @@ it(
 		time: 48.95 + 2,
 		lastDamageApplicationTime: 48.515 + 2,
 		totalPotency: {
-			applied: 6090,
+			applied: 6280,
 			pending: 0,
 		},
 		gcdSkills: {

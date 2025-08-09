@@ -649,7 +649,7 @@ makeSpell_RDM("GRAND_IMPACT", 96, {
 	baseCastTime: 0,
 	baseManaCost: 0,
 	basePotency: 600,
-	falloff: 0.6,
+	falloff: 0.55,
 	applicationDelay: 1.55,
 	validateAttempt: giCondition.condition,
 	highlightIf: giCondition.condition,
@@ -712,7 +712,7 @@ makeMeleeGCD("ENCHANTED_RIPOSTE", 50, {
 	potency: [
 		["NEVER", 220],
 		["RED_MAGIC_MASTERY_III", 280],
-		["ENCHANTED_BLADE_MASTERY", 300],
+		["ENCHANTED_BLADE_MASTERY", 340],
 	],
 	recastTime: 1.5,
 	validateAttempt: (state) => state.colorManaExceeds(20),
@@ -726,13 +726,13 @@ makeMeleeGCD("ENCHANTED_ZWERCHHAU", 50, {
 	potency: [
 		["NEVER", 100],
 		["RED_MAGIC_MASTERY_III", 150],
-		["ENCHANTED_BLADE_MASTERY", 170],
+		["ENCHANTED_BLADE_MASTERY", 190],
 	],
 	combo: {
 		potency: [
 			["NEVER", 290],
 			["RED_MAGIC_MASTERY_III", 340],
-			["ENCHANTED_BLADE_MASTERY", 360],
+			["ENCHANTED_BLADE_MASTERY", 380],
 		],
 		resource: "RDM_MELEE_COUNTER",
 		resourceValue: 1,
@@ -750,13 +750,13 @@ makeMeleeGCD("ENCHANTED_REDOUBLEMENT", 50, {
 	potency: [
 		["NEVER", 100],
 		["RED_MAGIC_MASTERY_III", 130],
-		["ENCHANTED_BLADE_MASTERY", 170],
+		["ENCHANTED_BLADE_MASTERY", 190],
 	],
 	combo: {
 		potency: [
 			["NEVER", 470],
 			["RED_MAGIC_MASTERY_III", 500],
-			["ENCHANTED_BLADE_MASTERY", 530],
+			["ENCHANTED_BLADE_MASTERY", 560],
 		],
 		resource: "RDM_MELEE_COUNTER",
 		resourceValue: 2,
@@ -881,7 +881,7 @@ makeSpell_RDM("VERHOLY", 70, {
 	startOnHotbar: false,
 	baseCastTime: 0,
 	baseManaCost: 400,
-	falloff: 0.6,
+	falloff: 0.55,
 	applicationDelay: 1.43,
 	basePotency: verfinishPotency,
 	validateAttempt: (state) => state.hasThreeManaStacks(),
@@ -903,7 +903,7 @@ makeSpell_RDM("VERFLARE", 68, {
 	startOnHotbar: false,
 	baseCastTime: 0,
 	baseManaCost: 400,
-	falloff: 0.6,
+	falloff: 0.55,
 	applicationDelay: 1.43,
 	basePotency: verfinishPotency,
 	validateAttempt: (state) => state.hasThreeManaStacks(),
@@ -926,7 +926,7 @@ makeSpell_RDM("SCORCH", 80, {
 	replaceIf: joltReplaces,
 	baseCastTime: 0,
 	baseManaCost: 400,
-	falloff: 0.6,
+	falloff: 0.55,
 	applicationDelay: 1.83,
 	basePotency: [
 		["NEVER", 680],
@@ -942,7 +942,7 @@ makeSpell_RDM("RESOLUTION", 90, {
 	replaceIf: joltReplaces,
 	baseCastTime: 0,
 	baseManaCost: 400,
-	falloff: 0.6,
+	falloff: 0.55,
 	applicationDelay: 1.56,
 	basePotency: [
 		["NEVER", 750],
@@ -1087,9 +1087,9 @@ makeResourceAbility("RDM", "MAGICK_BARRIER", 86, "cd_MAGICK_BARRIER", {
 
 makeAbility_RDM("VICE_OF_THORNS", 92, "cd_VICE_OF_THORNS", {
 	startOnHotbar: false,
-	falloff: 0.6,
+	falloff: 0.55,
 	applicationDelay: 0.8,
-	potency: 800,
+	potency: 900,
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable("THORNED_FLOURISH"),
 	onConfirm: (state) => state.tryConsumeResource("THORNED_FLOURISH"),
@@ -1098,9 +1098,9 @@ makeAbility_RDM("VICE_OF_THORNS", 92, "cd_VICE_OF_THORNS", {
 
 makeAbility_RDM("PREFULGENCE", 100, "cd_PREFULGENCE", {
 	startOnHotbar: false,
-	falloff: 0.6,
+	falloff: 0.55,
 	applicationDelay: 1.42,
-	potency: 1000,
+	potency: 1200,
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable("PREFULGENCE_READY"),
 	onConfirm: (state) => state.tryConsumeResource("PREFULGENCE_READY"),

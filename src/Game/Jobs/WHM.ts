@@ -388,7 +388,7 @@ makeWHMSpell("DIA", 72, {
 	applicationDelay: 1.29,
 	potency: [
 		["NEVER", 65],
-		["WHITE_MAGIC_MASTERY", 80],
+		["WHITE_MAGIC_MASTERY", 85],
 	],
 	manaCost: 400,
 	onConfirm: (state, node) => {
@@ -396,7 +396,7 @@ makeWHMSpell("DIA", 72, {
 			node,
 			effectName: "DIA",
 			skillName: "DIA",
-			tickPotency: state.hasTraitUnlocked("WHITE_MAGIC_MASTERY") ? 80 : 65,
+			tickPotency: state.hasTraitUnlocked("WHITE_MAGIC_MASTERY") ? 85 : 65,
 			speedStat: "sps",
 		});
 	},

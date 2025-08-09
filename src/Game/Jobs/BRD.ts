@@ -702,7 +702,7 @@ makeResourceAbility_BRD("BARRAGE", 38, "cd_BARRAGE", {
 });
 makeWeaponskill_BRD("RESONANT_ARROW", 96, {
 	startOnHotbar: false,
-	potency: 600,
+	potency: 640,
 	falloff: 0.5,
 	applicationDelay: 1.16,
 	onConfirm: (state) => state.tryConsumeResource("RESONANT_ARROW_READY"),
@@ -737,7 +737,7 @@ makeWeaponskill_BRD("RADIANT_ENCORE", 100, {
 	startOnHotbar: false,
 	potency: (state) => {
 		const radiantCoda = state.resources.get("RADIANT_CODA").availableAmount();
-		return radiantCoda === 3 ? 900 : radiantCoda === 2 ? 600 : 500;
+		return radiantCoda === 3 ? 1000 : radiantCoda === 2 ? 700 : 600;
 	},
 	falloff: 0.5,
 	applicationDelay: 1.96,

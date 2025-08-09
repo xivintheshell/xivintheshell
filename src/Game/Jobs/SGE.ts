@@ -4,7 +4,7 @@ import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
 import { Aspect, BuffType } from "../Common";
-import { RESOURCES } from "../Data";
+import { RESOURCES, TraitKey } from "../Data";
 import { SGEResourceKey, SGEActionKey, SGECooldownKey } from "../Data/Jobs/SGE";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
@@ -533,6 +533,11 @@ makeSGESpell("DOSIS_II", 72, {
 	applicationDelay: 0.67,
 });
 
+const DOSIS_III_POTENCY: Array<[TraitKey, number]> = [
+	["NEVER", 330],
+	["MAGICK_MASTERY_HEALER", 380],
+];
+
 makeSGESpell("DOSIS_III", 82, {
 	startOnHotbar: false,
 	replaceIf: [
@@ -542,10 +547,7 @@ makeSGESpell("DOSIS_III", 82, {
 		},
 	],
 	manaCost: 400,
-	potency: [
-		["NEVER", 330],
-		["MAGICK_MASTERY_HEALER", 370],
-	],
+	potency: DOSIS_III_POTENCY,
 	applicationDelay: 0.67,
 });
 
@@ -638,10 +640,7 @@ makeSGESpell("TOXIKON", 66, {
 });
 makeSGESpell("TOXIKON_II", 82, {
 	startOnHotbar: false,
-	potency: [
-		["NEVER", 330],
-		["MAGICK_MASTERY_HEALER", 370],
-	],
+	potency: DOSIS_III_POTENCY,
 	falloff: 0.5,
 	applicationDelay: 1.2,
 	castTime: 0,
@@ -867,10 +866,7 @@ makeSGEAbility("EUKRASIAN_PROGNOSIS_II_POP", 30, "cd_PROGNOSIS_POP", {
 });
 
 makeSGESpell("PNEUMA", 90, {
-	potency: [
-		["NEVER", 330],
-		["MAGICK_MASTERY_HEALER", 370],
-	],
+	potency: DOSIS_III_POTENCY,
 	falloff: 0.4,
 	healingPotency: 600,
 	aoeHeal: true,

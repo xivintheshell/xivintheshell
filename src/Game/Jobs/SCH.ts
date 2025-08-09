@@ -494,7 +494,7 @@ makeSCHSpell("BROIL_IV", 82, {
 	manaCost: 400,
 	potency: [
 		["NEVER", 295],
-		["TACTICIANS_MASTERY", 310],
+		["TACTICIANS_MASTERY", 320],
 	],
 });
 

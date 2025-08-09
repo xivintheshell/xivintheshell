@@ -467,7 +467,7 @@ makeSpell_SMN("RUIN_III", 54, {
 	basePotency: [
 		["NEVER", 300],
 		["RUIN_MASTERY_IV", 310],
-		["ARCANE_MASTERY", 360],
+		["ARCANE_MASTERY", 400],
 	],
 	baseCastTime: 1.5,
 	manaCost: 300,
@@ -654,7 +654,7 @@ makeSpell_SMN("RUBY_RITE", 72, {
 	basePotency: [
 		["NEVER", 480],
 		["RUIN_MASTERY_IV", 510],
-		["ARCANE_MASTERY", 540],
+		["ARCANE_MASTERY", 580],
 	],
 	baseCastTime: 2.8,
 	baseRecastTime: 3,
@@ -695,7 +695,7 @@ makeSpell_SMN("EMERALD_RITE", 72, {
 	basePotency: [
 		["NEVER", 220],
 		["RUIN_MASTERY_IV", 230],
-		["ARCANE_MASTERY", 240],
+		["ARCANE_MASTERY", 280],
 	],
 	applicationDelay: 0.62,
 	highlightIf: (state) => true,
@@ -1014,6 +1014,9 @@ const garudaConfirm: (skill: SMNActionKey) => EffectFn<SMNState> = (skill) => (s
 // while the "[primal]'s Favor" buffs are granted by the synced version (because followups are
 // learned at level 86), we don't need to implement them for the un-upgraded summons because the
 // only level sync they're used at is 90
+
+const SUMMON_FALLOFF = 0.5;
+
 makeSpell_SMN("SUMMON_IFRIT", 30, {
 	autoUpgrade: {
 		trait: "ENKINDLE_II",
@@ -1023,7 +1026,7 @@ makeSpell_SMN("SUMMON_IFRIT", 30, {
 	highlightIf: ifritCondition,
 	validateAttempt: ifritCondition,
 	onConfirm: ifritConfirm("SUMMON_IFRIT"),
-	falloff: 0.6,
+	falloff: SUMMON_FALLOFF,
 });
 
 makeSpell_SMN("SUMMON_TITAN", 35, {
@@ -1035,7 +1038,7 @@ makeSpell_SMN("SUMMON_TITAN", 35, {
 	highlightIf: titanCondition,
 	validateAttempt: titanCondition,
 	onConfirm: titanConfirm("SUMMON_TITAN"),
-	falloff: 0.6,
+	falloff: SUMMON_FALLOFF,
 });
 
 makeSpell_SMN("SUMMON_GARUDA", 45, {
@@ -1047,7 +1050,7 @@ makeSpell_SMN("SUMMON_GARUDA", 45, {
 	highlightIf: garudaCondition,
 	validateAttempt: garudaCondition,
 	onConfirm: garudaConfirm("SUMMON_GARUDA"),
-	falloff: 0.6,
+	falloff: SUMMON_FALLOFF,
 });
 
 makeSpell_SMN("SUMMON_IFRIT_II", 90, {
@@ -1062,7 +1065,7 @@ makeSpell_SMN("SUMMON_IFRIT_II", 90, {
 		(state) => state.gainStatus("IFRITS_FAVOR"),
 		ifritConfirm("SUMMON_IFRIT_II"),
 	),
-	falloff: 0.6,
+	falloff: SUMMON_FALLOFF,
 });
 
 makeSpell_SMN("SUMMON_TITAN_II", 90, {
@@ -1075,7 +1078,7 @@ makeSpell_SMN("SUMMON_TITAN_II", 90, {
 	validateAttempt: titanCondition,
 	// titan's favor is gained upon executing rite/catastrophe
 	onConfirm: titanConfirm("SUMMON_TITAN_II"),
-	falloff: 0.6,
+	falloff: SUMMON_FALLOFF,
 });
 
 makeSpell_SMN("SUMMON_GARUDA_II", 90, {
@@ -1090,7 +1093,7 @@ makeSpell_SMN("SUMMON_GARUDA_II", 90, {
 		(state) => state.gainStatus("GARUDAS_FAVOR"),
 		garudaConfirm("SUMMON_GARUDA_II"),
 	),
-	falloff: 0.6,
+	falloff: SUMMON_FALLOFF,
 });
 
 const ASTRAL_FLOW_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
@@ -1166,7 +1169,7 @@ makeAbility_SMN("SUNFLARE", 100, "cd_ASTRAL_FLOW", {
 makeSpell_SMN("CRIMSON_CYCLONE", 86, {
 	basePotency: [
 		["NEVER", 430],
-		["ARCANE_MASTERY", 490],
+		["ARCANE_MASTERY", 520],
 	],
 	applicationDelay: 0.8,
 	replaceIf: ASTRAL_FLOW_REPLACE_LIST,
@@ -1176,21 +1179,21 @@ makeSpell_SMN("CRIMSON_CYCLONE", 86, {
 		state.tryConsumeResource("IFRITS_FAVOR");
 		state.gainStatus("CRIMSON_STRIKE_READY");
 	},
-	falloff: 0.65,
+	falloff: 0.6,
 	startOnHotbar: false,
 });
 
 makeSpell_SMN("CRIMSON_STRIKE", 86, {
 	basePotency: [
 		["NEVER", 430],
-		["ARCANE_MASTERY", 490],
+		["ARCANE_MASTERY", 520],
 	],
 	applicationDelay: 0.76,
 	replaceIf: ASTRAL_FLOW_REPLACE_LIST,
 	highlightIf: (state) => true,
 	validateAttempt: ASTRAL_FLOW_REPLACE_LIST[4].condition,
 	onConfirm: (state) => state.tryConsumeResource("CRIMSON_STRIKE_READY"),
-	falloff: 0.65,
+	falloff: 0.6,
 	startOnHotbar: false,
 });
 
@@ -1205,7 +1208,7 @@ makeAbility_SMN("MOUNTAIN_BUSTER", 86, "cd_MOUNTAIN_BUSTER", {
 	highlightIf: (state) => true,
 	validateAttempt: ASTRAL_FLOW_REPLACE_LIST[5].condition,
 	onConfirm: (state) => state.tryConsumeResource("TITANS_FAVOR"),
-	falloff: 0.7,
+	falloff: 0.6,
 	startOnHotbar: false,
 });
 
@@ -1214,7 +1217,7 @@ makeSpell_SMN("SLIPSTREAM", 86, {
 	baseRecastTime: 3.5,
 	basePotency: [
 		["NEVER", 430],
-		["ARCANE_MASTERY", 490],
+		["ARCANE_MASTERY", 520],
 	],
 	applicationDelay: 1.02,
 	replaceIf: ASTRAL_FLOW_REPLACE_LIST,
@@ -1231,7 +1234,7 @@ makeSpell_SMN("SLIPSTREAM", 86, {
 		});
 	},
 	onApplication: (state, node) => state.applyDoT("SLIPSTREAM", node),
-	falloff: 0.65,
+	falloff: 0.6,
 	startOnHotbar: false,
 });
 
@@ -1286,7 +1289,7 @@ const ENKINDLE_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 makeSpell_SMN("RUIN_IV", 62, {
 	basePotency: [
 		["NEVER", 430],
-		["ARCANE_MASTERY", 490],
+		["ARCANE_MASTERY", 520],
 	],
 	manaCost: 400,
 	applicationDelay: 0.8,
