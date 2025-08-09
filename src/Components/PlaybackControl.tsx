@@ -459,6 +459,11 @@ type ConfigState = {
 	procMode: ProcMode;
 	initialResourceOverrides: ResourceOverrideData[];
 
+	// set only by xivgear/etro import
+	tenacity: string;
+	wd: string;
+	main: string;
+
 	selectedOverrideResource: ResourceKey | CooldownKey;
 	overrideTimer: string;
 	overrideStacks: string;
@@ -527,6 +532,10 @@ export class Config extends React.Component {
 			randomSeed: "",
 			procMode: ProcMode.RNG,
 			initialResourceOverrides: [],
+			/////////
+			tenacity: "0",
+			wd: "0",
+			main: "0",
 			/////////
 			selectedOverrideResource: "MANA",
 			overrideTimer: "0",
@@ -618,6 +627,9 @@ export class Config extends React.Component {
 						const stats = new Map<string, string>(
 							body["totalParams"].map((obj: any) => [obj["name"], obj["value"]]),
 						);
+						// The main stat should always be the first returned field.
+						const mainStat =
+							body["totalParams"].length > 0 ? body["totalParams"][0]["value"] : 0;
 						if (!(body["jobAbbrev"] in JOBS)) {
 							throw new Error(
 								"Imported gearset was for a job (" +
@@ -641,15 +653,20 @@ export class Config extends React.Component {
 						if (stats.has("SPS")) importedFields.push("spellSpeed");
 						if (stats.has("SKS")) importedFields.push("skillSpeed");
 						if (stats.has("PIE")) importedFields.push("piety");
+						if (stats.has("TEN")) importedFields.push("tenacity");
+						if (stats.has("Weapon Damage")) importedFields.push("wd");
 						this.setState({
 							job: body["jobAbbrev"],
 							level: body["level"],
 							spellSpeed,
 							skillSpeed,
+							wd: stats.get("Weapon Damage"),
 							criticalHit: stats.get("CRT"),
 							directHit: stats.get("DH"),
 							determination: stats.get("DET"),
 							piety: stats.get("PIE"),
+							tenacity: stats.get("TEN"),
+							main: mainStat,
 							imported: true,
 							importedFields: importedFields,
 							dirty: true,
@@ -685,6 +702,13 @@ export class Config extends React.Component {
 							);
 						}
 						const stats = body["sets"][0]["computedStats"];
+						// just assume the highest main stat/wd field is the correct one
+						const mainStat = Math.max(
+							...["strength", "dexterity", "intelligence", "mind"].map(
+								(field) => stats[field] ?? 0,
+							),
+						);
+						const wd = Math.max(stats["wdPhys"] ?? 0, stats["wdMag"] ?? 0);
 						this.setState({
 							job: body["job"],
 							level: body["level"],
@@ -694,6 +718,9 @@ export class Config extends React.Component {
 							directHit: stats["dhit"],
 							determination: stats["determination"],
 							piety: stats["piety"],
+							tenacity: stats["tenacity"],
+							wd,
+							main: mainStat,
 							imported: true,
 							importedFields: [
 								"job",
@@ -704,6 +731,9 @@ export class Config extends React.Component {
 								"directHit",
 								"determination",
 								"piety",
+								"tenacity",
+								"wd",
+								"main",
 							],
 							dirty: true,
 						});

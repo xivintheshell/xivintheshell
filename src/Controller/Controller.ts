@@ -1653,9 +1653,12 @@ class Controller {
 			det_stat: this.gameConfig.determination,
 			crit_stat: this.gameConfig.criticalHit,
 			dh_stat: this.gameConfig.directHit,
+			tenacity: this.gameConfig.tenacity,
 			speed_stat: isHealerOrCaster ? this.gameConfig.spellSpeed : this.gameConfig.skillSpeed,
 			version: CURRENT_GAME_COMBAT_PATCH,
 			level: this.gameConfig.level,
+			wd: this.gameConfig.wd,
+			main_stat: this.gameConfig.main,
 		};
 		meta.push("stats = " + JSON.stringify(statsDict));
 		const downtimeWindows = this.timeline
