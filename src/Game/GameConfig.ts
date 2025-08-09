@@ -15,6 +15,12 @@ export type ConfigData = {
 	directHit: number;
 	determination: number;
 	piety: number;
+	// TEN, WD, and main stat are hidden because they are not currently used for any purpose in XIV in
+	// the Shell itself.  They were requested by Caro for compatibility with Ama's Combat Sim
+	// export, and can be set either via xivgear import or by manually editing this file.
+	tenacity: number;
+	main: number;
+	wd: number;
 	countdown: number;
 	randomSeed: string;
 	fps: number;
@@ -25,49 +31,275 @@ export type ConfigData = {
 	initialResourceOverrides: ResourceOverrideData[];
 };
 
-export const DEFAULT_BLM_CONFIG: ConfigData = {
-	job: "BLM",
-	shellVersion: ShellInfo.version,
-	level: LevelSync.lvl100,
-	// 2.37 GCD
-	spellSpeed: 1532,
-	skillSpeed: 420,
-	criticalHit: 420,
-	directHit: 420,
-	determination: 440,
-	piety: 440,
-	countdown: 5,
-	randomSeed: "sup",
-	fps: 60,
-	gcdSkillCorrection: 0,
-	animationLock: 0.7,
-	timeTillFirstManaTick: 1.2,
-	procMode: ProcMode.Never,
-	initialResourceOverrides: [],
-};
+const CURRENT_BIS_WD = 152;
 
-export const DEFAULT_PCT_CONFIG: ConfigData = {
-	job: "PCT",
-	shellVersion: ShellInfo.version,
-	level: LevelSync.lvl100,
-	// 7.05 2.5 GCD bis https://xivgear.app/?page=sl%7C4c102326-839a-43c8-84ae-11ffdb6ef4a2
+// These fields should (and initialResourceOverrides) should change every time the job changes,
+// while remaining fields are kept the same.
+type DynamicConfigField =
+	| "spellSpeed"
+	| "skillSpeed"
+	| "criticalHit"
+	| "directHit"
+	| "determination"
+	| "piety"
+	| "tenacity"
+	| "main";
+
+const TANK_MAIN = 5882;
+const OTHER_MAIN = 5925;
+
+const PRANGE_2_5_BIS = {
+	main: OTHER_MAIN,
 	spellSpeed: 420,
 	skillSpeed: 420,
-	criticalHit: 3140,
-	directHit: 1993,
-	determination: 2269,
+	criticalHit: 3387,
+	directHit: 1935,
+	determination: 2407,
 	piety: 440,
-	countdown: 4.5,
-	randomSeed: "sup",
-	fps: 60,
-	gcdSkillCorrection: 0,
-	animationLock: 0.7,
-	timeTillFirstManaTick: 1.2,
-	procMode: ProcMode.Never,
-	initialResourceOverrides: [],
+	tenacity: 420,
 };
 
-export const DEFAULT_CONFIG: ConfigData = DEFAULT_BLM_CONFIG; // TODO
+// BiS sets updated for patch 7.3
+// These should only be applied the first time the user loads the site, or switches to a given job
+const JOB_DEFAULT_FIELDS: { [Property in ShellJob]: { [Property in DynamicConfigField]: number } } =
+	{
+		DRK: {
+			main: TANK_MAIN,
+			spellSpeed: 420,
+			skillSpeed: 420,
+			criticalHit: 3404,
+			directHit: 1068,
+			determination: 2883,
+			piety: 440,
+			tenacity: 794,
+		},
+		GNB: {
+			main: TANK_MAIN,
+			spellSpeed: 420,
+			skillSpeed: 420,
+			criticalHit: 3404,
+			directHit: 1068,
+			determination: 2883,
+			piety: 440,
+			tenacity: 794,
+		},
+		PLD: {
+			main: TANK_MAIN,
+			spellSpeed: 420,
+			skillSpeed: 420,
+			criticalHit: 3242,
+			directHit: 1230,
+			determination: 2883,
+			piety: 440,
+			tenacity: 794,
+		},
+		WAR: {
+			main: TANK_MAIN,
+			spellSpeed: 420,
+			skillSpeed: 420,
+			criticalHit: 3404,
+			directHit: 1068,
+			determination: 2883,
+			piety: 440,
+			tenacity: 794,
+		},
+		AST: {
+			// "2.46 Spero Dedes"
+			main: OTHER_MAIN,
+			spellSpeed: 704,
+			skillSpeed: 420,
+			criticalHit: 3427,
+			directHit: 1230,
+			determination: 2510,
+			piety: 718,
+			tenacity: 420,
+		},
+		SCH: {
+			// 2.40
+			main: OTHER_MAIN,
+			spellSpeed: 1221,
+			skillSpeed: 420,
+			criticalHit: 3484,
+			directHit: 852,
+			determination: 2314,
+			piety: 718,
+			tenacity: 420,
+		},
+		SGE: {
+			// 2.46 min piety
+			main: OTHER_MAIN,
+			spellSpeed: 704,
+			skillSpeed: 420,
+			criticalHit: 3427,
+			directHit: 1230,
+			determination: 2510,
+			piety: 718,
+			tenacity: 420,
+		},
+		WHM: {
+			// 2.46 min piety
+			main: OTHER_MAIN,
+			spellSpeed: 704,
+			skillSpeed: 420,
+			criticalHit: 3427,
+			directHit: 1230,
+			determination: 2510,
+			piety: 718,
+			tenacity: 420,
+		},
+		DRG: {
+			main: OTHER_MAIN,
+			spellSpeed: 420,
+			skillSpeed: 420,
+			criticalHit: 3425,
+			directHit: 1996,
+			determination: 2308,
+			piety: 440,
+			tenacity: 420,
+		},
+		MNK: {
+			// 1.94
+			main: OTHER_MAIN,
+			spellSpeed: 420,
+			skillSpeed: 968,
+			criticalHit: 3487,
+			directHit: 1685,
+			determination: 2009,
+			piety: 440,
+			tenacity: 420,
+		},
+		NIN: {
+			// 2.12
+			main: OTHER_MAIN,
+			spellSpeed: 420,
+			skillSpeed: 420,
+			criticalHit: 3378,
+			directHit: 1981,
+			determination: 2370,
+			piety: 440,
+			tenacity: 420,
+		},
+		RPR: {
+			// 2.49
+			main: OTHER_MAIN,
+			spellSpeed: 420,
+			skillSpeed: 474,
+			criticalHit: 3425,
+			directHit: 1942,
+			determination: 2308,
+			piety: 440,
+			tenacity: 420,
+		},
+		SAM: {
+			// 2.14
+			main: OTHER_MAIN,
+			spellSpeed: 420,
+			skillSpeed: 690,
+			criticalHit: 3425,
+			directHit: 2045,
+			determination: 1989,
+			piety: 440,
+			tenacity: 420,
+		},
+		VPR: {
+			// 2.12
+			main: OTHER_MAIN,
+			spellSpeed: 420,
+			skillSpeed: 420,
+			criticalHit: 3378,
+			directHit: 1981,
+			determination: 2370,
+			piety: 440,
+			tenacity: 420,
+		},
+		DNC: PRANGE_2_5_BIS,
+		BRD: PRANGE_2_5_BIS,
+		MCH: PRANGE_2_5_BIS,
+		BLM: {
+			main: OTHER_MAIN,
+			spellSpeed: 978,
+			skillSpeed: 420,
+			criticalHit: 3456,
+			directHit: 1764,
+			determination: 1951,
+			piety: 440,
+			tenacity: 420,
+		},
+		RDM: {
+			// 2.48
+			main: OTHER_MAIN,
+			spellSpeed: 528,
+			skillSpeed: 420,
+			criticalHit: 3399,
+			directHit: 1872,
+			determination: 2350,
+			piety: 440,
+			tenacity: 420,
+		},
+		SMN: {
+			// 2.48
+			main: OTHER_MAIN,
+			spellSpeed: 528,
+			skillSpeed: 420,
+			criticalHit: 3399,
+			directHit: 1872,
+			determination: 2350,
+			piety: 440,
+			tenacity: 420,
+		},
+		PCT: {
+			// 7.2 2.5 GCD bis https://xivgear.app/?page=sl%7Cc48f85d8-9b93-4f96-bfc4-1e0e30e98a8c
+			main: OTHER_MAIN,
+			spellSpeed: 420,
+			skillSpeed: 420,
+			criticalHit: 3399,
+			directHit: 1764,
+			determination: 2566,
+			piety: 440,
+			tenacity: 420,
+		},
+		BLU: {
+			// lv80 2.20
+			main: 1701,
+			spellSpeed: 1573,
+			skillSpeed: 380,
+			criticalHit: 1343,
+			directHit: 785,
+			determination: 676,
+			piety: 340,
+			tenacity: 380,
+		},
+		NEVER: {
+			main: OTHER_MAIN,
+			spellSpeed: 420,
+			skillSpeed: 420,
+			criticalHit: 420,
+			directHit: 420,
+			determination: 440,
+			piety: 440,
+			tenacity: 420,
+		},
+	};
+
+export function makeDefaultConfig(job: ShellJob): ConfigData {
+	return {
+		job,
+		shellVersion: ShellInfo.version,
+		level: job === "BLU" ? LevelSync.lvl80 : LevelSync.lvl100,
+		...JOB_DEFAULT_FIELDS[job],
+		wd: CURRENT_BIS_WD,
+		countdown: 5,
+		randomSeed: "sup",
+		fps: 60,
+		gcdSkillCorrection: 0,
+		animationLock: 0.7,
+		timeTillFirstManaTick: 1.2,
+		procMode: ProcMode.Never,
+		initialResourceOverrides: [],
+	};
+}
+
+export const DEFAULT_CONFIG: ConfigData = makeDefaultConfig("BLM"); // TODO
 Object.freeze(DEFAULT_CONFIG);
 
 export type SerializedConfig = ConfigData & {
@@ -78,12 +310,15 @@ export class GameConfig {
 	readonly job: ShellJob;
 	readonly shellVersion = ShellInfo.version;
 	readonly level: LevelSync;
+	readonly wd: number;
+	readonly main: number;
 	readonly spellSpeed: number;
 	readonly skillSpeed: number;
 	readonly criticalHit: number;
 	readonly directHit: number;
 	readonly determination: number;
 	readonly piety: number;
+	readonly tenacity: number;
 	readonly countdown: number;
 	readonly randomSeed: string;
 	readonly fps: number;
@@ -98,12 +333,15 @@ export class GameConfig {
 		job: ShellJob;
 		shellVersion: ShellVersion;
 		level: LevelSync;
+		wd?: number;
+		main?: number;
 		spellSpeed: number;
 		skillSpeed: number;
 		criticalHit: number;
 		directHit: number;
 		determination: number;
 		piety: number;
+		tenacity?: number;
 		countdown: number;
 		randomSeed: string;
 		fps: number;
@@ -166,6 +404,10 @@ export class GameConfig {
 		});
 		// backward compatibility for caster tax:
 		this.legacy_casterTax = props?.casterTax ?? 0;
+		// hidden stats currently used only for combat sim export
+		this.tenacity = props?.tenacity ?? 420;
+		this.main = props?.main ?? OTHER_MAIN;
+		this.wd = props?.wd ?? CURRENT_BIS_WD;
 	}
 
 	// Presuming DoT and Hot potency calculations work the same way...
@@ -240,12 +482,15 @@ export class GameConfig {
 			job: this.job,
 			shellVersion: this.shellVersion,
 			level: this.level,
+			wd: this.wd,
+			main: this.main,
 			spellSpeed: this.spellSpeed,
 			skillSpeed: this.skillSpeed,
 			criticalHit: this.criticalHit,
 			directHit: this.directHit,
 			determination: this.determination,
 			piety: this.piety,
+			tenacity: this.tenacity,
 			countdown: this.countdown,
 			randomSeed: this.randomSeed,
 			casterTax: this.legacy_casterTax, // still want this bc don't want to break cached timelines
