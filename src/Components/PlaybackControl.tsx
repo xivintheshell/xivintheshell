@@ -649,6 +649,7 @@ export class Config extends React.Component {
 							"criticalHit",
 							"directHit",
 							"determination",
+							"main",
 						];
 						if (stats.has("SPS")) importedFields.push("spellSpeed");
 						if (stats.has("SKS")) importedFields.push("skillSpeed");
