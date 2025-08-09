@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, useEffect, useReducer } from "react";
+import React, { MouseEventHandler, useEffect, useReducer, useState } from "react";
 import { controller } from "../Controller/Controller";
 import {
 	ButtonIndicator,
@@ -247,191 +247,164 @@ type TimeControlState = {
 	tickMode: TickMode;
 };
 
-export class TimeControl extends React.Component {
-	state: TimeControlState;
-	setTickMode: (e: ValueChangeEvent) => void;
-	setTimeScale: (s: string) => void;
-	loadSettings: () => TimeControlState | undefined;
-	saveSettings: (settings: TimeControlState) => void;
-
-	constructor(props: {}) {
-		super(props);
-
-		this.saveSettings = (settings: TimeControlState) => {
-			const str = JSON.stringify({
-				tickMode: settings.tickMode,
-				timeScale: settings.timeScale,
-			});
-			setCachedValue("playbackSettings", str);
-		};
-
-		this.loadSettings = () => {
-			const str = getCachedValue("playbackSettings");
-			if (str) {
-				const settings: TimeControlState = JSON.parse(str);
-				return settings;
-			}
-			return undefined;
-		};
-
-		this.setTickMode = (e: ValueChangeEvent) => {
-			if (!e || !e.target || isNaN(parseInt(e.target.value))) return;
-			this.setState({ tickMode: parseInt(e.target.value) });
-			const numVal = parseInt(e.target.value);
-			if (!isNaN(numVal)) {
-				controller.setTimeControlSettings({
-					tickMode: numVal,
-					timeScale: this.state.timeScale,
-				});
-				this.saveSettings({
-					tickMode: numVal,
-					timeScale: this.state.timeScale,
-				});
-			}
-		};
-
-		this.setTimeScale = (val: string) => {
-			this.setState({ timeScale: val });
-			const numVal = parseFloat(val);
-			if (!isNaN(numVal)) {
-				controller.setTimeControlSettings({
-					tickMode: this.state.tickMode,
-					timeScale: numVal,
-				});
-				this.saveSettings({
-					tickMode: this.state.tickMode,
-					timeScale: numVal,
-				});
-			}
-		};
-
-		const settings = this.loadSettings();
-		if (settings) {
-			this.state = {
-				tickMode: settings.tickMode,
-				timeScale: settings.timeScale,
-			};
-		} else {
-			this.state = {
-				tickMode: 1,
-				timeScale: 2,
-			};
+export function TimeControl() {
+	const loadSettings = () => {
+		const str = getCachedValue("playbackSettings");
+		if (str) {
+			const settings: TimeControlState = JSON.parse(str);
+			return settings;
 		}
-	}
-	componentDidMount() {
-		controller.setTimeControlSettings({
-			tickMode: this.state.tickMode,
-			timeScale: this.state.timeScale,
+		return undefined;
+	};
+	const settings = loadSettings();
+	const [timeScale, _setTimeScale] = useState(settings?.tickMode ?? 1);
+	const [tickMode, _setTickMode] = useState(settings?.timeScale ?? TickMode.Manual);
+
+	const saveSettings = (timeScale: number, tickMode: TickMode) => {
+		const str = JSON.stringify({
+			tickMode,
+			timeScale,
 		});
-	}
-	render() {
-		const radioStyle: React.CSSProperties = {
-			position: "relative",
-			top: 3,
-			marginRight: "0.75em",
-		};
-		const tickModeOptionStyle = {
-			display: "inline-block",
-			marginRight: "0.5em",
-		};
-		return <div>
-			<p>
-				<label style={tickModeOptionStyle}>
-					<input
-						style={radioStyle}
-						type={"radio"}
-						onChange={this.setTickMode}
-						value={TickMode.RealTimeAutoPause}
-						checked={this.state.tickMode === TickMode.RealTimeAutoPause}
-						name={"tick mode"}
-					/>
-					{localize({
-						en: "real-time auto pause",
-						zh: "实时(带自动暂停）",
-					})}
-				</label>
-				<Help
-					topic={"ctrl-realTimeAutoPause"}
-					content={
-						<div className="toolTip">
-							{localize({
-								en: <div className="paragraph">*Recommended*</div>,
-								zh: <div className="paragraph">*推荐设置*</div>,
-							})}
-							{localize({
-								en: <div className="paragraph">
-									- click to use a skill. if the skill is on cooldown, or you're
-									in an animation lock, then the simulation will automatically
-									skip ahead to when the skill can be used again
-									<br />- animation locks and cast bars will play out in sped-up
-									real time until done
-								</div>,
-								zh: <div className="paragraph">
-									- 点击图标使用技能;
-									战斗时间会按下方设置的倍速自动前进直到可释放下一个技能。如果点击的技能CD没有转好，模拟会自动地快进到它CD转好并重试。
-								</div>,
-							})}
-						</div>
-					}
+		setCachedValue("playbackSettings", str);
+	};
+
+	const setTickMode = (e: ValueChangeEvent) => {
+		if (!e || !e.target || isNaN(parseInt(e.target.value))) return;
+		_setTickMode(parseInt(e.target.value));
+		const numVal = parseInt(e.target.value);
+		if (!isNaN(numVal)) {
+			controller.setTimeControlSettings({
+				tickMode: numVal,
+				timeScale,
+			});
+			saveSettings(timeScale, numVal);
+		}
+	};
+
+	const setTimeScale = (val: string) => {
+		const numVal = parseFloat(val);
+		_setTimeScale(numVal);
+		if (!isNaN(numVal)) {
+			controller.setTimeControlSettings({
+				tickMode,
+				timeScale: numVal,
+			});
+			saveSettings(numVal, timeScale);
+		}
+	};
+
+	useEffect(() => {
+		controller.setTimeControlSettings({
+			tickMode,
+			timeScale,
+		});
+	});
+	const radioStyle: React.CSSProperties = {
+		position: "relative",
+		top: 3,
+		marginRight: "0.75em",
+	};
+	const tickModeOptionStyle = {
+		display: "inline-block",
+		marginRight: "0.5em",
+	};
+	return <div>
+		<p>
+			<label style={tickModeOptionStyle}>
+				<input
+					style={radioStyle}
+					type={"radio"}
+					onChange={setTickMode}
+					value={TickMode.RealTimeAutoPause}
+					checked={tickMode === TickMode.RealTimeAutoPause}
+					name={"tick mode"}
 				/>
-				<br />
-				<label style={tickModeOptionStyle}>
-					<input
-						style={radioStyle}
-						type={"radio"}
-						onChange={this.setTickMode}
-						value={TickMode.Manual}
-						checked={this.state.tickMode === TickMode.Manual}
-						name={"tick mode"}
-					/>
-					{localize({
-						en: "manual",
-						zh: "手动",
-					})}
-				</label>
-				<Help
-					topic={"ctrl-manual"}
-					content={
-						<div className="toolTip">
-							{localize({
-								en: <div className="paragraph">
-									- click to use a skill. if the skill is on cooldown, or you're
-									in an animation lock, then the simulation will automatically
-									skip ahead to when the skill can be used again
-									<br />- animation locks and cast times are skipped immediately
-								</div>,
-								zh: <div className="paragraph">
-									- 点击图标使用技能;
-									战斗时间会自动快进至可释放下一个技能。如果点击的技能CD没有转好，模拟会自动地快进到它CD转好并重试。
-								</div>,
-							})}
-						</div>
-					}
-				/>
-			</p>
-			<Input
-				defaultValue={`${this.state.timeScale}`}
-				description={
-					<span>
-						{localize({ en: "time scale ", zh: "倍速 " })}
-						<Help
-							topic={"timeScale"}
-							content={
-								<div>
-									{localize({
-										en: "rate at which game time advances automatically (aka when in real-time)",
-										zh: "战斗时间自动前进的速度",
-									})}
-								</div>
-							}
-						/>
-						:{" "}
-					</span>
+				{localize({
+					en: "real-time auto pause",
+					zh: "实时(带自动暂停）",
+				})}
+			</label>
+			<Help
+				topic={"ctrl-realTimeAutoPause"}
+				content={
+					<div className="toolTip">
+						{localize({
+							en: <div className="paragraph">*Recommended*</div>,
+							zh: <div className="paragraph">*推荐设置*</div>,
+						})}
+						{localize({
+							en: <div className="paragraph">
+								- click to use a skill. if the skill is on cooldown, or you're in an
+								animation lock, then the simulation will automatically skip ahead to
+								when the skill can be used again
+								<br />- animation locks and cast bars will play out in sped-up real
+								time until done
+							</div>,
+							zh: <div className="paragraph">
+								- 点击图标使用技能;
+								战斗时间会按下方设置的倍速自动前进直到可释放下一个技能。如果点击的技能CD没有转好，模拟会自动地快进到它CD转好并重试。
+							</div>,
+						})}
+					</div>
 				}
-				onChange={this.setTimeScale}
 			/>
-		</div>;
-	}
+			<br />
+			<label style={tickModeOptionStyle}>
+				<input
+					style={radioStyle}
+					type={"radio"}
+					onChange={setTickMode}
+					value={TickMode.Manual}
+					checked={tickMode === TickMode.Manual}
+					name={"tick mode"}
+				/>
+				{localize({
+					en: "manual",
+					zh: "手动",
+				})}
+			</label>
+			<Help
+				topic={"ctrl-manual"}
+				content={
+					<div className="toolTip">
+						{localize({
+							en: <div className="paragraph">
+								- click to use a skill. if the skill is on cooldown, or you're in an
+								animation lock, then the simulation will automatically skip ahead to
+								when the skill can be used again
+								<br />- animation locks and cast times are skipped immediately
+							</div>,
+							zh: <div className="paragraph">
+								- 点击图标使用技能;
+								战斗时间会自动快进至可释放下一个技能。如果点击的技能CD没有转好，模拟会自动地快进到它CD转好并重试。
+							</div>,
+						})}
+					</div>
+				}
+			/>
+		</p>
+		<Input
+			defaultValue={`${timeScale}`}
+			description={
+				<span>
+					{localize({ en: "time scale ", zh: "倍速 " })}
+					<Help
+						topic={"timeScale"}
+						content={
+							<div>
+								{localize({
+									en: "rate at which game time advances automatically (aka when in real-time)",
+									zh: "战斗时间自动前进的速度",
+								})}
+							</div>
+						}
+					/>
+					:{" "}
+				</span>
+			}
+			onChange={setTimeScale}
+		/>
+	</div>;
 }
 
 // states are mostly strings here because those inputs are controlled by <Input ... />
