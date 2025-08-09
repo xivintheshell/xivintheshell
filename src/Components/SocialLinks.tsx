@@ -15,8 +15,6 @@ export function SocialLinks() {
 		}}
 	>
 		<style>
-			{/* note that the 1px solid offsets the icon a little when hovered, but as long as it's not
-		moving the other icons around that's fine */}
 			{`
 		.linkOption {
 			display: inline-block;
