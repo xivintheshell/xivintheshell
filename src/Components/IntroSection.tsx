@@ -540,7 +540,7 @@ export function IntroSection(props: { job: ShellJob }) {
 							</li>
 							<li>
 								<a href={BSKY_URL}>蓝天页面</a>和我们的
-								<a href={BLOG_URL}>开发者博客</a>（英文）
+								<a href={BLOG_URL}>开发博客</a>（英文）
 							</li>
 							<li>
 								<a href={"https://xivintheshell.github.io/legacy/"}>遗留版排轴器</a>
