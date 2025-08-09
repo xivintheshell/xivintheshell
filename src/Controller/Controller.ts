@@ -963,12 +963,15 @@ class Controller {
 	setConfigAndRestart(props: {
 		job: ShellJob;
 		level: LevelSync;
+		main: number;
+		wd: number;
 		spellSpeed: number;
 		skillSpeed: number;
 		criticalHit: number;
 		directHit: number;
 		determination: number;
 		piety: number;
+		tenacity: number;
 		animationLock: number;
 		fps: number;
 		gcdSkillCorrection: number;

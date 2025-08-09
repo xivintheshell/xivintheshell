@@ -1300,18 +1300,26 @@ export class Config extends React.Component {
 	}
 
 	setConfigAndRestart(config: ConfigState) {
+		const numericFields: (keyof ConfigState)[] = [
+			"spellSpeed",
+			"skillSpeed",
+			"criticalHit",
+			"directHit",
+			"determination",
+			"animationLock",
+			"fps",
+			"gcdSkillCorrection",
+			"timeTillFirstManaTick",
+			"countdown",
+			"level",
+			"wd",
+			"main",
+			"tenacity",
+		];
 		if (
-			isNaN(parseFloat(config.spellSpeed)) ||
-			isNaN(parseFloat(config.skillSpeed)) ||
-			isNaN(parseFloat(config.criticalHit)) ||
-			isNaN(parseFloat(config.directHit)) ||
-			isNaN(parseFloat(config.determination)) ||
-			isNaN(parseFloat(config.animationLock)) ||
-			isNaN(parseFloat(config.fps)) ||
-			isNaN(parseFloat(config.gcdSkillCorrection)) ||
-			isNaN(parseFloat(config.timeTillFirstManaTick)) ||
-			isNaN(parseFloat(config.countdown)) ||
-			isNaN(parseFloat(config.level))
+			// @ts-expect-error we know that all the fields correspond to number values here
+			// (should split up state later)
+			numericFields.map((field) => isNaN(parseFloat(config[field]))).some((x) => x)
 		) {
 			window.alert("Some config fields are not numbers!");
 			return;
@@ -1323,23 +1331,16 @@ export class Config extends React.Component {
 			window.alert("Invalid job: " + config.job);
 			return;
 		}
+		// @ts-expect-error too hard to manually specify every field, should refactor
 		controller.setConfigAndRestart({
 			job: config.job,
-			level: parseFloat(config.level),
-			spellSpeed: parseFloat(config.spellSpeed),
-			skillSpeed: parseFloat(config.skillSpeed),
-			criticalHit: parseFloat(config.criticalHit),
-			directHit: parseFloat(config.directHit),
-			determination: parseFloat(config.determination),
-			piety: parseFloat(config.piety),
-			animationLock: parseFloat(config.animationLock),
-			fps: parseFloat(config.fps),
-			gcdSkillCorrection: parseFloat(config.gcdSkillCorrection),
-			timeTillFirstManaTick: parseFloat(config.timeTillFirstManaTick),
-			countdown: parseFloat(config.countdown),
 			randomSeed: config.randomSeed.trim(),
 			procMode: config.procMode,
 			initialResourceOverrides: config.initialResourceOverrides, // info only
+			...Object.fromEntries(
+				// @ts-expect-error we know that all fields correspond to number values here
+				numericFields.map((field) => [field, parseFloat(config[field])]),
+			),
 		});
 		controller.updateAllDisplay();
 	}
