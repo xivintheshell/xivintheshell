@@ -1,5 +1,13 @@
 [
 	{
+		"date": "8/8/25",
+		"changes": [
+			"Added quick links to our GitHub, Bluesky, and (new) developer blog.",
+			"Added Bluesky, the dev blog, and the legacy game version site to the links in the \"about\" section."
+		],
+		"level": "minor"
+	},
+	{
 		"date": "8/4/25",
 		"changes": [
 			"Updated for patch 7.3."

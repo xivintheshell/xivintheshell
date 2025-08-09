@@ -8,7 +8,9 @@ import { ShellJob } from "../Game/Data/Jobs";
 
 const THIS_DOMAIN = isBetaSite ? "https://beta.xivintheshell.com" : "https://xivintheshell.com";
 
-const GITHUB_URL = "https://github.com/xivintheshell/xivintheshell";
+export const GITHUB_URL = "https://github.com/xivintheshell/xivintheshell";
+export const BSKY_URL = "https://bsky.app/profile/xivintheshell.com";
+export const BLOG_URL = "https://blog.xivintheshell.com";
 
 // #xiv_in_the_shell_support in the Balance discord
 export const HELP_CHANNEL_URL =
@@ -497,6 +499,17 @@ export function IntroSection(props: { job: ShellJob }) {
 								<a href={GITHUB_URL}>Github repository</a>
 							</li>
 							<li>
+								<a href={BSKY_URL}>Bluesky account</a> and our{" "}
+								<a href={BLOG_URL}>developer blog</a>
+							</li>
+							<li>
+								<a href={"https://xivintheshell.github.io/legacy/"}>
+									XIV in the Shell (Legacy)
+								</a>
+								: a snapshot of this tool at the end of the previous major game
+								patch (currently 7.25).
+							</li>
+							<li>
 								<a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>
 									Black Mage in the Shell (Endwalker)
 								</a>
@@ -524,6 +537,14 @@ export function IntroSection(props: { job: ShellJob }) {
 						zh: <ul>
 							<li>
 								<a href={GITHUB_URL}>Github页面</a>
+							</li>
+							<li>
+								<a href={BSKY_URL}>蓝天页面</a>和我们的
+								<a href={BLOG_URL}>开发博客</a>（英文）
+							</li>
+							<li>
+								<a href={"https://xivintheshell.github.io/legacy/"}>遗留版排轴器</a>
+								，最近的过去版本FF14排轴器（现在用7.25版本）。
 							</li>
 							<li>
 								<a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>
