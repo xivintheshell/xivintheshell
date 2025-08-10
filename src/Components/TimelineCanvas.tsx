@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useReducer, useContext, useState, CSSProperties } from "react";
+import React, { useEffect, useRef, useReducer, useContext, CSSProperties } from "react";
 import {
 	AutoTickMarkElem,
 	CursorElem,
@@ -1897,18 +1897,7 @@ export function TimelineCanvas(props: {
 	const interactiveCanvasRef = useRef<HTMLCanvasElement | null>(null);
 	const lowUpdateCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
-	const [dpr, setDpr] = useState(window.devicePixelRatio);
-
-	// Set a listener for when the DPR changes (dragged to second monitor, browser native zoom used)
-	// https://stackoverflow.com/questions/28905420/window-devicepixelratio-change-listener
-	useEffect(() => {
-		const onDprChange = () => {
-			setDpr(window.devicePixelRatio);
-		};
-		const media = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
-		// Remove listener on dismount
-		return () => media.addEventListener("change", onDprChange);
-	});
+	const dpr = window.devicePixelRatio;
 
 	const scaledWidth = props.visibleWidth * dpr;
 	const scaledHeight = props.timelineHeight * dpr;
