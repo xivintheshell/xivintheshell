@@ -1,5 +1,12 @@
 [
 	{
+		"date": "8/10/25",
+		"changes": [
+			"[NIN] Fixed a bug where Ninjutsu abilities were not buffed by Kunai's Bane and Dokumori."
+		],
+		"level": "minor"
+	},
+	{
 		"date": "8/8/25",
 		"changes": [
 			"Added quick links to our GitHub, Bluesky, and (new) developer blog.",
