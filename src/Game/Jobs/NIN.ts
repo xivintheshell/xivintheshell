@@ -985,6 +985,7 @@ NINJUTSU_POTENCY_LIST.forEach(([name, level, applicationDelay, potency, falloff]
 			if (state.hasResourceAvailable("DOTON") && ["KATON", "GOKA_MEKKYAKU"].includes(name)) {
 				mods.push(Modifiers.HollowNozuchi);
 			}
+			addUniversalPotencyModifiers(state, mods);
 			return mods;
 		},
 	});
