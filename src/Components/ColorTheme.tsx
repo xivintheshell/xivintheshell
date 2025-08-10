@@ -3,6 +3,7 @@ import { MdDarkMode, MdLightMode } from "react-icons/md";
 import { getCachedValue } from "../Controller/Common";
 import { ShellJob } from "../Game/Data/Jobs";
 import { PotencyModifierType } from "../Game/Potency";
+import { localize } from "./Localization";
 
 export type ColorTheme = "Light" | "Dark";
 
@@ -920,15 +921,19 @@ function ColorThemeOption(props: {
 	colorTheme: ColorTheme;
 	setColorTheme: (value: ColorTheme) => void;
 }) {
-	let icon = <MdLightMode />;
+	const isThisDark = props.colorTheme === "Dark";
+	const icon = isThisDark ? <MdDarkMode /> : <MdLightMode />;
 	const colors = getCurrentThemeColors();
 	const activeColorTheme = useContext(ColorThemeContext);
-	if (props.colorTheme === "Dark") icon = <MdDarkMode />;
+	const localizedTitle = localize({
+		en: isThisDark ? "Dark Mode" : "Light Mode",
+		zh: isThisDark ? "黑暗模式" : "灯光模式",
+	}) as string;
 	return <div
+		title={localizedTitle}
 		style={{
 			display: "inline-block",
 			cursor: "pointer",
-			verticalAlign: "middle",
 			borderBottom:
 				props.colorTheme === activeColorTheme ? "none" : "1px solid " + colors.text,
 			borderTop: props.colorTheme === activeColorTheme ? "1px solid " + colors.text : "none",
@@ -958,11 +963,9 @@ export function SelectColorTheme(props: { setColorTheme: (value: ColorTheme) => 
 	return <div
 		style={{
 			display: "inline-block",
-			position: "absolute",
-			right: 10,
 		}}
 	>
-		<div style={{ display: "inline-block", fontSize: 16, position: "relative" }}>
+		<div style={{ display: "inline-block", fontSize: 16 }}>
 			<ColorThemeOption colorTheme={"Light"} setColorTheme={props.setColorTheme} />|
 			<ColorThemeOption colorTheme={"Dark"} setColorTheme={props.setColorTheme} />
 		</div>

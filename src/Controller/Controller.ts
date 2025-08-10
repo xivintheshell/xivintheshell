@@ -963,12 +963,15 @@ class Controller {
 	setConfigAndRestart(props: {
 		job: ShellJob;
 		level: LevelSync;
+		main: number;
+		wd: number;
 		spellSpeed: number;
 		skillSpeed: number;
 		criticalHit: number;
 		directHit: number;
 		determination: number;
 		piety: number;
+		tenacity: number;
 		animationLock: number;
 		fps: number;
 		gcdSkillCorrection: number;
@@ -1653,9 +1656,12 @@ class Controller {
 			det_stat: this.gameConfig.determination,
 			crit_stat: this.gameConfig.criticalHit,
 			dh_stat: this.gameConfig.directHit,
+			tenacity: this.gameConfig.tenacity,
 			speed_stat: isHealerOrCaster ? this.gameConfig.spellSpeed : this.gameConfig.skillSpeed,
 			version: CURRENT_GAME_COMBAT_PATCH,
 			level: this.gameConfig.level,
+			wd: this.gameConfig.wd,
+			main_stat: this.gameConfig.main,
 		};
 		meta.push("stats = " + JSON.stringify(statsDict));
 		const downtimeWindows = this.timeline

@@ -459,6 +459,11 @@ type ConfigState = {
 	procMode: ProcMode;
 	initialResourceOverrides: ResourceOverrideData[];
 
+	// set only by xivgear/etro import
+	tenacity: string;
+	wd: string;
+	main: string;
+
 	selectedOverrideResource: ResourceKey | CooldownKey;
 	overrideTimer: string;
 	overrideStacks: string;
@@ -527,6 +532,10 @@ export class Config extends React.Component {
 			randomSeed: "",
 			procMode: ProcMode.RNG,
 			initialResourceOverrides: [],
+			/////////
+			tenacity: "0",
+			wd: "0",
+			main: "0",
 			/////////
 			selectedOverrideResource: "MANA",
 			overrideTimer: "0",
@@ -618,6 +627,9 @@ export class Config extends React.Component {
 						const stats = new Map<string, string>(
 							body["totalParams"].map((obj: any) => [obj["name"], obj["value"]]),
 						);
+						// The main stat should always be the first returned field.
+						const mainStat =
+							body["totalParams"].length > 0 ? body["totalParams"][0]["value"] : 0;
 						if (!(body["jobAbbrev"] in JOBS)) {
 							throw new Error(
 								"Imported gearset was for a job (" +
@@ -637,19 +649,25 @@ export class Config extends React.Component {
 							"criticalHit",
 							"directHit",
 							"determination",
+							"main",
 						];
 						if (stats.has("SPS")) importedFields.push("spellSpeed");
 						if (stats.has("SKS")) importedFields.push("skillSpeed");
 						if (stats.has("PIE")) importedFields.push("piety");
+						if (stats.has("TEN")) importedFields.push("tenacity");
+						if (stats.has("Weapon Damage")) importedFields.push("wd");
 						this.setState({
 							job: body["jobAbbrev"],
 							level: body["level"],
 							spellSpeed,
 							skillSpeed,
+							wd: stats.get("Weapon Damage"),
 							criticalHit: stats.get("CRT"),
 							directHit: stats.get("DH"),
 							determination: stats.get("DET"),
 							piety: stats.get("PIE"),
+							tenacity: stats.get("TEN"),
+							main: mainStat,
 							imported: true,
 							importedFields: importedFields,
 							dirty: true,
@@ -685,6 +703,13 @@ export class Config extends React.Component {
 							);
 						}
 						const stats = body["sets"][0]["computedStats"];
+						// just assume the highest main stat/wd field is the correct one
+						const mainStat = Math.max(
+							...["strength", "dexterity", "intelligence", "mind"].map(
+								(field) => stats[field] ?? 0,
+							),
+						);
+						const wd = Math.max(stats["wdPhys"] ?? 0, stats["wdMag"] ?? 0);
 						this.setState({
 							job: body["job"],
 							level: body["level"],
@@ -694,6 +719,9 @@ export class Config extends React.Component {
 							directHit: stats["dhit"],
 							determination: stats["determination"],
 							piety: stats["piety"],
+							tenacity: stats["tenacity"],
+							wd,
+							main: mainStat,
 							imported: true,
 							importedFields: [
 								"job",
@@ -704,6 +732,9 @@ export class Config extends React.Component {
 								"directHit",
 								"determination",
 								"piety",
+								"tenacity",
+								"wd",
+								"main",
 							],
 							dirty: true,
 						});
@@ -1269,18 +1300,26 @@ export class Config extends React.Component {
 	}
 
 	setConfigAndRestart(config: ConfigState) {
+		const numericFields: (keyof ConfigState)[] = [
+			"spellSpeed",
+			"skillSpeed",
+			"criticalHit",
+			"directHit",
+			"determination",
+			"animationLock",
+			"fps",
+			"gcdSkillCorrection",
+			"timeTillFirstManaTick",
+			"countdown",
+			"level",
+			"wd",
+			"main",
+			"tenacity",
+		];
 		if (
-			isNaN(parseFloat(config.spellSpeed)) ||
-			isNaN(parseFloat(config.skillSpeed)) ||
-			isNaN(parseFloat(config.criticalHit)) ||
-			isNaN(parseFloat(config.directHit)) ||
-			isNaN(parseFloat(config.determination)) ||
-			isNaN(parseFloat(config.animationLock)) ||
-			isNaN(parseFloat(config.fps)) ||
-			isNaN(parseFloat(config.gcdSkillCorrection)) ||
-			isNaN(parseFloat(config.timeTillFirstManaTick)) ||
-			isNaN(parseFloat(config.countdown)) ||
-			isNaN(parseFloat(config.level))
+			// @ts-expect-error we know that all the fields correspond to number values here
+			// (should split up state later)
+			numericFields.map((field) => isNaN(parseFloat(config[field]))).some((x) => x)
 		) {
 			window.alert("Some config fields are not numbers!");
 			return;
@@ -1292,23 +1331,16 @@ export class Config extends React.Component {
 			window.alert("Invalid job: " + config.job);
 			return;
 		}
+		// @ts-expect-error too hard to manually specify every field, should refactor
 		controller.setConfigAndRestart({
 			job: config.job,
-			level: parseFloat(config.level),
-			spellSpeed: parseFloat(config.spellSpeed),
-			skillSpeed: parseFloat(config.skillSpeed),
-			criticalHit: parseFloat(config.criticalHit),
-			directHit: parseFloat(config.directHit),
-			determination: parseFloat(config.determination),
-			piety: parseFloat(config.piety),
-			animationLock: parseFloat(config.animationLock),
-			fps: parseFloat(config.fps),
-			gcdSkillCorrection: parseFloat(config.gcdSkillCorrection),
-			timeTillFirstManaTick: parseFloat(config.timeTillFirstManaTick),
-			countdown: parseFloat(config.countdown),
 			randomSeed: config.randomSeed.trim(),
 			procMode: config.procMode,
 			initialResourceOverrides: config.initialResourceOverrides, // info only
+			...Object.fromEntries(
+				// @ts-expect-error we know that all fields correspond to number values here
+				numericFields.map((field) => [field, parseFloat(config[field])]),
+			),
 		});
 		controller.updateAllDisplay();
 	}
