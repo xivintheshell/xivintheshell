@@ -108,7 +108,7 @@ function TimelineActionElement(props: {
 }) {
 	const colors = getCurrentThemeColors();
 	// Every other row should be highlighted slightly to provide contrast.
-	let bgColor = props.index % 2 === 1 ? colors.bgLowContrast : "transparent";
+	let bgColor = "transparent";
 	// These checks to override background color should happen in this specific order.
 	if (props.isSelected) {
 		bgColor = "rgba(151,111,246,0.25)";
@@ -661,7 +661,7 @@ export function TimelineEditor() {
 				tabIndex={-1}
 				style={{
 					height: "0.8em",
-					background: colors.bgHighContrast,
+					background: colors.bgMediumContrast,
 					userSelect: "none",
 					...(isEndDragTarget ? getDropTargetStyle(colors) : {}),
 				}}
@@ -688,7 +688,7 @@ export function TimelineEditor() {
 	}
 
 	const thStyle: CSSProperties = {
-		backgroundColor: colors.bgHighContrast,
+		backgroundColor: colors.bgMediumContrast,
 	};
 	return <div
 		onClick={(evt) => {
