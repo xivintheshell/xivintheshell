@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useReducer, useContext, CSSProperties } from "react";
+import React, { useEffect, useRef, useReducer, useContext, useState, CSSProperties } from "react";
 import {
 	AutoTickMarkElem,
 	CursorElem,
@@ -1876,7 +1876,7 @@ function newInteractionLayer(): InteractionLayer {
 	};
 }
 
-function clearLayer(layer: InteractionLayer) {
+function clearInteractionLayer(layer: InteractionLayer) {
 	(["mouseDown", "mouseHover", "mouseUp", "pointer"] as (keyof InteractionLayer)[]).forEach(
 		(zone) => layer[zone].clear(),
 	);
@@ -1897,7 +1897,18 @@ export function TimelineCanvas(props: {
 	const interactiveCanvasRef = useRef<HTMLCanvasElement | null>(null);
 	const lowUpdateCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
-	const dpr = window.devicePixelRatio;
+	const [dpr, setDpr] = useState(window.devicePixelRatio);
+
+	// Set a listener for when the DPR changes (dragged to second monitor, browser native zoom used)
+	// https://stackoverflow.com/questions/28905420/window-devicepixelratio-change-listener
+	useEffect(() => {
+		const onDprChange = () => {
+			setDpr(window.devicePixelRatio);
+		};
+		const media = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+		// Remove listener on dismount
+		return () => media.addEventListener("change", onDprChange);
+	});
 
 	const scaledWidth = props.visibleWidth * dpr;
 	const scaledHeight = props.timelineHeight * dpr;
@@ -2011,13 +2022,16 @@ export function TimelineCanvas(props: {
 	const redrawInteractive = () => {
 		const ctx = interactiveCanvasRef.current?.getContext("2d", { alpha: true });
 		if (ctx) {
+			// This scale call needs to come before clearCtx, or else some stuff won't be erased.
+			ctx.scale(dpr, dpr);
 			clearCtx(ctx);
-			clearLayer(interactionLayers.current.interactive);
+			clearInteractionLayer(interactionLayers.current.interactive);
 			drawInteractive({
 				ctx,
 				...getDrawState(),
 				testInteraction: makeTestInteraction("interactive"),
 			});
+			ctx.scale(1 / dpr, 1 / dpr);
 		}
 	};
 
@@ -2100,12 +2114,15 @@ export function TimelineCanvas(props: {
 				const entries = Array.from(hitboxes.entries());
 				for (let i = 0; i < entries.length; i++) {
 					const [index, hitbox] = entries[i];
-					let xDist = Math.abs(mouseX.current - hitbox.x);
-					// Do not use the right border for the final action in the timeline because
-					// in some cases, the sim end cursor will not be past this position.
-					if (i !== entries.length - 1) {
-						xDist = Math.min(xDist, Math.abs(mouseX.current - hitbox.x - hitbox.w));
-					}
+					const xDist = Math.abs(mouseX.current - hitbox.x);
+					// This commented out statement uses the right boundary of a skill icon for detection,
+					// but this looks weird with oGCDs. Leaving this here in case we choose to change
+					// that someday.
+					// // Do not use the right border for the final action in the timeline because
+					// // in some cases, the sim end cursor will not be past this position.
+					// if (i !== entries.length - 1) {
+					// 	xDist = Math.min(xDist, Math.abs(mouseX.current - hitbox.x - hitbox.w));
+					// }
 					if (lastXDist !== undefined && xDist > lastXDist) {
 						break;
 					}
@@ -2280,10 +2297,12 @@ export function TimelineCanvas(props: {
 			lowUpdateCanvasRef,
 		].map((ref, i) => ref.current?.getContext("2d", { alpha: i !== 0 }));
 		if (liveCtx && interactiveCtx && lowUpdateCtx) {
+			// Scale calls need to come before clearCtx, or else some stuff won't be erased.
+			[liveCtx, interactiveCtx, lowUpdateCtx].forEach((ctx) => ctx.scale(dpr, dpr));
 			// Event trigger zones are re-computed when testInteraction is called
-			clearLayer(interactionLayers.current.live);
-			clearLayer(interactionLayers.current.interactive);
-			clearLayer(interactionLayers.current.lowUpdate);
+			clearInteractionLayer(interactionLayers.current.live);
+			clearInteractionLayer(interactionLayers.current.interactive);
+			clearInteractionLayer(interactionLayers.current.lowUpdate);
 			// Don't need to clearRect the live ctx because we do an explicit background fillRect
 			[interactiveCtx, lowUpdateCtx].forEach((ctx) => clearCtx(ctx));
 			const viewInfo = {
@@ -2292,27 +2311,22 @@ export function TimelineCanvas(props: {
 				visibleLeft: props.visibleLeft,
 				visibleWidth: props.visibleWidth,
 			};
-			liveCtx.scale(dpr, dpr);
 			skillHitboxes.current = drawLive({
 				ctx: liveCtx,
 				viewInfo,
 				testInteraction: makeTestInteraction("live"),
 			});
-			liveCtx.scale(1 / dpr, 1 / dpr);
-			interactiveCtx.scale(dpr, dpr);
 			drawInteractive({
 				ctx: interactiveCtx,
 				...getDrawState(),
 				testInteraction: makeTestInteraction("interactive"),
 			});
-			interactiveCtx.scale(1 / dpr, 1 / dpr);
-			lowUpdateCtx.scale(dpr, dpr);
 			drawLowUpdate({
 				ctx: lowUpdateCtx,
 				viewInfo,
 				testInteraction: makeTestInteraction("lowUpdate"),
 			});
-			lowUpdateCtx.scale(1 / dpr, 1 / dpr);
+			[liveCtx, interactiveCtx, lowUpdateCtx].forEach((ctx) => ctx.scale(1 / dpr, 1 / dpr));
 		}
 	};
 

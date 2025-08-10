@@ -119,7 +119,7 @@ function TimelineMain() {
 				paddingBottom: isFirefox ? 10 : 0,
 			}}
 			ref={myRef}
-			onScroll={(e) => {
+			onScroll={() => {
 				if (myRef.current) {
 					myRef.current.scrollLeft = Math.min(
 						myRef.current.scrollWidth - myRef.current.clientWidth,
@@ -145,8 +145,8 @@ function TimelineMain() {
 					callbacks.onMouseDown(x, y);
 				}
 			}}
-			onMouseEnter={(e) => callbacks.onMouseEnter()}
-			onMouseLeave={(e) => callbacks.onMouseLeave()}
+			onMouseEnter={() => callbacks.onMouseEnter()}
+			onMouseLeave={() => callbacks.onMouseLeave()}
 			onMouseUp={(e) => {
 				if (myRef.current) {
 					const rect = myRef.current.getBoundingClientRect();
