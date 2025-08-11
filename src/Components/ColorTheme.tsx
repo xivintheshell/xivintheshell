@@ -252,6 +252,10 @@ export type ThemeColors = {
 	bgLowContrast: string;
 	bgMediumContrast: string;
 	bgHighContrast: string;
+	timelineEditor: {
+		headerFooter: string;
+		bgAlternateRow: string;
+	};
 	resources: {
 		gcdBar: string;
 		lockBar: string;
@@ -356,6 +360,10 @@ const DARK_THEME_COLORS: ThemeColors = {
 	bgLowContrast: "#333",
 	bgMediumContrast: "#393939",
 	bgHighContrast: "#626262",
+	timelineEditor: {
+		headerFooter: "#424242",
+		bgAlternateRow: "#282828",
+	},
 	resources: {
 		gcdBar: "#5cab43",
 		lockBar: "#737373",
@@ -606,6 +614,10 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 	bgLowContrast: "#efefef",
 	bgMediumContrast: "lightgrey",
 	bgHighContrast: "darkgrey",
+	timelineEditor: {
+		headerFooter: "#cacaca",
+		bgAlternateRow: "#eeeeee",
+	},
 	resources: {
 		gcdBar: "#8edc72",
 		lockBar: "#cbcbcb",
