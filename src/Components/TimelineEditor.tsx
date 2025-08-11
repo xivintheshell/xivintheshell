@@ -60,23 +60,23 @@ const getBorderStyling = (colors: ThemeColors) => {
 };
 
 const INDEX_TD_STYLE: CSSProperties = {
-	width: "1%", // seems like this is auto expanded to contain its content
+	width: "1.5%",
 	textAlign: "right",
-	paddingRight: "1em",
-	paddingLeft: "1em",
+	paddingRight: "0.3em",
+	paddingLeft: "0.3em",
 };
 
 const TIMESTAMP_TD_STYLE: CSSProperties = {
-	width: "1%", // seems like this is auto expanded to contain its content
+	width: "12%", // seems like this is auto expanded to contain its content
 	textAlign: "right",
-	paddingRight: "1em",
-	paddingLeft: "1em",
+	paddingRight: "0.3em",
+	paddingLeft: "0.3em",
 };
 
 const ACTION_TD_STYLE: CSSProperties = {
-	// and seems like the last column is auto expanded to fill the rest of the table
+	width: "86.5%", // seems like the last column is auto expanded to fill the rest of the table even without this line
 	textAlign: "left",
-	paddingLeft: "1em",
+	paddingLeft: "0.3em",
 };
 
 const TR_STYLE: CSSProperties = {
