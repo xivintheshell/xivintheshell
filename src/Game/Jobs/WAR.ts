@@ -40,14 +40,22 @@ const makeWARResource = (
 makeWARResource("BEAST_GAUGE", 100, { warnOnOvercap: true });
 
 // Status Effects
+// From logs, it looks like all buffs applied by Inner Release are extended longer than their tooltip.
+// However, the buffs are applied instantly on ability usage, so we just add this offset to their
+// duration. In my own testing I found this duration to be 0.73-0.74s.
+const IR_DELAY = 0.74;
+const PRIMAL_REND_APPLICATION_DELAY = 1.16;
 makeWARResource("SURGING_TEMPEST", 1, { timeout: 60 });
 makeWARResource("NASCENT_CHAOS", 1, { timeout: 30 });
-makeWARResource("INNER_RELEASE", 3, { timeout: 15 });
-makeWARResource("INNER_STRENGTH", 1, { timeout: 15 });
+makeWARResource("INNER_RELEASE", 3, { timeout: 15 + IR_DELAY });
+makeWARResource("INNER_STRENGTH", 1, { timeout: 15 + IR_DELAY });
 makeWARResource("BURGEONING_FURY", 3, { timeout: 30 });
 makeWARResource("WRATHFUL", 1, { timeout: 30 });
-makeWARResource("PRIMAL_REND_READY", 1, { timeout: 30, warnOnTimeout: true });
-makeWARResource("PRIMAL_RUINATION_READY", 1, { timeout: 20, warnOnTimeout: true });
+makeWARResource("PRIMAL_REND_READY", 1, { timeout: 30 + IR_DELAY, warnOnTimeout: true });
+makeWARResource("PRIMAL_RUINATION_READY", 1, {
+	timeout: 20 + PRIMAL_REND_APPLICATION_DELAY,
+	warnOnTimeout: true,
+});
 
 makeWARResource("THRILL_OF_BATTLE", 1, { timeout: 10 });
 makeWARResource("EQUILIBRIUM", 1, { timeout: 15 });
@@ -360,11 +368,11 @@ makeWeaponskill_WAR("STORMS_EYE", 50, {
 		resource: "STORM_COMBO",
 		resourceValue: 2,
 	},
-	applicationDelay: 0.62,
+	applicationDelay: 1.65,
 	onConfirm: (state) => {
 		if (state.hasComboStatus("STORM_COMBO", 2)) {
 			state.gainBeastGauge(10);
-			state.gainSurgingTempestGCD(30, 0.62, 1.7);
+			state.gainSurgingTempestGCD(30, 1.65, 1.7);
 		}
 	},
 	highlightIf: (state) => state.hasComboStatus("STORM_COMBO", 2),
@@ -444,7 +452,7 @@ makeWeaponskill_WAR("DECIMATE", 60, {
 		);
 	},
 	onConfirm: (state) => {
-		if (!state.tryConsumeResource("INNER_RELEASE")) {
+		if (!state.hasResourceAvailable("INNER_RELEASE")) {
 			state.resources.get("BEAST_GAUGE").consume(50);
 		}
 		reduceInfuriateCooldown(state);
@@ -490,7 +498,7 @@ makeAbility_WAR("INNER_RELEASE", 70, "cd_INNER_RELEASE", {
 
 makeWeaponskill_WAR("PRIMAL_REND", 90, {
 	potency: 700,
-	applicationDelay: 1.16,
+	applicationDelay: PRIMAL_REND_APPLICATION_DELAY,
 	falloff: 0.5,
 	animationLock: 1.2,
 	validateAttempt: (state) => state.hasResourceAvailable("PRIMAL_REND_READY"),

@@ -67,19 +67,20 @@ const INDEX_TD_STYLE: CSSProperties = {
 };
 
 const TIMESTAMP_TD_STYLE: CSSProperties = {
-	width: "12%",
+	width: "12%", // seems like this is auto expanded to contain its content
 	textAlign: "right",
 	paddingRight: "0.3em",
 	paddingLeft: "0.3em",
 };
 
 const ACTION_TD_STYLE: CSSProperties = {
-	width: "86.5%",
+	width: "86.5%", // seems like the last column is auto expanded to fill the rest of the table even without this line
 	textAlign: "left",
 	paddingLeft: "0.3em",
 };
 
 const TR_STYLE: CSSProperties = {
+	width: "100%",
 	height: "1.6em",
 	userSelect: "none",
 };
@@ -108,7 +109,7 @@ function TimelineActionElement(props: {
 }) {
 	const colors = getCurrentThemeColors();
 	// Every other row should be highlighted slightly to provide contrast.
-	let bgColor = props.index % 2 === 1 ? colors.bgLowContrast : "transparent";
+	let bgColor = props.index % 2 === 1 ? colors.timelineEditor.bgAlternateRow : "transparent";
 	// These checks to override background color should happen in this specific order.
 	if (props.isSelected) {
 		bgColor = "rgba(151,111,246,0.25)";
@@ -661,7 +662,7 @@ export function TimelineEditor() {
 				tabIndex={-1}
 				style={{
 					height: "0.8em",
-					background: colors.bgHighContrast,
+					background: colors.timelineEditor.headerFooter,
 					userSelect: "none",
 					...(isEndDragTarget ? getDropTargetStyle(colors) : {}),
 				}}
@@ -688,7 +689,7 @@ export function TimelineEditor() {
 	}
 
 	const thStyle: CSSProperties = {
-		backgroundColor: colors.bgHighContrast,
+		backgroundColor: colors.timelineEditor.headerFooter,
 	};
 	return <div
 		onClick={(evt) => {
@@ -708,6 +709,8 @@ export function TimelineEditor() {
 				{
 					content: <table
 						style={{
+							position: "relative",
+							width: "100%",
 							borderCollapse: "collapse",
 							borderColor: colors.bgMediumContrast,
 							borderWidth: "1px",
