@@ -377,6 +377,7 @@ export default class Main extends React.Component<{ command?: string }> {
 								maxWidth: 1060,
 								margin: "0 auto",
 								marginTop: 40,
+								display: "grid",
 							}}
 						>
 							<div
@@ -395,7 +396,7 @@ export default class Main extends React.Component<{ command?: string }> {
 								<SelectColorTheme setColorTheme={this.setColorTheme} />
 							</div>
 							<div>
-								<h3 style={{ marginTop: 20, marginBottom: 6 }}>
+								<h3 style={{ marginTop: 0, marginBottom: 6 }}>
 									{betaPrefix}XIV in the Shell
 								</h3>
 								{localize({
