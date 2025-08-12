@@ -4,6 +4,7 @@
 		"changes": [
 			"[WAR] Fixed a bug where Decimate consumed 2 stacks of Inner Release, and failed to grant Burgeoning Fury.",
 			"[WAR] Fixed Storm's Eye using an incorrect application delay.",
+			"[WAR] Extended the duration of the Inner Release, Primal Rend Ready, and Primal Ruination buffs to match in-game behavior.",
 			"[NIN] Fixed a bug where using Gust Slash without an active combo incorrectly advanced combo state.",
 			"[NIN] Fixed a bug where damage from Doton ticks was not computed.",
 			"[NIN] Fixed a bug where using Katon under Ten Chi Jin did not trigger Hollow Nozuchi."
