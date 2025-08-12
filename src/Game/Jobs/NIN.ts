@@ -98,7 +98,7 @@ export class NINState extends GameState {
 				groupedEffects: [
 					{
 						effectName: "DOTON",
-						appliedBy: ["DOTON"],
+						appliedBy: ["DOTON", "DOTON_CHI"],
 						isGroundTargeted: true,
 					},
 				],
@@ -155,7 +155,7 @@ export class NINState extends GameState {
 		];
 		if (skill === "SPINNING_EDGE") {
 			counters = [1, 0];
-		} else if (skill === "GUST_SLASH") {
+		} else if (skill === "GUST_SLASH" && counters[0] === 1) {
 			counters = [2, 0];
 		} else if (skill === "DEATH_BLOSSOM") {
 			counters = [0, 1];
@@ -722,6 +722,9 @@ tcjReplaces.forEach(
 			jobPotencyModifiers: (state) => {
 				const mods: PotencyModifier[] = [];
 				addUniversalPotencyModifiers(state, mods);
+				if (name === "KATON" && state.hasResourceAvailable("DOTON")) {
+					mods.push(Modifiers.HollowNozuchi);
+				}
 				return mods;
 			},
 			onConfirm: combineEffects(
@@ -740,19 +743,11 @@ tcjReplaces.forEach(
 	},
 );
 
-const dotonConfirm = combineEffects(
-	(state, node) => {
-		state.gainStatus("DOTON");
-		state.addDoTPotencies({
-			node,
-			effectName: "DOTON",
-			skillName: "DOTON",
-			tickPotency: 80,
-			speedStat: "sks",
-		});
-	},
-	(state: NINState) => state.clearMudraInfo(),
-);
+const dotonApply = (state: NINState, node: ActionNode) => {
+	state.applyDoT("DOTON", node);
+	state.gainStatus("DOTON");
+};
+
 // Special handling for Doton
 makeWeaponskill("NIN", "DOTON_CHI", 70, {
 	startOnHotbar: false,
@@ -764,7 +759,19 @@ makeWeaponskill("NIN", "DOTON_CHI", 70, {
 		addUniversalPotencyModifiers(state, mods);
 		return mods;
 	},
-	onConfirm: (state: NINState) => state.pushMudra(2, true),
+	onConfirm: combineEffects(
+		(state, node) => {
+			state.addDoTPotencies({
+				node,
+				effectName: "DOTON",
+				skillName: "DOTON",
+				tickPotency: 80,
+				speedStat: "sks",
+			});
+		},
+		(state: NINState) => state.pushMudra(2, true),
+	),
+	onApplication: dotonApply,
 });
 
 // Mudra actions always take exactly 0.5s regardless of sks/haste.
@@ -999,7 +1006,19 @@ makeWeaponskill("NIN", "DOTON", 45, {
 	falloff: 0,
 	replaceIf: getReplaceList("DOTON"),
 	validateAttempt: NINJUTSU_REPLACE_LIST.find((item) => item.newSkill === "DOTON")!.condition,
-	onConfirm: dotonConfirm,
+	onConfirm: combineEffects(
+		(state, node) => {
+			state.addDoTPotencies({
+				node,
+				effectName: "DOTON",
+				skillName: "DOTON",
+				tickPotency: 80,
+				speedStat: "sks",
+			});
+		},
+		(state: NINState) => state.clearMudraInfo(),
+	),
+	onApplication: dotonApply,
 	// Kassatsu does not affect doton
 });
 

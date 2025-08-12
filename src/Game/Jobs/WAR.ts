@@ -360,11 +360,11 @@ makeWeaponskill_WAR("STORMS_EYE", 50, {
 		resource: "STORM_COMBO",
 		resourceValue: 2,
 	},
-	applicationDelay: 0.62,
+	applicationDelay: 1.65,
 	onConfirm: (state) => {
 		if (state.hasComboStatus("STORM_COMBO", 2)) {
 			state.gainBeastGauge(10);
-			state.gainSurgingTempestGCD(30, 0.62, 1.7);
+			state.gainSurgingTempestGCD(30, 1.65, 1.7);
 		}
 	},
 	highlightIf: (state) => state.hasComboStatus("STORM_COMBO", 2),
@@ -444,7 +444,7 @@ makeWeaponskill_WAR("DECIMATE", 60, {
 		);
 	},
 	onConfirm: (state) => {
-		if (!state.tryConsumeResource("INNER_RELEASE")) {
+		if (!state.hasResourceAvailable("INNER_RELEASE")) {
 			state.resources.get("BEAST_GAUGE").consume(50);
 		}
 		reduceInfuriateCooldown(state);
