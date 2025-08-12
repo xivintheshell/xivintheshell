@@ -6,16 +6,7 @@ import { getCachedValue, setCachedValue } from "../Controller/Common";
 import { Help, Slider, Tabs, TABS_TITLE_HEIGHT } from "./Common";
 import { TimelineMarkers } from "./TimelineMarkers";
 import { TimelineEditor } from "./TimelineEditor";
-import {
-	TimelineCanvas,
-	timelineCanvasGetPointerMouse,
-	timelineCanvasOnKeyDown,
-	timelineCanvasOnMouseEnter,
-	timelineCanvasOnMouseLeave,
-	timelineCanvasOnMouseMove,
-	timelineCanvasOnMouseDown,
-	timelineCanvasOnMouseUp,
-} from "./TimelineCanvas";
+import { TimelineCanvas } from "./TimelineCanvas";
 import { localize } from "./Localization";
 import { getCurrentThemeColors, getThemeField, ColorThemeContext } from "./ColorTheme";
 
@@ -46,6 +37,15 @@ export const DragTargetContext = createContext<DragTarget>({
 	setDragTarget: (index, time) => {},
 });
 
+export interface CanvasCallbacks {
+	onMouseMove: (x: number, y: number) => void;
+	onMouseEnter: () => void;
+	onMouseLeave: () => void;
+	onMouseUp: (e: React.MouseEvent, x: number, y: number) => void;
+	onMouseDown: (x: number, y: number) => void;
+	onKeyDown: (e: React.KeyboardEvent) => void;
+}
+
 // the actual timeline canvas
 function TimelineMain() {
 	const myRef = useRef<HTMLDivElement | null>(null);
@@ -55,6 +55,15 @@ function TimelineMain() {
 	const [visibleLeft, setVisibleLeft] = useState(23);
 	const [visibleWidth, setVisibleWidth] = useState(66);
 	const [version, setVersion] = useState(0);
+	const [pointerMouse, setPointerMouse] = useState(false);
+	const [callbacks, setCallbacks] = useState<CanvasCallbacks>({
+		onMouseMove: () => {},
+		onMouseEnter: () => {},
+		onMouseLeave: () => {},
+		onMouseUp: () => {},
+		onMouseDown: () => {},
+		onKeyDown: () => {},
+	});
 
 	const updateVisibleRange = () => {
 		if (myRef.current) {
@@ -88,6 +97,9 @@ function TimelineMain() {
 		visibleLeft={visibleLeft}
 		visibleWidth={visibleWidth}
 		version={version}
+		pointerMouse={pointerMouse}
+		setCallbacks={setCallbacks}
+		setPointerMouse={setPointerMouse}
 	/>;
 	const isFirefox = navigator.userAgent.indexOf("Firefox") >= 0;
 	const colorContext = useContext(ColorThemeContext);
@@ -103,11 +115,11 @@ function TimelineMain() {
 				overflowX: "scroll",
 				overflowY: "clip",
 				outline: "1px solid " + bg,
-				cursor: timelineCanvasGetPointerMouse() ? "pointer" : "default",
+				cursor: pointerMouse ? "pointer" : "default",
 				paddingBottom: isFirefox ? 10 : 0,
 			}}
 			ref={myRef}
-			onScroll={(e) => {
+			onScroll={() => {
 				if (myRef.current) {
 					myRef.current.scrollLeft = Math.min(
 						myRef.current.scrollWidth - myRef.current.clientWidth,
@@ -122,7 +134,7 @@ function TimelineMain() {
 					const rect = myRef.current.getBoundingClientRect();
 					const x = e.clientX - rect.left;
 					const y = e.clientY - rect.top;
-					timelineCanvasOnMouseMove(x, y);
+					callbacks.onMouseMove(x, y);
 				}
 			}}
 			onMouseDown={(e) => {
@@ -130,26 +142,20 @@ function TimelineMain() {
 					const rect = myRef.current.getBoundingClientRect();
 					const x = e.clientX - rect.left;
 					const y = e.clientY - rect.top;
-					timelineCanvasOnMouseDown(x, y);
+					callbacks.onMouseDown(x, y);
 				}
 			}}
-			onMouseEnter={(e) => {
-				timelineCanvasOnMouseEnter();
-			}}
-			onMouseLeave={(e) => {
-				timelineCanvasOnMouseLeave();
-			}}
+			onMouseEnter={() => callbacks.onMouseEnter()}
+			onMouseLeave={() => callbacks.onMouseLeave()}
 			onMouseUp={(e) => {
 				if (myRef.current) {
 					const rect = myRef.current.getBoundingClientRect();
 					const x = e.clientX - rect.left;
 					const y = e.clientY - rect.top;
-					timelineCanvasOnMouseUp(e, x, y);
+					callbacks.onMouseUp(e, x, y);
 				}
 			}}
-			onKeyDown={(e) => {
-				timelineCanvasOnKeyDown(e);
-			}}
+			onKeyDown={(e) => callbacks.onKeyDown(e)}
 		>
 			<div
 				style={{

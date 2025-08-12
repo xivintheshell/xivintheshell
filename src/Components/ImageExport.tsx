@@ -4,7 +4,7 @@ import { localize, LocalizedContent } from "./Localization";
 import { controller } from "../Controller/Controller";
 import { setCachedValue } from "../Controller/Common";
 import { getCurrentThemeColors, ThemeColors } from "./ColorTheme";
-import { swapCtx, drawRuler, drawMarkerTracks, drawTimelines } from "./TimelineCanvas";
+import { drawRuler, drawMarkerTracks, drawTimelines } from "./TimelineCanvas";
 
 /**
  * Creates a mock canvas to draw the components of the timeline we have selected.
@@ -57,20 +57,43 @@ function createMockCanvas(includeTime: boolean, g_colors: ThemeColors): HTMLCanv
 	const oneRowCtx = dummyOneRowCanvas.getContext("2d", {
 		willReadFrequently: true,
 	}) as CanvasRenderingContext2D;
-	// 2. Temporarily swap the active graphics context, and request TimelineCanvas functions to
-	// draw elements onto our "fake" canvas (oneRowCtx).
-	swapCtx(oneRowCtx, () => {
-		const new_ctx = oneRowCtx;
-		const timelineOrigin = 0;
-		// Mimic drawEverything and add components as necessary
-		new_ctx.fillStyle = g_colors.background;
-		new_ctx.fillRect(0, 0, dummyOneRowCanvas.width, dummyOneRowCanvas.height);
-		let currentHeight = 0;
-		if (includeTime) {
-			currentHeight += drawRuler(timelineOrigin, true);
-			currentHeight += drawMarkerTracks(timelineOrigin, currentHeight, true);
-		}
-		drawTimelines(timelineOrigin, currentHeight, true);
+	// 2. Request TimelineCanvas functions to draw elements onto our "fake" canvas (oneRowCtx).
+	const timelineOrigin = 0;
+	// Mimic drawEverything and add components as necessary
+	oneRowCtx.fillStyle = g_colors.background;
+	oneRowCtx.fillRect(0, 0, dummyOneRowCanvas.width, dummyOneRowCanvas.height);
+	let currentHeight = 0;
+	const viewInfo = {
+		renderingProps: controller.getTimelineRenderingProps(),
+		colors: g_colors,
+		// these values are meaningless
+		visibleLeft: 0,
+		visibleWidth: 100,
+	};
+	if (includeTime) {
+		currentHeight += drawRuler({
+			ctx: oneRowCtx,
+			viewInfo,
+			originX: 0,
+			ignoreVisibleX: true,
+			testInteraction: () => {},
+		});
+		currentHeight += drawMarkerTracks({
+			ctx: oneRowCtx,
+			viewInfo,
+			originX: timelineOrigin,
+			originY: currentHeight,
+			ignoreVisibleX: true,
+			testInteraction: () => {},
+		});
+	}
+	drawTimelines({
+		ctx: oneRowCtx,
+		viewInfo,
+		isImageExportMode: true,
+		originX: timelineOrigin,
+		originY: currentHeight,
+		testInteraction: () => {},
 	});
 	// 3. Copy elements off the "fake" canvas (oneRowCtx) onto our row-split canvas.
 	// Since all pixel widths are relative to oneRowCtx, all x coordinates must be

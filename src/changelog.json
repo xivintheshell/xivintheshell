@@ -2,6 +2,7 @@
 	{
 		"date": "8/11/25",
 		"changes": [
+			"Made some internal adjustments to the implementation of click/drag selection and skill arrangements.",
 			"[WAR] Fixed a bug where Decimate consumed 2 stacks of Inner Release, and failed to grant Burgeoning Fury.",
 			"[WAR] Fixed Storm's Eye using an incorrect application delay.",
 			"[WAR] Extended the duration of the Inner Release, Primal Rend Ready, and Primal Ruination buffs to match in-game behavior.",
