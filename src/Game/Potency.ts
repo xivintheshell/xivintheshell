@@ -507,6 +507,8 @@ export const Modifiers = {
 	HollowNozuchi: {
 		kind: "adder",
 		source: PotencyModifierType.HOLLOW_NOZUCHI,
+		// Because additive mods are applied before multiplication by target count, we can use a single
+		// modifier for hollow nozuchi.
 		additiveAmount: 70,
 	} as PotencyAdder,
 	Kazematoi: {
