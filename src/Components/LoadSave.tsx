@@ -1,14 +1,20 @@
-import React from "react";
-import { Columns, FileFormat, LoadJsonFromFileOrUrl, SaveToFile } from "./Common";
+import React, { useContext, useState } from "react";
+import { Columns, FileFormat, Input, LoadJsonFromFileOrUrl, SaveToFile } from "./Common";
 import { controller } from "../Controller/Controller";
 import { FileType } from "../Controller/Common";
 import { localize } from "./Localization";
 import { ImageExport } from "./ImageExport";
 import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
+import { ColorThemeContext, getThemeField } from "./ColorTheme";
+import { FaCheck } from "react-icons/fa6";
 
 type Fixme = any;
 
 export function LoadSave() {
+	const activeColorTheme = useContext(ColorThemeContext);
+	const [uploadLink, setUploadLink] = useState("");
+	const [uploaded, setUploaded] = useState(false);
+
 	const onFileLoad = (content: Fixme) => {
 		if (content.fileType === FileType.Record) {
 			// loadBattleRecordFromFile calls render methods, so no need to explicily
@@ -122,23 +128,105 @@ export function LoadSave() {
 			zh: "导出为图像",
 		})}
 	</>;
+	const uploadExportTitle = <>
+		{localize({
+			en: "Export fight to external site",
+		})}
+	</>;
+
+	const uploadToURL = (evt: React.SyntheticEvent) => {
+		evt.preventDefault();
+		fetch(uploadLink, {
+			method: "post",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(controller.record.serialized()),
+		})
+			.then((response) => {
+				if (response.ok) {
+					setUploaded(true);
+				} else {
+					const failMessageEn =
+						"Upload failed: error " + response.status + "\n" + response.statusText;
+					window.alert(
+						localize({
+							en: failMessageEn,
+						}),
+					);
+					console.error(failMessageEn);
+				}
+			})
+			.catch((error) => {
+				const failMessageEn = "Upload failed:\n" + error;
+				window.alert(
+					localize({
+						en: failMessageEn,
+					}),
+				);
+				console.error(failMessageEn);
+			});
+	};
+	const uploadExportContent = <div>
+		<p>
+			{localize({
+				en:
+					"Export your fight plan to an external website. " +
+					"Make sure you trust whatever link you're uploading to.",
+			})}
+		</p>
+
+		<form onSubmit={uploadToURL}>
+			<div>
+				<Input
+					style={{ display: "inline-block" }}
+					width={25}
+					description={""}
+					onChange={(s: string) => {
+						setUploadLink(s);
+						setUploaded(false);
+					}}
+				/>
+				<span> </span>
+				<input
+					style={{ display: "inline-block" }}
+					type="submit"
+					value={localize({ en: "Upload" }) as string}
+				/>
+				{
+					<FaCheck
+						style={{
+							display: uploaded ? "inline" : "none",
+							color: getThemeField(activeColorTheme, "success") as string,
+							position: "relative",
+							top: 4,
+							marginLeft: 8,
+						}}
+					/>
+				}
+			</div>
+		</form>
+	</div>;
 
 	return <Columns contentHeight={TIMELINE_COLUMNS_HEIGHT}>
 		{[
 			{
-				defaultSize: 25,
+				defaultSize: 20,
 				title: textImportTitle,
 				content: textImportContent,
 			},
 			{
-				defaultSize: 30,
+				defaultSize: 26,
 				title: textExportTitle,
 				content: textExportContent,
 			},
 			{
-				defaultSize: 45,
+				defaultSize: 27,
 				title: imageExportTitle,
 				content: <ImageExport />,
+			},
+			{
+				defaultSize: 27,
+				title: uploadExportTitle,
+				content: uploadExportContent,
 			},
 		]}
 	</Columns>;
