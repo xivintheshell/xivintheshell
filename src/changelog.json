@@ -1,5 +1,12 @@
 [
 	{
+		"date": "8/17/25",
+		"changes": [
+			"Changed timeline slot buttons to trigger only if the mouse was both pressed and released on top of them."
+		],
+		"level": "minor"
+	},
+	{
 		"date": "8/11/25",
 		"changes": [
 			"Made some internal adjustments to the implementation of click/drag selection and skill arrangements.",
