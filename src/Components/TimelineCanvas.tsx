@@ -104,11 +104,13 @@ interface MarkerDrawParams<T extends SlotTimelineElem> {
 	testInteraction: InteractionHandler;
 }
 
+type MouseUpHandler = (info: MouseInteractionInfo, mouseDownInHitbox: boolean) => void;
+
 type InteractionHandler = (
 	rect: Rect,
 	params: {
 		hoverTip?: string[] | ((info: MouseInteractionInfo) => string[]);
-		onMouseUp?: (info: MouseInteractionInfo) => void;
+		onMouseUp?: MouseUpHandler;
 		onMouseDown?: (info: MouseInteractionInfo) => void;
 		pointerMouse?: boolean;
 		hoverImages?: any[];
@@ -1437,7 +1439,11 @@ export function drawTimelines(params: {
 				slot === renderingProps.activeSlotIndex
 					? undefined
 					: [localize({ en: "set active", zh: "设为当前" }) as string],
-			onMouseUp: () => controller.setActiveSlot(slot),
+			onMouseUp: (info, mouseDownInHitbox) => {
+				if (mouseDownInHitbox) {
+					controller.setActiveSlot(slot);
+				}
+			},
 			pointerMouse: true,
 		});
 
@@ -1455,9 +1461,11 @@ export function drawTimelines(params: {
 			};
 			testInteraction(deleteBtn, {
 				hoverTip: [localize({ en: "delete", zh: "删除" }) as string],
-				onMouseUp: () => {
-					controller.timeline.removeSlot(slot);
-					controller.displayCurrentState();
+				onMouseUp: (info, mouseDownInHitbox) => {
+					if (mouseDownInHitbox) {
+						controller.timeline.removeSlot(slot);
+						controller.displayCurrentState();
+					}
 				},
 				pointerMouse: true,
 			});
@@ -1639,9 +1647,11 @@ function drawAddSlotButton(params: {
 		);
 
 		testInteraction(handle, {
-			onMouseUp: () => {
-				controller.timeline.addSlot();
-				controller.displayCurrentState();
+			onMouseUp: (info, mouseDownInHitbox) => {
+				if (mouseDownInHitbox) {
+					controller.timeline.addSlot();
+					controller.displayCurrentState();
+				}
 			},
 			pointerMouse: true,
 		});
@@ -1668,9 +1678,11 @@ function drawAddSlotButton(params: {
 		);
 
 		testInteraction(cloneHandle, {
-			onMouseUp: () => {
-				controller.cloneActiveSlot();
-				controller.displayCurrentState();
+			onMouseUp: (info, mouseDownInHitbox) => {
+				if (mouseDownInHitbox) {
+					controller.cloneActiveSlot();
+					controller.displayCurrentState();
+				}
 			},
 			pointerMouse: true,
 		});
@@ -1844,14 +1856,31 @@ function rectsOverlap(a: Rect, b: Rect): boolean {
 	return !(aLeftOfB || aRightOfB || aAboveB || aBelowB);
 }
 
+function xyInRect(xy: [number | undefined, number | undefined], rect: Rect): boolean {
+	const [x, y] = xy;
+	return (
+		x !== undefined &&
+		y !== undefined &&
+		x > rect.x &&
+		x < rect.x + rect.w &&
+		y > rect.y &&
+		y < rect.y + rect.h
+	);
+}
+
 // Check whether a mouse event at {x, y} overlaps any specified rectangles.
 // Iterates hitboxes in reverse order to ensure that the top-most hitbox (registered last)
 // is always triggered.
 // Returns undefined if no rectangles overlap the mouse location.
 function findMouseItem<T>(x: number, y: number, zones: Map<Rect, T>): T | undefined {
+	const itemAndZone = findMouseItemAndZone(x, y, zones);
+	return itemAndZone !== undefined ? itemAndZone[0] : undefined;
+}
+
+function findMouseItemAndZone<T>(x: number, y: number, zones: Map<Rect, T>): [T, Rect] | undefined {
 	for (const [zone, value] of Array.from(zones.entries()).reverse()) {
-		if (x > zone.x && x < zone.x + zone.w && y > zone.y && y < zone.y + zone.h) {
-			return value;
+		if (xyInRect([x, y], zone)) {
+			return [value, zone];
 		}
 	}
 	return undefined;
@@ -1859,7 +1888,7 @@ function findMouseItem<T>(x: number, y: number, zones: Map<Rect, T>): T | undefi
 
 interface InteractionLayer {
 	mouseDown: Map<Rect, (interactionInfo: MouseInteractionInfo) => void>;
-	mouseUp: Map<Rect, (interactionInfo: MouseInteractionInfo) => void>;
+	mouseUp: Map<Rect, MouseUpHandler>;
 	mouseHover: Map<
 		Rect,
 		{ tip?: string[] | ((interactionInfo: MouseInteractionInfo) => string[]); images?: any[] }
@@ -1909,6 +1938,9 @@ export function TimelineCanvas(props: {
 	const selectionBounds = useRef<(number | null)[]>([null, null]);
 	const mouseX = useRef(0);
 	const mouseY = useRef(0);
+	// Track the XY coordinates of the last mouseDown so mouseUp can verify it in button clicks
+	const mouseDownX = useRef<number | undefined>(undefined);
+	const mouseDownY = useRef<number | undefined>(undefined);
 	const selectStartX = useRef<number>(0);
 	const selectStartY = useRef<number>(0);
 	const activeHoverDraw = useRef<{
@@ -1949,7 +1981,7 @@ export function TimelineCanvas(props: {
 			rect: Rect,
 			params: {
 				hoverTip?: string[] | ((info: MouseInteractionInfo) => string[]);
-				onMouseUp?: (info: MouseInteractionInfo) => void;
+				onMouseUp?: MouseUpHandler;
 				onMouseDown?: (info: MouseInteractionInfo) => void;
 				pointerMouse?: boolean;
 				hoverImages?: any[];
@@ -2175,6 +2207,8 @@ export function TimelineCanvas(props: {
 		},
 		onMouseEnter: () => {},
 		onMouseLeave: () => {
+			mouseDownX.current = undefined;
+			mouseDownY.current = undefined;
 			bgSelecting.current = false;
 		},
 		// ignore KB & M input when in the middle of using a skill (for simplicity)
@@ -2221,22 +2255,27 @@ export function TimelineCanvas(props: {
 				// Only handle mouseup events if we're not currently in an animation.
 				// This must run AFTER the prior drag check to ensure dropping an icon on top
 				// of a skill hitbox works properly.
-				findMouseItem(
-					x,
-					y,
-					getAllZones("mouseUp"),
-				)?.({
-					x,
-					y,
-					shiftKey: e.shiftKey,
-					dragLock: lockContext.value,
-					bgSelecting: bgSelecting.current,
-					setDraggedSkillElem,
-					setBgSelecting,
-				});
+				const maybeItemAndZone = findMouseItemAndZone(x, y, getAllZones("mouseUp"));
+				if (maybeItemAndZone !== undefined) {
+					const [callback, zone] = maybeItemAndZone;
+					callback(
+						{
+							x,
+							y,
+							shiftKey: e.shiftKey,
+							dragLock: lockContext.value,
+							bgSelecting: bgSelecting.current,
+							setDraggedSkillElem,
+							setBgSelecting,
+						},
+						xyInRect([mouseDownX.current, mouseDownY.current], zone),
+					);
+				}
 			}
 		},
 		onMouseDown: (x: number, y: number) => {
+			mouseDownX.current = x;
+			mouseDownY.current = y;
 			mouseX.current = x;
 			mouseY.current = y;
 			if (!controller.shouldLoop) {
