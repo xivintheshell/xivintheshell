@@ -144,8 +144,12 @@ export class WHMState extends GameState {
 	}
 
 	override jobSpecificRegisterRecurringEvents() {
-		if (this.isInCombat()) {
-			// Start the lily timer immediately if combat was initiated by override
+		if (
+			(this.isInCombat() || this.hasResourceAvailable("LILY_TIMER")) &&
+			!this.hasResourceAvailable("LILLIES", 3)
+		) {
+			// Start the lily timer immediately if combat was initiated by override or the lily timer
+			// resource was manually set.
 			this.startLilyTimer();
 		}
 	}
@@ -164,25 +168,31 @@ export class WHMState extends GameState {
 		}
 	}
 
+	recurringLilyGain() {
+		// Use a separate timer resource, since timers are cleared when a resource is cleared.
+		this.resources.addResourceEvent({
+			rscType: "LILY_TIMER",
+			name: "gain lily",
+			delay: 20,
+			fnOnRsc: () => {
+				this.resources.get("LILLIES").gain(1);
+				// If the lily gauge has capped, do not re-register the timer.
+				if (!this.hasResourceAvailable("LILLIES", 3)) {
+					this.recurringLilyGain();
+				} else {
+					this.tryConsumeResource("LILY_TIMER");
+				}
+			},
+		});
+	}
+
 	startLilyTimer() {
-		// If lily timer already running, do nothing.
-		if (this.hasResourceAvailable("LILY_TIMER")) {
+		// If lily timer already running or we're capped on lillies, do nothing.
+		if (this.hasResourceAvailable("LILY_TIMER") || this.hasResourceAvailable("LILLIES", 3)) {
 			return;
 		}
 		this.resources.get("LILY_TIMER").gain(1);
-		const recurringLilyGain = () => {
-			// Use a separate timer resource, since timers are cleared when a resource is cleared.
-			this.resources.addResourceEvent({
-				rscType: "LILY_TIMER",
-				name: "gain lily",
-				delay: 20,
-				fnOnRsc: () => {
-					this.resources.get("LILLIES").gain(1);
-					recurringLilyGain();
-				},
-			});
-		};
-		recurringLilyGain();
+		this.recurringLilyGain();
 	}
 
 	// Modifiers that affect incoming heals on the player with the effect
@@ -256,7 +266,9 @@ const makeWHMSpell = (
 			params.onConfirm,
 		),
 		onApplication: combineEffects(
-			params.potency ? (state) => state.startLilyTimer() : undefined,
+			params.potency || name == "AFFLATUS_SOLACE" || name == "AFFLATUS_RAPTURE"
+				? (state) => state.startLilyTimer()
+				: undefined,
 			params.onApplication,
 		),
 	});

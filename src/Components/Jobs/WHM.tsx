@@ -33,7 +33,9 @@ export class WHMStatusPropsGenerator extends StatusPropsGenerator<WHMState> {
 	override jobSpecificResourceViewProps(colors: ThemeColors): ResourceDisplayProps[] {
 		const resources = this.state.resources;
 		const lily = resources.get("LILLIES");
-		const lilyCd = this.state.isInCombat() ? resources.timeTillReady("LILY_TIMER") : 30;
+		const lilyCd = resources.get("LILY_TIMER").available(1)
+			? resources.timeTillReady("LILY_TIMER")
+			: 20;
 		const lilyStacks = lily.availableAmount();
 		const bloodStacks = resources.get("BLOOD_LILY").availableAmount();
 		const items = [
@@ -41,7 +43,7 @@ export class WHMStatusPropsGenerator extends StatusPropsGenerator<WHMState> {
 				kind: "bar",
 				name: localizeResourceType("LILY_TIMER"),
 				color: colors.whm.lily,
-				progress: 1 - lilyCd / 30,
+				progress: 1 - lilyCd / 20,
 				valueString: lilyCd.toFixed(3),
 			} as ResourceBarProps,
 			{

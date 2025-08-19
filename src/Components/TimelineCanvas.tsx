@@ -1135,7 +1135,7 @@ export function drawRuler(params: {
 					renderingProps.countdown;
 				return [displayTime.toFixed(3)];
 			},
-			onMouseUp: (info) => {
+			onMouseDown: (info) => {
 				const displayTime =
 					StaticFn.timeFromPositionAndScale(info.x - originX, renderingProps.scale) -
 					renderingProps.countdown;
