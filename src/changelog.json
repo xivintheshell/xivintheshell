@@ -1,5 +1,13 @@
 [
 	{
+		"date": "8/19/25",
+		"changes": [
+			"[WHM] Fixed a bug where Lillies would continue to generate even when at full stacks.",
+			"Fixed a bug where clicking on the timeline ruler would not immediately display historical state."
+		],
+		"level": "minor"
+	},
+	{
 		"date": "8/17/25",
 		"changes": [
 			"Changed timeline slot buttons to trigger only if the mouse was both pressed and released on top of them."
