@@ -1,4 +1,5 @@
 import React, { MouseEventHandler, useEffect, useReducer } from "react";
+import { Select } from "@base-ui-components/react/select";
 import { controller } from "../Controller/Controller";
 import {
 	ButtonIndicator,
@@ -434,6 +435,93 @@ export class TimeControl extends React.Component {
 	}
 }
 
+function JobSelector(props: {
+	activeJob: ShellJob;
+	setJob: (job: ShellJob) => void;
+	color: string;
+}) {
+	const jobOptions = ALL_JOBS.flatMap((job) => {
+		const impl = JOBS[job].implementationLevel as ImplementationKey;
+		return impl !== "UNIMPLEMENTED"
+			? [
+					{
+						value: job,
+						label:
+							impl === "LIVE"
+								? job
+								: `${job} (${localize(IMPLEMENTATION_LEVELS[impl].label ?? { en: "" })})`,
+					},
+				]
+			: [];
+	});
+	// Group jobs by their role, returning a list of [role, [jobs]]
+	const jobGroups = new Map<string, { value: ShellJob; label: string }[]>();
+	jobOptions.forEach(({ value: job, label }) => {
+		const jobInfo = JOBS[job];
+		if (!jobGroups.has(jobInfo.role)) {
+			jobGroups.set(jobInfo.role, []);
+		}
+		jobGroups.get(jobInfo.role)!.push({ value: job, label });
+	});
+	return <div style={{ marginBottom: 10 }} id="job-selector-container">
+		<span>{localize({ en: "job: ", zh: "职业：" })}</span>
+		<Select.Root onValueChange={props.setJob} value={props.activeJob} items={jobOptions}>
+			<Select.Trigger className={"select-trigger"}>
+				<Select.Value />
+				<Select.Icon />
+			</Select.Trigger>
+			<Select.Portal container={document.getElementById("job-selector-container")}>
+				<Select.Backdrop />
+				<Select.Positioner className="select-positioner">
+					<Select.ScrollUpArrow />
+					<Select.Popup className="select-popup">
+						{Array.from(jobGroups).map(([group, jobs], i) => <Select.Group key={i}>
+							<Select.GroupLabel>{group}</Select.GroupLabel>
+							{...jobs.map(({ value: job, label }, j) => {
+								const impl = JOBS[job].implementationLevel as ImplementationKey;
+								return <Select.Item
+									className="select-item"
+									key={j}
+									value={job}
+									label={label}
+								>
+									<Select.ItemText className="select-item-text">
+										{label}
+									</Select.ItemText>
+								</Select.Item>;
+							})}
+						</Select.Group>)}
+					</Select.Popup>
+					<Select.ScrollDownArrow />
+				</Select.Positioner>
+			</Select.Portal>
+		</Select.Root>
+		{/*		
+		<select
+			style={{ outline: "none", color: props.color }}
+			value={props.activeJob}
+			onChange={props.setJob}
+		>
+			{ALL_JOBS.filter((job) => JOBS[job].implementationLevel !== "UNIMPLEMENTED").map(
+				(job) => {
+					const impl = JOBS[job].implementationLevel as ImplementationKey;
+					if (impl !== "LIVE") {
+						return <option key={job} value={job}>
+							{job +
+								}
+						</option>;
+					} else {
+						return <option key={job} value={job}>
+							{job}
+						</option>;
+					}
+				},
+			)}
+		</select>
+*/}{" "}
+	</div>;
+}
+
 // states are mostly strings here because those inputs are controlled by <Input ... />
 type ConfigState = {
 	job: ShellJob;
@@ -482,7 +570,7 @@ export class Config extends React.Component {
 	updateSksTaxPreview: (sksStr: string, fpsStr: string, levelStr: string) => void;
 	handleSubmit: MouseEventHandler;
 
-	setJob: (evt: React.ChangeEvent<HTMLSelectElement>) => void;
+	setJob: (job: ShellJob) => void;
 	importGear: (evt: React.SyntheticEvent) => void;
 	setGearImportLink: (evt: React.ChangeEvent<HTMLInputElement>) => void;
 	setSpellSpeed: (val: string) => void;
@@ -590,12 +678,12 @@ export class Config extends React.Component {
 			event.preventDefault();
 		};
 
-		this.setJob = (evt) => {
+		this.setJob = (job) => {
 			// Reset all resource overrides
-			if (evt.target.value !== this.state.job) {
+			if (job !== this.state.job) {
 				this.setState({ initialResourceOverrides: [], dirty: true });
 			}
-			this.setState({ job: evt.target.value, dirty: true });
+			this.setState({ job, dirty: true });
 			this.removeImportedField("job");
 			this.updateTaxPreview(this.state.spellSpeed, this.state.fps, this.state.level);
 			this.updateSksTaxPreview(this.state.skillSpeed, this.state.fps, this.state.level);
@@ -1470,30 +1558,11 @@ export class Config extends React.Component {
 				return colors.text;
 			}
 		};
-		const editJobSection = <div style={{ marginBottom: 10 }}>
-			<span>{localize({ en: "job: ", zh: "职业：" })}</span>
-			<select
-				style={{ outline: "none", color: fieldColor("job") }}
-				value={this.state.job}
-				onChange={this.setJob}
-			>
-				{ALL_JOBS.filter((job) => JOBS[job].implementationLevel !== "UNIMPLEMENTED").map(
-					(job) => {
-						const impl = JOBS[job].implementationLevel as ImplementationKey;
-						if (impl !== "LIVE") {
-							return <option key={job} value={job}>
-								{job +
-									` (${localize(IMPLEMENTATION_LEVELS[impl].label ?? { en: "" })})`}
-							</option>;
-						} else {
-							return <option key={job} value={job}>
-								{job}
-							</option>;
-						}
-					},
-				)}
-			</select>
-		</div>;
+		const editJobSection = <JobSelector
+			activeJob={this.state.job}
+			setJob={this.setJob}
+			color={fieldColor("job")}
+		/>;
 		const editStatsSection = <div style={{ marginBottom: 16 }}>
 			<div>
 				<span>{localize({ en: "level: ", zh: "等级：" })}</span>
