@@ -1627,6 +1627,14 @@ class Controller {
 		// as such, many skills are unsupported: we set the use_strict_skill_naming metadata
 		// flag to allow the sim to raise warnings when we export a skill it doesn't recognize
 		// we exclude buff toggle events from the export since those aren't real skills
+		//
+		// for BRD specifically, we need to track the number of coda present on each radiant finale
+		// usage. reading sim state retroactively is hard, so we just do this hack instead
+		// (also need to check override gauges)
+		let magesCoda = this.gameConfig.getOverrideStacks("MAGES_CODA") ?? 0;
+		let wanderersCoda = this.gameConfig.getOverrideStacks("WANDERERS_CODA") ?? 0;
+		let armysCoda = this.gameConfig.getOverrideStacks("ARMYS_CODA") ?? 0;
+		let radiantCoda = this.gameConfig.getOverrideStacks("RADIANT_CODA") ?? 0;
 		const actionRows = this.#actionsLogCsv
 			.filter((row) => !row.action.includes("Toggle buff"))
 			.map((row) => {
@@ -1641,17 +1649,82 @@ class Controller {
 					}
 					targetCell += '"';
 				}
-				return [row.time, normalizeName(row.action), "", "", targetCell];
+				let conditional = "";
+				const codaCount = magesCoda + wanderersCoda + armysCoda;
+				if (row.action === "Mage's Ballad") {
+					magesCoda = 1;
+				} else if (row.action === "The Wanderer's Minuet") {
+					wanderersCoda = 1;
+				} else if (row.action === "Army's Paeon") {
+					armysCoda = 1;
+				} else if (row.action === "Radiant Finale") {
+					if (codaCount > 0) {
+						radiantCoda = codaCount;
+						conditional = `${codaCount} Coda`;
+						magesCoda = 0;
+						wanderersCoda = 0;
+						armysCoda = 0;
+					}
+				} else if (row.action === "Radiant Encore") {
+					if (radiantCoda > 0) {
+						conditional = `${radiantCoda} Encore`;
+						radiantCoda = 0;
+					}
+				}
+				return [row.time, normalizeName(row.action), "", conditional, targetCell];
 			});
 		const meta = ["use_strict_skill_naming = False"];
 		const isHealerOrCaster = !(isMelee || RANGED_JOBS.includes(job));
-		if (isHealerOrCaster) {
-			meta.push("enable_autos = False");
-		}
+		// Ama's combat sim expects a strength stat to be provided for healer and caster auto-attacks.
+		// To avoid needing to store this stat in config, these figures are hardcoded at export.
+		// These values were taken in-game by entering synced instances on a female midlander character
+		// (Anemos at lvl 70, Zadnor lvl 80, Sil'dihn variant at lvl 90, and overworld at lvl 100).
+		const autoStrengths = {
+			[LevelSync.lvl70]: new Map([
+				["WHM", 162],
+				["SCH", 264],
+				["AST", 148],
+				["SGE", 177],
+				["BLM", 133],
+				["SMN", 264],
+				["RDM", 162],
+				["PCT", 148],
+			]),
+			[LevelSync.lvl80]: new Map([
+				["WHM", 189],
+				["SCH", 308],
+				["AST", 172],
+				["SGE", 206],
+				["BLM", 155],
+				["SMN", 308],
+				["RDM", 189],
+				["PCT", 172],
+			]),
+			[LevelSync.lvl90]: new Map([
+				["WHM", 216],
+				["SCH", 353],
+				["AST", 197],
+				["SGE", 236],
+				["BLM", 177],
+				["SMN", 353],
+				["RDM", 216],
+				["PCT", 197],
+			]),
+			[LevelSync.lvl100]: new Map([
+				["WHM", 244],
+				["SCH", 398],
+				["AST", 222],
+				["SGE", 266],
+				["BLM", 200],
+				["SMN", 398],
+				["RDM", 244],
+				["PCT", 222],
+			]),
+		};
 		// stats dict is parsed by combat sim as a python dict
 		// WD is the same at a given ilvl across all jobs, but we still want users to input it manually
 		// main_stat varies for each job's bis, so we still require users to input that for accuracy
-		const statsDict = {
+		let statsDict: any = {
 			job_class: job,
 			det_stat: this.gameConfig.determination,
 			crit_stat: this.gameConfig.criticalHit,
@@ -1663,6 +1736,12 @@ class Controller {
 			wd: this.gameConfig.wd,
 			main_stat: this.gameConfig.main,
 		};
+		if (autoStrengths[this.gameConfig.level].has(job)) {
+			statsDict = {
+				...statsDict,
+				healer_or_caster_strength: autoStrengths[this.gameConfig.level].get(job),
+			};
+		}
 		meta.push("stats = " + JSON.stringify(statsDict));
 		const downtimeWindows = this.timeline
 			.getUntargetableMarkers()

@@ -1,5 +1,13 @@
 [
 	{
+		"date": "8/28/25",
+		"changes": [
+			"[BRD] Fixed typos in the names of Apex Arrow, The Wanderer's Minuet, and Rain of Death.",
+			"[BRD] Export to Ama's combat sim now tracks codas for Radiant Finale and Radiant Encore.",
+			"Updated export to Ama's combat sim to include hard-coded STR stats for healer/caster auto-attacks."
+		]
+	},
+	{
 		"date": "8/19/25",
 		"changes": [
 			"[WHM] Fixed a bug where Lillies would continue to generate even when at full stacks.",
