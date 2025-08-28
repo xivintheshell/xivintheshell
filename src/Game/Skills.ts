@@ -223,6 +223,11 @@ const skillMap: Map<ShellJob, Map<ActionKey, Skill<GameState>>> = new Map();
 const skillAssetPaths: Map<ActionKey, string> = new Map();
 
 const normalizedSkillNameMap = new Map<string, ActionKey>();
+const typos = new Map<string, string>([
+	["Lightning Shock", "Lightning Shot"],
+	["Wanderer's Minuet", "The Wanderer's Minuet"],
+	["Apex Arow", "Apex Arrow"],
+]);
 /**
  * Attempt to retrieve an ActionKey member from the specified string. This function is run
  * when a line is loaded to fix skill naming errors in earlier versions of XIV in the Shell.
@@ -231,10 +236,12 @@ const normalizedSkillNameMap = new Map<string, ActionKey>();
  * - [PCT] "Thunder In Magenta" was capitalized inappropriately (should be
  *   "Thunder in Magenta" with "in" not capitalized
  * - [GNB] "Lightning Shot" was incorrectly written as "Lightning Shock"
+ * - [BRD] "The Wanderer's Minuet" was missing "The" at the start
+ * - [BRD] "Apex Arrow" was written as "Apex Arow"
  */
 export function getNormalizedSkillName(s: string): ActionKey | undefined {
-	if (s === "Lightning Shock") {
-		s = "Lightning Shot";
+	if (typos.has(s)) {
+		s = typos.get(s)!;
 	}
 	s = s.toLowerCase();
 	if (!normalizedSkillNameMap.has(s)) {

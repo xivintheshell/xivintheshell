@@ -234,7 +234,7 @@ export function Changelog() {
 	return <>
 		<style>{changelogDialogStyles}</style>
 		<Dialog.Root onOpenChange={onOpenChange}>
-			<Dialog.Trigger render={dialogTrigger} />
+			<Dialog.Trigger render={dialogTrigger} nativeButton={false} />
 			<Dialog.Portal>
 				<Dialog.Backdrop
 					className="Backdrop"
@@ -252,7 +252,7 @@ export function Changelog() {
 					}}
 				>
 					<Dialog.Title render={<h3>{titleNode}</h3>} />
-					<Dialog.Close render={exitTrigger} />
+					<Dialog.Close render={exitTrigger} nativeButton={false} />
 					<Dialog.Description
 						className="Description"
 						render={

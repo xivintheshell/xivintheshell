@@ -477,6 +477,10 @@ export class GameConfig {
 		return XIVMath.criticalHitRate(this.level, this.criticalHit);
 	}
 
+	getOverrideStacks(rsc: ResourceKey): number | undefined {
+		return this.initialResourceOverrides.find((override) => override.type === rsc)?.stacks;
+	}
+
 	serialized() {
 		return {
 			job: this.job,
