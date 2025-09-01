@@ -19,7 +19,12 @@ import {
 	ColorThemeContext,
 	getThemeField,
 } from "./ColorTheme";
-import { SerializedConfig, GameConfig, makeDefaultConfig } from "../Game/GameConfig";
+import {
+	SerializedConfig,
+	GameConfig,
+	makeDefaultConfig,
+	getSavedConfigPart,
+} from "../Game/GameConfig";
 import { XIVMath } from "../Game/XIVMath";
 import { FaCheck } from "react-icons/fa6";
 import {
@@ -1063,15 +1068,25 @@ export function Config() {
 			// so the initializing action must explicitly set dirty to false.
 			newState.dirty = action.dirty ?? true;
 			if (action.job !== undefined && action.job !== prevState.job) {
-				// If the job changed, update haste modifiers and clear resource overrides.
+				// If the job changed, update haste modifiers, clear resource overrides, and
+				// use whatever the last saved stats for that job was.
 				const dummyConfig: GameConfig = new GameConfig(makeDefaultConfig(action.job));
 				const speedModifier = getGameState(dummyConfig).inherentSpeedModifier();
 				setjobSpeedMod(speedModifier);
-				_setInitialResourceOverrides([]);
-				// need to duplicate some code to prevent a bootstrapping error
-				const firstAddableRsc: ResourceKey | CooldownKey =
-					getAllResources(action.job).keys().toArray()?.[0] ?? "NEVER";
-				setSelectedOverrideResource(firstAddableRsc);
+				// If we returned to the ORIGINAL job (still stored by the controller), revert
+				// stats to whatever was stored by the controller.
+				if (action.job === controller.record.config?.job) {
+					Object.assign(newState, controller.gameConfig.serialized());
+					_setInitialResourceOverrides(controller.gameConfig.initialResourceOverrides);
+				} else {
+					_setInitialResourceOverrides([]);
+					// need to duplicate some code to prevent a bootstrapping error
+					const firstAddableRsc: ResourceKey | CooldownKey =
+						getAllResources(action.job).keys().toArray()?.[0] ?? "NEVER";
+					setSelectedOverrideResource(firstAddableRsc);
+					// Update stats from last saved timeline of this job.
+					Object.assign(newState, getSavedConfigPart(action.job));
+				}
 			}
 		}
 		return newState;
@@ -1316,12 +1331,19 @@ export function Config() {
 				value={configFields.level}
 				onChange={(e) => configFieldDispatch({ level: e.target.value })}
 			>
-				<option key={LevelSync.lvl100} value={LevelSync.lvl100}>
+				{/* hide levels above cap for BLU, unless the file is old and already uses that level */}
+				{(configFields.level === "100" || job !== "BLU") && <option
+					key={LevelSync.lvl100}
+					value={LevelSync.lvl100}
+				>
 					100
-				</option>
-				<option key={LevelSync.lvl90} value={LevelSync.lvl90}>
+				</option>}
+				{(configFields.level === "90" || job !== "BLU") && <option
+					key={LevelSync.lvl90}
+					value={LevelSync.lvl90}
+				>
 					90
-				</option>
+				</option>}
 				<option key={LevelSync.lvl80} value={LevelSync.lvl80}>
 					80
 				</option>

@@ -386,6 +386,7 @@ export class Timeline {
 				elapsedTime: elapsedTime,
 			}),
 		);
+		controller.gameConfig.savePartialConfig();
 	}
 
 	loadSlot(index: number): boolean {
