@@ -1535,13 +1535,6 @@ export function Config() {
 			setOverrideStacks={setOverrideStacks}
 			setOverrideEnabled={setOverrideEnabled}
 		/>
-		<button
-			onClick={handleSubmit}
-			style={{ width: "100%", fontWeight: configFields.dirty ? "bold" : "normal" }}
-		>
-			{localize({ en: "apply and reset", zh: "应用并重置时间轴" })}
-			{configFields.dirty ? "*" : ""}
-		</button>
 	</div>;
 
 	return <div style={{ marginBottom: 20 }}>
@@ -1555,11 +1548,47 @@ export function Config() {
 		{editJobSection}
 		<ConfigSummary job={controller.getActiveJob()} dirty={configFields.dirty} />
 		{editStatsSection}
-		<p>
+		<p style={{ paddingBottom: 5 }}>
 			{localize({
 				en: "You can also import/export fights from/to local files at the bottom of the page.",
 				zh: "页面底部有导入和导出战斗文件相关选项。",
 			})}
 		</p>
+		<div
+			className="invisibleScrollbar"
+			style={{
+				boxSizing: "border-box",
+				width: "100%",
+				position: "absolute",
+				paddingRight: 5,
+				paddingLeft: 5,
+				bottom: 0,
+				left: 0,
+				overflowY: "scroll",
+			}}
+		>
+			{/* intermediate child div needed to ensure background fill doesn't overlap scroll bar */}
+			<div
+				style={{
+					width: "100%",
+					boxSizing: "border-box",
+					backgroundColor: colors.background,
+					borderTop: "1px solid " + colors.bgMediumContrast,
+					paddingTop: 5,
+					paddingBottom: 5,
+				}}
+			>
+				<button
+					onClick={handleSubmit}
+					style={{
+						width: "100%",
+						fontWeight: configFields.dirty ? "bold" : "normal",
+					}}
+				>
+					{localize({ en: "apply and reset", zh: "应用并重置时间轴" })}
+					{configFields.dirty ? "*" : ""}
+				</button>
+			</div>
+		</div>
 	</div>;
 }
