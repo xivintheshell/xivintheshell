@@ -371,6 +371,7 @@ export class Timeline {
 		if (this.activeSlotIndex >= idx)
 			this.activeSlotIndex = Math.max(0, this.activeSlotIndex - 1);
 		this.loadSlot(this.activeSlotIndex);
+		setCachedValue("activeSlotIndex", this.activeSlotIndex.toString());
 	}
 
 	saveCurrentSlot(serializedRecord: any, countdown: number, elapsedTime: number) {
