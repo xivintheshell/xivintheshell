@@ -1,5 +1,11 @@
 [
 	{
+		"date": "9/1/25",
+		"changes": [
+			"Added DSR P2 markers from Caro."
+		]
+	},
+	{
 		"date": "8/28/25",
 		"changes": [
 			"[BRD] Fixed typos in the names of Apex Arrow, The Wanderer's Minuet, and Rain of Death.",

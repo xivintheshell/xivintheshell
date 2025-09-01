@@ -666,6 +666,11 @@ export class TimelineMarkers extends React.Component {
 			<p>
 				<span>{localize({ en: "Legacy ultimates: ", zh: "过去绝本（英文）：" })}</span>
 				<LoadCombinedTracksBtn
+					displayName={"DSR P2 by Caro"}
+					url={PRESET_MARKERS_BASE + "dsr_p2.txt"}
+					offsetStr={this.state.offsetStr}
+				/>
+				<LoadCombinedTracksBtn
 					displayName={"DSR P6 by Tischel"}
 					url={PRESET_MARKERS_BASE + "dsr_p6.txt"}
 					offsetStr={this.state.offsetStr}
