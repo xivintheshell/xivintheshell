@@ -1,5 +1,12 @@
 [
 	{
+		"date": "9/2/25",
+		"changes": [
+			"Added different tincture images for each job.",
+			"Timelines with invalid skill names can now be loaded."
+		]
+	},
+	{
 		"date": "9/1/25",
 		"changes": [
 			"Added DSR P2 markers from Caro."
