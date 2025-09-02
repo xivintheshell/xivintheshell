@@ -92,7 +92,7 @@ export type WarningMarkElem = TimelineElemBase & {
 export type SkillElem = TimelineElemBase & {
 	type: ElemType.Skill;
 	displayTime: number;
-	skillName: ActionKey;
+	skillName: ActionKey | string;
 	isGCD: boolean;
 	isSpellCast: boolean;
 	relativeSnapshotTime: number;

@@ -39,15 +39,17 @@ export function localizeDate(date: string, lang: Language): string {
 	return date;
 }
 
-export function localizeSkillName(text: ActionKey): string {
+export function localizeSkillName(text: ActionKey | string): string {
 	if (text === "NEVER") {
 		return localize({
 			en: "unknown skill",
 			zh: "未知技能",
 		}).toString();
 	}
-	const action = Data.getAction(text);
-
+	if (!(text in ACTIONS)) {
+		return text;
+	}
+	const action = Data.getAction(text as ActionKey);
 	return localize({
 		en: action.name,
 		...action.label,
@@ -77,6 +79,8 @@ export function localizeSkillUnavailableReason(reason?: SkillUnavailableReason):
 		zhReason = "跳时间的目标已经过去了";
 	} else if (reason === SkillUnavailableReason.CastCanceled) {
 		zhReason = "咏唱被中断（确定时不再满足播放条件）";
+	} else if (reason === SkillUnavailableReason.UnknownSkill) {
+		zhReason = "未知技能";
 	} else {
 		console.error("unlocalized reason: " + reason);
 	}

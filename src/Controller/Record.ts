@@ -30,6 +30,7 @@ export const enum ActionType {
 	JumpToTimestamp = "JumpToTimestamp",
 	WaitForMP = "WaitForMP",
 	SetResourceEnabled = "SetResourceEnabled",
+	Unknown = "Unknown",
 	Invalid = "Invalid",
 }
 
@@ -77,6 +78,13 @@ interface SkillNodeInfo {
 	healTargetCount: number | undefined;
 }
 
+interface UnknownSkillInfo {
+	type: ActionType.Unknown;
+	skillName: string;
+	targetCount: number;
+	healTargetCount: number | undefined;
+}
+
 interface SetResourceNodeInfo {
 	type: ActionType.SetResourceEnabled;
 	buffName: ResourceKey;
@@ -88,11 +96,21 @@ export type NodeInfo =
 	| SerializedJump
 	| SerializedMPWait
 	| SetResourceNodeInfo
+	| UnknownSkillInfo
 	| { type: ActionType.Invalid };
 
 export function skillNode(skillName: ActionKey, targetCount?: number): ActionNode {
 	return new ActionNode({
 		type: ActionType.Skill,
+		skillName,
+		targetCount: targetCount ?? 1,
+		healTargetCount: undefined,
+	});
+}
+
+export function unknownSkillNode(skillName: string, targetCount?: number): ActionNode {
+	return new ActionNode({
+		type: ActionType.Unknown,
 		skillName,
 		targetCount: targetCount ?? 1,
 		healTargetCount: undefined,
@@ -179,6 +197,13 @@ export class ActionNode {
 			return {
 				type: ActionType.SetResourceEnabled,
 				buffName: this.info.buffName.toString(),
+			};
+		} else if (this.info.type === ActionType.Unknown) {
+			return {
+				type: ActionType.Skill,
+				skillName: this.info.skillName,
+				targetCount: this.info.targetCount,
+				healTargetCount: this.info.healTargetCount,
 			};
 		} else {
 			return this.info;
@@ -482,7 +507,7 @@ export class Line {
 	}
 
 	addActionNode(actionNode: ActionNode) {
-		console.assert(actionNode);
+		console.assert(actionNode !== undefined);
 		this.actions.push(actionNode);
 	}
 
@@ -509,18 +534,25 @@ export class Line {
 			// TODO handle additional wait types
 			// TODO ensure objects are well-formed and insert invalid nodes if not
 			if (serializedAction.type === ActionType.Skill) {
-				const skillName = getNormalizedSkillName(serializedAction.skillName)!;
+				const skillName = getNormalizedSkillName(serializedAction.skillName);
 				const legacyWaitDuration =
 					"waitDuration" in serializedAction
 						? serializedAction["waitDuration"]
 						: undefined;
 				return new ActionNode(
-					{
-						type: ActionType.Skill,
-						skillName,
-						targetCount: serializedAction.targetCount,
-						healTargetCount: serializedAction.healTargetCount,
-					},
+					skillName !== undefined
+						? {
+								type: ActionType.Skill,
+								skillName,
+								targetCount: serializedAction.targetCount,
+								healTargetCount: serializedAction.healTargetCount,
+							}
+						: {
+								type: ActionType.Unknown,
+								skillName: serializedAction.skillName,
+								targetCount: serializedAction.targetCount,
+								healTargetCount: serializedAction.healTargetCount,
+							},
 					// @ts-expect-error used for parsing legacy format
 					legacyWaitDuration,
 				);
@@ -538,9 +570,9 @@ export class Line {
 					legacyWaitDuration,
 				);
 			} else if (
-				[ActionType.Wait, ActionType.JumpToTimestamp, ActionType.WaitForMP].includes(
-					serializedAction.type,
-				)
+				serializedAction.type === ActionType.Wait ||
+				serializedAction.type === ActionType.JumpToTimestamp ||
+				serializedAction.type === ActionType.WaitForMP
 			) {
 				return new ActionNode(serializedAction);
 			} else {

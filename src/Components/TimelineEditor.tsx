@@ -150,6 +150,8 @@ function TimelineActionElement(props: {
 			en: "(toggle resource: " + localizedBuffName + ")",
 			zh: "（开关或去除BUFF：" + localizedBuffName + "）",
 		});
+	} else if (props.node.info.type === ActionType.Unknown) {
+		name = props.node.info.skillName;
 	}
 	const skillNameCell = <td style={{ ...ACTION_TD_STYLE, ...getBorderStyling(colors) }}>
 		{props.isInvalid ? (
@@ -379,6 +381,8 @@ export function TimelineEditor() {
 				nodeName = node.info.skillName
 					? localizeSkillName(node.info.skillName)
 					: l("(unknown skill)", "（未知技能）");
+			} else if (node.info.type === ActionType.Unknown) {
+				nodeName = node.info.skillName;
 			}
 		}
 		let errorMessage: string;

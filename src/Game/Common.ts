@@ -43,6 +43,7 @@ export const enum SkillUnavailableReason {
 	BuffNoLongerAvailable = "buff no longer available",
 	PastTargetTime = "jump target time has already passed",
 	CastCanceled = "cast canceled (skill requirements no longer met at confirmation time)",
+	UnknownSkill = "unknown skill",
 }
 
 export type SkillReadyStatus = {
