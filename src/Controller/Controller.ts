@@ -50,6 +50,7 @@ import {
 	jumpToTimestampNode,
 	waitForMPNode,
 	setResourceNode,
+	unknownSkillNode,
 } from "./Record";
 import { ImageExportConfig } from "./ImageExportConfig";
 import { inferJobFromSkillNames, PresetLinesManager } from "./PresetLinesManager";
@@ -1417,8 +1418,47 @@ class Controller {
 						reason,
 					});
 				}
+			} else if (itr.info.type === ActionType.Unknown) {
+				const { skillName, targetCount } = itr.info;
+				const node = unknownSkillNode(skillName, targetCount);
+				this.record.addActionNode(node);
+				const reason = makeSkillReadyStatus();
+				reason.addUnavailableReason(SkillUnavailableReason.UnknownSkill);
+				invalidActions.push({
+					node: itr,
+					index: i,
+					reason,
+				});
+				node.tmp_invalid_reasons = reason.unavailableReasons;
+				const animLock = this.gameConfig.animationLock;
+				if (!this.#bInSandbox) {
+					// this block is run when NOT viewing historical state (aka run when receiving input)
+					this.lastSkillTime = this.game.time;
+					this.timeline.addElement({
+						type: ElemType.Skill,
+						displayTime: this.game.getDisplayTime(),
+						skillName: skillName as ActionKey,
+						isGCD: false,
+						isSpellCast: false,
+						time: this.game.time,
+						relativeSnapshotTime: this.game.time,
+						lockDuration: animLock,
+						recastDuration: 0,
+						node,
+						actionIndex: i,
+					});
+					this.#actionsLogCsv.push({
+						time: this.game.getDisplayTime(),
+						action: skillName,
+						isGCD: 0,
+						castTime: 0,
+						targetCount: node.targetCount,
+						isDamaging: false,
+					});
+				}
+				this.#requestTick({ deltaTime: animLock });
 			} else {
-				console.assert(false);
+				console.error("did not process ActionNode " + JSON.stringify(itr.info));
 			}
 
 			// now added whatever node it needs to add.

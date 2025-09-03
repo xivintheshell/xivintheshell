@@ -1687,7 +1687,7 @@ export class GameState {
 		const instantCastAvailable =
 			capturedCastTime === 0 ||
 			skill.kind === "ability" ||
-			(skill.kind !== "limitbreak" && skill.isInstantFn(this)); // LBs can't be swiftcasted
+			(skill.kind !== "limitbreak" && skill.kind !== "unknown" && skill.isInstantFn(this)); // LBs can't be swiftcasted
 		const currentMana = this.resources.get("MANA").availableAmount();
 		const blocked = timeTillAvailable > Debug.epsilon;
 		const enoughMana = capturedManaCost <= currentMana;

@@ -15,7 +15,7 @@ const skillIconImages = new Map();
 
 const MISSING_PATH = "assets/Skills/General/Missing.png";
 
-export const getSkillIconImage = (skillName: ActionKey) => {
+export const getSkillIconImage = (skillName: ActionKey | string) => {
 	if (skillIconImages.has(skillName)) {
 		return skillIconImages.get(skillName);
 	}

@@ -3,7 +3,7 @@ import { ActionNode } from "../Controller/Record";
 import { GameState } from "./GameState";
 import { makeCooldown, getResourceInfo, ResourceInfo } from "./Resources";
 import { PotencyModifier } from "./Potency";
-import { ShellJob, ALL_JOBS } from "./Data/Jobs";
+import { ShellJob, ALL_JOBS, JOBS } from "./Data/Jobs";
 import { ActionKey, ACTIONS, CooldownKey, ResourceKey, RESOURCES, TraitKey } from "./Data";
 import { LimitBreakActionKey } from "./Data/Shared/LimitBreak";
 import { hasUnlockedTrait } from "../utilities";
@@ -198,6 +198,12 @@ export type LimitBreak<T extends GameState> = BaseSkill<T> & {
 	readonly castTimeFn: ResourceCalculationFn<T>;
 };
 
+// Unknown skills always use the NEVER key, and store the original string in skillName.
+export type UnknownSkill<T extends GameState> = BaseSkill<T> & {
+	kind: "unknown";
+	skillName: string;
+};
+
 /**
  * A Skill represents an action that a player can take.
  *
@@ -212,7 +218,12 @@ export type LimitBreak<T extends GameState> = BaseSkill<T> & {
  *   // castTimeFn, recastTimeFn, etc. are valid here
  * }
  */
-export type Skill<T extends GameState> = Spell<T> | Weaponskill<T> | Ability<T> | LimitBreak<T>;
+export type Skill<T extends GameState> =
+	| Spell<T>
+	| Weaponskill<T>
+	| Ability<T>
+	| LimitBreak<T>
+	| UnknownSkill<T>;
 
 // Map tracking skills for each job.
 // This is automatically populated by the makeWeaponskill, makeSpell, and makeAbility helper functions.
@@ -221,7 +232,9 @@ export type Skill<T extends GameState> = Spell<T> | Weaponskill<T> | Ability<T> 
 const skillMap: Map<ShellJob, Map<ActionKey, Skill<GameState>>> = new Map();
 // Track asset paths for all skills so we can load icons for multiple timelines
 const skillAssetPaths: Map<ActionKey, string> = new Map();
+const MISSING_ASSET_PATH = "General/Missing.png";
 
+const seenUnknownNames = new Set<string>();
 const normalizedSkillNameMap = new Map<string, ActionKey>();
 const typos = new Map<string, string>([
 	["Lightning Shock", "Lightning Shot"],
@@ -244,8 +257,9 @@ export function getNormalizedSkillName(s: string): ActionKey | undefined {
 		s = typos.get(s)!;
 	}
 	s = s.toLowerCase();
-	if (!normalizedSkillNameMap.has(s)) {
-		console.error("cannot find skill: " + s);
+	if (!normalizedSkillNameMap.has(s) && !seenUnknownNames.has(s)) {
+		console.error(`could not find skill with name: ${s}`);
+		seenUnknownNames.add(s);
 	}
 	return normalizedSkillNameMap.get(s);
 }
@@ -265,8 +279,8 @@ export function getSkill<T extends GameState>(job: ShellJob, skillName: ActionKe
 	return skillMap.get(job)!.get(skillName)!;
 }
 
-export function getSkillAssetPath(skillName: ActionKey): string | undefined {
-	return skillAssetPaths.get(skillName);
+export function getSkillAssetPath(skillName: ActionKey | string): string {
+	return skillAssetPaths.get(skillName as ActionKey) ?? MISSING_ASSET_PATH;
 }
 
 // Return true if the provided skill is valid for the job.
@@ -447,7 +461,7 @@ export function makeSpell<T extends GameState>(
 		name: name,
 		assetPath:
 			params.assetPath ??
-			(jobs.length === 1 ? normalizeAssetPath(jobs[0], name) : "General/Missing.png"),
+			(jobs.length === 1 ? normalizeAssetPath(jobs[0], name) : MISSING_ASSET_PATH),
 		unlockLevel: unlockLevel,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
@@ -522,7 +536,7 @@ export function makeWeaponskill<T extends GameState>(
 		name: name,
 		assetPath:
 			params.assetPath ??
-			(jobs.length === 1 ? normalizeAssetPath(jobs[0], name) : "General/Missing.png"),
+			(jobs.length === 1 ? normalizeAssetPath(jobs[0], name) : MISSING_ASSET_PATH),
 		unlockLevel: unlockLevel,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
@@ -611,7 +625,7 @@ export function makeAbility<T extends GameState>(
 		name: name,
 		assetPath:
 			params.assetPath ??
-			(jobs.length === 1 ? normalizeAssetPath(jobs[0], name) : "General/Missing.png"),
+			(jobs.length === 1 ? normalizeAssetPath(jobs[0], name) : MISSING_ASSET_PATH),
 		requiresCombat: params.requiresCombat,
 		unlockLevel: unlockLevel,
 		autoUpgrade: params.autoUpgrade,
@@ -767,11 +781,6 @@ export function makeLimitBreak<T extends GameState>(
 	return info;
 }
 
-// Dummy skill to avoid a hard crash when a skill info isn't found
-const NEVER_SKILL = makeAbility(ALL_JOBS, "NEVER", 1, "NEVER", {
-	validateAttempt: (state) => false,
-});
-
 export class SkillsList<T extends GameState> {
 	job: ShellJob;
 
@@ -783,8 +792,8 @@ export class SkillsList<T extends GameState> {
 		const skill = skillMap.get(this.job)!.get(key) as Skill<T>;
 		if (skill) return skill;
 		else {
-			console.error(`could not find skill with key: ${key}`);
-			return NEVER_SKILL;
+			console.error(`creating placeholder skill ${key} for ${this.job}`);
+			return makeAbility([this.job], key, 1, "NEVER", { validateAttempt: (state) => false });
 		}
 	}
 }
@@ -847,6 +856,29 @@ export class DisplayedSkills {
 				this.#skills.push(getAutoReplacedSkillName(job, skillInfo.name, level));
 			}
 		}
+		// Special case for tinctures: update the asset map to use a different image based on the role
+		let tinctureAssetPath = skillAssetPaths.get("TINCTURE");
+		switch (JOBS[job].role) {
+			case "TANK":
+			case "MELEE":
+				if (job === "NIN" || job === "VPR") {
+					tinctureAssetPath = "Role/Dexterity Tincture.png";
+				} else {
+					tinctureAssetPath = "Role/Strength Tincture.png";
+				}
+				break;
+			case "HEALER":
+				tinctureAssetPath = "Role/Mind Tincture.png";
+				break;
+			case "LIMITED":
+			case "CASTER":
+				tinctureAssetPath = "Role/Intelligence Tincture.png";
+				break;
+			case "RANGED":
+				tinctureAssetPath = "Role/Dexterity Tincture.png";
+				break;
+		}
+		skillAssetPaths.set("TINCTURE", tinctureAssetPath);
 	}
 
 	// Get the list of skills to display in the current game state.
