@@ -1,6 +1,6 @@
 import { Debug, ProcMode, LevelSync, FIXED_BASE_CASTER_TAX } from "./Common";
 import { ResourceOverride, ResourceOverrideData } from "./Resources";
-import { ShellInfo, ShellVersion } from "../Controller/Common";
+import { getCachedValue, setCachedValue, ShellInfo, ShellVersion } from "../Controller/Common";
 import { XIVMath } from "./XIVMath";
 import { ShellJob } from "./Data/Jobs";
 import { CooldownKey, COOLDOWNS, ResourceKey, RESOURCES } from "./Data";
@@ -45,10 +45,14 @@ type DynamicConfigField =
 	| "tenacity"
 	| "main";
 
+type DynamicConfigPart = {
+	[Property in DynamicConfigField]: number;
+};
+
 const TANK_MAIN = 5882;
 const OTHER_MAIN = 5925;
 
-const PRANGE_2_5_BIS = {
+const PRANGE_2_5_BIS: DynamicConfigPart = {
 	main: OTHER_MAIN,
 	spellSpeed: 420,
 	skillSpeed: 420,
@@ -61,231 +65,230 @@ const PRANGE_2_5_BIS = {
 
 // BiS sets updated for patch 7.3
 // These should only be applied the first time the user loads the site, or switches to a given job
-const JOB_DEFAULT_FIELDS: { [Property in ShellJob]: { [Property in DynamicConfigField]: number } } =
-	{
-		DRK: {
-			main: TANK_MAIN,
-			spellSpeed: 420,
-			skillSpeed: 420,
-			criticalHit: 3404,
-			directHit: 1068,
-			determination: 2883,
-			piety: 440,
-			tenacity: 794,
-		},
-		GNB: {
-			main: TANK_MAIN,
-			spellSpeed: 420,
-			skillSpeed: 420,
-			criticalHit: 3404,
-			directHit: 1068,
-			determination: 2883,
-			piety: 440,
-			tenacity: 794,
-		},
-		PLD: {
-			main: TANK_MAIN,
-			spellSpeed: 420,
-			skillSpeed: 420,
-			criticalHit: 3242,
-			directHit: 1230,
-			determination: 2883,
-			piety: 440,
-			tenacity: 794,
-		},
-		WAR: {
-			main: TANK_MAIN,
-			spellSpeed: 420,
-			skillSpeed: 420,
-			criticalHit: 3404,
-			directHit: 1068,
-			determination: 2883,
-			piety: 440,
-			tenacity: 794,
-		},
-		AST: {
-			// "2.46 Spero Dedes"
-			main: OTHER_MAIN,
-			spellSpeed: 704,
-			skillSpeed: 420,
-			criticalHit: 3427,
-			directHit: 1230,
-			determination: 2510,
-			piety: 718,
-			tenacity: 420,
-		},
-		SCH: {
-			// 2.40
-			main: OTHER_MAIN,
-			spellSpeed: 1221,
-			skillSpeed: 420,
-			criticalHit: 3484,
-			directHit: 852,
-			determination: 2314,
-			piety: 718,
-			tenacity: 420,
-		},
-		SGE: {
-			// 2.46 min piety
-			main: OTHER_MAIN,
-			spellSpeed: 704,
-			skillSpeed: 420,
-			criticalHit: 3427,
-			directHit: 1230,
-			determination: 2510,
-			piety: 718,
-			tenacity: 420,
-		},
-		WHM: {
-			// 2.46 min piety
-			main: OTHER_MAIN,
-			spellSpeed: 704,
-			skillSpeed: 420,
-			criticalHit: 3427,
-			directHit: 1230,
-			determination: 2510,
-			piety: 718,
-			tenacity: 420,
-		},
-		DRG: {
-			main: OTHER_MAIN,
-			spellSpeed: 420,
-			skillSpeed: 420,
-			criticalHit: 3425,
-			directHit: 1996,
-			determination: 2308,
-			piety: 440,
-			tenacity: 420,
-		},
-		MNK: {
-			// 1.94
-			main: OTHER_MAIN,
-			spellSpeed: 420,
-			skillSpeed: 968,
-			criticalHit: 3487,
-			directHit: 1685,
-			determination: 2009,
-			piety: 440,
-			tenacity: 420,
-		},
-		NIN: {
-			// 2.12
-			main: OTHER_MAIN,
-			spellSpeed: 420,
-			skillSpeed: 420,
-			criticalHit: 3378,
-			directHit: 1981,
-			determination: 2370,
-			piety: 440,
-			tenacity: 420,
-		},
-		RPR: {
-			// 2.49
-			main: OTHER_MAIN,
-			spellSpeed: 420,
-			skillSpeed: 474,
-			criticalHit: 3425,
-			directHit: 1942,
-			determination: 2308,
-			piety: 440,
-			tenacity: 420,
-		},
-		SAM: {
-			// 2.14
-			main: OTHER_MAIN,
-			spellSpeed: 420,
-			skillSpeed: 690,
-			criticalHit: 3425,
-			directHit: 2045,
-			determination: 1989,
-			piety: 440,
-			tenacity: 420,
-		},
-		VPR: {
-			// 2.12
-			main: OTHER_MAIN,
-			spellSpeed: 420,
-			skillSpeed: 420,
-			criticalHit: 3378,
-			directHit: 1981,
-			determination: 2370,
-			piety: 440,
-			tenacity: 420,
-		},
-		DNC: PRANGE_2_5_BIS,
-		BRD: PRANGE_2_5_BIS,
-		MCH: PRANGE_2_5_BIS,
-		BLM: {
-			main: OTHER_MAIN,
-			spellSpeed: 978,
-			skillSpeed: 420,
-			criticalHit: 3456,
-			directHit: 1764,
-			determination: 1951,
-			piety: 440,
-			tenacity: 420,
-		},
-		RDM: {
-			// 2.48
-			main: OTHER_MAIN,
-			spellSpeed: 528,
-			skillSpeed: 420,
-			criticalHit: 3399,
-			directHit: 1872,
-			determination: 2350,
-			piety: 440,
-			tenacity: 420,
-		},
-		SMN: {
-			// 2.48
-			main: OTHER_MAIN,
-			spellSpeed: 528,
-			skillSpeed: 420,
-			criticalHit: 3399,
-			directHit: 1872,
-			determination: 2350,
-			piety: 440,
-			tenacity: 420,
-		},
-		PCT: {
-			// 7.2 2.5 GCD bis https://xivgear.app/?page=sl%7Cc48f85d8-9b93-4f96-bfc4-1e0e30e98a8c
-			main: OTHER_MAIN,
-			spellSpeed: 420,
-			skillSpeed: 420,
-			criticalHit: 3399,
-			directHit: 1764,
-			determination: 2566,
-			piety: 440,
-			tenacity: 420,
-		},
-		BLU: {
-			// lv80 2.20
-			main: 1701,
-			spellSpeed: 1573,
-			skillSpeed: 380,
-			criticalHit: 1343,
-			directHit: 785,
-			determination: 676,
-			piety: 340,
-			tenacity: 380,
-		},
-		NEVER: {
-			main: OTHER_MAIN,
-			spellSpeed: 420,
-			skillSpeed: 420,
-			criticalHit: 420,
-			directHit: 420,
-			determination: 440,
-			piety: 440,
-			tenacity: 420,
-		},
-	};
+const JOB_DEFAULT_FIELDS: { [Property in ShellJob]: DynamicConfigPart } = {
+	DRK: {
+		main: TANK_MAIN,
+		spellSpeed: 420,
+		skillSpeed: 420,
+		criticalHit: 3404,
+		directHit: 1068,
+		determination: 2883,
+		piety: 440,
+		tenacity: 794,
+	},
+	GNB: {
+		main: TANK_MAIN,
+		spellSpeed: 420,
+		skillSpeed: 420,
+		criticalHit: 3404,
+		directHit: 1068,
+		determination: 2883,
+		piety: 440,
+		tenacity: 794,
+	},
+	PLD: {
+		main: TANK_MAIN,
+		spellSpeed: 420,
+		skillSpeed: 420,
+		criticalHit: 3242,
+		directHit: 1230,
+		determination: 2883,
+		piety: 440,
+		tenacity: 794,
+	},
+	WAR: {
+		main: TANK_MAIN,
+		spellSpeed: 420,
+		skillSpeed: 420,
+		criticalHit: 3404,
+		directHit: 1068,
+		determination: 2883,
+		piety: 440,
+		tenacity: 794,
+	},
+	AST: {
+		// "2.46 Spero Dedes"
+		main: OTHER_MAIN,
+		spellSpeed: 704,
+		skillSpeed: 420,
+		criticalHit: 3427,
+		directHit: 1230,
+		determination: 2510,
+		piety: 718,
+		tenacity: 420,
+	},
+	SCH: {
+		// 2.40
+		main: OTHER_MAIN,
+		spellSpeed: 1221,
+		skillSpeed: 420,
+		criticalHit: 3484,
+		directHit: 852,
+		determination: 2314,
+		piety: 718,
+		tenacity: 420,
+	},
+	SGE: {
+		// 2.46 min piety
+		main: OTHER_MAIN,
+		spellSpeed: 704,
+		skillSpeed: 420,
+		criticalHit: 3427,
+		directHit: 1230,
+		determination: 2510,
+		piety: 718,
+		tenacity: 420,
+	},
+	WHM: {
+		// 2.46 min piety
+		main: OTHER_MAIN,
+		spellSpeed: 704,
+		skillSpeed: 420,
+		criticalHit: 3427,
+		directHit: 1230,
+		determination: 2510,
+		piety: 718,
+		tenacity: 420,
+	},
+	DRG: {
+		main: OTHER_MAIN,
+		spellSpeed: 420,
+		skillSpeed: 420,
+		criticalHit: 3425,
+		directHit: 1996,
+		determination: 2308,
+		piety: 440,
+		tenacity: 420,
+	},
+	MNK: {
+		// 1.94
+		main: OTHER_MAIN,
+		spellSpeed: 420,
+		skillSpeed: 968,
+		criticalHit: 3487,
+		directHit: 1685,
+		determination: 2009,
+		piety: 440,
+		tenacity: 420,
+	},
+	NIN: {
+		// 2.12
+		main: OTHER_MAIN,
+		spellSpeed: 420,
+		skillSpeed: 420,
+		criticalHit: 3378,
+		directHit: 1981,
+		determination: 2370,
+		piety: 440,
+		tenacity: 420,
+	},
+	RPR: {
+		// 2.49
+		main: OTHER_MAIN,
+		spellSpeed: 420,
+		skillSpeed: 474,
+		criticalHit: 3425,
+		directHit: 1942,
+		determination: 2308,
+		piety: 440,
+		tenacity: 420,
+	},
+	SAM: {
+		// 2.14
+		main: OTHER_MAIN,
+		spellSpeed: 420,
+		skillSpeed: 690,
+		criticalHit: 3425,
+		directHit: 2045,
+		determination: 1989,
+		piety: 440,
+		tenacity: 420,
+	},
+	VPR: {
+		// 2.12
+		main: OTHER_MAIN,
+		spellSpeed: 420,
+		skillSpeed: 420,
+		criticalHit: 3378,
+		directHit: 1981,
+		determination: 2370,
+		piety: 440,
+		tenacity: 420,
+	},
+	DNC: PRANGE_2_5_BIS,
+	BRD: PRANGE_2_5_BIS,
+	MCH: PRANGE_2_5_BIS,
+	BLM: {
+		main: OTHER_MAIN,
+		spellSpeed: 978,
+		skillSpeed: 420,
+		criticalHit: 3456,
+		directHit: 1764,
+		determination: 1951,
+		piety: 440,
+		tenacity: 420,
+	},
+	RDM: {
+		// 2.48
+		main: OTHER_MAIN,
+		spellSpeed: 528,
+		skillSpeed: 420,
+		criticalHit: 3399,
+		directHit: 1872,
+		determination: 2350,
+		piety: 440,
+		tenacity: 420,
+	},
+	SMN: {
+		// 2.48
+		main: OTHER_MAIN,
+		spellSpeed: 528,
+		skillSpeed: 420,
+		criticalHit: 3399,
+		directHit: 1872,
+		determination: 2350,
+		piety: 440,
+		tenacity: 420,
+	},
+	PCT: {
+		// 7.2 2.5 GCD bis https://xivgear.app/?page=sl%7Cc48f85d8-9b93-4f96-bfc4-1e0e30e98a8c
+		main: OTHER_MAIN,
+		spellSpeed: 420,
+		skillSpeed: 420,
+		criticalHit: 3399,
+		directHit: 1764,
+		determination: 2566,
+		piety: 440,
+		tenacity: 420,
+	},
+	BLU: {
+		// lv80 2.20
+		main: 1701,
+		spellSpeed: 1573,
+		skillSpeed: 380,
+		criticalHit: 1343,
+		directHit: 785,
+		determination: 676,
+		piety: 340,
+		tenacity: 380,
+	},
+	NEVER: {
+		main: OTHER_MAIN,
+		spellSpeed: 420,
+		skillSpeed: 420,
+		criticalHit: 420,
+		directHit: 420,
+		determination: 440,
+		piety: 440,
+		tenacity: 420,
+	},
+};
 
-export function makeDefaultConfig(job: ShellJob): ConfigData {
+export function makeDefaultConfig(job: ShellJob, level: LevelSync = LevelSync.lvl100): ConfigData {
 	return {
 		job,
 		shellVersion: ShellInfo.version,
-		level: job === "BLU" ? LevelSync.lvl80 : LevelSync.lvl100,
+		level: level ?? (job === "BLU" ? LevelSync.lvl80 : LevelSync.lvl100),
 		...JOB_DEFAULT_FIELDS[job],
 		wd: CURRENT_BIS_WD,
 		countdown: 5,
@@ -299,8 +302,24 @@ export function makeDefaultConfig(job: ShellJob): ConfigData {
 	};
 }
 
-export const DEFAULT_CONFIG: ConfigData = makeDefaultConfig("BLM"); // TODO
-Object.freeze(DEFAULT_CONFIG);
+export function getSavedConfigPart(job: ShellJob): DynamicConfigPart {
+	const blob = getCachedValue(`defaultPartialConfig: ${job}`);
+	if (blob === null) {
+		return JOB_DEFAULT_FIELDS[job];
+	}
+	const parsedBlob = JSON.parse(blob);
+	// We only store combat stats directly in localStorage so they remain independent between jobs.
+	// Remaining stats (like fps and countdown) are shared across job swap.
+	// If anything is missing, just fill it in from the default.
+	Object.entries(JOB_DEFAULT_FIELDS[job]).forEach(([key, value]) => {
+		if (parsedBlob[key] === undefined) {
+			parsedBlob[key] = value;
+		}
+	});
+	return parsedBlob as ConfigData;
+}
+
+export const DEFAULT_CONFIG = makeDefaultConfig("BLM");
 
 export type SerializedConfig = ConfigData & {
 	casterTax: number; // still want this bc don't want to break cached timelines
@@ -354,13 +373,14 @@ export class GameConfig {
 	}) {
 		this.job = props.job;
 		this.shellVersion = props.shellVersion;
-		this.level = props.level ?? DEFAULT_CONFIG.level;
+		const defaultConfig = DEFAULT_CONFIG;
+		this.level = props.level ?? defaultConfig.level;
 		this.spellSpeed = props.spellSpeed;
-		this.skillSpeed = props.skillSpeed ?? DEFAULT_CONFIG.skillSpeed;
-		this.criticalHit = props.criticalHit ?? DEFAULT_CONFIG.criticalHit;
-		this.directHit = props.directHit ?? DEFAULT_CONFIG.directHit;
-		this.determination = props.determination ?? DEFAULT_CONFIG.determination;
-		this.piety = props.piety ?? DEFAULT_CONFIG.piety;
+		this.skillSpeed = props.skillSpeed ?? defaultConfig.skillSpeed;
+		this.criticalHit = props.criticalHit ?? defaultConfig.criticalHit;
+		this.directHit = props.directHit ?? defaultConfig.directHit;
+		this.determination = props.determination ?? defaultConfig.determination;
+		this.piety = props.piety ?? defaultConfig.piety;
 		this.countdown = props.countdown;
 		this.randomSeed = props.randomSeed;
 		this.fps = props.fps;
@@ -481,6 +501,14 @@ export class GameConfig {
 		return this.initialResourceOverrides.find((override) => override.type === rsc)?.stacks;
 	}
 
+	savePartialConfig() {
+		const obj: any = {};
+		Object.keys(JOB_DEFAULT_FIELDS[this.job]).forEach((key) => {
+			obj[key] = this[key as keyof GameConfig];
+		});
+		setCachedValue(`defaultPartialConfig: ${this.job}`, JSON.stringify(obj));
+	}
+
 	serialized() {
 		return {
 			job: this.job,
@@ -503,9 +531,9 @@ export class GameConfig {
 			animationLock: this.animationLock,
 			timeTillFirstManaTick: this.timeTillFirstManaTick,
 			procMode: this.procMode,
-			initialResourceOverrides: this.initialResourceOverrides.map((override) => {
-				return override.serialized();
-			}),
+			initialResourceOverrides: this.initialResourceOverrides.map((override) =>
+				override.serialized(),
+			),
 		};
 	}
 }
