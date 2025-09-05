@@ -284,11 +284,11 @@ const JOB_DEFAULT_FIELDS: { [Property in ShellJob]: DynamicConfigPart } = {
 	},
 };
 
-export function makeDefaultConfig(job: ShellJob): ConfigData {
+export function makeDefaultConfig(job: ShellJob, level: LevelSync = LevelSync.lvl100): ConfigData {
 	return {
 		job,
 		shellVersion: ShellInfo.version,
-		level: job === "BLU" ? LevelSync.lvl80 : LevelSync.lvl100,
+		level: level ?? (job === "BLU" ? LevelSync.lvl80 : LevelSync.lvl100),
 		...JOB_DEFAULT_FIELDS[job],
 		wd: CURRENT_BIS_WD,
 		countdown: 5,

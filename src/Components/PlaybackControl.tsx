@@ -953,12 +953,12 @@ function getGcdTaxPreview(
 	levelStr: string,
 	speedModifier?: number,
 ): { gcdStr: string; taxedGcdStr: string } {
-	const level = parseFloat(levelStr);
-	const speed = parseFloat(speedStr);
+	const level = parseInt(levelStr);
+	const speed = parseInt(speedStr);
 	const fps = parseFloat(fpsStr);
 	let gcdStr: string;
 	let taxedGcdStr: string;
-	if (isNaN(level) || isNaN(speed) || isNaN(fps) || speed < 400) {
+	if (isNaN(level) || isNaN(speed) || isNaN(fps) || speed < XIVMath.getSubstatBase(level)) {
 		gcdStr = "n/a";
 		taxedGcdStr = "n/a";
 	} else {
@@ -1070,7 +1070,9 @@ export function Config() {
 			if (action.job !== undefined && action.job !== prevState.job) {
 				// If the job changed, update haste modifiers, clear resource overrides, and
 				// use whatever the last saved stats for that job was.
-				const dummyConfig: GameConfig = new GameConfig(makeDefaultConfig(action.job));
+				const dummyConfig: GameConfig = new GameConfig(
+					makeDefaultConfig(action.job, parseInt(action.level ?? prevState.level)),
+				);
 				const speedModifier = getGameState(dummyConfig).inherentSpeedModifier();
 				setjobSpeedMod(speedModifier);
 				// If we returned to the ORIGINAL job (still stored by the controller), revert
@@ -1087,6 +1089,13 @@ export function Config() {
 					// Update stats from last saved timeline of this job.
 					Object.assign(newState, getSavedConfigPart(action.job));
 				}
+			}
+			if (action.level !== undefined && action.level !== prevState.level) {
+				const dummyConfig: GameConfig = new GameConfig(
+					makeDefaultConfig(prevState.job, parseInt(action.level)),
+				);
+				const speedModifier = getGameState(dummyConfig).inherentSpeedModifier();
+				setjobSpeedMod(speedModifier);
 			}
 		}
 		return newState;

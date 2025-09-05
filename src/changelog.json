@@ -3,6 +3,7 @@
 		"date": "9/6/25",
 		"changes": [
 			"Fixed a crash when loading xivgear/etro links from a job different from the active one.",
+			"Fixed an issue where speed effects and certain sps/sks values were displayed incorrectly at level 70 (this was only a cosmetic issue in the configuration panel).",
 			"Changing jobs now uses the last saved stats you set for that job.",
 			"Creating a new timeline with a different job will now use one of The Balance's best-in-slot gear sets for the current patch."
 		]
