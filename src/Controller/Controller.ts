@@ -1548,7 +1548,10 @@ class Controller {
 			this.autoSave();
 
 			this.record.unselectAll();
-			console.assert(this.timeline.loadSlot(slot));
+			const loaded = this.timeline.loadSlot(slot);
+			if (!loaded) {
+				console.error(`failed to load timeline in cached active slot ${slot}`);
+			}
 		});
 		this.displayCurrentState();
 		setCachedValue("activeSlotIndex", slot.toString());
