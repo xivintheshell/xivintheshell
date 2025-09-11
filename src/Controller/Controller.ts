@@ -985,8 +985,9 @@ class Controller {
 		},
 		resetRecord: boolean = true,
 	) {
-		const oldJob = this.gameConfig.job;
-		const jobChanged = oldJob !== props.job;
+		const jobChanged = this.gameConfig.job !== props.job;
+		const oldCountdown = this.gameConfig.countdown;
+		const countdownIncreased = oldCountdown < props.countdown;
 		if (jobChanged && !resetRecord) {
 			console.error(
 				"attempted to apply config without reset even though job changed; forcing reset",
@@ -1001,6 +1002,11 @@ class Controller {
 
 			if (resetRecord) {
 				this.record = new Record();
+			} else if (countdownIncreased) {
+				// If the countdown increased and we're modifying the record in-place, prepend an
+				// implicit "jump to timestamp" event so the first action's timing remains unchanged.
+				// If the countdown decreased, we don't care.
+				this.record.prependActionNode(jumpToTimestampNode(-oldCountdown));
 			}
 			this.record.config = this.gameConfig;
 

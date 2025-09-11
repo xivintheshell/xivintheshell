@@ -506,6 +506,11 @@ export class Line {
 		return this.length - 1;
 	}
 
+	prependActionNode(actionNode: ActionNode) {
+		console.assert(actionNode !== undefined);
+		this.actions.unshift(actionNode);
+	}
+
 	addActionNode(actionNode: ActionNode) {
 		console.assert(actionNode !== undefined);
 		this.actions.push(actionNode);

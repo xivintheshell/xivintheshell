@@ -1302,8 +1302,8 @@ export function Config() {
 				window.alert("Invalid job: " + configFields.job);
 				return;
 			}
-			// @ts-expect-error too onerous to manually specify every field in a way that type-checks with fromEntries
 			controller.setConfigAndRestart(
+				// @ts-expect-error too onerous to manually specify every field in a way that type-checks with fromEntries
 				{
 					job: configFields.job,
 					randomSeed: seed.trim(),

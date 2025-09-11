@@ -2210,6 +2210,13 @@ export function TimelineCanvas(props: {
 			mouseDownX.current = undefined;
 			mouseDownY.current = undefined;
 			bgSelecting.current = false;
+			if (
+				activeHoverDraw.current.tip !== undefined ||
+				activeHoverDraw.current.images !== undefined
+			) {
+				activeHoverDraw.current = { tip: undefined, images: undefined };
+				redrawInteractive();
+			}
 		},
 		// ignore KB & M input when in the middle of using a skill (for simplicity)
 		onMouseUp: (e: any, x: number, y: number) => {
