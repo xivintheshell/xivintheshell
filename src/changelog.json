@@ -1,5 +1,14 @@
 [
 	{
+		"date": "9/12/25",
+		"changes": [
+			"Added an \"apply\" button to the configuration section, which can be used to change configuration without resetting the timeline."
+		],
+		"changes_zh": [
+			"在属性设置中增加了“应用”按钮，改变属性设置后不用重置时间轴。"
+		]
+	},
+	{
 		"date": "9/8/25",
 		"changes": [
 			"Fixed a crash when loading xivgear/etro links from a job different from the active one.",
