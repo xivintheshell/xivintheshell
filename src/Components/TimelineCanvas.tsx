@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useReducer, useContext, CSSProperties } from "react";
+import React, { useEffect, useRef, useContext, CSSProperties } from "react";
 import {
 	AutoTickMarkElem,
 	CursorElem,
@@ -1931,7 +1931,6 @@ export function TimelineCanvas(props: {
 	const scaledWidth = props.visibleWidth * dpr;
 	const scaledHeight = props.timelineHeight * dpr;
 
-	const [, forceUpdate] = useReducer((x) => x + 1, 0);
 	const activeColorTheme = useContext(ColorThemeContext);
 	const globalDragContext = useContext(DragTargetContext);
 	const lockContext = useContext(DragLockContext);
@@ -2244,14 +2243,13 @@ export function TimelineCanvas(props: {
 						// Even though we're automatically saving the edit, go through the whole song
 						// and dance of pretending an edit was made so state is properly synchronized.
 						controller.record.moveSelected(distance);
-						const result = controller.checkRecordValidity(controller.record, 0, true);
 						controller.autoSave();
-						updateInvalidStatus();
+						const status = updateInvalidStatus();
 						updateTimelineView();
 						const newStart = controller.record.selectionStartIndex;
 						if (newStart !== undefined) {
 							controller.displayHistoricalState(
-								result.skillUseTimes[newStart],
+								status.skillUseTimes[newStart],
 								newStart,
 							);
 						} else {
@@ -2313,14 +2311,36 @@ export function TimelineCanvas(props: {
 				});
 			}
 		},
-		onKeyDown: (e: any) => {
+		onKeyDown: (e: React.KeyboardEvent) => {
 			if (!controller.shouldLoop) {
+				const firstSelected = controller.record.selectionStartIndex;
+				const lastSelected = controller.record.selectionEndIndex;
+				const selecting = firstSelected !== undefined;
 				if (e.key === "Backspace" || e.key === "Delete") {
-					forceUpdate();
-					const firstSelected = controller.record.selectionStartIndex;
-					if (firstSelected !== undefined) {
-						controller.deleteSelectedSkill();
+					if (selecting) {
+						controller.deleteSelectedSkills();
 					}
+				} else if (e.key === "ArrowUp") {
+					if (selecting && firstSelected - 1 >= 0) {
+						if (e.shiftKey) {
+							controller.timeline.resizeSelection(true);
+						} else {
+							controller.timeline.onClickTimelineAction(firstSelected - 1, false);
+						}
+					}
+				} else if (e.key === "ArrowDown") {
+					if (e.shiftKey) {
+						controller.timeline.resizeSelection(false);
+					} else {
+						controller.timeline.onClickTimelineAction(lastSelected + 1, false);
+					}
+				} else if (e.key === "Home") {
+					controller.timeline.onClickTimelineAction(0, e.shiftKey);
+				} else if (e.key === "End") {
+					controller.timeline.onClickTimelineAction(
+						controller.record.length - 1,
+						e.shiftKey,
+					);
 				}
 			}
 		},

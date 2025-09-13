@@ -6,7 +6,6 @@ import { controller } from "../Controller/Controller";
 import { MAX_ABILITY_TARGETS } from "../Controller/Common";
 import { localize, localizeSkillName, localizeSkillUnavailableReason } from "./Localization";
 import { updateTimelineView } from "./Timeline";
-import { updateInvalidStatus } from "./TimelineEditor";
 import { getThemeColors, ColorThemeContext } from "./ColorTheme";
 import { getSkillAssetPath } from "../Game/Skills";
 import { ActionKey, ACTIONS } from "../Game/Data";
@@ -514,6 +513,7 @@ export class SkillsWindow extends React.Component {
 		};
 
 		this.onWaitTimeSubmit = (e: FormEvent<HTMLFormElement>) => {
+			e.preventDefault();
 			const waitTime = parseFloat(this.state.waitTime);
 			if (!isNaN(waitTime)) {
 				if (this.state.waitSince === WaitSince.Now) {
@@ -535,10 +535,7 @@ export class SkillsWindow extends React.Component {
 				} else {
 					console.assert(false);
 				}
-				controller.autoSave();
-				updateInvalidStatus();
 			}
-			e.preventDefault();
 		};
 
 		this.onWaitUntilChange = (e: ValueChangeEvent) => {
@@ -547,17 +544,20 @@ export class SkillsWindow extends React.Component {
 		};
 
 		this.onWaitUntilSubmit = (e: FormEvent<HTMLFormElement>) => {
+			e.preventDefault();
 			const targetTime = parseTime(this.state.waitUntil);
 			if (!isNaN(targetTime)) {
-				if (targetTime > controller.game.getDisplayTime()) {
+				if (
+					targetTime >
+					(controller.displayingUpToDateGameState
+						? controller.game.getDisplayTime()
+						: controller.savedHistoricalGame.getDisplayTime())
+				) {
 					controller.stepUntil(targetTime);
-					controller.autoSave();
-					updateInvalidStatus();
 				} else {
 					window.alert("Can only jump to a time in the future!");
 				}
 			}
-			e.preventDefault();
 		};
 
 		this.onWaitSinceChange = (e: ValueChangeEvent) => {
@@ -736,11 +736,7 @@ export class SkillsWindow extends React.Component {
 									<option value={WaitSince.Now}>now</option>
 									<option value={WaitSince.LastSkill}>last action</option>
 								</select>{" "}
-								<input
-									type="submit"
-									disabled={!controller.displayingUpToDateGameState}
-									value="GO"
-								/>
+								<input type="submit" value="GO" />
 							</form>,
 							zh: <form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
 								快进至{" "}
@@ -762,12 +758,7 @@ export class SkillsWindow extends React.Component {
 									value={this.state.waitTime}
 									onChange={this.onWaitTimeChange}
 								/>{" "}
-								秒{" "}
-								<input
-									type="submit"
-									disabled={!controller.displayingUpToDateGameState}
-									value="GO"
-								/>
+								秒 <input type="submit" value="GO" />
 							</form>,
 							ja: <form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
 								<select
@@ -793,11 +784,7 @@ export class SkillsWindow extends React.Component {
 									onChange={this.onWaitTimeChange}
 								/>
 								秒進む
-								<input
-									type="submit"
-									disabled={!controller.displayingUpToDateGameState}
-									value="GO"
-								/>
+								<input type="submit" value="GO" />
 							</form>,
 						})}
 						{localize({
@@ -812,11 +799,7 @@ export class SkillsWindow extends React.Component {
 									value={this.state.waitUntil}
 									onChange={this.onWaitUntilChange}
 								/>
-								<input
-									type="submit"
-									disabled={!controller.displayingUpToDateGameState}
-									value="GO"
-								/>
+								<input type="submit" value="GO" />
 							</form>,
 							zh: <form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
 								快进至指定时间 {waitUntilHelp}{" "}
@@ -829,11 +812,7 @@ export class SkillsWindow extends React.Component {
 									value={this.state.waitUntil}
 									onChange={this.onWaitUntilChange}
 								/>
-								<input
-									type="submit"
-									disabled={!controller.displayingUpToDateGameState}
-									value="GO"
-								/>
+								<input type="submit" value="GO" />
 							</form>,
 							ja: <form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
 								指定した時間まで進む {waitUntilHelp}{" "}
@@ -846,11 +825,7 @@ export class SkillsWindow extends React.Component {
 									value={this.state.waitUntil}
 									onChange={this.onWaitUntilChange}
 								/>
-								<input
-									type="submit"
-									disabled={!controller.displayingUpToDateGameState}
-									value="GO"
-								/>
+								<input type="submit" value="GO" />
 							</form>,
 						})}
 					</div>

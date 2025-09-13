@@ -500,11 +500,17 @@ class Controller {
 		this.autoSave();
 	}
 
-	deleteSelectedSkill() {
-		if (this.record.selectionStartIndex !== undefined) {
-			this.rewindUntilBefore(this.record.selectionStartIndex, false);
-			updateInvalidStatus();
-			this.displayCurrentState();
+	deleteSelectedSkills() {
+		const originalStart = this.record.selectionStartIndex;
+		if (originalStart !== undefined) {
+			this.record.deleteSelected();
+			const status = updateInvalidStatus();
+			if (originalStart < this.record.length) {
+				this.record.selectSingle(originalStart);
+				this.displayHistoricalState(status.skillUseTimes[originalStart], originalStart);
+			} else {
+				this.displayCurrentState();
+			}
 			// TODO: push editor dirty state up to the controller and don't autosave if
 			// we're mid-edit
 			this.autoSave();
@@ -1929,6 +1935,17 @@ class Controller {
 		this.updateAllDisplay();
 	}
 
+	insertRecordNode(node: ActionNode, insertIdx: number) {
+		// cleanup function for taking care of business after splicing a new node into the middle of
+		// the timeline
+		this.record.insertActionNode(node, insertIdx);
+		this.autoSave();
+		// After inserting the new skill, restart simulation and re-select the newly-added skill.
+		const status = updateInvalidStatus();
+		this.record.selectSingle(insertIdx);
+		this.displayHistoricalState(status.skillUseTimes[insertIdx], insertIdx);
+	}
+
 	requestUseSkill(props: { skillName: ActionKey; targetCount: number }) {
 		this.#bTakingUserInput = true;
 		if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
@@ -1956,14 +1973,7 @@ class Controller {
 				// Insert the skill to the middle of the timeline by modifying the record.
 				const insertIdx = this.record.selectionStartIndex;
 				if (insertIdx !== undefined) {
-					const newSkill = skillNode(props.skillName, props.targetCount);
-					this.record.insertActionNode(newSkill, insertIdx);
-					const result = this.checkRecordValidity(this.record, 0, true);
-					this.autoSave();
-					// After inserting the new skill, restart simulation and re-select the newly-added skill.
-					updateInvalidStatus();
-					this.record.selectSingle(insertIdx);
-					this.displayHistoricalState(result.skillUseTimes[insertIdx], insertIdx);
+					this.insertRecordNode(skillNode(props.skillName, props.targetCount), insertIdx);
 				}
 			}
 		}
@@ -2056,13 +2066,23 @@ class Controller {
 	}
 
 	step(t: number) {
-		this.#requestTick({ deltaTime: t, waitKind: "duration" });
-		this.updateAllDisplay();
+		if (this.displayingUpToDateGameState) {
+			this.#requestTick({ deltaTime: t, waitKind: "duration" });
+			this.autoSave();
+			this.updateAllDisplay();
+		} else if (this.record.selectionStartIndex !== undefined) {
+			this.insertRecordNode(durationWaitNode(t), this.record.selectionStartIndex);
+		}
 	}
 
 	stepUntil(t: number) {
-		this.#requestTick({ deltaTime: t - this.game.getDisplayTime(), waitKind: "target" });
-		this.updateAllDisplay();
+		if (this.displayingUpToDateGameState) {
+			this.#requestTick({ deltaTime: t - this.game.getDisplayTime(), waitKind: "target" });
+			this.autoSave();
+			this.updateAllDisplay();
+		} else if (this.record.selectionStartIndex !== undefined) {
+			this.insertRecordNode(jumpToTimestampNode(t), this.record.selectionStartIndex);
+		}
 	}
 
 	#handleKeyboardEvent_RealTimeAutoPause(evt: { shiftKey: boolean; keyCode: number }) {
