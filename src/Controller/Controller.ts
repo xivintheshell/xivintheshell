@@ -1,3 +1,4 @@
+import React from "react";
 import {
 	CURRENT_GAME_COMBAT_PATCH,
 	getCachedValue,
@@ -8,6 +9,7 @@ import {
 	ShellVersion,
 	TickMode,
 } from "./Common";
+import { UndoStack, AddNode } from "./UndoStack";
 import { GameState } from "../Game/GameState";
 import {
 	getAutoReplacedSkillName,
@@ -162,6 +164,8 @@ class Controller {
 	#lastTickDuration: number = 0; // used during record loads to resolve legacy wait durations
 	lastSkillTime: number = 0; // used for WaitSince.LastSkill; updated in #useSkill
 
+	undoStack: UndoStack;
+
 	constructor() {
 		this.timeScale = 1;
 		this.shouldLoop = false;
@@ -187,6 +191,7 @@ class Controller {
 		// meaningless at the beginning
 		this.savedHistoricalGame = this.game;
 		this.savedHistoricalRecord = this.record;
+		this.undoStack = new UndoStack();
 
 		this.#requestRestart();
 	}
@@ -930,7 +935,7 @@ class Controller {
 		deltaTime: number;
 		waitKind?: WaitKind;
 		prematureStopCondition?: () => boolean;
-	}) {
+	}): ActionNode | undefined {
 		const now = this.game.time;
 		const fixedTargetTimestamp = props.deltaTime + this.game.getDisplayTime();
 		if (props.deltaTime > 0) {
@@ -958,7 +963,9 @@ class Controller {
 				newNode.tmp_endLockTime = props.deltaTime + now;
 				this.record.addActionNode(newNode);
 			}
+			return newNode;
 		}
+		return undefined;
 	}
 
 	setTimeControlSettings(props: { timeScale: number; tickMode: TickMode }) {
@@ -1935,19 +1942,30 @@ class Controller {
 		this.updateAllDisplay();
 	}
 
-	insertRecordNode(node: ActionNode, insertIdx: number) {
+	insertRecordNodes(nodes: ActionNode[], insertIdx: number) {
 		// cleanup function for taking care of business after splicing a new node into the middle of
 		// the timeline
-		this.record.insertActionNode(node, insertIdx);
+		// unlike tryAddLine, this function can add nodes at arbitrary positions
+		this.record.insertActionNodes(nodes, insertIdx);
 		this.autoSave();
 		// After inserting the new skill, restart simulation and re-select the newly-added skill.
 		const status = updateInvalidStatus();
 		const newSelectIdx = Math.min(insertIdx + 1, this.record.length - 1);
 		this.record.selectSingle(newSelectIdx);
+		if (nodes.length > 1) {
+			this.record.selectUntil(newSelectIdx + nodes.length - 1);
+		}
 		this.displayHistoricalState(status.skillUseTimes[newSelectIdx], newSelectIdx);
 	}
 
-	requestUseSkill(props: { skillName: ActionKey; targetCount: number }) {
+	insertRecordNode(node: ActionNode, insertIdx: number) {
+		this.insertRecordNodes([node], insertIdx);
+	}
+
+	requestUseSkill(
+		props: { skillName: ActionKey; targetCount: number },
+		canUndo: boolean = false,
+	) {
 		this.#bTakingUserInput = true;
 		if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
 			// not sure should allow any control here.
@@ -1969,12 +1987,25 @@ class Controller {
 					if (this.tickMode !== TickMode.RealTimeAutoPause) {
 						updateInvalidStatus();
 					}
+					if (canUndo) {
+						this.undoStack.push(
+							new AddNode(
+								skillNode(props.skillName, props.targetCount),
+								this.record.length - 1,
+							),
+						);
+					}
 				}
 			} else {
 				// Insert the skill to the middle of the timeline by modifying the record.
 				const insertIdx = this.record.selectionStartIndex;
 				if (insertIdx !== undefined) {
-					this.insertRecordNode(skillNode(props.skillName, props.targetCount), insertIdx);
+					// TODO this needs validity checking
+					const node = skillNode(props.skillName, props.targetCount);
+					this.insertRecordNode(node, insertIdx);
+					if (canUndo) {
+						this.undoStack.push(new AddNode(node, insertIdx));
+					}
 				}
 			}
 		}
@@ -2066,53 +2097,69 @@ class Controller {
 		requestAnimationFrame(loopFn);
 	}
 
-	step(t: number) {
+	step(t: number, canUndo: boolean = false) {
+		let node: ActionNode | undefined;
+		let index = this.record.length - 1;
 		if (this.displayingUpToDateGameState) {
-			this.#requestTick({ deltaTime: t, waitKind: "duration" });
+			node = this.#requestTick({ deltaTime: t, waitKind: "duration" });
 			this.autoSave();
 			this.updateAllDisplay();
 		} else if (this.record.selectionStartIndex !== undefined) {
-			this.insertRecordNode(durationWaitNode(t), this.record.selectionStartIndex);
+			index = this.record.selectionStartIndex;
+			node = durationWaitNode(t);
+			this.insertRecordNode(node, index);
+		}
+		if (canUndo && node) {
+			this.undoStack.push(new AddNode(node, index));
 		}
 	}
 
-	stepUntil(t: number) {
+	stepUntil(t: number, canUndo: boolean = false) {
+		let node: ActionNode | undefined;
+		let index = this.record.length - 1;
 		if (this.displayingUpToDateGameState) {
-			this.#requestTick({ deltaTime: t - this.game.getDisplayTime(), waitKind: "target" });
+			node = this.#requestTick({
+				deltaTime: t - this.game.getDisplayTime(),
+				waitKind: "target",
+			});
 			this.autoSave();
 			this.updateAllDisplay();
 		} else if (this.record.selectionStartIndex !== undefined) {
-			this.insertRecordNode(jumpToTimestampNode(t), this.record.selectionStartIndex);
+			index = this.record.selectionStartIndex;
+			node = jumpToTimestampNode(t);
+			this.insertRecordNode(node, index);
+		}
+		if (canUndo && node) {
+			this.undoStack.push(new AddNode(node, index));
 		}
 	}
 
-	#handleKeyboardEvent_RealTimeAutoPause(evt: { shiftKey: boolean; keyCode: number }) {
-		if (this.shouldLoop) return;
-
-		if (evt.keyCode === 85) {
-			// u (undo)
-			this.rewindUntilBefore(this.record.tailIndex, false);
-			this.updateAllDisplay();
-			this.autoSave();
+	handleKeyboardEvent(evt: React.KeyboardEvent) {
+		console.log(evt.key);
+		if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
+			// never accept shortcuts while we're mid-animation
+			return;
 		}
-	}
-	#handleKeyboardEvent_Manual(evt: { keyCode: number; shiftKey: boolean }) {
-		if (evt.keyCode === 85) {
-			// u (undo)
-			this.rewindUntilBefore(this.record.tailIndex, false);
-			this.updateAllDisplay();
-			this.autoSave();
-		}
-	}
-
-	handleKeyboardEvent(evt: { keyCode: number; shiftKey: boolean }) {
 		// console.log(evt.keyCode);
+		let processed = false;
 		if (this.displayingUpToDateGameState) {
-			if (this.tickMode === TickMode.RealTimeAutoPause) {
-				this.#handleKeyboardEvent_RealTimeAutoPause(evt);
-			} else if (this.tickMode === TickMode.Manual) {
-				this.#handleKeyboardEvent_Manual(evt);
+			if (evt.keyCode === 85) {
+				// u (remove last action)
+				this.rewindUntilBefore(this.record.tailIndex, false);
+				this.updateAllDisplay();
+				this.autoSave();
+				processed = true;
 			}
+		}
+		if (evt.key === "z" && evt.ctrlKey) {
+			this.undoStack.undo();
+			processed = true;
+		} else if ((evt.key === "Z" && evt.ctrlKey) || (evt.key === "y" && evt.ctrlKey)) {
+			this.undoStack.redo();
+			processed = true;
+		}
+		if (processed) {
+			evt.preventDefault();
 		}
 	}
 

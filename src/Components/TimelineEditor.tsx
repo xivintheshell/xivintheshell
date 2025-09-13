@@ -9,6 +9,7 @@ import React, {
 	DragEventHandler,
 } from "react";
 import { controller } from "../Controller/Controller";
+import { MoveNodes, DeleteNodes } from "../Controller/UndoStack";
 import { ActionNode, ActionType, Record, RecordValidStatus } from "../Controller/Record";
 import { StaticFn, Columns } from "./Common";
 import { getCurrentThemeColors, ThemeColors } from "./ColorTheme";
@@ -569,21 +570,42 @@ export function TimelineEditor() {
 	const toolbar = <div style={{ marginBottom: 6, flex: 1 }}>
 		<button
 			style={buttonStyle}
-			onClick={(e) => doRecordEdit((record) => record.moveSelected(-1))}
+			onClick={(e) =>
+				doRecordEdit((record) => {
+					controller.undoStack.push(
+						new MoveNodes(record.selectionStartIndex!, record.getSelectionLength(), -1),
+					);
+					return record.moveSelected(-1);
+				})
+			}
 		>
 			{localize({ en: "move up", zh: "上移" })}
 		</button>
 
 		<button
 			style={buttonStyle}
-			onClick={(e) => doRecordEdit((record) => record.moveSelected(1))}
+			onClick={(e) =>
+				doRecordEdit((record) => {
+					controller.undoStack.push(
+						new MoveNodes(record.selectionStartIndex!, record.getSelectionLength(), 1),
+					);
+					return record.moveSelected(1);
+				})
+			}
 		>
 			{localize({ en: "move down", zh: "下移" })}
 		</button>
 
 		<button
 			style={buttonStyle}
-			onClick={(e) => doRecordEdit((record) => record.deleteSelected())}
+			onClick={(e) =>
+				doRecordEdit((record) => {
+					controller.undoStack.push(
+						new DeleteNodes(record.selectionStartIndex!, record.getSelected().actions),
+					);
+					return record.deleteSelected();
+				})
+			}
 		>
 			{localize({ en: "delete selected", zh: "删除所选" })}
 		</button>
@@ -600,6 +622,9 @@ export function TimelineEditor() {
 						// 3. Call `selectUntil` on the original range
 						const originalStart = record.selectionStartIndex!;
 						const originalEnd = record.selectionEndIndex!;
+						controller.undoStack.push(
+							new MoveNodes(originalEnd, 1, -(selectionLength - 1)),
+						);
 						record.selectSingle(originalEnd);
 						record.moveSelected(-(selectionLength - 1));
 						record.selectSingle(originalStart);
@@ -630,7 +655,12 @@ export function TimelineEditor() {
 		const selecting = firstSelected !== undefined;
 		if (selecting) {
 			if (e.key === "Backspace" || e.key === "Delete") {
-				doRecordEdit((record) => record.deleteSelected());
+				doRecordEdit((record) => {
+					controller.undoStack.push(
+						new DeleteNodes(firstSelected, controller.record.getSelected().actions),
+					);
+					return record.deleteSelected();
+				});
 			} else if (e.key === "ArrowUp") {
 				if (e.shiftKey) {
 					controller.timeline.resizeSelection(true);

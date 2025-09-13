@@ -436,10 +436,13 @@ function SkillButton(props: SkillButtonProps) {
 	const tooltipTrigger = <span title={ACTIONS[props.skillName].name} className="skillButton">
 		<Clickable
 			onClickFn={() => {
-				controller.requestUseSkill({
-					skillName: props.skillName,
-					targetCount: props.targetCount,
-				});
+				controller.requestUseSkill(
+					{
+						skillName: props.skillName,
+						targetCount: props.targetCount,
+					},
+					true,
+				);
 			}}
 			content={icon}
 		/>
@@ -517,7 +520,7 @@ export class SkillsWindow extends React.Component {
 			const waitTime = parseFloat(this.state.waitTime);
 			if (!isNaN(waitTime)) {
 				if (this.state.waitSince === WaitSince.Now) {
-					controller.step(waitTime);
+					controller.step(waitTime, true);
 				} else if (this.state.waitSince === WaitSince.LastSkill) {
 					const timeSinceLastSkill = controller.game.time - controller.lastSkillTime;
 					const stepTime = waitTime - timeSinceLastSkill;
@@ -530,7 +533,7 @@ export class SkillsWindow extends React.Component {
 								"s has already elapsed.",
 						);
 					} else {
-						controller.step(stepTime);
+						controller.step(stepTime, true);
 					}
 				} else {
 					console.assert(false);
@@ -553,7 +556,7 @@ export class SkillsWindow extends React.Component {
 						? controller.game.getDisplayTime()
 						: controller.savedHistoricalGame.getDisplayTime())
 				) {
-					controller.stepUntil(targetTime);
+					controller.stepUntil(targetTime, true);
 				} else {
 					window.alert("Can only jump to a time in the future!");
 				}

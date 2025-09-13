@@ -517,6 +517,9 @@ export function Input(props: InputProps) {
 			type="text"
 			value={props.defaultValue}
 			onChange={onChange}
+			// When the input field is focused, native commands like arrow key + undo/redo should
+			// work as expected, and not be intercepted by the top-level app's key listeners.
+			onKeyDown={(e) => e.stopPropagation()}
 		/>
 	</div>;
 }

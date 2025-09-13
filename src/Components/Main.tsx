@@ -134,10 +134,7 @@ export default class Main extends React.Component<{ command?: string }> {
 		this.controlRegionRef = React.createRef();
 
 		this.gameplayKeyCapture = (evt: React.KeyboardEvent) => {
-			if (evt.target && evt.target === this.controlRegionRef?.current) {
-				controller.handleKeyboardEvent(evt);
-				evt.preventDefault();
-			}
+			controller.handleKeyboardEvent(evt);
 		};
 
 		setJob = (job: ShellJob) => {
@@ -238,7 +235,6 @@ export default class Main extends React.Component<{ command?: string }> {
 				}}
 				tabIndex={-1}
 				ref={this.controlRegionRef}
-				onKeyDown={this.gameplayKeyCapture}
 			>
 				<StatusDisplay />
 				<SkillsWindow />
@@ -254,6 +250,8 @@ export default class Main extends React.Component<{ command?: string }> {
 				left: 0,
 				right: 0,
 			}}
+			tabIndex={-1}
+			onKeyDown={this.gameplayKeyCapture}
 		>
 			<style>{`
 				.visibleScrollbar::-webkit-scrollbar {

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useContext, CSSProperties } from "react";
+import { DeleteNodes, MoveNodes } from "../Controller/UndoStack";
 import {
 	AutoTickMarkElem,
 	CursorElem,
@@ -2239,6 +2240,9 @@ export function TimelineCanvas(props: {
 					if (distance !== 0) {
 						// Even though we're automatically saving the edit, go through the whole song
 						// and dance of pretending an edit was made so state is properly synchronized.
+						controller.undoStack.push(
+							new MoveNodes(start, controller.record.getSelectionLength(), distance),
+						);
 						controller.record.moveSelected(distance);
 						controller.autoSave();
 						const status = updateInvalidStatus();
@@ -2319,6 +2323,9 @@ export function TimelineCanvas(props: {
 				const selecting = firstSelected !== undefined;
 				if (e.key === "Backspace" || e.key === "Delete") {
 					if (selecting) {
+						controller.undoStack.push(
+							new DeleteNodes(firstSelected, controller.record.getSelected().actions),
+						);
 						controller.deleteSelectedSkills();
 					}
 				} else if (e.key === "ArrowUp") {
