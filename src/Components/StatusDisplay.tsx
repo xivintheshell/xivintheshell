@@ -851,7 +851,7 @@ export class StatusDisplay extends React.Component {
 									</div>
 									<div className="paragraph">
 										<b style={{ color: "mediumpurple" }}>purple</b> border:
-										receiving input
+										up-to-date, receiving input
 									</div>
 									<div className="paragraph">
 										<b style={{ color: "mediumseagreen" }}>green</b> border:
@@ -859,10 +859,11 @@ export class StatusDisplay extends React.Component {
 									</div>
 									<div className="paragraph">
 										<b style={{ color: "darkorange" }}>orange</b> border:
-										viewing historical state, not receiving input
+										viewing historical state, receiving input
 									</div>
 								</>,
 								zh: <>
+									{/* TODO ZH OUTDATED */}
 									<div className="paragraph">
 										<span style={{ color: "lightgray" }}>灰色</span>边框：未选中
 									</div>
@@ -880,6 +881,7 @@ export class StatusDisplay extends React.Component {
 									</div>
 								</>,
 								ja: <>
+									{/* TODO JA OUTDATED */}
 									<div className="paragraph">
 										<span style={{ color: "lightgray" }}>グレー</span> : 未選択
 									</div>
