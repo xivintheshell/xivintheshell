@@ -2318,6 +2318,7 @@ export function TimelineCanvas(props: {
 		},
 		onKeyDown: (e: React.KeyboardEvent) => {
 			if (!controller.shouldLoop) {
+				const ctrlOrCmd = e.ctrlKey || e.metaKey;
 				const firstSelected = controller.record.selectionStartIndex;
 				const lastSelected = controller.record.selectionEndIndex;
 				const selecting = firstSelected !== undefined;
@@ -2354,6 +2355,10 @@ export function TimelineCanvas(props: {
 					controller.displayCurrentState();
 					globalDragContext.setDragTarget(null, null);
 					setDraggedSkillElem(undefined);
+				} else if (e.key === "a" && ctrlOrCmd) {
+					controller.timeline.onClickTimelineAction(0, false);
+					controller.timeline.onClickTimelineAction(controller.record.length - 1, true);
+					e.preventDefault();
 				}
 			}
 		},

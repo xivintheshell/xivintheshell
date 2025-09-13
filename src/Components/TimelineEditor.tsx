@@ -650,6 +650,7 @@ export function TimelineEditor() {
 	</div>;
 
 	const rowKeyHandler = (e: React.KeyboardEvent) => {
+		const ctrlOrCmd = e.ctrlKey || e.metaKey;
 		const firstSelected = controller.record.selectionStartIndex;
 		const lastSelected = controller.record.selectionEndIndex;
 		const selecting = firstSelected !== undefined;
@@ -681,6 +682,10 @@ export function TimelineEditor() {
 				controller.record.unselectAll();
 				controller.displayCurrentState();
 				globalDragTarget.setDragTarget(null, null);
+			} else if (e.key === "a" && ctrlOrCmd) {
+				controller.timeline.onClickTimelineAction(0, false);
+				controller.timeline.onClickTimelineAction(controller.record.length - 1, true);
+				e.preventDefault();
 			}
 		}
 	};

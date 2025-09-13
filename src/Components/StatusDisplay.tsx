@@ -461,7 +461,7 @@ function Buff(props: BuffProps) {
 				style={style}
 				onClickFn={() => {
 					if (props.onSelf) {
-						controller.requestToggleBuff(props.rscType);
+						controller.requestToggleBuff(props.rscType, true);
 						controller.updateStatusDisplay(controller.game);
 						controller.updateSkillButtons(controller.game);
 						controller.autoSave();

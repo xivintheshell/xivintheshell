@@ -2012,7 +2012,7 @@ class Controller {
 		this.#bTakingUserInput = false;
 	}
 
-	requestToggleBuff(buffName: ResourceKey) {
+	requestToggleBuff(buffName: ResourceKey, canUndo: boolean = false) {
 		const success = this.game.requestToggleBuff(buffName);
 		if (!success) return false;
 
@@ -2020,6 +2020,10 @@ class Controller {
 		toggleNode.tmp_startLockTime = this.game.time;
 		toggleNode.tmp_endLockTime = toggleNode.tmp_startLockTime;
 		this.record.addActionNode(toggleNode);
+		// TODO: support splicing the toggle node at current timestamp
+		if (canUndo) {
+			this.undoStack.push(new AddNode(toggleNode, this.record.length - 1));
+		}
 
 		this.#actionsLogCsv.push({
 			time: this.game.getDisplayTime(),
