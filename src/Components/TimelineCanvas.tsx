@@ -2321,7 +2321,7 @@ export function TimelineCanvas(props: {
 						controller.deleteSelectedSkills();
 					}
 				} else if (e.key === "ArrowUp") {
-					if (selecting && firstSelected - 1 >= 0) {
+					if (selecting) {
 						if (e.shiftKey) {
 							controller.timeline.resizeSelection(true);
 						} else {
@@ -2332,7 +2332,7 @@ export function TimelineCanvas(props: {
 					if (e.shiftKey) {
 						controller.timeline.resizeSelection(false);
 					} else {
-						controller.timeline.onClickTimelineAction(lastSelected + 1, false);
+						controller.timeline.onClickTimelineAction(lastSelected! + 1, false);
 					}
 				} else if (e.key === "Home") {
 					controller.timeline.onClickTimelineAction(0, e.shiftKey);
@@ -2341,6 +2341,11 @@ export function TimelineCanvas(props: {
 						controller.record.length - 1,
 						e.shiftKey,
 					);
+				} else if (e.key === "Escape") {
+					controller.record.unselectAll();
+					controller.displayCurrentState();
+					globalDragContext.setDragTarget(null, null);
+					setDraggedSkillElem(undefined);
 				}
 			}
 		},

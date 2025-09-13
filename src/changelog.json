@@ -1,5 +1,14 @@
 [
 	{
+		"date": "9/15/25",
+		"changes": [
+			"[BETA] Skills can now be inserted in the middle of a timeline (instructions not yet updated).",
+			"[BETA] Pressing backspace/delete now deletes only the selected skills.",
+			"[BETA] Using the up and down arrow keys changes the selected skills."
+		],
+		"level": "major"
+	},
+	{
 		"date": "9/14/25",
 		"changes": [
 			"Fixed a bug where certain config stats couldn't be changed."
