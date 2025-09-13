@@ -524,6 +524,10 @@ export class Timeline {
 	}
 
 	onClickTimelineAction(index: number, bShift: boolean) {
+		if (index < 0 || index >= controller.record.length) {
+			return;
+		}
+
 		controller.record.onClickNode(index, bShift);
 
 		updateSkillSequencePresetsView();

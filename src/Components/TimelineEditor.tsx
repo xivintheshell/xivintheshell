@@ -34,7 +34,14 @@ const HIGHLIGHT_ALPHA_HEX = "3f";
 export let refreshTimelineEditor = () => {};
 // [sz] It brings me no joy to write another pair of global setter functions that live outside the
 // React life cycle, but we don't really have a better way to pass the active timeline slot at the moment.
-export let updateInvalidStatus: () => RecordValidStatus | undefined = () => undefined;
+export let updateInvalidStatus: () => RecordValidStatus = () => {
+	return {
+		isValid: false,
+		invalidActions: [],
+		skillUseTimes: [],
+		straightenedIfValid: undefined,
+	};
+};
 export let updateActiveTimelineEditor = (slotSwapFn: () => void) => {
 	slotSwapFn();
 };
@@ -83,6 +90,7 @@ const TR_STYLE: CSSProperties = {
 	width: "100%",
 	height: "1.6em",
 	userSelect: "none",
+	outline: "none",
 };
 
 const getDropTargetStyle = (colors: ThemeColors): CSSProperties => {
@@ -105,6 +113,7 @@ function TimelineActionElement(props: {
 	isInvalid: boolean;
 	includeDetails: boolean;
 	usedAt: number;
+	onKeyDown: (e: React.KeyboardEvent) => void;
 	refObj?: React.RefObject<HTMLTableRowElement | null>;
 }) {
 	const colors = getCurrentThemeColors();
@@ -233,6 +242,8 @@ function TimelineActionElement(props: {
 				}
 			}
 		}}
+		tabIndex={-1} /* key events are only received if it has a tabIndex */
+		onKeyDown={props.onKeyDown}
 	>
 		{indexCell}
 		{timestampCell}
@@ -579,10 +590,10 @@ export function TimelineEditor() {
 
 		<button
 			style={buttonStyle}
-			onClick={(e) =>
-				doRecordEdit((record) => {
-					const selectionLength = record.getSelectionLength();
-					if (selectionLength > 1) {
+			onClick={(e) => {
+				const selectionLength = controller.record.getSelectionLength();
+				if (selectionLength > 1) {
+					doRecordEdit((record) => {
 						// To make use of the existing moveSelected abstraction, we do the following:
 						// 1. Deselect everything except the current tail
 						// 2. Call `moveSelected(-1 * (selectionLength - 1))`
@@ -594,10 +605,9 @@ export function TimelineEditor() {
 						record.selectSingle(originalStart);
 						record.selectUntil(originalEnd);
 						return record.selectionStartIndex;
-					}
-					return undefined;
-				})
-			}
+					});
+				}
+			}}
 		>
 			{localize({
 				en: <>
@@ -613,6 +623,37 @@ export function TimelineEditor() {
 			})}
 		</button>
 	</div>;
+
+	const rowKeyHandler = (e: React.KeyboardEvent) => {
+		const firstSelected = controller.record.selectionStartIndex;
+		const lastSelected = controller.record.selectionEndIndex;
+		const selecting = firstSelected !== undefined;
+		if (selecting) {
+			if (e.key === "Backspace" || e.key === "Delete") {
+				doRecordEdit((record) => record.deleteSelected());
+			} else if (e.key === "ArrowUp") {
+				if (e.shiftKey) {
+					controller.timeline.resizeSelection(true);
+				} else {
+					controller.timeline.onClickTimelineAction(firstSelected - 1, false);
+				}
+			} else if (e.key === "ArrowDown") {
+				if (e.shiftKey) {
+					controller.timeline.resizeSelection(false);
+				} else {
+					controller.timeline.onClickTimelineAction(lastSelected! + 1, false);
+				}
+			} else if (e.key === "Home") {
+				controller.timeline.onClickTimelineAction(0, e.shiftKey);
+			} else if (e.key === "End") {
+				controller.timeline.onClickTimelineAction(controller.record.length - 1, e.shiftKey);
+			} else if (e.key === "Escape") {
+				controller.record.unselectAll();
+				controller.displayCurrentState();
+				globalDragTarget.setDragTarget(null, null);
+			}
+		}
+	};
 
 	const includeDetails = true;
 
@@ -631,6 +672,7 @@ export function TimelineEditor() {
 				isInvalid={invalidIndices.has(i)}
 				usedAt={recordValidStatus?.skillUseTimes[i] ?? 0}
 				includeDetails={includeDetails}
+				onKeyDown={rowKeyHandler}
 				refObj={isFirstSelected ? firstSelected : undefined}
 			/>,
 		);
