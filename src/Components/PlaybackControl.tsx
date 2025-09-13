@@ -1261,7 +1261,7 @@ export function Config() {
 
 	const applyConfig = (event: React.SyntheticEvent, resetRecord: boolean) => {
 		event.preventDefault();
-		if (resetRecord && jobOrLevelDirty) {
+		if (!resetRecord && jobOrLevelDirty) {
 			console.error("attempted to apply w/o reset, but job or level changed");
 			return;
 		}
