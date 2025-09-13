@@ -34,7 +34,7 @@ const HIGHLIGHT_ALPHA_HEX = "3f";
 export let refreshTimelineEditor = () => {};
 // [sz] It brings me no joy to write another pair of global setter functions that live outside the
 // React life cycle, but we don't really have a better way to pass the active timeline slot at the moment.
-export let updateInvalidStatus = () => {};
+export let updateInvalidStatus: () => RecordValidStatus | undefined = () => undefined;
 export let updateActiveTimelineEditor = (slotSwapFn: () => void) => {
 	slotSwapFn();
 };
@@ -268,7 +268,9 @@ export function TimelineEditor() {
 		updateInvalidStatus = () => {
 			// This is called by the controller to ensure timestamps are properly propagated to the
 			// timeline editor table.
-			setRecordValidStatus(controller.checkRecordValidity(controller.record, 0, true));
+			const status = controller.checkRecordValidity(controller.record, 0, true);
+			setRecordValidStatus(status);
+			return status;
 		};
 		// When switching the active timeline slot, we must ensure that the batched edits are
 		// discarded.

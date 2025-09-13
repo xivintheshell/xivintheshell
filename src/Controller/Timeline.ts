@@ -539,6 +539,26 @@ export class Timeline {
 		}
 	}
 
+	resizeSelection(left: boolean) {
+		// Resizes the record selection by 1 skill.
+		// Example:
+		//   old selection: __xx__
+		//   resizeSelection(true)
+		//   new selection: _xxx__
+		//   resizeSelection(false)
+		//   new selection: __xx__
+		//   resizeSelection(false) called 2x
+		//   new selection: ___xx_
+		const start = controller.record.selectionStartIndex;
+		const end = controller.record.selectionEndIndex;
+		if (start !== undefined && end !== undefined) {
+			const target = (controller.record.startIsPivot ? end : start) + (left ? -1 : 1);
+			if (target >= 0 && target < controller.record.length) {
+				this.onClickTimelineAction(target, true);
+			}
+		}
+	}
+
 	getNumMarkerTracks() {
 		let maxTrack = -1;
 		let hasUntargetableTrack = false;
