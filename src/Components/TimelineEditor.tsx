@@ -711,56 +711,72 @@ export function TimelineEditor() {
 					defaultSize: 20,
 				},
 				{
-					content: <table
+					content: <div
 						style={{
-							position: "relative",
-							width: "100%",
-							borderCollapse: "collapse",
-							borderColor: colors.bgMediumContrast,
-							borderWidth: "1px",
-							borderStyle: "solid",
+							display: "flex",
+							flexDirection: "column",
+							gap: INDEX_TD_STYLE.paddingLeft,
 						}}
 					>
-						<thead>
-							<tr style={TR_STYLE}>
-								{includeDetails && <th
-									className="stickyTh"
-									style={{
-										...thStyle,
-										...INDEX_TD_STYLE,
-										...getBorderStyling(colors),
-									}}
-								>
-									#
-								</th>}
-								{includeDetails && <th
-									className="stickyTh"
-									style={{
-										...thStyle,
-										...TIMESTAMP_TD_STYLE,
-										...getBorderStyling(colors),
-									}}
-								>
-									{localize({ en: "Time", zh: "时间" })}
-								</th>}
-								<th
-									className="stickyTh"
-									style={{
-										...thStyle,
-										...ACTION_TD_STYLE,
-										...getBorderStyling(colors),
-									}}
-								>
-									{localize({ en: "Actions", zh: "技能" })}
-								</th>
-							</tr>
-						</thead>
-						<tbody>
-							<EditorDragContext.Provider value={dragHandlers}>
-								{actionsList}
-							</EditorDragContext.Provider>
-						</tbody>
-					</table>,
+						<table
+							style={{
+								position: "relative",
+								width: "100%",
+								borderCollapse: "collapse",
+								borderColor: colors.bgMediumContrast,
+								borderWidth: "1px",
+								borderStyle: "solid",
+							}}
+						>
+							<thead>
+								<tr style={TR_STYLE}>
+									{includeDetails && <th
+										className="stickyTh"
+										style={{
+											...thStyle,
+											...INDEX_TD_STYLE,
+											...getBorderStyling(colors),
+										}}
+									>
+										#
+									</th>}
+									{includeDetails && <th
+										className="stickyTh"
+										style={{
+											...thStyle,
+											...TIMESTAMP_TD_STYLE,
+											...getBorderStyling(colors),
+										}}
+									>
+										{localize({ en: "Time", zh: "时间" })}
+									</th>}
+									<th
+										className="stickyTh"
+										style={{
+											...thStyle,
+											...ACTION_TD_STYLE,
+											...getBorderStyling(colors),
+										}}
+									>
+										{localize({ en: "Actions", zh: "技能" })}
+									</th>
+								</tr>
+							</thead>
+							<tbody>
+								<EditorDragContext.Provider value={dragHandlers}>
+									{actionsList}
+								</EditorDragContext.Provider>
+							</tbody>
+						</table>
+						{actionCount === 0 && <span
+							style={{ paddingLeft: INDEX_TD_STYLE.paddingLeft, fontStyle: "italic" }}
+						>
+							{localize({
+								en: "No actions to display yet.",
+								zh: "暂无技能可显示。",
+							})}
+						</span>}
+					</div>,
 					defaultSize: 40,
 					fullBorder: true,
 				},

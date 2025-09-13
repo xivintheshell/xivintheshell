@@ -961,42 +961,60 @@ class Controller {
 		this.shouldLoop = false;
 	}
 
-	setConfigAndRestart(props: {
-		job: ShellJob;
-		level: LevelSync;
-		main: number;
-		wd: number;
-		spellSpeed: number;
-		skillSpeed: number;
-		criticalHit: number;
-		directHit: number;
-		determination: number;
-		piety: number;
-		tenacity: number;
-		animationLock: number;
-		fps: number;
-		gcdSkillCorrection: number;
-		timeTillFirstManaTick: number;
-		countdown: number;
-		randomSeed: string;
-		procMode: ProcMode;
-		initialResourceOverrides: any[];
-	}) {
-		const oldJob = this.gameConfig.job;
+	setConfigAndRestart(
+		props: {
+			job: ShellJob;
+			level: LevelSync;
+			main: number;
+			wd: number;
+			spellSpeed: number;
+			skillSpeed: number;
+			criticalHit: number;
+			directHit: number;
+			determination: number;
+			piety: number;
+			tenacity: number;
+			animationLock: number;
+			fps: number;
+			gcdSkillCorrection: number;
+			timeTillFirstManaTick: number;
+			countdown: number;
+			randomSeed: string;
+			procMode: ProcMode;
+			initialResourceOverrides: any[];
+		},
+		resetRecord: boolean = true,
+	) {
+		const jobChanged = this.gameConfig.job !== props.job;
+		const oldCountdown = this.gameConfig.countdown;
+		const countdownIncreased = oldCountdown < props.countdown;
+		if (jobChanged && !resetRecord) {
+			console.error(
+				"attempted to apply config without reset even though job changed; forcing reset",
+			);
+			resetRecord = true;
+		}
 		updateActiveTimelineEditor(() => {
 			this.gameConfig = new GameConfig({
 				...props,
 				shellVersion: ShellInfo.version,
 			});
 
-			this.record = new Record();
+			if (resetRecord) {
+				this.record = new Record();
+			} else if (countdownIncreased) {
+				// If the countdown increased and we're modifying the record in-place, prepend an
+				// implicit "jump to timestamp" event so the first action's timing remains unchanged.
+				// If the countdown decreased, we don't care.
+				this.record.prependActionNode(jumpToTimestampNode(-oldCountdown));
+			}
 			this.record.config = this.gameConfig;
 
 			this.#requestRestart();
 			this.#applyResourceOverrides(this.gameConfig);
 			// Propagate changes to the intro section (definitely not idiomatic react... maybe we
 			// should just make the text static for all jobs)
-			if (oldJob !== props.job) {
+			if (jobChanged) {
 				setJob(props.job);
 			}
 		});

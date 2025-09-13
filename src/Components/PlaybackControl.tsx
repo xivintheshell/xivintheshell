@@ -1054,6 +1054,7 @@ export function Config() {
 				.find((rsc) => !S.has(rsc)) ?? "NEVER";
 		setSelectedOverrideResource(firstAddableRsc);
 	};
+	const [jobOrLevelDirty, setJobOrLevelDirty] = useState(false);
 	// config field management
 	function configFieldReducer(
 		prevState: ConfigFields,
@@ -1097,6 +1098,10 @@ export function Config() {
 				const speedModifier = getGameState(dummyConfig).inherentSpeedModifier();
 				setjobSpeedMod(speedModifier);
 			}
+			setJobOrLevelDirty(
+				parseInt(newState.level) !== controller.gameConfig.level ||
+					newState.job !== controller.gameConfig.job,
+			);
 		}
 		return newState;
 	}
@@ -1254,7 +1259,12 @@ export function Config() {
 		</table>
 	</div>;
 
-	const handleSubmit = (event: React.SyntheticEvent) => {
+	const applyConfig = (event: React.SyntheticEvent, resetRecord: boolean) => {
+		event.preventDefault();
+		if (resetRecord && jobOrLevelDirty) {
+			console.error("attempted to apply w/o reset, but job or level changed");
+			return;
+		}
 		if (validateResourceOverrides(initialResourceOverrides)) {
 			let seed = configFields.randomSeed;
 			if (seed.length === 0) {
@@ -1292,26 +1302,29 @@ export function Config() {
 				window.alert("Invalid job: " + configFields.job);
 				return;
 			}
-			// @ts-expect-error too onerous to manually specify every field in a way that type-checks with fromEntries
-			controller.setConfigAndRestart({
-				job: configFields.job,
-				randomSeed: seed.trim(),
-				procMode: configFields.procMode,
-				initialResourceOverrides, // info only
-				...Object.fromEntries(
-					numericFields.map((field) => [
-						field,
-						parseFloat(configFields[field].toString()),
-					]),
-				),
-			});
+			controller.setConfigAndRestart(
+				// @ts-expect-error too onerous to manually specify every field in a way that type-checks with fromEntries
+				{
+					job: configFields.job,
+					randomSeed: seed.trim(),
+					procMode: configFields.procMode,
+					initialResourceOverrides, // info only
+					...Object.fromEntries(
+						numericFields.map((field) => [
+							field,
+							parseFloat(configFields[field].toString()),
+						]),
+					),
+				},
+				resetRecord,
+			);
 
 			setDirty(false);
+			setJobOrLevelDirty(false);
 			clearImportedFields();
 			controller.updateAllDisplay();
 			controller.scrollToTime();
 		}
-		event.preventDefault();
 	};
 
 	// Stats that use ConfigInputField directly, without any bells and whistles
@@ -1576,7 +1589,6 @@ export function Config() {
 				overflowY: "scroll",
 			}}
 		>
-			{/* intermediate child div needed to ensure background fill doesn't overlap scroll bar */}
 			<div
 				style={{
 					width: "100%",
@@ -1585,10 +1597,35 @@ export function Config() {
 					borderTop: "1px solid " + colors.bgMediumContrast,
 					paddingTop: 5,
 					paddingBottom: 5,
+					display: "flex",
+					flexDirection: "row",
+					justifyContent: "space-between",
+					gap: 5,
 				}}
 			>
 				<button
-					onClick={handleSubmit}
+					onClick={(e) => applyConfig(e, false)}
+					style={{
+						width: "100%",
+						fontWeight: !jobOrLevelDirty && configFields.dirty ? "bold" : "normal",
+						textDecoration: jobOrLevelDirty ? "line-through" : undefined,
+						backgroundColor: jobOrLevelDirty ? colors.background : undefined,
+					}}
+					disabled={jobOrLevelDirty}
+				>
+					{localize({ en: "apply", zh: "应用" })}
+					{jobOrLevelDirty && " "}
+					{jobOrLevelDirty && <Help
+						topic="applyWithoutReset"
+						content={localize({
+							en: "Must reset timeline because job or level changed.",
+							zh: "因为职业或等级有变化，必须重置时间轴。",
+						})}
+					/>}
+					{!jobOrLevelDirty && configFields.dirty ? "*" : ""}
+				</button>
+				<button
+					onClick={(e) => applyConfig(e, true)}
 					style={{
 						width: "100%",
 						fontWeight: configFields.dirty ? "bold" : "normal",
