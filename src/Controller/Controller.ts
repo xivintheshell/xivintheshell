@@ -310,7 +310,7 @@ class Controller {
 
 			// view only cursor
 			this.timeline.updateElem({
-				type: ElemType.s_ViewOnlyCursor,
+				type: ElemType.s_HistoricalCursor,
 				time: this.game.time, // is actually historical state
 				displayTime: this.game.getDisplayTime(),
 				enabled: true,
@@ -337,7 +337,7 @@ class Controller {
 	displayCurrentState() {
 		this.displayingUpToDateGameState = true;
 		this.timeline.updateElem({
-			type: ElemType.s_ViewOnlyCursor,
+			type: ElemType.s_HistoricalCursor,
 			enabled: false,
 			time: 0,
 			displayTime: 0,
@@ -500,11 +500,17 @@ class Controller {
 		this.autoSave();
 	}
 
-	deleteSelectedSkill() {
-		if (this.record.selectionStartIndex !== undefined) {
-			this.rewindUntilBefore(this.record.selectionStartIndex, false);
-			updateInvalidStatus();
-			this.displayCurrentState();
+	deleteSelectedSkills() {
+		const originalStart = this.record.selectionStartIndex;
+		if (originalStart !== undefined) {
+			this.record.deleteSelected();
+			const status = updateInvalidStatus();
+			if (originalStart < this.record.length) {
+				this.record.selectSingle(originalStart);
+				this.displayHistoricalState(status.skillUseTimes[originalStart], originalStart);
+			} else {
+				this.displayCurrentState();
+			}
 			// TODO: push editor dirty state up to the controller and don't autosave if
 			// we're mid-edit
 			this.autoSave();
@@ -1929,25 +1935,46 @@ class Controller {
 		this.updateAllDisplay();
 	}
 
+	insertRecordNode(node: ActionNode, insertIdx: number) {
+		// cleanup function for taking care of business after splicing a new node into the middle of
+		// the timeline
+		this.record.insertActionNode(node, insertIdx);
+		this.autoSave();
+		// After inserting the new skill, restart simulation and re-select the newly-added skill.
+		const status = updateInvalidStatus();
+		const newSelectIdx = Math.min(insertIdx + 1, this.record.length - 1);
+		this.record.selectSingle(newSelectIdx);
+		this.displayHistoricalState(status.skillUseTimes[newSelectIdx], newSelectIdx);
+	}
+
 	requestUseSkill(props: { skillName: ActionKey; targetCount: number }) {
 		this.#bTakingUserInput = true;
 		if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
 			// not sure should allow any control here.
 		} else {
-			const status = this.#useSkill(
-				props.skillName,
-				props.targetCount,
-				this.tickMode,
-				-1,
-				false,
-			);
-			if (status.status.ready()) {
-				this.scrollToTime(this.game.time);
-				this.autoSave();
-				// This is needed to correct timestamps of newly-used actions
-				// in realtime mode, this is handled at the end of the animation loop
-				if (this.tickMode !== TickMode.RealTimeAutoPause) {
-					updateInvalidStatus();
+			if (this.displayingUpToDateGameState) {
+				// Append the skill to the timeline.
+				const status = this.#useSkill(
+					props.skillName,
+					props.targetCount,
+					this.tickMode,
+					-1,
+					false,
+				);
+				if (status.status.ready()) {
+					this.scrollToTime(this.game.time);
+					this.autoSave();
+					// This is needed to correct timestamps of newly-used actions
+					// in realtime mode, this is handled at the end of the animation loop
+					if (this.tickMode !== TickMode.RealTimeAutoPause) {
+						updateInvalidStatus();
+					}
+				}
+			} else {
+				// Insert the skill to the middle of the timeline by modifying the record.
+				const insertIdx = this.record.selectionStartIndex;
+				if (insertIdx !== undefined) {
+					this.insertRecordNode(skillNode(props.skillName, props.targetCount), insertIdx);
 				}
 			}
 		}
@@ -2040,13 +2067,23 @@ class Controller {
 	}
 
 	step(t: number) {
-		this.#requestTick({ deltaTime: t, waitKind: "duration" });
-		this.updateAllDisplay();
+		if (this.displayingUpToDateGameState) {
+			this.#requestTick({ deltaTime: t, waitKind: "duration" });
+			this.autoSave();
+			this.updateAllDisplay();
+		} else if (this.record.selectionStartIndex !== undefined) {
+			this.insertRecordNode(durationWaitNode(t), this.record.selectionStartIndex);
+		}
 	}
 
 	stepUntil(t: number) {
-		this.#requestTick({ deltaTime: t - this.game.getDisplayTime(), waitKind: "target" });
-		this.updateAllDisplay();
+		if (this.displayingUpToDateGameState) {
+			this.#requestTick({ deltaTime: t - this.game.getDisplayTime(), waitKind: "target" });
+			this.autoSave();
+			this.updateAllDisplay();
+		} else if (this.record.selectionStartIndex !== undefined) {
+			this.insertRecordNode(jumpToTimestampNode(t), this.record.selectionStartIndex);
+		}
 	}
 
 	#handleKeyboardEvent_RealTimeAutoPause(evt: { shiftKey: boolean; keyCode: number }) {

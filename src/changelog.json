@@ -1,5 +1,14 @@
 [
 	{
+		"date": "9/13/25",
+		"changes": [
+			"[BETA] Skills can now be inserted in the middle of a timeline (instructions not yet updated).",
+			"[BETA] Pressing backspace/delete now deletes only the selected skills.",
+			"[BETA] Using the up and down arrow keys changes the selected skills."
+		],
+		"level": "major"
+	},
+	{
 		"date": "9/12/25",
 		"changes": [
 			"Added an \"apply\" button to the configuration section, which can be used to change configuration without resetting the timeline."

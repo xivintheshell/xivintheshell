@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useReducer, useContext, CSSProperties } from "react";
+import React, { useEffect, useRef, useContext, CSSProperties } from "react";
 import {
 	AutoTickMarkElem,
 	CursorElem,
@@ -15,7 +15,7 @@ import {
 	SlotTimelineElem,
 	TimelineElem,
 	UntargetableMarkerTrack,
-	ViewOnlyCursorElem,
+	HistoricalCursorElem,
 	WarningMarkElem,
 } from "../Controller/Timeline";
 import { StaticFn, TimelineDimensions, TimelineDrawOptions } from "./Common";
@@ -1503,8 +1503,8 @@ function drawCursors(params: {
 	};
 
 	// view only cursor
-	(sharedElemBins.get(ElemType.s_ViewOnlyCursor) ?? []).forEach((cursor) => {
-		const vcursor = cursor as ViewOnlyCursorElem;
+	(sharedElemBins.get(ElemType.s_HistoricalCursor) ?? []).forEach((cursor) => {
+		const vcursor = cursor as HistoricalCursorElem;
 		if (vcursor.enabled) {
 			const x =
 				displayOriginX +
@@ -1931,7 +1931,6 @@ export function TimelineCanvas(props: {
 	const scaledWidth = props.visibleWidth * dpr;
 	const scaledHeight = props.timelineHeight * dpr;
 
-	const [, forceUpdate] = useReducer((x) => x + 1, 0);
 	const activeColorTheme = useContext(ColorThemeContext);
 	const globalDragContext = useContext(DragTargetContext);
 	const lockContext = useContext(DragLockContext);
@@ -2222,9 +2221,6 @@ export function TimelineCanvas(props: {
 		onMouseUp: (e: any, x: number, y: number) => {
 			mouseX.current = x;
 			mouseY.current = y;
-			// Always end a background selection operation when the mouse is released, regardless of
-			// what element the cursor is hovering.
-			bgSelecting.current = false;
 			// Cancel any existing drag operation.
 			if (draggedSkillElem.current) {
 				const targetIndex = globalDragContext.dragTargetIndex;
@@ -2244,11 +2240,18 @@ export function TimelineCanvas(props: {
 						// Even though we're automatically saving the edit, go through the whole song
 						// and dance of pretending an edit was made so state is properly synchronized.
 						controller.record.moveSelected(distance);
-						controller.checkRecordValidity(controller.record, 0, true);
 						controller.autoSave();
-						updateInvalidStatus();
+						const status = updateInvalidStatus();
 						updateTimelineView();
-						controller.displayCurrentState();
+						const newStart = controller.record.selectionStartIndex;
+						if (newStart !== undefined) {
+							controller.displayHistoricalState(
+								status.skillUseTimes[newStart],
+								newStart,
+							);
+						} else {
+							controller.displayCurrentState();
+						}
 						manualRedrawInteractive = false;
 					}
 				}
@@ -2279,6 +2282,10 @@ export function TimelineCanvas(props: {
 					);
 				}
 			}
+			// Always end a background selection operation when the mouse is released, regardless of
+			// what element the cursor is hovering.
+			// Set this at the end to ensure mouseUp on top of a skill is properly handled.
+			bgSelecting.current = false;
 		},
 		onMouseDown: (x: number, y: number) => {
 			mouseDownX.current = x;
@@ -2305,14 +2312,41 @@ export function TimelineCanvas(props: {
 				});
 			}
 		},
-		onKeyDown: (e: any) => {
+		onKeyDown: (e: React.KeyboardEvent) => {
 			if (!controller.shouldLoop) {
+				const firstSelected = controller.record.selectionStartIndex;
+				const lastSelected = controller.record.selectionEndIndex;
+				const selecting = firstSelected !== undefined;
 				if (e.key === "Backspace" || e.key === "Delete") {
-					forceUpdate();
-					const firstSelected = controller.record.selectionStartIndex;
-					if (firstSelected !== undefined) {
-						controller.deleteSelectedSkill();
+					if (selecting) {
+						controller.deleteSelectedSkills();
 					}
+				} else if (e.key === "ArrowUp") {
+					if (selecting) {
+						if (e.shiftKey) {
+							controller.timeline.resizeSelection(true);
+						} else {
+							controller.timeline.onClickTimelineAction(firstSelected - 1, false);
+						}
+					}
+				} else if (e.key === "ArrowDown") {
+					if (e.shiftKey) {
+						controller.timeline.resizeSelection(false);
+					} else {
+						controller.timeline.onClickTimelineAction(lastSelected! + 1, false);
+					}
+				} else if (e.key === "Home") {
+					controller.timeline.onClickTimelineAction(0, e.shiftKey);
+				} else if (e.key === "End") {
+					controller.timeline.onClickTimelineAction(
+						controller.record.length - 1,
+						e.shiftKey,
+					);
+				} else if (e.key === "Escape") {
+					controller.record.unselectAll();
+					controller.displayCurrentState();
+					globalDragContext.setDragTarget(null, null);
+					setDraggedSkillElem(undefined);
 				}
 			}
 		},
