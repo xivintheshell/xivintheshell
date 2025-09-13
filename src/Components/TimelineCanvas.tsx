@@ -15,7 +15,7 @@ import {
 	SlotTimelineElem,
 	TimelineElem,
 	UntargetableMarkerTrack,
-	ViewOnlyCursorElem,
+	HistoricalCursorElem,
 	WarningMarkElem,
 } from "../Controller/Timeline";
 import { StaticFn, TimelineDimensions, TimelineDrawOptions } from "./Common";
@@ -1503,8 +1503,8 @@ function drawCursors(params: {
 	};
 
 	// view only cursor
-	(sharedElemBins.get(ElemType.s_ViewOnlyCursor) ?? []).forEach((cursor) => {
-		const vcursor = cursor as ViewOnlyCursorElem;
+	(sharedElemBins.get(ElemType.s_HistoricalCursor) ?? []).forEach((cursor) => {
+		const vcursor = cursor as HistoricalCursorElem;
 		if (vcursor.enabled) {
 			const x =
 				displayOriginX +
@@ -2244,11 +2244,19 @@ export function TimelineCanvas(props: {
 						// Even though we're automatically saving the edit, go through the whole song
 						// and dance of pretending an edit was made so state is properly synchronized.
 						controller.record.moveSelected(distance);
-						controller.checkRecordValidity(controller.record, 0, true);
+						const result = controller.checkRecordValidity(controller.record, 0, true);
 						controller.autoSave();
 						updateInvalidStatus();
 						updateTimelineView();
-						controller.displayCurrentState();
+						const newStart = controller.record.selectionStartIndex;
+						if (newStart !== undefined) {
+							controller.displayHistoricalState(
+								result.skillUseTimes[newStart],
+								newStart,
+							);
+						} else {
+							controller.displayCurrentState();
+						}
 						manualRedrawInteractive = false;
 					}
 				}

@@ -16,7 +16,7 @@ export const MAX_TIMELINE_SLOTS = 4;
 
 export const enum ElemType {
 	s_Cursor = "s_Cursor",
-	s_ViewOnlyCursor = "s_ViewOnlyCursor",
+	s_HistoricalCursor = "s_HistoricalCursor",
 	DamageMark = "DamageMark",
 	HealingMark = "HealingMark",
 	AggroMark = "AggroMark",
@@ -48,8 +48,8 @@ export type CursorElem = TimelineElemBase & {
 	type: ElemType.s_Cursor;
 	displayTime: number;
 };
-export type ViewOnlyCursorElem = TimelineElemBase & {
-	type: ElemType.s_ViewOnlyCursor;
+export type HistoricalCursorElem = TimelineElemBase & {
+	type: ElemType.s_HistoricalCursor;
 	displayTime: number;
 	enabled: boolean;
 };
@@ -119,7 +119,7 @@ export type SerializedMarker = TimelineElemBase & {
 	description: string;
 };
 
-export type SharedTimelineElem = CursorElem | ViewOnlyCursorElem;
+export type SharedTimelineElem = CursorElem | HistoricalCursorElem;
 
 export type SlotTimelineElem =
 	| PotencyMarkElem
@@ -131,7 +131,7 @@ export type SlotTimelineElem =
 	| SkillElem;
 
 function isSharedElem(elem: TimelineElem) {
-	return elem.type === ElemType.s_Cursor || elem.type === ElemType.s_ViewOnlyCursor;
+	return elem.type === ElemType.s_Cursor || elem.type === ElemType.s_HistoricalCursor;
 }
 
 export type TimelineElem = SharedTimelineElem | SlotTimelineElem;
@@ -420,7 +420,7 @@ export class Timeline {
 			displayTime: 0, // gets updated later (it seems)
 		});
 		this.addElement({
-			type: ElemType.s_ViewOnlyCursor,
+			type: ElemType.s_HistoricalCursor,
 			time: 0,
 			displayTime: 0,
 			enabled: false,

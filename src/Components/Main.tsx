@@ -107,7 +107,6 @@ const betaPrefix = isBetaSite ? "[BETA] " : "";
 export default class Main extends React.Component<{ command?: string }> {
 	controlRegionRef: React.RefObject<HTMLDivElement | null>;
 	gameplayKeyCapture: React.KeyboardEventHandler<HTMLDivElement>;
-	gameplayMouseCapture: React.MouseEventHandler<HTMLDivElement>;
 	setColorTheme: (colorTheme: ColorTheme) => void;
 
 	state: {
@@ -139,10 +138,6 @@ export default class Main extends React.Component<{ command?: string }> {
 				controller.handleKeyboardEvent(evt);
 				evt.preventDefault();
 			}
-		};
-
-		this.gameplayMouseCapture = (evt: React.MouseEvent) => {
-			controller.displayCurrentState();
 		};
 
 		setJob = (job: ShellJob) => {
@@ -244,7 +239,6 @@ export default class Main extends React.Component<{ command?: string }> {
 				tabIndex={-1}
 				ref={this.controlRegionRef}
 				onKeyDown={this.gameplayKeyCapture}
-				onClick={this.gameplayMouseCapture}
 			>
 				<StatusDisplay />
 				<SkillsWindow />

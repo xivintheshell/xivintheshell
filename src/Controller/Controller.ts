@@ -310,7 +310,7 @@ class Controller {
 
 			// view only cursor
 			this.timeline.updateElem({
-				type: ElemType.s_ViewOnlyCursor,
+				type: ElemType.s_HistoricalCursor,
 				time: this.game.time, // is actually historical state
 				displayTime: this.game.getDisplayTime(),
 				enabled: true,
@@ -337,7 +337,7 @@ class Controller {
 	displayCurrentState() {
 		this.displayingUpToDateGameState = true;
 		this.timeline.updateElem({
-			type: ElemType.s_ViewOnlyCursor,
+			type: ElemType.s_HistoricalCursor,
 			enabled: false,
 			time: 0,
 			displayTime: 0,
@@ -1934,20 +1934,36 @@ class Controller {
 		if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
 			// not sure should allow any control here.
 		} else {
-			const status = this.#useSkill(
-				props.skillName,
-				props.targetCount,
-				this.tickMode,
-				-1,
-				false,
-			);
-			if (status.status.ready()) {
-				this.scrollToTime(this.game.time);
-				this.autoSave();
-				// This is needed to correct timestamps of newly-used actions
-				// in realtime mode, this is handled at the end of the animation loop
-				if (this.tickMode !== TickMode.RealTimeAutoPause) {
+			if (this.displayingUpToDateGameState) {
+				// Append the skill to the timeline.
+				const status = this.#useSkill(
+					props.skillName,
+					props.targetCount,
+					this.tickMode,
+					-1,
+					false,
+				);
+				if (status.status.ready()) {
+					this.scrollToTime(this.game.time);
+					this.autoSave();
+					// This is needed to correct timestamps of newly-used actions
+					// in realtime mode, this is handled at the end of the animation loop
+					if (this.tickMode !== TickMode.RealTimeAutoPause) {
+						updateInvalidStatus();
+					}
+				}
+			} else {
+				// Insert the skill to the middle of the timeline by modifying the record.
+				const insertIdx = this.record.selectionStartIndex;
+				if (insertIdx !== undefined) {
+					const newSkill = skillNode(props.skillName, props.targetCount);
+					this.record.insertActionNode(newSkill, insertIdx);
+					const result = this.checkRecordValidity(this.record, 0, true);
+					this.autoSave();
+					// After inserting the new skill, restart simulation and re-select the newly-added skill.
 					updateInvalidStatus();
+					this.record.selectSingle(insertIdx);
+					this.displayHistoricalState(result.skillUseTimes[insertIdx], insertIdx);
 				}
 			}
 		}

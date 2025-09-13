@@ -436,19 +436,13 @@ function SkillButton(props: SkillButtonProps) {
 	</div>;
 	const tooltipTrigger = <span title={ACTIONS[props.skillName].name} className="skillButton">
 		<Clickable
-			onClickFn={
-				controller.displayingUpToDateGameState
-					? () => {
-							controller.requestUseSkill({
-								skillName: props.skillName,
-								targetCount: props.targetCount,
-							});
-							controller.updateAllDisplay();
-						}
-					: undefined
-			}
+			onClickFn={() => {
+				controller.requestUseSkill({
+					skillName: props.skillName,
+					targetCount: props.targetCount,
+				});
+			}}
 			content={icon}
-			style={controller.displayingUpToDateGameState ? {} : { cursor: "not-allowed" }}
 		/>
 	</span>;
 	return <Tooltip.Root delay={0} hoverable={false}>

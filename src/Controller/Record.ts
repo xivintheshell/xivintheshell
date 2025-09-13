@@ -511,6 +511,11 @@ export class Line {
 		this.actions.unshift(actionNode);
 	}
 
+	insertActionNode(actionNode: ActionNode, index: number) {
+		console.assert(actionNode !== undefined);
+		this.actions.splice(index, 0, actionNode);
+	}
+
 	addActionNode(actionNode: ActionNode) {
 		console.assert(actionNode !== undefined);
 		this.actions.push(actionNode);
