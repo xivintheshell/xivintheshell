@@ -2221,9 +2221,6 @@ export function TimelineCanvas(props: {
 		onMouseUp: (e: any, x: number, y: number) => {
 			mouseX.current = x;
 			mouseY.current = y;
-			// Always end a background selection operation when the mouse is released, regardless of
-			// what element the cursor is hovering.
-			bgSelecting.current = false;
 			// Cancel any existing drag operation.
 			if (draggedSkillElem.current) {
 				const targetIndex = globalDragContext.dragTargetIndex;
@@ -2285,6 +2282,10 @@ export function TimelineCanvas(props: {
 					);
 				}
 			}
+			// Always end a background selection operation when the mouse is released, regardless of
+			// what element the cursor is hovering.
+			// Set this at the end to ensure mouseUp on top of a skill is properly handled.
+			bgSelecting.current = false;
 		},
 		onMouseDown: (x: number, y: number) => {
 			mouseDownX.current = x;
