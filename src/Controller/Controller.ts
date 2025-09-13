@@ -1942,8 +1942,9 @@ class Controller {
 		this.autoSave();
 		// After inserting the new skill, restart simulation and re-select the newly-added skill.
 		const status = updateInvalidStatus();
-		this.record.selectSingle(insertIdx);
-		this.displayHistoricalState(status.skillUseTimes[insertIdx], insertIdx);
+		const newSelectIdx = Math.min(insertIdx + 1, this.record.length - 1);
+		this.record.selectSingle(newSelectIdx);
+		this.displayHistoricalState(status.skillUseTimes[newSelectIdx], newSelectIdx);
 	}
 
 	requestUseSkill(props: { skillName: ActionKey; targetCount: number }) {
