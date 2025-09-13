@@ -2135,11 +2135,11 @@ class Controller {
 	}
 
 	handleKeyboardEvent(evt: React.KeyboardEvent) {
-		console.log(evt.key);
 		if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
 			// never accept shortcuts while we're mid-animation
 			return;
 		}
+		const ctrlOrCmd = evt.ctrlKey || evt.metaKey;
 		// console.log(evt.keyCode);
 		let processed = false;
 		if (this.displayingUpToDateGameState) {
@@ -2151,10 +2151,10 @@ class Controller {
 				processed = true;
 			}
 		}
-		if (evt.key === "z" && evt.ctrlKey) {
+		if (evt.key === "z" && ctrlOrCmd) {
 			this.undoStack.undo();
 			processed = true;
-		} else if ((evt.key === "Z" && evt.ctrlKey) || (evt.key === "y" && evt.ctrlKey)) {
+		} else if ((evt.key === "Z" && ctrlOrCmd) || (evt.key === "y" && ctrlOrCmd)) {
 			this.undoStack.redo();
 			processed = true;
 		}
