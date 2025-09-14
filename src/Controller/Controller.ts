@@ -9,7 +9,7 @@ import {
 	ShellVersion,
 	TickMode,
 } from "./Common";
-import { UndoStack, AddNode } from "./UndoStack";
+import { UndoStack, AddNode, DeleteNodes } from "./UndoStack";
 import { GameState } from "../Game/GameState";
 import {
 	getAutoReplacedSkillName,
@@ -1074,6 +1074,7 @@ class Controller {
 		overrideTickMode: TickMode = this.tickMode,
 		maxReplayTime: number = -1,
 		addInvalidNodes: boolean = true,
+		canUndo: boolean = false,
 	): SkillButtonViewInfo {
 		let status = this.game.getSkillAvailabilityStatus(skillName);
 		const preStartLockTime = this.game.time;
@@ -1082,7 +1083,10 @@ class Controller {
 
 		// Wait out the current animation lock or remaining cooldown on the skill,
 		// then attempt to use it ASAP
-		this.#requestTick({ deltaTime: beforeWaitTime });
+		const waitNode = this.#requestTick({ deltaTime: beforeWaitTime });
+		if (canUndo && waitNode) {
+			this.undoStack.push(new AddNode(waitNode, this.record.length - 1));
+		}
 		skillName = getConditionalReplacement(skillName, this.game);
 		status = this.game.getSkillAvailabilityStatus(skillName);
 
@@ -1094,6 +1098,9 @@ class Controller {
 			node.tmp_startLockTime = this.game.time;
 			this.record.addActionNode(node);
 			actionIndex = this.record.tailIndex;
+			if (canUndo && node) {
+				this.undoStack.push(new AddNode(node, this.record.length - 1));
+			}
 			// If the skill can be used, do so.
 			this.game.useSkill(skillName, node, actionIndex);
 			node.tmp_invalid_reasons = [];
@@ -1937,23 +1944,34 @@ class Controller {
 	}
 
 	waitTillNextMpOrLucidTick() {
-		this.#requestTick({ deltaTime: this.game.timeTillNextMpGainEvent(), waitKind: "mp" });
+		const node = this.#requestTick({
+			deltaTime: this.game.timeTillNextMpGainEvent(),
+			waitKind: "mp",
+		});
+		if (node !== undefined) {
+			this.undoStack.push(new AddNode(node, this.record.length - 1));
+		}
 		updateInvalidStatus();
 		this.updateAllDisplay();
 	}
 
 	insertRecordNodes(nodes: ActionNode[], insertIdx: number) {
-		// cleanup function for taking care of business after splicing a new node into the middle of
+		// cleanup function for taking care of business after splicing new nodes into the middle of
 		// the timeline
 		// unlike tryAddLine, this function can add nodes at arbitrary positions
 		this.record.insertActionNodes(nodes, insertIdx);
 		this.autoSave();
 		// After inserting the new skill, restart simulation and re-select the newly-added skill.
 		const status = updateInvalidStatus();
-		const newSelectIdx = Math.min(insertIdx + 1, this.record.length - 1);
-		this.record.selectSingle(newSelectIdx);
+		let newSelectIdx: number;
 		if (nodes.length > 1) {
+			newSelectIdx = Math.min(insertIdx, this.record.length - 1);
+			console.log(newSelectIdx, newSelectIdx + nodes.length - 1);
+			this.record.selectSingle(newSelectIdx);
 			this.record.selectUntil(newSelectIdx + nodes.length - 1);
+		} else {
+			newSelectIdx = Math.min(insertIdx + 1, this.record.length - 1);
+			this.record.selectSingle(newSelectIdx);
 		}
 		this.displayHistoricalState(status.skillUseTimes[newSelectIdx], newSelectIdx);
 	}
@@ -1978,6 +1996,7 @@ class Controller {
 					this.tickMode,
 					-1,
 					false,
+					canUndo,
 				);
 				if (status.status.ready()) {
 					this.scrollToTime(this.game.time);
@@ -1986,14 +2005,6 @@ class Controller {
 					// in realtime mode, this is handled at the end of the animation loop
 					if (this.tickMode !== TickMode.RealTimeAutoPause) {
 						updateInvalidStatus();
-					}
-					if (canUndo) {
-						this.undoStack.push(
-							new AddNode(
-								skillNode(props.skillName, props.targetCount),
-								this.record.length - 1,
-							),
-						);
 					}
 				}
 			} else {
@@ -2138,6 +2149,9 @@ class Controller {
 		}
 	}
 
+	// Process key events across the whole webpage.
+	// If an element like an input field does not want this handler to be called while focused,
+	// it should call evt.stopPropagation().
 	handleKeyboardEvent(evt: React.KeyboardEvent) {
 		if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
 			// never accept shortcuts while we're mid-animation
@@ -2147,11 +2161,15 @@ class Controller {
 		// console.log(evt.keyCode);
 		let processed = false;
 		if (this.displayingUpToDateGameState) {
-			if (evt.keyCode === 85) {
-				// u (remove last action)
-				this.rewindUntilBefore(this.record.tailIndex, false);
-				this.updateAllDisplay();
-				this.autoSave();
+			if (evt.key === "u") {
+				// delete the last action in the current timeline
+				const action = new DeleteNodes(
+					this.record.tailIndex,
+					[this.record.actions[this.record.tailIndex]],
+					"delete",
+				);
+				action.redo();
+				this.undoStack.push(action);
 				processed = true;
 			}
 		}
@@ -2164,6 +2182,56 @@ class Controller {
 		}
 		if (processed) {
 			evt.preventDefault();
+		}
+	}
+
+	// Process key events within the timeline canvas and timeline editor.
+	handleTimelineKeyboardEvent(evt: React.KeyboardEvent) {
+		if (!controller.shouldLoop) {
+			const ctrlOrCmd = evt.ctrlKey || evt.metaKey;
+			const firstSelected = controller.record.selectionStartIndex;
+			const lastSelected = controller.record.selectionEndIndex;
+			const selecting = firstSelected !== undefined;
+			if (evt.key === "Backspace" || evt.key === "Delete") {
+				if (selecting) {
+					controller.undoStack.push(
+						new DeleteNodes(
+							firstSelected,
+							controller.record.getSelected().actions,
+							"delete",
+						),
+					);
+					controller.deleteSelectedSkills();
+				}
+			} else if (evt.key === "ArrowUp") {
+				if (selecting) {
+					if (evt.shiftKey) {
+						controller.timeline.resizeSelection(true);
+					} else {
+						controller.timeline.onClickTimelineAction(firstSelected - 1, false);
+					}
+				}
+			} else if (evt.key === "ArrowDown") {
+				if (evt.shiftKey) {
+					controller.timeline.resizeSelection(false);
+				} else {
+					controller.timeline.onClickTimelineAction(lastSelected! + 1, false);
+				}
+			} else if (evt.key === "Home") {
+				controller.timeline.onClickTimelineAction(0, evt.shiftKey);
+			} else if (evt.key === "End") {
+				controller.timeline.onClickTimelineAction(
+					controller.record.length - 1,
+					evt.shiftKey,
+				);
+			} else if (evt.key === "Escape") {
+				controller.record.unselectAll();
+				controller.displayCurrentState();
+			} else if (evt.key === "a" && ctrlOrCmd) {
+				controller.timeline.onClickTimelineAction(0, false);
+				controller.timeline.onClickTimelineAction(controller.record.length - 1, true);
+				evt.preventDefault();
+			}
 		}
 	}
 

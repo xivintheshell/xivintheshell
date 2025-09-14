@@ -601,7 +601,11 @@ export function TimelineEditor() {
 			onClick={(e) =>
 				doRecordEdit((record) => {
 					controller.undoStack.push(
-						new DeleteNodes(record.selectionStartIndex!, record.getSelected().actions),
+						new DeleteNodes(
+							record.selectionStartIndex!,
+							record.getSelected().actions,
+							"delete",
+						),
 					);
 					return record.deleteSelected();
 				})
@@ -650,42 +654,22 @@ export function TimelineEditor() {
 	</div>;
 
 	const rowKeyHandler = (e: React.KeyboardEvent) => {
-		const ctrlOrCmd = e.ctrlKey || e.metaKey;
 		const firstSelected = controller.record.selectionStartIndex;
-		const lastSelected = controller.record.selectionEndIndex;
 		const selecting = firstSelected !== undefined;
 		if (selecting) {
 			if (e.key === "Backspace" || e.key === "Delete") {
+				// Don't use the shared controller codepath since we operate on the temporary edit record
 				doRecordEdit((record) => {
 					controller.undoStack.push(
-						new DeleteNodes(firstSelected, controller.record.getSelected().actions),
+						new DeleteNodes(firstSelected, record.getSelected().actions, "delete"),
 					);
 					return record.deleteSelected();
 				});
-			} else if (e.key === "ArrowUp") {
-				if (e.shiftKey) {
-					controller.timeline.resizeSelection(true);
-				} else {
-					controller.timeline.onClickTimelineAction(firstSelected - 1, false);
+			} else {
+				controller.handleTimelineKeyboardEvent(e);
+				if (e.key === "Escape") {
+					globalDragTarget.setDragTarget(null, null);
 				}
-			} else if (e.key === "ArrowDown") {
-				if (e.shiftKey) {
-					controller.timeline.resizeSelection(false);
-				} else {
-					controller.timeline.onClickTimelineAction(lastSelected! + 1, false);
-				}
-			} else if (e.key === "Home") {
-				controller.timeline.onClickTimelineAction(0, e.shiftKey);
-			} else if (e.key === "End") {
-				controller.timeline.onClickTimelineAction(controller.record.length - 1, e.shiftKey);
-			} else if (e.key === "Escape") {
-				controller.record.unselectAll();
-				controller.displayCurrentState();
-				globalDragTarget.setDragTarget(null, null);
-			} else if (e.key === "a" && ctrlOrCmd) {
-				controller.timeline.onClickTimelineAction(0, false);
-				controller.timeline.onClickTimelineAction(controller.record.length - 1, true);
-				e.preventDefault();
 			}
 		}
 	};

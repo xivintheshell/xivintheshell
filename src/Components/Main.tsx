@@ -249,6 +249,7 @@ export default class Main extends React.Component<{ command?: string }> {
 				bottom: 0,
 				left: 0,
 				right: 0,
+				outline: "none",
 			}}
 			tabIndex={-1}
 			onKeyDown={this.gameplayKeyCapture}

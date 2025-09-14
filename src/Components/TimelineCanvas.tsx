@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useContext, CSSProperties } from "react";
-import { DeleteNodes, MoveNodes } from "../Controller/UndoStack";
+import { MoveNodes } from "../Controller/UndoStack";
 import {
 	AutoTickMarkElem,
 	CursorElem,
@@ -2317,48 +2317,11 @@ export function TimelineCanvas(props: {
 			}
 		},
 		onKeyDown: (e: React.KeyboardEvent) => {
+			controller.handleTimelineKeyboardEvent(e);
 			if (!controller.shouldLoop) {
-				const ctrlOrCmd = e.ctrlKey || e.metaKey;
-				const firstSelected = controller.record.selectionStartIndex;
-				const lastSelected = controller.record.selectionEndIndex;
-				const selecting = firstSelected !== undefined;
-				if (e.key === "Backspace" || e.key === "Delete") {
-					if (selecting) {
-						controller.undoStack.push(
-							new DeleteNodes(firstSelected, controller.record.getSelected().actions),
-						);
-						controller.deleteSelectedSkills();
-					}
-				} else if (e.key === "ArrowUp") {
-					if (selecting) {
-						if (e.shiftKey) {
-							controller.timeline.resizeSelection(true);
-						} else {
-							controller.timeline.onClickTimelineAction(firstSelected - 1, false);
-						}
-					}
-				} else if (e.key === "ArrowDown") {
-					if (e.shiftKey) {
-						controller.timeline.resizeSelection(false);
-					} else {
-						controller.timeline.onClickTimelineAction(lastSelected! + 1, false);
-					}
-				} else if (e.key === "Home") {
-					controller.timeline.onClickTimelineAction(0, e.shiftKey);
-				} else if (e.key === "End") {
-					controller.timeline.onClickTimelineAction(
-						controller.record.length - 1,
-						e.shiftKey,
-					);
-				} else if (e.key === "Escape") {
-					controller.record.unselectAll();
-					controller.displayCurrentState();
+				if (e.key === "Escape") {
 					globalDragContext.setDragTarget(null, null);
 					setDraggedSkillElem(undefined);
-				} else if (e.key === "a" && ctrlOrCmd) {
-					controller.timeline.onClickTimelineAction(0, false);
-					controller.timeline.onClickTimelineAction(controller.record.length - 1, true);
-					e.preventDefault();
 				}
 			}
 		},

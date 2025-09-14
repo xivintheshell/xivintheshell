@@ -115,11 +115,13 @@ export class MoveNodes extends TimelineInteraction {
 export class DeleteNodes extends TimelineInteraction {
 	startIndex: number;
 	nodes: ActionNode[];
+	source: "delete" | "cut";
 
-	constructor(startIndex: number, nodes: ActionNode[]) {
+	constructor(startIndex: number, nodes: ActionNode[], source: "delete" | "cut") {
 		super();
 		this.startIndex = startIndex;
 		this.nodes = nodes;
+		this.source = source;
 	}
 
 	override undo() {
@@ -133,7 +135,28 @@ export class DeleteNodes extends TimelineInteraction {
 	}
 }
 
-// AddNodeBulk (presets; partially used by imports but those also have stat changes)
+export class AddNodeBulk extends TimelineInteraction {
+	nodes: ActionNode[];
+	index: number;
+	source: "preset" | "paste";
+
+	constructor(nodes: ActionNode[], index: number, source: "preset" | "paste") {
+		super();
+		this.nodes = nodes;
+		this.index = index;
+		this.source = source;
+	}
+
+	override undo() {
+		controller.record.selectSingle(this.index);
+		controller.record.selectUntil(this.index + this.nodes.length - 1);
+		controller.deleteSelectedSkills();
+	}
+
+	override redo() {
+		controller.insertRecordNodes(this.nodes, this.index);
+	}
+}
 
 // === META STUFF ===
 // SetActiveTimeline

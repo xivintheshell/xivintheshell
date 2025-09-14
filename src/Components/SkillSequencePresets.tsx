@@ -7,6 +7,7 @@ import {
 	LoadJsonFromFileOrUrl,
 	SaveToFile,
 } from "./Common";
+import { AddNodeBulk } from "../Controller/UndoStack";
 import { controller } from "../Controller/Controller";
 import { FileType, ReplayMode } from "../Controller/Common";
 import { SkillIconImage } from "./Skills";
@@ -64,26 +65,23 @@ function PresetLine(props: { line: Line }) {
 		{line.name} ({icons})
 	</span>;
 
-	const addLineStyle = controller.displayingUpToDateGameState
-		? {}
-		: {
-				//filter: "grayscale(100%)",
-				//pointerEvents: "none",
-				cursor: "not-allowed",
-			};
 	return <div style={{ marginBottom: "8px" }}>
 		<Clickable
 			content={clickableContent}
-			style={addLineStyle}
-			onClickFn={
-				controller.displayingUpToDateGameState
-					? () => {
-							controller.tryAddLine(line, ReplayMode.SkillSequence);
-							controller.updateAllDisplay();
-							controller.scrollToTime();
-						}
-					: undefined
-			}
+			onClickFn={() => {
+				const start = controller.record.selectionStartIndex;
+				if (controller.displayingUpToDateGameState) {
+					const end = controller.record.length;
+					if (controller.tryAddLine(line, ReplayMode.SkillSequence)) {
+						controller.undoStack.push(new AddNodeBulk(line.actions, end, "preset"));
+					}
+					controller.updateAllDisplay();
+					controller.scrollToTime();
+				} else if (start !== undefined) {
+					controller.insertRecordNodes(line.actions, start);
+					controller.undoStack.push(new AddNodeBulk(line.actions, start, "preset"));
+				}
+			}}
 		/>
 		<span> </span>
 		<Clickable
