@@ -2,10 +2,10 @@
 // The undo/redo methods of an interaction are only valid at the state before/after they were applied,
 // since they track stuff like record index that is sensitive to other state changes.
 
-// import React from "react";
 import { updateInvalidStatus } from "../Components/TimelineEditor";
+import { LocalizedContent } from "../Components/Localization";
 import { controller } from "./Controller";
-import { ActionNode } from "./Record";
+import { ActionNode, SerializedRecord } from "./Record";
 // import { ConfigData } from "../Game/GameConfig";
 
 const UNDO_STACK_LIMIT = 30;
@@ -36,6 +36,11 @@ export class UndoStack {
 		this.cursor = this.actions.length;
 	}
 
+	doThenPush(action: TimelineInteraction) {
+		action.redo();
+		this.push(action);
+	}
+
 	undo() {
 		if (this.cursor > 0) {
 			this.actions[--this.cursor].undo();
@@ -53,13 +58,26 @@ export class UndoStack {
 			console.log("nothing to redo");
 		}
 	}
+
+	peekUndoMessage(): LocalizedContent | undefined {
+		return this.cursor > 0 ? this.actions[this.cursor - 1].message : undefined;
+	}
+
+	peekRedoMessage(): LocalizedContent | undefined {
+		return this.cursor < this.actions.length ? this.actions[this.cursor].message : undefined;
+	}
 }
 
 export abstract class TimelineInteraction {
+	// A blurb to display on undo/redo buttons or toasts. Should be very short.
+	message: LocalizedContent;
+
+	constructor(message: LocalizedContent) {
+		this.message = message;
+	}
+
 	abstract undo(): void;
 	abstract redo(): void;
-	// abstract undoToast(): React.Element;
-	// abstract redoToast(): React.Element;
 }
 
 // === BASIC SINGLE-TIMELINE INTERACTIONS ===
@@ -68,7 +86,8 @@ export class AddNode extends TimelineInteraction {
 	index: number;
 
 	constructor(node: ActionNode, index: number) {
-		super();
+		// TODO: distinguish between node types
+		super({ en: "add action", zh: "添加技能" });
 		this.node = node;
 		this.index = index;
 	}
@@ -89,7 +108,7 @@ export class MoveNodes extends TimelineInteraction {
 	offset: number;
 
 	constructor(startIndex: number, selectCount: number, offset: number) {
-		super();
+		super({ en: "move action" + (selectCount > 1 ? "s" : ""), zh: "移动技能" });
 		this.startIndex = startIndex;
 		this.selectCount = selectCount;
 		this.offset = offset;
@@ -118,7 +137,10 @@ export class DeleteNodes extends TimelineInteraction {
 	source: "delete" | "cut";
 
 	constructor(startIndex: number, nodes: ActionNode[], source: "delete" | "cut") {
-		super();
+		super({
+			en: source + " action" + (nodes.length > 1 ? "s" : ""),
+			zh: (source === "delete" ? "删除" : "剪切") + "技能",
+		});
 		this.startIndex = startIndex;
 		this.nodes = nodes;
 		this.source = source;
@@ -141,7 +163,10 @@ export class AddNodeBulk extends TimelineInteraction {
 	source: "preset" | "paste";
 
 	constructor(nodes: ActionNode[], index: number, source: "preset" | "paste") {
-		super();
+		super({
+			en: source === "preset" ? "add preset sequence" : "paste actions",
+			zh: source === "preset" ? "增加技能序列预设" : "粘贴技能",
+		});
 		this.nodes = nodes;
 		this.index = index;
 		this.source = source;
@@ -159,9 +184,104 @@ export class AddNodeBulk extends TimelineInteraction {
 }
 
 // === META STUFF ===
-// SetActiveTimeline
-// DeleteTimeline
-// NewTimeline
+export class SetActiveTimelineSlot extends TimelineInteraction {
+	oldIndex: number;
+	newIndex: number;
+
+	constructor(oldIndex: number, newIndex: number) {
+		super({
+			en: "change active slot",
+			zh: "交换当前时间轴",
+		});
+		this.oldIndex = oldIndex;
+		this.newIndex = newIndex;
+	}
+
+	override undo() {
+		controller.setActiveSlot(this.oldIndex);
+		controller.displayCurrentState();
+	}
+
+	override redo() {
+		controller.setActiveSlot(this.newIndex);
+		controller.displayCurrentState();
+	}
+}
+
+export class DeleteTimelineSlot extends TimelineInteraction {
+	deleteIndex: number;
+	deletedRecord: SerializedRecord;
+
+	constructor(deleteIndex: number, deletedRecord: SerializedRecord) {
+		super({
+			en: "delete slot",
+			zh: "删除时间轴",
+		});
+		this.deleteIndex = deleteIndex;
+		this.deletedRecord = deletedRecord;
+	}
+
+	override undo() {
+		controller.timeline.addSlotAtIndex(this.deleteIndex);
+		controller.loadBattleRecordFromFile(this.deletedRecord);
+		controller.autoSave();
+		controller.displayCurrentState();
+	}
+
+	override redo() {
+		controller.timeline.removeSlot(this.deleteIndex);
+		controller.displayCurrentState();
+	}
+}
+
+export class AddTimelineSlot extends TimelineInteraction {
+	oldIndex: number;
+
+	constructor(currentIndex: number) {
+		super({
+			en: "add timeline slot",
+			zh: "添加时间轴",
+		});
+		// track the original active slot to ensure we copy the correct config
+		this.oldIndex = currentIndex;
+	}
+
+	override undo() {
+		controller.timeline.removeSlot(controller.timeline.slots.length - 1);
+		controller.setActiveSlot(this.oldIndex);
+		controller.displayCurrentState();
+	}
+
+	override redo() {
+		controller.setActiveSlot(this.oldIndex);
+		controller.timeline.addSlot();
+		controller.displayCurrentState();
+	}
+}
+
+export class CloneTimelineSlot extends TimelineInteraction {
+	sourceIndex: number;
+
+	constructor(sourceIndex: number) {
+		super({
+			en: "clone timeline slot",
+			zh: "复制时间轴",
+		});
+		this.sourceIndex = sourceIndex;
+	}
+
+	override undo() {
+		controller.timeline.removeSlot(controller.timeline.slots.length - 1);
+		controller.setActiveSlot(this.sourceIndex);
+		controller.displayCurrentState();
+	}
+
+	override redo() {
+		controller.setActiveSlot(this.sourceIndex);
+		controller.cloneActiveSlot();
+		controller.displayCurrentState();
+	}
+}
 
 // === CONFIGURATION AND IMPORT INTERACTIONS ===
 
@@ -182,3 +302,5 @@ export class AddNodeBulk extends TimelineInteraction {
 // export class ImportTimeline extends TimelineInteraction {
 
 // }
+
+// === MARKER ACTIONS ===

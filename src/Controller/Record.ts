@@ -18,7 +18,7 @@
 
 import { FileType } from "./Common";
 import { BuffType, SkillReadyStatus, SkillUnavailableReason } from "../Game/Common";
-import { GameConfig } from "../Game/GameConfig";
+import { GameConfig, SerializedConfig } from "../Game/GameConfig";
 import { Potency, PotencyKind } from "../Game/Potency";
 import { controller } from "./Controller";
 import { ACTIONS, ActionKey, ResourceKey } from "../Game/Data";
@@ -145,6 +145,13 @@ export function setResourceNode(buffName: ResourceKey): ActionNode {
 }
 
 export type SerializedLine = SerializedAction[];
+
+export interface SerializedRecord {
+	name: string;
+	fileType: FileType.Record;
+	config: SerializedConfig;
+	actions: SerializedLine;
+}
 
 export class ActionNode {
 	#capturedBuffs: Set<BuffType>;
@@ -769,13 +776,15 @@ export class Record extends Line {
 		this.unselectAll();
 		return originalStartIndex;
 	}
-	serialized() {
+	serialized(): SerializedRecord {
 		console.assert(this.config);
 		const base = super.serialized();
 		return {
 			name: base.name,
 			fileType: FileType.Record,
+			// @ts-expect-error serialization typing is a mess
 			config: this.config?.serialized(),
+			// @ts-expect-error serialization typing is a mess
 			actions: base.actions,
 		};
 	}

@@ -1,5 +1,11 @@
 import React, { useEffect, useRef, useContext, CSSProperties } from "react";
-import { MoveNodes } from "../Controller/UndoStack";
+import {
+	MoveNodes,
+	SetActiveTimelineSlot,
+	AddTimelineSlot,
+	DeleteTimelineSlot,
+	CloneTimelineSlot,
+} from "../Controller/UndoStack";
 import {
 	AutoTickMarkElem,
 	CursorElem,
@@ -1442,7 +1448,9 @@ export function drawTimelines(params: {
 					: [localize({ en: "set active", zh: "设为当前" }) as string],
 			onMouseUp: (info, mouseDownInHitbox) => {
 				if (mouseDownInHitbox) {
-					controller.setActiveSlot(slot);
+					controller.undoStack.doThenPush(
+						new SetActiveTimelineSlot(renderingProps.activeSlotIndex, slot),
+					);
 				}
 			},
 			pointerMouse: true,
@@ -1464,8 +1472,12 @@ export function drawTimelines(params: {
 				hoverTip: [localize({ en: "delete", zh: "删除" }) as string],
 				onMouseUp: (info, mouseDownInHitbox) => {
 					if (mouseDownInHitbox) {
-						controller.timeline.removeSlot(slot);
-						controller.displayCurrentState();
+						controller.undoStack.doThenPush(
+							new DeleteTimelineSlot(
+								renderingProps.activeSlotIndex,
+								controller.record.serialized(),
+							),
+						);
 					}
 				},
 				pointerMouse: true,
@@ -1650,8 +1662,9 @@ function drawAddSlotButton(params: {
 		testInteraction(handle, {
 			onMouseUp: (info, mouseDownInHitbox) => {
 				if (mouseDownInHitbox) {
-					controller.timeline.addSlot();
-					controller.displayCurrentState();
+					controller.undoStack.doThenPush(
+						new AddTimelineSlot(renderingProps.activeSlotIndex),
+					);
 				}
 			},
 			pointerMouse: true,
@@ -1681,8 +1694,9 @@ function drawAddSlotButton(params: {
 		testInteraction(cloneHandle, {
 			onMouseUp: (info, mouseDownInHitbox) => {
 				if (mouseDownInHitbox) {
-					controller.cloneActiveSlot();
-					controller.displayCurrentState();
+					controller.undoStack.doThenPush(
+						new CloneTimelineSlot(renderingProps.activeSlotIndex),
+					);
 				}
 			},
 			pointerMouse: true,

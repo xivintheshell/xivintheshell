@@ -343,11 +343,29 @@ export class Timeline {
 		this.#save();
 	}
 
-	addSlot() {
-		this.slots.push({ job: "BLM", elements: [] });
-		console.assert(this.slots.length <= MAX_TIMELINE_SLOTS);
-		this.activeSlotIndex = this.slots.length - 1;
+	addSlotAtIndex(idx: number) {
+		if (idx < 0 || idx > this.slots.length || this.slots.length + 1 > MAX_TIMELINE_SLOTS) {
+			console.error("attempted to add slot at invalid index", idx);
+			return;
+		}
+		// move other save data up 1 slot, traversing them from highest to lowest
+		for (let i = MAX_TIMELINE_SLOTS - 1; i >= idx; i--) {
+			let str = getCachedValue(`gameRecord${i}`);
+			if (str !== null) {
+				setCachedValue(`gameRecord${i + 1}`, str);
+			}
+			str = getCachedValue(`gameTimeInfo${i}`);
+			if (str !== null) {
+				setCachedValue(`gameTimeInfo${i + 1}`, str);
+			}
+		}
+		this.slots.splice(idx, 0, { job: "BLM", elements: [] });
+		this.activeSlotIndex = idx;
 		controller.setConfigAndRestart(controller.gameConfig);
+	}
+
+	addSlot() {
+		this.addSlotAtIndex(this.slots.length);
 	}
 
 	removeSlot(idx: number) {

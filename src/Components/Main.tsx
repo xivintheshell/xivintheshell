@@ -354,6 +354,9 @@ export default class Main extends React.Component<{ command?: string }> {
 				    font-size: 100%;
 				    z-index: 10;
 				}
+				button:disabled {
+					background-color: ${colors.background};
+				}
 			`}</style>
 			<ColorThemeContext.Provider value={this.state.colorTheme}>
 				<div style={containerStyle} id={"globalHelpTooltipAnchor"}>

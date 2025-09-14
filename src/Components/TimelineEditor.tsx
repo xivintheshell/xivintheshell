@@ -540,7 +540,6 @@ export function TimelineEditor() {
 	const buttonStyle: CSSProperties = {
 		display: "block",
 		width: "100%",
-		marginBottom: 10,
 		padding: 3,
 	};
 	const doRecordEdit = (action: (record: Record) => number | undefined) => {
@@ -567,7 +566,11 @@ export function TimelineEditor() {
 			updateTimelineView();
 		}
 	};
-	const toolbar = <div style={{ marginBottom: 6, flex: 1 }}>
+	const peekUndo = controller.undoStack.peekUndoMessage();
+	const peekRedo = controller.undoStack.peekRedoMessage();
+	const toolbar = <div
+		style={{ marginBottom: 6, flex: 1, display: "flex", flexDirection: "column", gap: 10 }}
+	>
 		<button
 			style={buttonStyle}
 			onClick={(e) =>
@@ -650,6 +653,32 @@ export function TimelineEditor() {
 					移到选区最前
 				</>,
 			})}
+		</button>
+		<hr
+			style={{
+				backgroundColor: colors.bgLowContrast,
+				height: 2,
+				marginTop: -2,
+				marginBottom: -2,
+				border: 0,
+				width: "100%",
+			}}
+		/>
+		<button
+			style={buttonStyle}
+			onClick={() => controller.undoStack.undo()}
+			disabled={peekUndo === undefined}
+		>
+			{localize({ en: "undo ", zh: "撤消" })}
+			{localize(peekUndo ?? { en: "" })}
+		</button>
+		<button
+			style={buttonStyle}
+			onClick={() => controller.undoStack.redo()}
+			disabled={peekRedo === undefined}
+		>
+			{localize({ en: "redo ", zh: "重做" })}
+			{localize(peekRedo ?? { en: "" })}
 		</button>
 	</div>;
 

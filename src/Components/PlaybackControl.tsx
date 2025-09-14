@@ -1610,7 +1610,6 @@ export function Config() {
 						width: "100%",
 						fontWeight: !jobOrLevelDirty && configFields.dirty ? "bold" : "normal",
 						textDecoration: jobOrLevelDirty ? "line-through" : undefined,
-						backgroundColor: jobOrLevelDirty ? colors.background : undefined,
 					}}
 					disabled={jobOrLevelDirty}
 				>

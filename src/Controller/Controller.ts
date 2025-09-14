@@ -2163,13 +2163,13 @@ class Controller {
 		if (this.displayingUpToDateGameState) {
 			if (evt.key === "u") {
 				// delete the last action in the current timeline
-				const action = new DeleteNodes(
-					this.record.tailIndex,
-					[this.record.actions[this.record.tailIndex]],
-					"delete",
+				this.undoStack.doThenPush(
+					new DeleteNodes(
+						this.record.tailIndex,
+						[this.record.actions[this.record.tailIndex]],
+						"delete",
+					),
 				);
-				action.redo();
-				this.undoStack.push(action);
 				processed = true;
 			}
 		}
