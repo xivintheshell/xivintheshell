@@ -9,6 +9,7 @@ import {
 	Input,
 	ValueChangeEvent,
 } from "./Common";
+import { ConfigApply } from "../Controller/UndoStack";
 import { getCachedValue, setCachedValue, ShellVersion, TickMode } from "../Controller/Common";
 import { LevelSync, ProcMode } from "../Game/Common";
 import { getAllResources, getResourceInfo, ResourceOverrideData } from "../Game/Resources";
@@ -1302,6 +1303,8 @@ export function Config() {
 				window.alert("Invalid job: " + configFields.job);
 				return;
 			}
+			const oldConfig = controller.gameConfig.serialized();
+			const oldRecord = controller.record.serialized();
 			controller.setConfigAndRestart(
 				// @ts-expect-error too onerous to manually specify every field in a way that type-checks with fromEntries
 				{
@@ -1317,6 +1320,13 @@ export function Config() {
 					),
 				},
 				resetRecord,
+			);
+			controller.undoStack.push(
+				new ConfigApply(
+					oldConfig,
+					controller.gameConfig.serialized(),
+					resetRecord ? oldRecord : undefined,
+				),
 			);
 
 			setDirty(false);

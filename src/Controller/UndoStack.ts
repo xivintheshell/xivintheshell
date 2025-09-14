@@ -6,7 +6,7 @@ import { updateInvalidStatus } from "../Components/TimelineEditor";
 import { LocalizedContent } from "../Components/Localization";
 import { controller } from "./Controller";
 import { ActionNode, SerializedRecord } from "./Record";
-// import { ConfigData } from "../Game/GameConfig";
+import { SerializedConfig } from "../Game/GameConfig";
 
 const UNDO_STACK_LIMIT = 30;
 
@@ -44,18 +44,18 @@ export class UndoStack {
 	undo() {
 		if (this.cursor > 0) {
 			this.actions[--this.cursor].undo();
-			console.log("UNDO", this.actions[this.cursor]);
+			// console.log("UNDO", this.actions[this.cursor]);
 		} else {
-			console.log("nothing to undo");
+			// console.log("nothing to undo");
 		}
 	}
 
 	redo() {
 		if (this.cursor < this.actions.length) {
-			console.log("REDO", this.actions[this.cursor]);
+			// console.log("REDO", this.actions[this.cursor]);
 			this.actions[this.cursor++].redo();
 		} else {
-			console.log("nothing to redo");
+			// console.log("nothing to redo");
 		}
 	}
 
@@ -73,6 +73,8 @@ export abstract class TimelineInteraction {
 	message: LocalizedContent;
 
 	constructor(message: LocalizedContent) {
+		// TODO: make messages more detailed
+		// right now they're all very short to ensure they don't overflow the button's space
 		this.message = message;
 	}
 
@@ -285,22 +287,79 @@ export class CloneTimelineSlot extends TimelineInteraction {
 
 // === CONFIGURATION AND IMPORT INTERACTIONS ===
 
-// export class SetConfigField extends TimelineInteraction {
-//     constructor(fields: [K in keyof ConfigData]: { old: ConfigData[K]; new: ConfigData[K] }) {
-//         this.fields = fields;
-//     }
+export class ConfigApply extends TimelineInteraction {
+	// TODO: just encode diffs to save some memory?
+	oldConfig: SerializedConfig;
+	newConfig: SerializedConfig;
+	// Store the old record if the operation caused a reset.
+	oldRecord: SerializedRecord | undefined;
 
-//     override undo() {
+	constructor(
+		oldConfig: SerializedConfig,
+		newConfig: SerializedConfig,
+		oldRecord: SerializedRecord | undefined,
+	) {
+		super({ en: "change config", zh: "调整属性设置" });
+		this.oldConfig = oldConfig;
+		this.newConfig = newConfig;
+		if (
+			oldRecord === undefined &&
+			(oldConfig.job !== newConfig.job || oldConfig.level !== newConfig.level)
+		) {
+			console.error("config apply w/o reset but job or level changed");
+		}
+		this.oldRecord = oldRecord;
+	}
 
-//     }
+	override undo() {
+		if (this.oldRecord !== undefined) {
+			controller.loadBattleRecordFromFile(this.oldRecord);
+			controller.autoSave();
+		} else {
+			controller.setConfigAndRestart(this.oldConfig, false);
+		}
+		controller.updateAllDisplay();
+		controller.scrollToTime();
+	}
 
-//     override redo() {
+	override redo() {
+		controller.setConfigAndRestart(this.newConfig, this.oldRecord !== undefined);
+		controller.updateAllDisplay();
+		controller.scrollToTime();
+	}
+}
 
-//     }
-// }
+export class ImportTimeline extends TimelineInteraction {
+	// TODO: only set new record after an undo to save memory?
+	oldRecord: SerializedRecord;
+	importedRecord: SerializedRecord;
 
-// export class ImportTimeline extends TimelineInteraction {
+	constructor(oldRecord: SerializedRecord, importedRecord: SerializedRecord) {
+		super({
+			en: "import from file",
+			zh: "从文件导入战斗",
+		});
+		this.oldRecord = oldRecord;
+		this.importedRecord = importedRecord;
+	}
 
-// }
+	override undo() {
+		// loadBattleRecordFromFile calls render methods, so no need to explicily
+		// invoke updateAllDisplay here
+		controller.loadBattleRecordFromFile(this.oldRecord);
+		controller.autoSave();
+		controller.displayCurrentState();
+	}
 
+	override redo() {
+		controller.loadBattleRecordFromFile(this.importedRecord);
+		controller.autoSave();
+		controller.displayCurrentState();
+	}
+}
+
+// TODO
 // === MARKER ACTIONS ===
+// LoadMarkerPreset
+// AddMarker
+// RemoveMarkers
