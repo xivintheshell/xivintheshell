@@ -1,5 +1,11 @@
 [
 	{
+		"date": "9/14/25",
+		"changes": [
+			"Fixed a bug where certain config stats couldn't be changed."
+		]
+	},
+	{
 		"date": "9/12/25",
 		"changes": [
 			"Added an \"apply\" button to the configuration section, which can be used to change configuration without resetting the timeline."

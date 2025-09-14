@@ -706,7 +706,7 @@ type ConfigFields = {
 };
 
 function ConfigInputField(props: {
-	key: keyof ConfigFields;
+	name: keyof ConfigFields;
 	description: ContentNode;
 	initial: string;
 	dispatch: Dispatch<Partial<ConfigFields>>;
@@ -722,8 +722,8 @@ function ConfigInputField(props: {
 		defaultValue={props.initial}
 		description={props.description}
 		onChange={(val: string) => {
-			props.dispatch({ [props.key]: val });
-			props.removeImportedField(props.key);
+			props.dispatch({ [props.name]: val });
+			props.removeImportedField(props.name);
 		}}
 	/>;
 }
@@ -1338,6 +1338,7 @@ export function Config() {
 
 	const genericInputStatWidgets = genericInputStats.map(([key, description]) => <ConfigInputField
 		key={key}
+		name={key}
 		description={description}
 		initial={configFields[key].toString()}
 		dispatch={configFieldDispatch}
