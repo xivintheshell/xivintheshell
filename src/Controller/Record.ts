@@ -23,6 +23,7 @@ import { Potency, PotencyKind } from "../Game/Potency";
 import { controller } from "./Controller";
 import { ACTIONS, ActionKey, ResourceKey } from "../Game/Data";
 import { getNormalizedSkillName, getResourceKeyFromBuffName } from "../Game/Skills";
+import { localizeSkillName } from "../Components/Localization";
 
 export const enum ActionType {
 	Skill = "Skill",
@@ -215,6 +216,18 @@ export class ActionNode {
 		} else {
 			return this.info;
 		}
+	}
+
+	toLocalizedString(): string {
+		if (this.info.type === ActionType.Skill) {
+			return localizeSkillName(this.info.skillName);
+		} else if (this.info.type === ActionType.SetResourceEnabled) {
+		} else if (this.info.type === ActionType.Wait) {
+		} else if (this.info.type === ActionType.WaitForMP) {
+		} else if (this.info.type === ActionType.JumpToTimestamp) {
+		}
+		// TODO
+		return "(unknown)";
 	}
 
 	maybeGetActionKey(): ActionKey | undefined {

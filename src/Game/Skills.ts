@@ -230,12 +230,20 @@ export type Skill<T extends GameState> =
 // Unfortunately, I [sz] don't really know of a good way to encode the relationship between
 // the ShellJob and Skill<T>, so we'll just have to live with performing casts at certain locations.
 const skillMap: Map<ShellJob, Map<ActionKey, Skill<GameState>>> = new Map();
+const discordEmoteSkillMap: Map<ShellJob, Map<string, ActionKey>> = new Map();
+ALL_JOBS.forEach((job) => {
+	skillMap.set(job, new Map());
+	discordEmoteSkillMap.set(job, new Map());
+});
+
 // Track asset paths for all skills so we can load icons for multiple timelines
 const skillAssetPaths: Map<ActionKey, string> = new Map();
 const MISSING_ASSET_PATH = "General/Missing.png";
 
 const seenUnknownNames = new Set<string>();
 const normalizedSkillNameMap = new Map<string, ActionKey>();
+export const zhSkillNameMap = new Map<string, ActionKey>();
+export const jaSkillNameMap = new Map<string, ActionKey>();
 const typos = new Map<string, string>([
 	["Lightning Shock", "Lightning Shot"],
 	["Wanderer's Minuet", "The Wanderer's Minuet"],
@@ -295,11 +303,17 @@ export function getAllSkills<T extends GameState>(job: ShellJob): Map<ActionKey,
 
 function setSkill<T extends GameState>(job: ShellJob, skillName: ActionKey, skill: Skill<T>) {
 	skillMap.get(job)!.set(skillName, skill as Skill<GameState>);
+	discordEmoteSkillMap.get(job)!.set(ACTIONS[skillName].discordEmote ?? skillName, skillName);
 	normalizedSkillNameMap.set(ACTIONS[skillName].name.toLowerCase(), skillName);
+	const label = ACTIONS[skillName].label;
+	if (label?.zh !== undefined) {
+		zhSkillNameMap.set(label.zh as string, skillName);
+	}
+	if (label?.ja !== undefined) {
+		jaSkillNameMap.set(label.ja as string, skillName);
+	}
 	skillAssetPaths.set(skillName, skill.assetPath);
 }
-
-ALL_JOBS.forEach((job) => skillMap.set(job, new Map()));
 
 // Helper function to transform an optional<number | function> that has a default number value into a function.
 // If no default is provided, 0 is used instead.
@@ -844,11 +858,13 @@ export class DisplayedSkills {
 		this.#skills = [];
 		console.assert(skillMap.has(job), `No skill map found for job: ${job}`);
 		for (const skillInfo of skillMap.get(job)!.values()) {
-			// Leave off abilities that are above the current level sync.
+			// Leave off abilities that are above the current level sync, or placeholder abilities
+			// that use the "NEVER" cooldown.
 			// Also leave off any abilities that auto-downgrade, like HF2/HB2/HT,
 			// since their downgrade versions will already be on the hotbar.
 			if (
 				skillInfo.name !== "NEVER" &&
+				skillInfo.cdName !== "NEVER" &&
 				level >= skillInfo.unlockLevel &&
 				skillInfo.autoDowngrade === undefined &&
 				skillInfo.startOnHotbar

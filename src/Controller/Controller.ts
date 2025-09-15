@@ -60,6 +60,8 @@ import { inferJobFromSkillNames, PresetLinesManager } from "./PresetLinesManager
 import { updateSkillSequencePresetsView } from "../Components/SkillSequencePresets";
 import {
 	refreshTimelineEditor,
+	scrollEditorToFirstSelected,
+	scrollEditorToLastSelected,
 	updateActiveTimelineEditor,
 	updateInvalidStatus,
 } from "../Components/TimelineEditor";
@@ -1600,6 +1602,8 @@ class Controller {
 				console.error(`failed to load timeline in cached active slot ${slot}`);
 			}
 		});
+		this.savedHistoricalGame = this.game;
+		this.savedHistoricalRecord = this.record;
 		this.displayCurrentState();
 		setCachedValue("activeSlotIndex", slot.toString());
 	}
@@ -2201,6 +2205,8 @@ class Controller {
 			const firstSelected = controller.record.selectionStartIndex;
 			const lastSelected = controller.record.selectionEndIndex;
 			const selecting = firstSelected !== undefined;
+			let scrollToStart = false;
+			let scrollToEnd = false;
 			if (evt.key === "Backspace" || evt.key === "Delete") {
 				if (selecting) {
 					controller.undoStack.push(
@@ -2219,8 +2225,12 @@ class Controller {
 					} else {
 						controller.timeline.onClickTimelineAction(firstSelected - 1, false);
 					}
+					scrollToStart = true;
+					evt.preventDefault();
 				} else if (controller.record.length > 0) {
 					controller.timeline.onClickTimelineAction(controller.record.tailIndex, false);
+					scrollToStart = true;
+					evt.preventDefault();
 				}
 			} else if (evt.key === "ArrowDown") {
 				if (selecting) {
@@ -2229,16 +2239,22 @@ class Controller {
 					} else {
 						controller.timeline.onClickTimelineAction(lastSelected! + 1, false);
 					}
+					scrollToEnd = true;
+					evt.preventDefault();
 				} else if (controller.record.length > 0) {
 					controller.timeline.onClickTimelineAction(0, false);
+					scrollToEnd = true;
+					evt.preventDefault();
 				}
 			} else if (evt.key === "Home") {
 				controller.timeline.onClickTimelineAction(0, evt.shiftKey);
+				scrollToStart = true;
 			} else if (evt.key === "End") {
 				controller.timeline.onClickTimelineAction(
 					controller.record.tailIndex,
 					evt.shiftKey,
 				);
+				scrollToEnd = true;
 			} else if (evt.key === "Escape") {
 				controller.record.unselectAll();
 				controller.displayCurrentState();
@@ -2255,12 +2271,12 @@ class Controller {
 				evt.preventDefault();
 			} else if (evt.key === "Copy" || (evt.key === "c" && ctrlOrCmd)) {
 				if (selecting) {
-					copy(controller.record.getSelected().actions);
+					copy();
 				}
 				evt.preventDefault();
 			} else if (evt.key === "Cut" || (evt.key === "x" && ctrlOrCmd)) {
 				if (selecting) {
-					copy(controller.record.getSelected().actions);
+					copy();
 					controller.undoStack.push(
 						new DeleteNodes(
 							firstSelected,
@@ -2271,6 +2287,14 @@ class Controller {
 					controller.deleteSelectedSkills();
 				}
 				evt.preventDefault();
+			}
+			// shared post-action effects
+			if (scrollToStart) {
+				this.scrollToTime(this.record.selectionStart?.tmp_startLockTime);
+				scrollEditorToFirstSelected();
+			} else if (scrollToEnd) {
+				this.scrollToTime(this.record.selectionEnd?.tmp_startLockTime);
+				scrollEditorToLastSelected();
 			}
 		}
 	}

@@ -238,7 +238,7 @@ function TimelineActionElement(props: {
 				controller.timeline.onClickTimelineAction(props.index, e.shiftKey);
 			} else {
 				controller.timeline.onClickTimelineAction(props.index, e.shiftKey);
-				if (props.node.tmp_startLockTime) {
+				if (props.node.tmp_startLockTime !== undefined) {
 					controller.scrollToTime(props.node.tmp_startLockTime);
 				}
 			}
@@ -253,10 +253,12 @@ function TimelineActionElement(props: {
 }
 
 export let scrollEditorToFirstSelected = () => {};
+export let scrollEditorToLastSelected = () => {};
 
 export function TimelineEditor() {
 	const colors = getCurrentThemeColors();
 	const firstSelected: React.RefObject<HTMLTableRowElement | null> = useRef(null);
+	const lastSelected: React.RefObject<HTMLTableRowElement | null> = useRef(null);
 
 	const [isDirty, setDirty] = useState<boolean>(false);
 	const [recordValidStatus, setRecordValidStatus] = useState<RecordValidStatus | undefined>(
@@ -302,12 +304,21 @@ export function TimelineEditor() {
 		scrollEditorToFirstSelected = () => {
 			// lmfao this dirty hack again
 			setTimeout(() => {
-				if (firstSelected.current) {
-					firstSelected.current.scrollIntoView({
-						behavior: "smooth",
-						block: "nearest",
-					});
-				}
+				firstSelected.current?.scrollIntoView({
+					behavior: "smooth",
+					block: "nearest",
+				});
+			}, 0);
+		};
+		scrollEditorToLastSelected = () => {
+			setTimeout(() => {
+				(controller.record.getSelectionLength() === 1
+					? firstSelected
+					: lastSelected
+				).current?.scrollIntoView({
+					behavior: "smooth",
+					block: "nearest",
+				});
 			}, 0);
 		};
 		// Check the validity of the current record so we get timestamps of all actions
@@ -710,6 +721,7 @@ export function TimelineEditor() {
 	const invalidIndices = new Set(recordValidStatus?.invalidActions.map((ac) => ac.index));
 	controller.record.actions.forEach((action, i) => {
 		const isFirstSelected = !isDirty && i === controller.record.selectionStartIndex;
+		const isLastSelected = !isDirty && i === controller.record.selectionEndIndex;
 		actionsList.push(
 			<TimelineActionElement
 				key={i}
@@ -721,7 +733,7 @@ export function TimelineEditor() {
 				usedAt={recordValidStatus?.skillUseTimes[i] ?? 0}
 				includeDetails={includeDetails}
 				onKeyDown={rowKeyHandler}
-				refObj={isFirstSelected ? firstSelected : undefined}
+				refObj={isFirstSelected ? firstSelected : isLastSelected ? lastSelected : undefined}
 			/>,
 		);
 	});
