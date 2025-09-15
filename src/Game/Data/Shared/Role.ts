@@ -11,13 +11,19 @@ export const ROLE_ACTIONS = ensureRecord<ActionData>()({
 	ESUNA: { name: "Esuna", label: { zh: "康复" } },
 	RESCUE: { name: "Rescue", label: { zh: "营救" } },
 
-	ADDLE: { name: "Addle", label: { zh: "病毒", ja: "アドル" } },
+	ADDLE: { name: "Addle", label: { zh: "病毒", ja: "アドル" }, discordEmote: "Addle" },
+	// Discord emote for swiftcast is different between PCT and BLM, so we set it dynamically
 	SWIFTCAST: { name: "Swiftcast", label: { zh: "即刻咏唱", ja: "迅速魔" } },
 	LUCID_DREAMING: {
 		name: "Lucid Dreaming",
 		label: { zh: "醒梦", ja: "ルーシッドドリーム" },
+		discordEmote: "Lucid",
 	},
-	SURECAST: { name: "Surecast", label: { zh: "沉稳咏唱", ja: "堅実魔" } },
+	SURECAST: {
+		name: "Surecast",
+		label: { zh: "沉稳咏唱", ja: "堅実魔" },
+		discordEmote: "Surecast",
+	},
 
 	FEINT: { name: "Feint", label: { zh: "牵制" } },
 	BLOODBATH: { name: "Bloodbath", label: { zh: "浴血" } },

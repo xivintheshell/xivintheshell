@@ -7,6 +7,7 @@ export interface ActionData {
 	name: string;
 	id?: number; // In-game Action ID. Intended for use with exporting to Tischel
 	label?: Omit<LocalizedContent, "en">; // Defines the locale-specific text that will be displayed. English is inferred from the name property
+	discordEmote?: string; // A canonical discord emote (without surrounding : characters) for this skill.
 }
 
 export interface CooldownData {

@@ -5,7 +5,8 @@
 			"[BETA] Skills can now be inserted in the middle of a timeline (instructions not yet updated).",
 			"[BETA] Pressing backspace/delete now deletes only the selected skills.",
 			"[BETA] Using the up and down arrow keys changes the selected skills.",
-			"[BETA] Skill insertions, deletions, and moves can now be undone/redone with ctrl/cmd-z and ctrl/cmd-y."
+			"[BETA] Most actions can now be undone/redone with ctrl/cmd-z and ctrl/cmd-y.",
+			"[BETA] Actions can now be copy/pasted both within and outside the site (see \"Settings\" at the bottom of the page for details)."
 		],
 		"level": "major"
 	},

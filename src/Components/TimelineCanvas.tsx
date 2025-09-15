@@ -2279,7 +2279,7 @@ export function TimelineCanvas(props: {
 					redrawInteractive();
 				}
 			}
-			if (!controller.shouldLoop) {
+			if (!controller.inputLocked) {
 				// Only handle mouseup events if we're not currently in an animation.
 				// This must run AFTER the prior drag check to ensure dropping an icon on top
 				// of a skill hitbox works properly.
@@ -2310,7 +2310,7 @@ export function TimelineCanvas(props: {
 			mouseDownY.current = y;
 			mouseX.current = x;
 			mouseY.current = y;
-			if (!controller.shouldLoop) {
+			if (!controller.inputLocked) {
 				// Only handle mousedown events if we're not currently in an animation.
 				const mouseDownZones = getAllZones("mouseDown");
 				selectStartX.current = x;
@@ -2332,7 +2332,7 @@ export function TimelineCanvas(props: {
 		},
 		onKeyDown: (e: React.KeyboardEvent) => {
 			controller.handleTimelineKeyboardEvent(e);
-			if (!controller.shouldLoop) {
+			if (!controller.inputLocked) {
 				if (e.key === "Escape") {
 					globalDragContext.setDragTarget(null, null);
 					setDraggedSkillElem(undefined);

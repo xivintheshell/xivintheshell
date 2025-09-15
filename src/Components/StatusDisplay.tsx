@@ -863,7 +863,6 @@ export class StatusDisplay extends React.Component {
 									</div>
 								</>,
 								zh: <>
-									{/* TODO ZH OUTDATED */}
 									<div className="paragraph">
 										<span style={{ color: "lightgray" }}>灰色</span>边框：未选中
 									</div>
@@ -877,7 +876,7 @@ export class StatusDisplay extends React.Component {
 									</div>
 									<div className="paragraph">
 										<b style={{ color: "darkorange" }}>橙色</b>
-										边框：正在查看历史状态，未接收输入
+										边框：正在查看历史状态，可接收输入
 									</div>
 								</>,
 								ja: <>

@@ -9,6 +9,7 @@ import {
 	ShellVersion,
 	TickMode,
 } from "./Common";
+import { ClipboardMode, copy, paste } from "./Clipboard";
 import { UndoStack, AddNode, DeleteNodes } from "./UndoStack";
 import { GameState } from "../Game/GameState";
 import {
@@ -121,7 +122,7 @@ type ReplayResult = {
 
 class Controller {
 	timeScale;
-	shouldLoop;
+	shouldLoop: boolean;
 	tickMode;
 	timeline;
 	#presetLinesManager;
@@ -129,6 +130,8 @@ class Controller {
 	record;
 	imageExportConfig: ImageExportConfig;
 	timelineDrawOptions: TimelineDrawOptions = DEFAULT_TIMELINE_OPTIONS;
+	queuedPastes: number;
+	clipboardMode: ClipboardMode;
 	game;
 	#tinctureBuffPercentage = 0;
 	#untargetableMask = true;
@@ -169,6 +172,7 @@ class Controller {
 	constructor() {
 		this.timeScale = 1;
 		this.shouldLoop = false;
+		this.queuedPastes = 0;
 		this.tickMode = TickMode.RealTimeAutoPause;
 
 		this.timeline = new Timeline();
@@ -185,6 +189,7 @@ class Controller {
 			wrapThresholdSeconds: JSON.parse(getCachedValue("img: wrapThresholdSeconds") ?? "0"),
 			includeTime: JSON.parse(getCachedValue("img: includeTime") ?? "true"),
 		};
+		this.clipboardMode = (getCachedValue("radio: clipboardMode") ?? "plain") as ClipboardMode;
 
 		this.#lastDamageApplicationTime = -this.gameConfig.countdown; // left of timeline origin
 
@@ -194,6 +199,10 @@ class Controller {
 		this.undoStack = new UndoStack();
 
 		this.#requestRestart();
+	}
+
+	get inputLocked() {
+		return this.shouldLoop || this.queuedPastes > 0;
 	}
 
 	updateStats() {
@@ -1085,7 +1094,7 @@ class Controller {
 		// then attempt to use it ASAP
 		const waitNode = this.#requestTick({ deltaTime: beforeWaitTime });
 		if (canUndo && waitNode) {
-			this.undoStack.push(new AddNode(waitNode, this.record.length - 1));
+			this.undoStack.push(new AddNode(waitNode, this.record.tailIndex));
 		}
 		skillName = getConditionalReplacement(skillName, this.game);
 		status = this.game.getSkillAvailabilityStatus(skillName);
@@ -1099,7 +1108,7 @@ class Controller {
 			this.record.addActionNode(node);
 			actionIndex = this.record.tailIndex;
 			if (canUndo && node) {
-				this.undoStack.push(new AddNode(node, this.record.length - 1));
+				this.undoStack.push(new AddNode(node, this.record.tailIndex));
 			}
 			// If the skill can be used, do so.
 			this.game.useSkill(skillName, node, actionIndex);
@@ -1928,7 +1937,7 @@ class Controller {
 	removeTrailingIdleTime() {
 		// first remove any non-skill nodes in the end
 		let lastSkillIndex: number | undefined = undefined;
-		for (let i = this.record.length - 1; i >= 0; i--) {
+		for (let i = this.record.tailIndex; i >= 0; i--) {
 			if (this.record.actions[i].info.type === ActionType.Skill) {
 				lastSkillIndex = i;
 				break;
@@ -1949,7 +1958,7 @@ class Controller {
 			waitKind: "mp",
 		});
 		if (node !== undefined) {
-			this.undoStack.push(new AddNode(node, this.record.length - 1));
+			this.undoStack.push(new AddNode(node, this.record.tailIndex));
 		}
 		updateInvalidStatus();
 		this.updateAllDisplay();
@@ -1965,12 +1974,12 @@ class Controller {
 		const status = updateInvalidStatus();
 		let newSelectIdx: number;
 		if (nodes.length > 1) {
-			newSelectIdx = Math.min(insertIdx, this.record.length - 1);
+			newSelectIdx = Math.min(insertIdx, this.record.tailIndex);
 			console.log(newSelectIdx, newSelectIdx + nodes.length - 1);
 			this.record.selectSingle(newSelectIdx);
 			this.record.selectUntil(newSelectIdx + nodes.length - 1);
 		} else {
-			newSelectIdx = Math.min(insertIdx + 1, this.record.length - 1);
+			newSelectIdx = Math.min(insertIdx + 1, this.record.tailIndex);
 			this.record.selectSingle(newSelectIdx);
 		}
 		this.displayHistoricalState(status.skillUseTimes[newSelectIdx], newSelectIdx);
@@ -1985,7 +1994,7 @@ class Controller {
 		canUndo: boolean = false,
 	) {
 		this.#bTakingUserInput = true;
-		if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
+		if (this.inputLocked) {
 			// not sure should allow any control here.
 		} else {
 			if (this.displayingUpToDateGameState) {
@@ -2033,7 +2042,7 @@ class Controller {
 		this.record.addActionNode(toggleNode);
 		// TODO: support splicing the toggle node at current timestamp
 		if (canUndo) {
-			this.undoStack.push(new AddNode(toggleNode, this.record.length - 1));
+			this.undoStack.push(new AddNode(toggleNode, this.record.tailIndex));
 		}
 
 		this.#actionsLogCsv.push({
@@ -2114,7 +2123,7 @@ class Controller {
 
 	step(t: number, canUndo: boolean = false) {
 		let node: ActionNode | undefined;
-		let index = this.record.length - 1;
+		let index = this.record.tailIndex;
 		if (this.displayingUpToDateGameState) {
 			node = this.#requestTick({ deltaTime: t, waitKind: "duration" });
 			this.autoSave();
@@ -2131,7 +2140,7 @@ class Controller {
 
 	stepUntil(t: number, canUndo: boolean = false) {
 		let node: ActionNode | undefined;
-		let index = this.record.length - 1;
+		let index = this.record.tailIndex;
 		if (this.displayingUpToDateGameState) {
 			node = this.#requestTick({
 				deltaTime: t - this.game.getDisplayTime(),
@@ -2153,7 +2162,7 @@ class Controller {
 	// If an element like an input field does not want this handler to be called while focused,
 	// it should call evt.stopPropagation().
 	handleKeyboardEvent(evt: React.KeyboardEvent) {
-		if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
+		if (this.inputLocked) {
 			// never accept shortcuts while we're mid-animation
 			return;
 		}
@@ -2187,7 +2196,7 @@ class Controller {
 
 	// Process key events within the timeline canvas and timeline editor.
 	handleTimelineKeyboardEvent(evt: React.KeyboardEvent) {
-		if (!controller.shouldLoop) {
+		if (!this.inputLocked) {
 			const ctrlOrCmd = evt.ctrlKey || evt.metaKey;
 			const firstSelected = controller.record.selectionStartIndex;
 			const lastSelected = controller.record.selectionEndIndex;
@@ -2210,18 +2219,24 @@ class Controller {
 					} else {
 						controller.timeline.onClickTimelineAction(firstSelected - 1, false);
 					}
+				} else if (controller.record.length > 0) {
+					controller.timeline.onClickTimelineAction(controller.record.tailIndex, false);
 				}
 			} else if (evt.key === "ArrowDown") {
-				if (evt.shiftKey) {
-					controller.timeline.resizeSelection(false);
-				} else {
-					controller.timeline.onClickTimelineAction(lastSelected! + 1, false);
+				if (selecting) {
+					if (evt.shiftKey) {
+						controller.timeline.resizeSelection(false);
+					} else {
+						controller.timeline.onClickTimelineAction(lastSelected! + 1, false);
+					}
+				} else if (controller.record.length > 0) {
+					controller.timeline.onClickTimelineAction(0, false);
 				}
 			} else if (evt.key === "Home") {
 				controller.timeline.onClickTimelineAction(0, evt.shiftKey);
 			} else if (evt.key === "End") {
 				controller.timeline.onClickTimelineAction(
-					controller.record.length - 1,
+					controller.record.tailIndex,
 					evt.shiftKey,
 				);
 			} else if (evt.key === "Escape") {
@@ -2229,7 +2244,32 @@ class Controller {
 				controller.displayCurrentState();
 			} else if (evt.key === "a" && ctrlOrCmd) {
 				controller.timeline.onClickTimelineAction(0, false);
-				controller.timeline.onClickTimelineAction(controller.record.length - 1, true);
+				controller.timeline.onClickTimelineAction(controller.record.tailIndex, true);
+				evt.preventDefault();
+			} else if (evt.key === "Paste" || (evt.key === "v" && ctrlOrCmd)) {
+				// If there's currently selected stuff, delete the selection first.
+				if (selecting) {
+					controller.deleteSelectedSkills();
+				}
+				paste();
+				evt.preventDefault();
+			} else if (evt.key === "Copy" || (evt.key === "c" && ctrlOrCmd)) {
+				if (selecting) {
+					copy(controller.record.getSelected().actions);
+				}
+				evt.preventDefault();
+			} else if (evt.key === "Cut" || (evt.key === "x" && ctrlOrCmd)) {
+				if (selecting) {
+					copy(controller.record.getSelected().actions);
+					controller.undoStack.push(
+						new DeleteNodes(
+							firstSelected,
+							controller.record.getSelected().actions,
+							"delete",
+						),
+					);
+					controller.deleteSelectedSkills();
+				}
 				evt.preventDefault();
 			}
 		}

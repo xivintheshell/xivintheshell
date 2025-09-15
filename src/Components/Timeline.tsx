@@ -237,7 +237,7 @@ function TimelineTabs() {
 					</div>,
 				},
 				{
-					titleNode: localize({ en: "Display settings", zh: "显示设置" }),
+					titleNode: localize({ en: "Settings", zh: "设置" }),
 					contentNode: <TimelineDisplaySettings />,
 				},
 			]}

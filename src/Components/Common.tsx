@@ -567,6 +567,40 @@ export function Slider(props: SliderProps) {
 	</div>;
 }
 
+export function RadioSet(props: {
+	uniqueName: string;
+	onChange: (newValue: string) => void;
+	options: Array<[string, ContentNode]>;
+}) {
+	const defaultValue = getCachedValue(`radio: ${props.uniqueName}`) ?? props.options[0][0];
+	const [selected, setSelected] = useState(defaultValue);
+	const radioStyle: CSSProperties = {
+		position: "relative",
+		top: 3,
+		marginRight: "0.25em",
+	};
+	const radioOptions = props.options.map(([key, content]) => <div key={key} style={radioStyle}>
+		<input
+			type="radio"
+			id={key}
+			name={props.uniqueName}
+			value={key}
+			checked={selected === key}
+			onChange={(e) => {
+				setSelected(key);
+				setCachedValue(`radio: ${props.uniqueName}`, key);
+				// onchange is only emitted when a radio box is checked
+				props.onChange(key);
+			}}
+		/>
+		<label htmlFor={key} style={{ verticalAlign: "top" }}>
+			{" "}
+			{content}
+		</label>
+	</div>);
+	return <div>{radioOptions}</div>;
+}
+
 export function Checkbox(props: {
 	uniqueName: string;
 	label: ContentNode;
