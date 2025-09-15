@@ -1979,7 +1979,6 @@ class Controller {
 		let newSelectIdx: number;
 		if (nodes.length > 1) {
 			newSelectIdx = Math.min(insertIdx, this.record.tailIndex);
-			console.log(newSelectIdx, newSelectIdx + nodes.length - 1);
 			this.record.selectSingle(newSelectIdx);
 			this.record.selectUntil(newSelectIdx + nodes.length - 1);
 		} else {

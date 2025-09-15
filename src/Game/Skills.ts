@@ -230,7 +230,7 @@ export type Skill<T extends GameState> =
 // Unfortunately, I [sz] don't really know of a good way to encode the relationship between
 // the ShellJob and Skill<T>, so we'll just have to live with performing casts at certain locations.
 const skillMap: Map<ShellJob, Map<ActionKey, Skill<GameState>>> = new Map();
-const discordEmoteSkillMap: Map<ShellJob, Map<string, ActionKey>> = new Map();
+export const discordEmoteSkillMap: Map<ShellJob, Map<string, ActionKey>> = new Map();
 ALL_JOBS.forEach((job) => {
 	skillMap.set(job, new Map());
 	discordEmoteSkillMap.set(job, new Map());

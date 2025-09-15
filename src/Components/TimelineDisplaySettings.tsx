@@ -50,7 +50,7 @@ export function TimelineDisplaySettings() {
 				// eslint-disable-next-line react/jsx-key
 				["tsv", <span>tab-separated lines</span>],
 				// eslint-disable-next-line react/jsx-key
-				["discord", <span>discord emojis</span>],
+				["discord", <span>discord emotes</span>],
 			]}
 		/>
 	</div>;

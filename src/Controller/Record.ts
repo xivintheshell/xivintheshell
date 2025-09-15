@@ -23,7 +23,7 @@ import { Potency, PotencyKind } from "../Game/Potency";
 import { controller } from "./Controller";
 import { ACTIONS, ActionKey, ResourceKey } from "../Game/Data";
 import { getNormalizedSkillName, getResourceKeyFromBuffName } from "../Game/Skills";
-import { localizeSkillName } from "../Components/Localization";
+import { localize, localizeResourceType, localizeSkillName } from "../Components/Localization";
 
 export const enum ActionType {
 	Skill = "Skill",
@@ -222,11 +222,21 @@ export class ActionNode {
 		if (this.info.type === ActionType.Skill) {
 			return localizeSkillName(this.info.skillName);
 		} else if (this.info.type === ActionType.SetResourceEnabled) {
+			return (
+				localize({
+					en: "toggle ",
+					zh: "开关",
+				}).toString() + localizeResourceType(this.info.buffName)
+			);
 		} else if (this.info.type === ActionType.Wait) {
+			const waitString = this.info.waitDuration.toFixed(3);
+			return localize({ en: `wait ${waitString}`, zh: `快进至${waitString}` }).toString();
 		} else if (this.info.type === ActionType.WaitForMP) {
+			return localize({ en: "wait MP", zh: "快进至跳蓝" }).toString();
 		} else if (this.info.type === ActionType.JumpToTimestamp) {
+			const targetString = this.info.targetTime.toFixed(3);
+			return localize({ en: `jump ${targetString}`, zh: `跳到${targetString}` }).toString();
 		}
-		// TODO
 		return "(unknown)";
 	}
 
