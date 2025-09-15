@@ -303,7 +303,12 @@ export function getAllSkills<T extends GameState>(job: ShellJob): Map<ActionKey,
 
 function setSkill<T extends GameState>(job: ShellJob, skillName: ActionKey, skill: Skill<T>) {
 	skillMap.get(job)!.set(skillName, skill as Skill<GameState>);
-	discordEmoteSkillMap.get(job)!.set(ACTIONS[skillName].discordEmote ?? skillName, skillName);
+	discordEmoteSkillMap
+		.get(job)!
+		.set(
+			ACTIONS[skillName].discordEmote ?? ACTIONS[skillName].name.replaceAll(" ", ""),
+			skillName,
+		);
 	normalizedSkillNameMap.set(ACTIONS[skillName].name.toLowerCase(), skillName);
 	const label = ACTIONS[skillName].label;
 	if (label?.zh !== undefined) {

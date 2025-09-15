@@ -131,7 +131,7 @@ export const BLM_ACTIONS = ensureRecord<ActionData>()({
 		id: 25796,
 		name: "Amplifier",
 		label: { zh: "详述", ja: "アンプリファイア" },
-		discordEmote: "Amp",
+		discordEmote: "Amplifier",
 	},
 	PARADOX: {
 		id: 25797,

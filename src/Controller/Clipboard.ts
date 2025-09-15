@@ -52,9 +52,11 @@ function serializeToClipboard(mode: ClipboardMode): string {
 		const status = controller.checkRecordValidity(controller.record, 0);
 		actions.forEach((node, i) =>
 			rows.push(
-				[status.skillUseTimes[i + start], node.targetCount, node.toLocalizedString()].join(
-					"\t",
-				),
+				[
+					status.skillUseTimes[i + start].toFixed(3),
+					node.targetCount,
+					node.toLocalizedString(),
+				].join("\t"),
 			),
 		);
 		return rows.join("\n");
@@ -62,14 +64,16 @@ function serializeToClipboard(mode: ClipboardMode): string {
 		const items: string[] = [];
 		actions.forEach((node) => {
 			if (node.info.type === ActionType.Skill) {
-				const name = node.info.skillName;
-				if (name === "TINCTURE") {
+				const key = node.info.skillName;
+				if (key === "TINCTURE") {
 					items.push(":IntPot:");
-				} else if (name === "SWIFTCAST") {
+				} else if (key === "SWIFTCAST") {
 					items.push(controller.gameConfig.job === "BLM" ? ":Swift:" : ":Swiftcast:");
 				} else {
-					// If there's no canonical emoji, just use the action key
-					items.push(`:${ACTIONS[name].discordEmote ?? name}:`);
+					// If there's no canonical emoji, just use the name with spaces removed
+					items.push(
+						`:${ACTIONS[key].discordEmote ?? ACTIONS[key].name.replaceAll(" ", "")}:`,
+					);
 				}
 			} else {
 				items.push(node.toLocalizedString());
@@ -191,9 +195,21 @@ function parsePasted(text: string): ActionNode[] | undefined {
 			for (let i = 1; i < stripped.length; i++) {
 				const nextChar = stripped[i];
 				console.log(nodes.length, buffer, stripped.substring(i + 1, i + 4));
+				// discord emotes shouldn't end with spaces, but just assume that was a mistake
 				if (readingEmote && (nextChar === COLON || nextChar === " ")) {
-					// discord emotes shouldn't end with spaces, but whatever
-					if (buffer === "IntPot") {
+					// if there's a tilde (used for distinguishing servers) or an "_oGCD" suffix,
+					// remove them
+					// TODO parse XML tags? (retrieved if you right click + "copy text")
+					const tildeIdx = buffer.indexOf("~");
+					if (tildeIdx > 0) {
+						buffer = buffer.substring(0, tildeIdx);
+					}
+					if (buffer.toLowerCase().endsWith("_ogcd")) {
+						buffer = buffer.substring(0, buffer.length - 5);
+					}
+					if (buffer.length === 0) {
+						// no-op
+					} else if (buffer === "IntPot") {
 						nodes.push(skillNode("TINCTURE", 1));
 					} else if (buffer === "Swift" || buffer === "Swiftcast") {
 						nodes.push(skillNode("SWIFTCAST", 1));
@@ -227,7 +243,6 @@ function parsePasted(text: string): ActionNode[] | undefined {
 				if (!readingEmote) {
 					const maybeNode = checkNonSkillNode(buffer, lookahead);
 					if (maybeNode !== undefined) {
-						console.log("PARSE", maybeNode);
 						nodes.push(maybeNode);
 						buffer = "";
 					}
@@ -241,9 +256,11 @@ function parsePasted(text: string): ActionNode[] | undefined {
 				toks = stripped.split(SEP_ZH);
 			}
 			toks.forEach((tok) => {
-				const node = parseTextNode(tok.trim(), getNextTargetCount());
-				if (node !== undefined) {
-					nodes.push(node);
+				if (tok.length > 0) {
+					const node = parseTextNode(tok.trim(), getNextTargetCount());
+					if (node !== undefined) {
+						nodes.push(node);
+					}
 				}
 			});
 		}

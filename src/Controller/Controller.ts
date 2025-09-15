@@ -2170,6 +2170,8 @@ class Controller {
 			return;
 		}
 		const ctrlOrCmd = evt.ctrlKey || evt.metaKey;
+		const firstSelected = controller.record.selectionStartIndex;
+		const selecting = firstSelected !== undefined;
 		// console.log(evt.keyCode);
 		let processed = false;
 		if (this.displayingUpToDateGameState) {
@@ -2190,6 +2192,31 @@ class Controller {
 			processed = true;
 		} else if ((evt.key === "Z" && ctrlOrCmd) || (evt.key === "y" && ctrlOrCmd)) {
 			this.undoStack.redo();
+			processed = true;
+		} else if (evt.key === "Paste" || (evt.key === "v" && ctrlOrCmd)) {
+			// If there's currently selected stuff, delete the selection first.
+			if (selecting) {
+				controller.deleteSelectedSkills();
+			}
+			paste();
+			processed = true;
+		} else if (evt.key === "Copy" || (evt.key === "c" && ctrlOrCmd)) {
+			if (selecting) {
+				copy();
+			}
+			processed = true;
+		} else if (evt.key === "Cut" || (evt.key === "x" && ctrlOrCmd)) {
+			if (selecting) {
+				copy();
+				controller.undoStack.push(
+					new DeleteNodes(
+						firstSelected,
+						controller.record.getSelected().actions,
+						"delete",
+					),
+				);
+				controller.deleteSelectedSkills();
+			}
 			processed = true;
 		}
 		if (processed) {
@@ -2260,31 +2287,6 @@ class Controller {
 			} else if (evt.key === "a" && ctrlOrCmd) {
 				controller.timeline.onClickTimelineAction(0, false);
 				controller.timeline.onClickTimelineAction(controller.record.tailIndex, true);
-				evt.preventDefault();
-			} else if (evt.key === "Paste" || (evt.key === "v" && ctrlOrCmd)) {
-				// If there's currently selected stuff, delete the selection first.
-				if (selecting) {
-					controller.deleteSelectedSkills();
-				}
-				paste();
-				evt.preventDefault();
-			} else if (evt.key === "Copy" || (evt.key === "c" && ctrlOrCmd)) {
-				if (selecting) {
-					copy();
-				}
-				evt.preventDefault();
-			} else if (evt.key === "Cut" || (evt.key === "x" && ctrlOrCmd)) {
-				if (selecting) {
-					copy();
-					controller.undoStack.push(
-						new DeleteNodes(
-							firstSelected,
-							controller.record.getSelected().actions,
-							"delete",
-						),
-					);
-					controller.deleteSelectedSkills();
-				}
 				evt.preventDefault();
 			}
 			// shared post-action effects
