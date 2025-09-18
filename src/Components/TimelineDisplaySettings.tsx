@@ -12,7 +12,7 @@ export function TimelineDisplaySettings() {
 		topic="settings-display"
 		content={localize({
 			en: "Configure how elements are displayed in the visual timeline and image exports.",
-			zh: "设定图形时间轴和图像导出会显示的元素。",
+			zh: "设置在图形时间轴上以及图像导出会显示的元素。",
 		})}
 	/>;
 	const clipboardTopHelp = <Help
@@ -22,8 +22,13 @@ export function TimelineDisplaySettings() {
 				Configure the format used when copying a sequence of skills from XIV in the Shell to
 				paste in other applications.
 				<br />
-				Any of the provided formats can be copied <i>from</i> external applications to XIV
+				Any of the provided formats can be pasted <i>from</i> external applications to XIV
 				in the Shell at any time, regardless of the value of this setting.
+			</div>,
+			zh: <div>
+				设置从时间轴编辑器复制技能到外部软件时使用的格式。
+				<br />
+				无论此处选择何种格式，编辑器都支持从外部软件粘贴所有格式的数据。
 			</div>,
 		})}
 	/>;
