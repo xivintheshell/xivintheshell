@@ -572,7 +572,6 @@ export class SkillsWindow extends React.Component {
 		};
 
 		this.onRemoveTrailingIdleTime = () => {
-			// TODO this is currently not tracked by the undo button
 			controller.removeTrailingIdleTime();
 		};
 

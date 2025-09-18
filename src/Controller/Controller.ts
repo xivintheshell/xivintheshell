@@ -1947,6 +1947,13 @@ class Controller {
 				break;
 			}
 		}
+		const toDelete =
+			lastSkillIndex === undefined
+				? this.record.actions.slice()
+				: this.record.actions.slice(lastSkillIndex + 1);
+		if (toDelete.length > 0) {
+			this.undoStack.push(new DeleteNodes((lastSkillIndex ?? -1) + 1, toDelete, "delete"));
+		}
 		if (lastSkillIndex === undefined) {
 			// no skill has been used yet - delete everything.
 			this.rewindUntilBefore(0, true);
@@ -1954,6 +1961,7 @@ class Controller {
 			// there are nodes after the last skill
 			this.rewindUntilBefore(lastSkillIndex + 1, true);
 		}
+		updateInvalidStatus();
 	}
 
 	waitTillNextMpOrLucidTick() {

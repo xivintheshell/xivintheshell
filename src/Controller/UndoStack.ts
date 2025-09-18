@@ -168,6 +168,7 @@ export class DeleteNodes extends TimelineInteraction {
 		controller.record.selectSingle(this.startIndex);
 		controller.record.selectUntil(this.startIndex + this.nodes.length - 1);
 		controller.deleteSelectedSkills();
+		updateInvalidStatus();
 	}
 }
 
