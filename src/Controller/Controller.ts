@@ -2203,8 +2203,8 @@ class Controller {
 		} else if (evt.key === "Copy" || (evt.key === "c" && ctrlOrCmd)) {
 			if (selecting) {
 				copy();
+				processed = true;
 			}
-			processed = true;
 		} else if (evt.key === "Cut" || (evt.key === "x" && ctrlOrCmd)) {
 			if (selecting) {
 				copy();
@@ -2216,8 +2216,8 @@ class Controller {
 					),
 				);
 				controller.deleteSelectedSkills();
+				processed = true;
 			}
-			processed = true;
 		}
 		if (processed) {
 			evt.preventDefault();
