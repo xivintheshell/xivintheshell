@@ -5,12 +5,8 @@ import { Checkbox, RadioSet, Help } from "./Common";
 import type { ClipboardMode } from "../Controller/Clipboard";
 
 export function TimelineDisplaySettings() {
-	const header = (c: LocalizedContent, help: ReactNode | undefined) => <div
-		style={{ marginBottom: 5 }}
-	>
-		<b>{localize(c)}</b>
-		{help && " "}
-		{help}
+	const header = (c: LocalizedContent, help: ReactNode) => <div style={{ marginBottom: 5 }}>
+		<b>{localize(c)}</b> {help}
 	</div>;
 	const displaySettingsHelp = <Help
 		topic="settings-display"
@@ -167,23 +163,23 @@ export function TimelineDisplaySettings() {
 			onChange={(val) => (controller.clipboardMode = val as ClipboardMode)}
 			// TODO localization, help tooltips and explanations
 			options={[
-				// eslint-disable-next-line react/jsx-key
 				[
 					"plain",
+					// eslint-disable-next-line react/jsx-key
 					<span>
 						{localize({ en: "plain text", zh: "纯文本" })} {plaintextHelp}
 					</span>,
 				],
-				// eslint-disable-next-line react/jsx-key
 				[
 					"tsv",
+					// eslint-disable-next-line react/jsx-key
 					<span>
 						{localize({ en: "tab-separated lines", zh: "制表符分隔列表" })} {tsvHelp}
 					</span>,
 				],
-				// eslint-disable-next-line react/jsx-key
 				[
 					"discord",
+					// eslint-disable-next-line react/jsx-key
 					<span>
 						discord{localize({ en: " emotes", zh: "表情" })} {discordHelp}
 					</span>,

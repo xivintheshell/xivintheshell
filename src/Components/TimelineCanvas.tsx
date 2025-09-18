@@ -513,14 +513,14 @@ function drawPotencyMarks(params: MarkerDrawParams<PotencyMarkElem>) {
 				break;
 			case ElemType.HealingMark:
 				ctx.fillStyle = colors.timeline.healingMark;
-				time += localize({ en: "healing potency" });
+				time += localize({ en: "healing potency", zh: "恢复威力" });
 				break;
 			// If it's a damage mark, adjust color based on whether the boss is untargetable
 			default:
 				ctx.fillStyle = untargetable
 					? colors.timeline.untargetableDamageMark
 					: colors.timeline.damageMark;
-				time += localize({ en: "damage potency" });
+				time += localize({ en: "damage potency", zh: "伤害威力" });
 		}
 
 		// Create the appropriate shape
