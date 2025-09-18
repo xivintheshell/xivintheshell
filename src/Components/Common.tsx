@@ -436,6 +436,7 @@ export function Columns(props: {
 		fullBorder?: boolean;
 		defaultSize?: number;
 		minSize?: number;
+		showScrollbar?: boolean;
 	}[];
 }) {
 	const colors = getCurrentThemeColors();
@@ -446,7 +447,7 @@ export function Columns(props: {
 		children.push(
 			<Panel
 				key={`column-${i}`}
-				className={"invisibleScrollbar"}
+				className={column.showScrollbar ? "visibleScrollbar" : "invisibleScrollbar"}
 				defaultSize={column.defaultSize}
 				minSize={column.minSize ?? 20}
 				style={{

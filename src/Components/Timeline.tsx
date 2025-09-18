@@ -101,7 +101,6 @@ function TimelineMain() {
 		setCallbacks={setCallbacks}
 		setPointerMouse={setPointerMouse}
 	/>;
-	const isFirefox = navigator.userAgent.indexOf("Firefox") >= 0;
 	const colorContext = useContext(ColorThemeContext);
 	const bg = getThemeField(colorContext, "bgMediumContrast");
 	return <div style={{ position: "relative" }}>
@@ -116,7 +115,6 @@ function TimelineMain() {
 				overflowY: "clip",
 				outline: "1px solid " + bg,
 				cursor: pointerMouse ? "pointer" : "default",
-				paddingBottom: isFirefox ? 10 : 0,
 			}}
 			ref={myRef}
 			onScroll={() => {
@@ -185,6 +183,10 @@ function TimelineTabs() {
 	const renderDragLock = window.innerWidth > 1024;
 	// Similarly, the horizontal scale slider uses absolute positioning and clips into the tabs at about 800px.
 	const renderScaleSlider = window.innerWidth > 800;
+	// Firefox's built-in slider input is a little wider, so add a bit more space (should probably just
+	// make this a grid/flex at some point).
+	const isFirefox = navigator.userAgent.indexOf("Firefox") >= 0;
+	const dragLockRight = isFirefox ? 310 : 280;
 	return <div
 		style={{
 			position: "relative",
@@ -250,7 +252,7 @@ function TimelineTabs() {
 			style={{
 				position: "absolute",
 				top: 0,
-				right: 280,
+				right: dragLockRight,
 				height: TABS_TITLE_HEIGHT,
 				lineHeight: `${TABS_TITLE_HEIGHT}px`,
 				verticalAlign: "middle",

@@ -82,6 +82,10 @@ export abstract class TimelineInteraction {
 	abstract redo(): void;
 }
 
+function maybePluralActions(n: number): string {
+	return n > 0 ? "actions" : "action";
+}
+
 // === BASIC SINGLE-TIMELINE INTERACTIONS ===
 export class AddNode extends TimelineInteraction {
 	node: ActionNode;
@@ -110,7 +114,10 @@ export class MoveNodes extends TimelineInteraction {
 	offset: number;
 
 	constructor(startIndex: number, selectCount: number, offset: number) {
-		super({ en: "move action" + (selectCount > 1 ? "s" : ""), zh: "移动技能" });
+		super({
+			en: `move ${selectCount} ${maybePluralActions(selectCount)}`,
+			zh: "移动${selectCount}技能",
+		});
 		this.startIndex = startIndex;
 		this.selectCount = selectCount;
 		this.offset = offset;
@@ -140,8 +147,8 @@ export class DeleteNodes extends TimelineInteraction {
 
 	constructor(startIndex: number, nodes: ActionNode[], source: "delete" | "cut") {
 		super({
-			en: source + " action" + (nodes.length > 1 ? "s" : ""),
-			zh: (source === "delete" ? "删除" : "剪切") + "技能",
+			en: `${source} ${nodes.length} ${maybePluralActions(nodes.length)}`,
+			zh: `${source === "delete" ? "删除" : "剪切"}${nodes.length}技能`,
 		});
 		this.startIndex = startIndex;
 		this.nodes = nodes;
@@ -166,8 +173,11 @@ export class AddNodeBulk extends TimelineInteraction {
 
 	constructor(nodes: ActionNode[], index: number, source: "preset" | "paste") {
 		super({
-			en: source === "preset" ? "add preset sequence" : "paste actions",
-			zh: source === "preset" ? "增加技能序列预设" : "粘贴技能",
+			en:
+				source === "preset"
+					? "add preset sequence"
+					: `paste ${maybePluralActions(nodes.length)}`,
+			zh: source === "preset" ? "增加技能序列预设" : `粘贴${nodes.length}技能`,
 		});
 		this.nodes = nodes;
 		this.index = index;
@@ -241,7 +251,7 @@ export class AddTimelineSlot extends TimelineInteraction {
 
 	constructor(currentIndex: number) {
 		super({
-			en: "add timeline slot",
+			en: "add slot",
 			zh: "添加时间轴",
 		});
 		// track the original active slot to ensure we copy the correct config
@@ -266,7 +276,7 @@ export class CloneTimelineSlot extends TimelineInteraction {
 
 	constructor(sourceIndex: number) {
 		super({
-			en: "clone timeline slot",
+			en: "clone slot",
 			zh: "复制时间轴",
 		});
 		this.sourceIndex = sourceIndex;

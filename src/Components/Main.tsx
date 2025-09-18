@@ -255,23 +255,34 @@ export default class Main extends React.Component<{ command?: string }> {
 			onKeyDown={this.gameplayKeyCapture}
 		>
 			<style>{`
-				.visibleScrollbar::-webkit-scrollbar {
-					appearance: none;
-					background-color: ${colors.bgLowContrast};
-					height: 8px;
-					width: 5px;
+				@supports selector(::-webkit-scrollbar) {
+					.visibleScrollbar::-webkit-scrollbar {
+						appearance: none;
+						background-color: ${colors.bgLowContrast};
+						height: 8px;
+						width: 5px;
+					}
+					.visibleScrollbar::-webkit-scrollbar-thumb {
+						background-color: ${colors.bgHighContrast};
+					}
+					.invisibleScrollbar::-webkit-scrollbar {
+						appearance: none;
+						background-color: clear;
+						height: 8px;
+						width: 5px;
+					}
+					.invisibleScrollbar::-webkit-scrollbar-thumb {
+						background-color: ${colors.bgHighContrast};
+					}
 				}
-				.visibleScrollbar::-webkit-scrollbar-thumb {
-					background-color: ${colors.bgHighContrast};
-				}
-				.invisibleScrollbar::-webkit-scrollbar {
-					appearance: none;
-					background-color: clear;
-					height: 8px;
-					width: 5px;
-				}
-				.invisibleScrollbar::-webkit-scrollbar-thumb {
-					background-color: ${colors.bgHighContrast};
+				@supports not selector(::-webkit-scrollbar) {
+					.visibleScrollbar {
+						scrollbar-color: ${colors.bgHighContrast} ${colors.bgLowContrast};
+						scrollbar-width: thin;
+					}
+					.invisibleScrollbar {
+						scrollbar-width: none;
+					}
 				}
 				a {
 					color: ${colors.accent};

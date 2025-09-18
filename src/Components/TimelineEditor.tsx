@@ -10,6 +10,7 @@ import React, {
 } from "react";
 import { controller } from "../Controller/Controller";
 import { MoveNodes, DeleteNodes } from "../Controller/UndoStack";
+import { copy, paste } from "../Controller/Clipboard";
 import { ActionNode, ActionType, Record, RecordValidStatus } from "../Controller/Record";
 import { StaticFn, Columns } from "./Common";
 import { getCurrentThemeColors, ThemeColors } from "./ColorTheme";
@@ -551,7 +552,7 @@ export function TimelineEditor() {
 	const buttonStyle: CSSProperties = {
 		display: "block",
 		width: "100%",
-		padding: 3,
+		padding: 2,
 	};
 	const doRecordEdit = (action: (record: Record) => number | undefined) => {
 		if (controller.record.getFirstSelection()) {
@@ -690,6 +691,16 @@ export function TimelineEditor() {
 		>
 			{localize({ en: "redo ", zh: "重做" })}
 			{localize(peekRedo ?? { en: "" })}
+		</button>
+		<button
+			style={buttonStyle}
+			onClick={copy}
+			disabled={controller.record.getSelectionLength() === 0}
+		>
+			{localize({ en: "copy ", zh: "复制" })}
+		</button>
+		<button style={buttonStyle} onClick={paste}>
+			{localize({ en: "paste ", zh: "粘贴" })}
 		</button>
 	</div>;
 
@@ -883,6 +894,7 @@ export function TimelineEditor() {
 					</div>,
 					defaultSize: 40,
 					fullBorder: true,
+					showScrollbar: true,
 				},
 				{
 					content: applySection(),
