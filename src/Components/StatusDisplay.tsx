@@ -1,5 +1,6 @@
 import React, { CSSProperties } from "react";
 import { Clickable, ContentNode, Help, ProgressBar, StaticFn } from "./Common";
+import { updateInvalidStatus } from "./TimelineEditor";
 import type { GameState } from "../Game/GameState";
 import { controller } from "../Controller/Controller";
 import { localize, localizeResourceType } from "./Localization";
@@ -465,6 +466,7 @@ function Buff(props: BuffProps) {
 						controller.updateStatusDisplay(controller.game);
 						controller.updateSkillButtons(controller.game);
 						controller.autoSave();
+						updateInvalidStatus();
 					}
 				}}
 			/>
