@@ -1,13 +1,21 @@
 [
 	{
-		"date": "9/15/25",
+		"date": "9/21/25",
 		"changes": [
-			"[BETA] Skills can now be inserted in the middle of a timeline (instructions not yet updated).",
-			"[BETA] Pressing backspace/delete now deletes only the selected skills.",
+			"[BETA] [!] Skills can now be inserted in the middle of a timeline.",
+			"[BETA] [!] Pressing backspace/delete now deletes only the selected skills.",
 			"[BETA] Using the up and down arrow keys changes the selected skills.",
-			"[BETA] Most actions can now be undone/redone with ctrl/cmd-z and ctrl/cmd-y.",
+			"[BETA] Most actions can now be undone/redone with ctrl/cmd+z and ctrl/cmd+y.",
 			"[BETA] Actions can now be copy/pasted both within and outside the site (see \"Settings\" at the bottom of the page for details).",
 			"Adjusted the appearance of some website elements on Firefox."
+		],
+		"changes_zh": [
+			"[!]技能现在可以插入到时间轴的任意位置。",
+			"[!]按backspace或delete键现在只删除选中的技能。",
+			"按向上或向下箭头键会移动选中的技能。",
+			"按ctrl/cmd+z和ctrl/cmd+y现在可以撤销/重做大多数的时间轴操作。",
+			"现在可以在时间轴编辑器内或其他软件里复制和粘贴技能（详见下方“设置”部分的说明）。",
+			"调整了一些网站元素在 Firefox 上的显示效果。"
 		],
 		"level": "major"
 	},

@@ -41,21 +41,26 @@ export class UndoStack {
 		this.push(action);
 	}
 
+	emitLog(...args: any) {
+		// UNCOMMENT FOR DEBUGGING
+		// console.log(...args);
+	}
+
 	undo() {
 		if (this.cursor > 0) {
 			this.actions[--this.cursor].undo();
-			// console.log("UNDO", this.actions[this.cursor]);
+			this.emitLog("UNDO", this.actions[this.cursor]);
 		} else {
-			// console.log("nothing to undo");
+			this.emitLog("nothing to undo");
 		}
 	}
 
 	redo() {
 		if (this.cursor < this.actions.length) {
-			// console.log("REDO", this.actions[this.cursor]);
+			this.emitLog("REDO", this.actions[this.cursor]);
 			this.actions[this.cursor++].redo();
 		} else {
-			// console.log("nothing to redo");
+			this.emitLog("nothing to redo");
 		}
 	}
 

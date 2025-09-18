@@ -194,7 +194,6 @@ function parsePasted(text: string): ActionNode[] | undefined {
 			let buffer = "";
 			for (let i = 1; i < stripped.length; i++) {
 				const nextChar = stripped[i];
-				console.log(nodes.length, buffer, stripped.substring(i + 1, i + 4));
 				// discord emotes shouldn't end with spaces, but just assume that was a mistake
 				if (readingEmote && (nextChar === COLON || nextChar === " ")) {
 					// if there's a tilde (used for distinguishing servers) or an "_oGCD" suffix,
@@ -270,7 +269,7 @@ function parsePasted(text: string): ActionNode[] | undefined {
 
 export function copy() {
 	navigator.clipboard.writeText(serializeToClipboard(controller.clipboardMode));
-	console.log("copy", controller.record.getSelected().actions);
+	// console.log("copy", controller.record.getSelected().actions);
 }
 
 export function paste() {
@@ -294,7 +293,7 @@ export function paste() {
 					"paste",
 				),
 			);
-			console.log("paste", clipText);
+			// console.log("paste", clipText);
 		})
 		.finally(() => {
 			controller.queuedPastes--;
