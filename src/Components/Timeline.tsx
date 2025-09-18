@@ -244,11 +244,16 @@ function TimelineTabs() {
 			height={TIMELINE_SETTINGS_HEIGHT}
 			defaultSelectedIndex={undefined}
 		/>
-		<div style={{
-			position: "absolute",
-			top: 0,
-			right: 6,
-			display: "flex", flexDirection: "row", gap: 20}}>
+		<div
+			style={{
+				position: "absolute",
+				top: 0,
+				right: 6,
+				display: "flex",
+				flexDirection: "row",
+				gap: 20,
+			}}
+		>
 			{renderDragLock && <div
 				style={{
 					height: TABS_TITLE_HEIGHT,
@@ -266,7 +271,9 @@ function TimelineTabs() {
 				<Help
 					topic="dragLock"
 					content={localize({
-						en: <div>When locked, disables click/drag to rearrange timeline skills.</div>,
+						en: <div>
+							When locked, disables click/drag to rearrange timeline skills.
+						</div>,
 						zh: <div>锁定时，禁止用单击并拖动来改变技能轴。</div>,
 					})}
 				/>{" "}
