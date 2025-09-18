@@ -176,7 +176,7 @@ export class AddNodeBulk extends TimelineInteraction {
 			en:
 				source === "preset"
 					? "add preset sequence"
-					: `paste ${maybePluralActions(nodes.length)}`,
+					: `paste ${maybePluralActions(nodes.length)} actions`,
 			zh: source === "preset" ? "增加技能序列预设" : `粘贴${nodes.length}技能`,
 		});
 		this.nodes = nodes;

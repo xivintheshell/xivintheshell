@@ -552,7 +552,7 @@ export function TimelineEditor() {
 	const buttonStyle: CSSProperties = {
 		display: "block",
 		width: "100%",
-		padding: 2,
+		padding: 3,
 	};
 	const doRecordEdit = (action: (record: Record) => number | undefined) => {
 		if (controller.record.getFirstSelection()) {
@@ -676,6 +676,18 @@ export function TimelineEditor() {
 				width: "100%",
 			}}
 		/>
+		<div style={{ display: "flex", flexDirection: "row", gap: 6 }}>
+			<button
+				style={buttonStyle}
+				onClick={copy}
+				disabled={controller.record.getSelectionLength() === 0}
+			>
+				{localize({ en: "copy ", zh: "复制" })}
+			</button>
+			<button style={buttonStyle} onClick={paste}>
+				{localize({ en: "paste ", zh: "粘贴" })}
+			</button>
+		</div>
 		<button
 			style={buttonStyle}
 			onClick={() => controller.undoStack.undo()}
@@ -691,16 +703,6 @@ export function TimelineEditor() {
 		>
 			{localize({ en: "redo ", zh: "重做" })}
 			{localize(peekRedo ?? { en: "" })}
-		</button>
-		<button
-			style={buttonStyle}
-			onClick={copy}
-			disabled={controller.record.getSelectionLength() === 0}
-		>
-			{localize({ en: "copy ", zh: "复制" })}
-		</button>
-		<button style={buttonStyle} onClick={paste}>
-			{localize({ en: "paste ", zh: "粘贴" })}
 		</button>
 	</div>;
 
