@@ -1586,6 +1586,7 @@ class Controller {
 		}
 		const initialActiveSlot = parseInt(getCachedValue("activeSlotIndex") ?? "0");
 		this.setActiveSlot(initialActiveSlot >= MAX_TIMELINE_SLOTS ? 0 : initialActiveSlot);
+		this.undoStack.clear();
 	}
 
 	setActiveSlot(slot: number) {
