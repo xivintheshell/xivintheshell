@@ -12,7 +12,7 @@ export function TimelineDisplaySettings() {
 		topic="settings-display"
 		content={localize({
 			en: "Configure how elements are displayed in the visual timeline and image exports.",
-			zh: "设置在图形时间轴上以及图像导出会显示的元素。",
+			zh: "设置在时间轴上以及导出为图像时会显示的元素。",
 		})}
 	/>;
 	const clipboardTopHelp = <Help
@@ -28,7 +28,7 @@ export function TimelineDisplaySettings() {
 			zh: <div>
 				设置从时间轴编辑器复制技能到外部软件时使用的格式。
 				<br />
-				无论此处选择何种格式，编辑器都支持从外部软件粘贴所有格式的数据。
+				无论此处选择何种格式，编辑器都支持从外部软件粘贴以下所有格式的数据。
 			</div>,
 		})}
 	/>;
@@ -44,7 +44,7 @@ export function TimelineDisplaySettings() {
 				<span>Fire 3, Fire 4, Despair</span>
 			</div>,
 			zh: <div>
-				以逗号分隔技能名称的列表。
+				以顿号分隔技能名称的列表。
 				<br />
 				<br />
 				例：
@@ -83,7 +83,7 @@ export function TimelineDisplaySettings() {
 				</table>
 			</div>,
 			zh: <div>
-				制表符分隔的时间、击中目标数、技能名称的列表。可用于外部电子表格软件。
+				用制表符分隔的时间、击中目标数、技能名称的列表。可用于外部电子表格软件。
 				<br />
 				<br />
 				例：
@@ -122,7 +122,7 @@ export function TimelineDisplaySettings() {
 				<span>:F3: :F4: :Despair:</span>
 			</div>,
 			zh: <div>
-				Discord表情的列表（仅验证了黑魔和绘灵)。需要加入有所需的表情的Discord服务器才能用。
+				Discord表情的列表（仅验证了黑魔和画家)。需要加入有所需的表情的Discord服务器才能使用。
 				<br />
 				<br />
 				例：
