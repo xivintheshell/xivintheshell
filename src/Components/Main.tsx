@@ -107,7 +107,6 @@ const betaPrefix = isBetaSite ? "[BETA] " : "";
 export default class Main extends React.Component<{ command?: string }> {
 	controlRegionRef: React.RefObject<HTMLDivElement | null>;
 	gameplayKeyCapture: React.KeyboardEventHandler<HTMLDivElement>;
-	gameplayMouseCapture: React.MouseEventHandler<HTMLDivElement>;
 	setColorTheme: (colorTheme: ColorTheme) => void;
 
 	state: {
@@ -135,14 +134,7 @@ export default class Main extends React.Component<{ command?: string }> {
 		this.controlRegionRef = React.createRef();
 
 		this.gameplayKeyCapture = (evt: React.KeyboardEvent) => {
-			if (evt.target && evt.target === this.controlRegionRef?.current) {
-				controller.handleKeyboardEvent(evt);
-				evt.preventDefault();
-			}
-		};
-
-		this.gameplayMouseCapture = (evt: React.MouseEvent) => {
-			controller.displayCurrentState();
+			controller.handleKeyboardEvent(evt);
 		};
 
 		setJob = (job: ShellJob) => {
@@ -243,8 +235,6 @@ export default class Main extends React.Component<{ command?: string }> {
 				}}
 				tabIndex={-1}
 				ref={this.controlRegionRef}
-				onKeyDown={this.gameplayKeyCapture}
-				onClick={this.gameplayMouseCapture}
 			>
 				<StatusDisplay />
 				<SkillsWindow />
@@ -259,26 +249,40 @@ export default class Main extends React.Component<{ command?: string }> {
 				bottom: 0,
 				left: 0,
 				right: 0,
+				outline: "none",
 			}}
+			tabIndex={-1}
+			onKeyDown={this.gameplayKeyCapture}
 		>
 			<style>{`
-				.visibleScrollbar::-webkit-scrollbar {
-					appearance: none;
-					background-color: ${colors.bgLowContrast};
-					height: 8px;
-					width: 5px;
+				@supports selector(::-webkit-scrollbar) {
+					.visibleScrollbar::-webkit-scrollbar {
+						appearance: none;
+						background-color: ${colors.bgLowContrast};
+						height: 8px;
+						width: 5px;
+					}
+					.visibleScrollbar::-webkit-scrollbar-thumb {
+						background-color: ${colors.bgHighContrast};
+					}
+					.invisibleScrollbar::-webkit-scrollbar {
+						appearance: none;
+						background-color: clear;
+						height: 8px;
+						width: 5px;
+					}
+					.invisibleScrollbar::-webkit-scrollbar-thumb {
+						background-color: ${colors.bgHighContrast};
+					}
 				}
-				.visibleScrollbar::-webkit-scrollbar-thumb {
-					background-color: ${colors.bgHighContrast};
-				}
-				.invisibleScrollbar::-webkit-scrollbar {
-					appearance: none;
-					background-color: clear;
-					height: 8px;
-					width: 5px;
-				}
-				.invisibleScrollbar::-webkit-scrollbar-thumb {
-					background-color: ${colors.bgHighContrast};
+				@supports not selector(::-webkit-scrollbar) {
+					.visibleScrollbar {
+						scrollbar-color: ${colors.bgHighContrast} ${colors.bgLowContrast};
+						scrollbar-width: thin;
+					}
+					.invisibleScrollbar {
+						scrollbar-width: none;
+					}
 				}
 				a {
 					color: ${colors.accent};
@@ -360,6 +364,9 @@ export default class Main extends React.Component<{ command?: string }> {
 				    transition: none;
 				    font-size: 100%;
 				    z-index: 10;
+				}
+				button:disabled {
+					background-color: ${colors.background};
 				}
 			`}</style>
 			<ColorThemeContext.Provider value={this.state.colorTheme}>

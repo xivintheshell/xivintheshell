@@ -4,7 +4,7 @@ import { ActionNode } from "../Controller/Record";
 import { BLMState } from "./Jobs/BLM";
 import { controller } from "../Controller/Controller";
 import { ShellJob, ALL_JOBS, MELEE_JOBS } from "./Data/Jobs";
-import { ResourceKey, CooldownKey } from "./Data";
+import { ResourceKey, CooldownKey, RESOURCES } from "./Data";
 
 export enum EventTag {
 	ManaGain,
@@ -339,6 +339,18 @@ export type ResourceOrCoolDownInfo = ResourceInfo | CoolDownInfo;
 
 const resourceInfos = new Map<ShellJob, Map<ResourceKey | CooldownKey, ResourceOrCoolDownInfo>>();
 
+const enResourceNameMap = new Map<string, ResourceKey>();
+const zhResourceNameMap = new Map<string, ResourceKey>();
+const jaResourceNameMap = new Map<string, ResourceKey>();
+
+export function lookupResourceAnyLocale(s: string): ResourceKey | undefined {
+	return (
+		enResourceNameMap.get(s.toLowerCase()) ??
+		zhResourceNameMap.get(s) ??
+		jaResourceNameMap.get(s)
+	);
+}
+
 export function getResourceInfo(
 	job: ShellJob,
 	rsc: ResourceKey | CooldownKey,
@@ -379,6 +391,14 @@ export function makeResource(
 		warnOnOvercap: params.warnOnOvercap ?? false,
 		warnOnTimeout: params.warnOnTimeout ?? false,
 	});
+	const label = RESOURCES[rsc].label;
+	enResourceNameMap.set(RESOURCES[rsc].name.toLowerCase(), rsc);
+	if (label?.zh !== undefined) {
+		zhResourceNameMap.set(label.zh as string, rsc);
+	}
+	if (label?.ja !== undefined) {
+		jaResourceNameMap.set(label.ja as string, rsc);
+	}
 }
 
 ALL_JOBS.forEach((job) => {

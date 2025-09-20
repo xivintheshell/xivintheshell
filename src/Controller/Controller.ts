@@ -1,3 +1,4 @@
+import React from "react";
 import {
 	CURRENT_GAME_COMBAT_PATCH,
 	getCachedValue,
@@ -8,6 +9,8 @@ import {
 	ShellVersion,
 	TickMode,
 } from "./Common";
+import { ClipboardMode, copy, paste } from "./Clipboard";
+import { UndoStack, AddNode, DeleteNodes, AddNodeBulk } from "./UndoStack";
 import { GameState } from "../Game/GameState";
 import {
 	getAutoReplacedSkillName,
@@ -57,6 +60,8 @@ import { inferJobFromSkillNames, PresetLinesManager } from "./PresetLinesManager
 import { updateSkillSequencePresetsView } from "../Components/SkillSequencePresets";
 import {
 	refreshTimelineEditor,
+	scrollEditorToFirstSelected,
+	scrollEditorToLastSelected,
 	updateActiveTimelineEditor,
 	updateInvalidStatus,
 } from "../Components/TimelineEditor";
@@ -119,7 +124,7 @@ type ReplayResult = {
 
 class Controller {
 	timeScale;
-	shouldLoop;
+	shouldLoop: boolean;
 	tickMode;
 	timeline;
 	#presetLinesManager;
@@ -127,6 +132,8 @@ class Controller {
 	record;
 	imageExportConfig: ImageExportConfig;
 	timelineDrawOptions: TimelineDrawOptions = DEFAULT_TIMELINE_OPTIONS;
+	queuedPastes: number;
+	clipboardMode: ClipboardMode;
 	game;
 	#tinctureBuffPercentage = 0;
 	#untargetableMask = true;
@@ -162,9 +169,12 @@ class Controller {
 	#lastTickDuration: number = 0; // used during record loads to resolve legacy wait durations
 	lastSkillTime: number = 0; // used for WaitSince.LastSkill; updated in #useSkill
 
+	undoStack: UndoStack;
+
 	constructor() {
 		this.timeScale = 1;
 		this.shouldLoop = false;
+		this.queuedPastes = 0;
 		this.tickMode = TickMode.RealTimeAutoPause;
 
 		this.timeline = new Timeline();
@@ -181,14 +191,20 @@ class Controller {
 			wrapThresholdSeconds: JSON.parse(getCachedValue("img: wrapThresholdSeconds") ?? "0"),
 			includeTime: JSON.parse(getCachedValue("img: includeTime") ?? "true"),
 		};
+		this.clipboardMode = (getCachedValue("radio: clipboardMode") ?? "plain") as ClipboardMode;
 
 		this.#lastDamageApplicationTime = -this.gameConfig.countdown; // left of timeline origin
 
 		// meaningless at the beginning
 		this.savedHistoricalGame = this.game;
 		this.savedHistoricalRecord = this.record;
+		this.undoStack = new UndoStack();
 
 		this.#requestRestart();
+	}
+
+	get inputLocked() {
+		return this.shouldLoop || this.queuedPastes > 0;
 	}
 
 	updateStats() {
@@ -310,7 +326,7 @@ class Controller {
 
 			// view only cursor
 			this.timeline.updateElem({
-				type: ElemType.s_ViewOnlyCursor,
+				type: ElemType.s_HistoricalCursor,
 				time: this.game.time, // is actually historical state
 				displayTime: this.game.getDisplayTime(),
 				enabled: true,
@@ -337,7 +353,7 @@ class Controller {
 	displayCurrentState() {
 		this.displayingUpToDateGameState = true;
 		this.timeline.updateElem({
-			type: ElemType.s_ViewOnlyCursor,
+			type: ElemType.s_HistoricalCursor,
 			enabled: false,
 			time: 0,
 			displayTime: 0,
@@ -500,11 +516,17 @@ class Controller {
 		this.autoSave();
 	}
 
-	deleteSelectedSkill() {
-		if (this.record.selectionStartIndex !== undefined) {
-			this.rewindUntilBefore(this.record.selectionStartIndex, false);
-			updateInvalidStatus();
-			this.displayCurrentState();
+	deleteSelectedSkills() {
+		const originalStart = this.record.selectionStartIndex;
+		if (originalStart !== undefined) {
+			this.record.deleteSelected();
+			const status = updateInvalidStatus();
+			if (originalStart < this.record.length) {
+				this.record.selectSingle(originalStart);
+				this.displayHistoricalState(status.skillUseTimes[originalStart], originalStart);
+			} else {
+				this.displayCurrentState();
+			}
 			// TODO: push editor dirty state up to the controller and don't autosave if
 			// we're mid-edit
 			this.autoSave();
@@ -924,7 +946,7 @@ class Controller {
 		deltaTime: number;
 		waitKind?: WaitKind;
 		prematureStopCondition?: () => boolean;
-	}) {
+	}): ActionNode | undefined {
 		const now = this.game.time;
 		const fixedTargetTimestamp = props.deltaTime + this.game.getDisplayTime();
 		if (props.deltaTime > 0) {
@@ -952,7 +974,9 @@ class Controller {
 				newNode.tmp_endLockTime = props.deltaTime + now;
 				this.record.addActionNode(newNode);
 			}
+			return newNode;
 		}
+		return undefined;
 	}
 
 	setTimeControlSettings(props: { timeScale: number; tickMode: TickMode }) {
@@ -1061,6 +1085,7 @@ class Controller {
 		overrideTickMode: TickMode = this.tickMode,
 		maxReplayTime: number = -1,
 		addInvalidNodes: boolean = true,
+		canUndo: boolean = false,
 	): SkillButtonViewInfo {
 		let status = this.game.getSkillAvailabilityStatus(skillName);
 		const preStartLockTime = this.game.time;
@@ -1069,7 +1094,10 @@ class Controller {
 
 		// Wait out the current animation lock or remaining cooldown on the skill,
 		// then attempt to use it ASAP
-		this.#requestTick({ deltaTime: beforeWaitTime });
+		const waitNode = this.#requestTick({ deltaTime: beforeWaitTime });
+		if (canUndo && waitNode) {
+			this.undoStack.push(new AddNode(waitNode, this.record.tailIndex));
+		}
 		skillName = getConditionalReplacement(skillName, this.game);
 		status = this.game.getSkillAvailabilityStatus(skillName);
 
@@ -1081,6 +1109,9 @@ class Controller {
 			node.tmp_startLockTime = this.game.time;
 			this.record.addActionNode(node);
 			actionIndex = this.record.tailIndex;
+			if (canUndo && node) {
+				this.undoStack.push(new AddNode(node, this.record.tailIndex));
+			}
 			// If the skill can be used, do so.
 			this.game.useSkill(skillName, node, actionIndex);
 			node.tmp_invalid_reasons = [];
@@ -1555,6 +1586,7 @@ class Controller {
 		}
 		const initialActiveSlot = parseInt(getCachedValue("activeSlotIndex") ?? "0");
 		this.setActiveSlot(initialActiveSlot >= MAX_TIMELINE_SLOTS ? 0 : initialActiveSlot);
+		this.undoStack.clear();
 	}
 
 	setActiveSlot(slot: number) {
@@ -1571,6 +1603,8 @@ class Controller {
 				console.error(`failed to load timeline in cached active slot ${slot}`);
 			}
 		});
+		this.savedHistoricalGame = this.game;
+		this.savedHistoricalRecord = this.record;
 		this.displayCurrentState();
 		setCachedValue("activeSlotIndex", slot.toString());
 	}
@@ -1822,6 +1856,7 @@ class Controller {
 
 	// Used for trying to add a preset skill sequence to the current timeline
 	tryAddLine(line: Line, replayMode = ReplayMode.SkillSequence) {
+		const endIndex = controller.record.length;
 		const replayResult = this.#replay({ line: line, replayMode: replayMode });
 		if (!replayResult.success) {
 			this.rewindUntilBefore(replayResult.firstAddedIndex, false);
@@ -1832,6 +1867,7 @@ class Controller {
 			);
 			return false;
 		} else {
+			this.undoStack.push(new AddNodeBulk(line.actions, endIndex, "preset"));
 			this.autoSave();
 			updateInvalidStatus();
 			return true;
@@ -1908,11 +1944,18 @@ class Controller {
 	removeTrailingIdleTime() {
 		// first remove any non-skill nodes in the end
 		let lastSkillIndex: number | undefined = undefined;
-		for (let i = this.record.length - 1; i >= 0; i--) {
+		for (let i = this.record.tailIndex; i >= 0; i--) {
 			if (this.record.actions[i].info.type === ActionType.Skill) {
 				lastSkillIndex = i;
 				break;
 			}
+		}
+		const toDelete =
+			lastSkillIndex === undefined
+				? this.record.actions.slice()
+				: this.record.actions.slice(lastSkillIndex + 1);
+		if (toDelete.length > 0) {
+			this.undoStack.push(new DeleteNodes((lastSkillIndex ?? -1) + 1, toDelete, "delete"));
 		}
 		if (lastSkillIndex === undefined) {
 			// no skill has been used yet - delete everything.
@@ -1921,40 +1964,89 @@ class Controller {
 			// there are nodes after the last skill
 			this.rewindUntilBefore(lastSkillIndex + 1, true);
 		}
+		updateInvalidStatus();
 	}
 
 	waitTillNextMpOrLucidTick() {
-		this.#requestTick({ deltaTime: this.game.timeTillNextMpGainEvent(), waitKind: "mp" });
+		const node = this.#requestTick({
+			deltaTime: this.game.timeTillNextMpGainEvent(),
+			waitKind: "mp",
+		});
+		if (node !== undefined) {
+			this.undoStack.push(new AddNode(node, this.record.tailIndex));
+		}
 		updateInvalidStatus();
 		this.updateAllDisplay();
 	}
 
-	requestUseSkill(props: { skillName: ActionKey; targetCount: number }) {
+	insertRecordNodes(nodes: ActionNode[], insertIdx: number) {
+		// cleanup function for taking care of business after splicing new nodes into the middle of
+		// the timeline
+		// unlike tryAddLine, this function can add nodes at arbitrary positions
+		this.record.insertActionNodes(nodes, insertIdx);
+		this.autoSave();
+		// After inserting the new skill, restart simulation and re-select the newly-added skill.
+		const status = updateInvalidStatus();
+		let newSelectIdx: number;
+		if (nodes.length > 1) {
+			newSelectIdx = Math.min(insertIdx, this.record.tailIndex);
+			this.record.selectSingle(newSelectIdx);
+			this.record.selectUntil(newSelectIdx + nodes.length - 1);
+		} else {
+			newSelectIdx = Math.min(insertIdx + 1, this.record.tailIndex);
+			this.record.selectSingle(newSelectIdx);
+		}
+		this.displayHistoricalState(status.skillUseTimes[newSelectIdx], newSelectIdx);
+	}
+
+	insertRecordNode(node: ActionNode, insertIdx: number) {
+		this.insertRecordNodes([node], insertIdx);
+	}
+
+	requestUseSkill(
+		props: { skillName: ActionKey; targetCount: number },
+		canUndo: boolean = false,
+	) {
 		this.#bTakingUserInput = true;
-		if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
+		if (this.inputLocked) {
 			// not sure should allow any control here.
 		} else {
-			const status = this.#useSkill(
-				props.skillName,
-				props.targetCount,
-				this.tickMode,
-				-1,
-				false,
-			);
-			if (status.status.ready()) {
-				this.scrollToTime(this.game.time);
-				this.autoSave();
-				// This is needed to correct timestamps of newly-used actions
-				// in realtime mode, this is handled at the end of the animation loop
-				if (this.tickMode !== TickMode.RealTimeAutoPause) {
-					updateInvalidStatus();
+			if (this.displayingUpToDateGameState) {
+				// Append the skill to the timeline.
+				const status = this.#useSkill(
+					props.skillName,
+					props.targetCount,
+					this.tickMode,
+					-1,
+					false,
+					canUndo,
+				);
+				if (status.status.ready()) {
+					this.scrollToTime(this.game.time);
+					this.autoSave();
+					// This is needed to correct timestamps of newly-used actions
+					// in realtime mode, this is handled at the end of the animation loop
+					if (this.tickMode !== TickMode.RealTimeAutoPause) {
+						updateInvalidStatus();
+					}
+				}
+			} else {
+				// Insert the skill to the middle of the timeline by modifying the record.
+				const insertIdx = this.record.selectionStartIndex;
+				if (insertIdx !== undefined) {
+					// TODO this needs validity checking
+					const node = skillNode(props.skillName, props.targetCount);
+					this.insertRecordNode(node, insertIdx);
+					if (canUndo) {
+						this.undoStack.push(new AddNode(node, insertIdx));
+					}
 				}
 			}
 		}
 		this.#bTakingUserInput = false;
 	}
 
-	requestToggleBuff(buffName: ResourceKey) {
+	requestToggleBuff(buffName: ResourceKey, canUndo: boolean = false) {
 		const success = this.game.requestToggleBuff(buffName);
 		if (!success) return false;
 
@@ -1962,6 +2054,10 @@ class Controller {
 		toggleNode.tmp_startLockTime = this.game.time;
 		toggleNode.tmp_endLockTime = toggleNode.tmp_startLockTime;
 		this.record.addActionNode(toggleNode);
+		// TODO: support splicing the toggle node at current timestamp
+		if (canUndo) {
+			this.undoStack.push(new AddNode(toggleNode, this.record.tailIndex));
+		}
 
 		this.#actionsLogCsv.push({
 			time: this.game.getDisplayTime(),
@@ -2039,42 +2135,174 @@ class Controller {
 		requestAnimationFrame(loopFn);
 	}
 
-	step(t: number) {
-		this.#requestTick({ deltaTime: t, waitKind: "duration" });
-		this.updateAllDisplay();
-	}
-
-	stepUntil(t: number) {
-		this.#requestTick({ deltaTime: t - this.game.getDisplayTime(), waitKind: "target" });
-		this.updateAllDisplay();
-	}
-
-	#handleKeyboardEvent_RealTimeAutoPause(evt: { shiftKey: boolean; keyCode: number }) {
-		if (this.shouldLoop) return;
-
-		if (evt.keyCode === 85) {
-			// u (undo)
-			this.rewindUntilBefore(this.record.tailIndex, false);
-			this.updateAllDisplay();
-			this.autoSave();
-		}
-	}
-	#handleKeyboardEvent_Manual(evt: { keyCode: number; shiftKey: boolean }) {
-		if (evt.keyCode === 85) {
-			// u (undo)
-			this.rewindUntilBefore(this.record.tailIndex, false);
-			this.updateAllDisplay();
-			this.autoSave();
-		}
-	}
-
-	handleKeyboardEvent(evt: { keyCode: number; shiftKey: boolean }) {
-		// console.log(evt.keyCode);
+	step(t: number, canUndo: boolean = false) {
+		let node: ActionNode | undefined;
+		let index = this.record.length;
 		if (this.displayingUpToDateGameState) {
-			if (this.tickMode === TickMode.RealTimeAutoPause) {
-				this.#handleKeyboardEvent_RealTimeAutoPause(evt);
-			} else if (this.tickMode === TickMode.Manual) {
-				this.#handleKeyboardEvent_Manual(evt);
+			node = this.#requestTick({ deltaTime: t, waitKind: "duration" });
+			this.autoSave();
+			this.updateAllDisplay();
+		} else if (this.record.selectionStartIndex !== undefined) {
+			index = this.record.selectionStartIndex;
+			node = durationWaitNode(t);
+			this.insertRecordNode(node, index);
+		}
+		if (canUndo && node) {
+			this.undoStack.push(new AddNode(node, index));
+		}
+	}
+
+	stepUntil(t: number, canUndo: boolean = false) {
+		let node: ActionNode | undefined;
+		let index = this.record.length;
+		if (this.displayingUpToDateGameState) {
+			node = this.#requestTick({
+				deltaTime: t - this.game.getDisplayTime(),
+				waitKind: "target",
+			});
+			this.autoSave();
+			this.updateAllDisplay();
+		} else if (this.record.selectionStartIndex !== undefined) {
+			index = this.record.selectionStartIndex;
+			node = jumpToTimestampNode(t);
+			this.insertRecordNode(node, index);
+		}
+		if (canUndo && node) {
+			this.undoStack.push(new AddNode(node, index));
+		}
+	}
+
+	// Process key events across the whole webpage.
+	// If an element like an input field does not want this handler to be called while focused,
+	// it should call evt.stopPropagation().
+	handleKeyboardEvent(evt: React.KeyboardEvent) {
+		if (this.inputLocked) {
+			// never accept shortcuts while we're mid-animation
+			return;
+		}
+		const ctrlOrCmd = evt.ctrlKey || evt.metaKey;
+		const firstSelected = controller.record.selectionStartIndex;
+		const selecting = firstSelected !== undefined;
+		// console.log(evt.keyCode);
+		let processed = false;
+		if (this.displayingUpToDateGameState) {
+			if (evt.key === "u") {
+				// delete the last action in the current timeline
+				this.undoStack.doThenPush(
+					new DeleteNodes(
+						this.record.tailIndex,
+						[this.record.actions[this.record.tailIndex]],
+						"delete",
+					),
+				);
+				processed = true;
+			}
+		}
+		if (evt.key === "z" && ctrlOrCmd) {
+			this.undoStack.undo();
+			processed = true;
+		} else if ((evt.key === "Z" && ctrlOrCmd) || (evt.key === "y" && ctrlOrCmd)) {
+			this.undoStack.redo();
+			processed = true;
+		} else if (evt.key === "Paste" || (evt.key === "v" && ctrlOrCmd)) {
+			paste();
+			processed = true;
+		} else if (evt.key === "Copy" || (evt.key === "c" && ctrlOrCmd)) {
+			if (selecting) {
+				copy();
+				processed = true;
+			}
+		} else if (evt.key === "Cut" || (evt.key === "x" && ctrlOrCmd)) {
+			if (selecting) {
+				copy();
+				controller.undoStack.push(
+					new DeleteNodes(
+						firstSelected,
+						controller.record.getSelected().actions,
+						"delete",
+					),
+				);
+				controller.deleteSelectedSkills();
+				processed = true;
+			}
+		}
+		if (processed) {
+			evt.preventDefault();
+		}
+	}
+
+	// Process key events within the timeline canvas and timeline editor.
+	handleTimelineKeyboardEvent(evt: React.KeyboardEvent) {
+		if (!this.inputLocked) {
+			const ctrlOrCmd = evt.ctrlKey || evt.metaKey;
+			const firstSelected = controller.record.selectionStartIndex;
+			const lastSelected = controller.record.selectionEndIndex;
+			const selecting = firstSelected !== undefined;
+			let scrollToStart = false;
+			let scrollToEnd = false;
+			if (evt.key === "Backspace" || evt.key === "Delete") {
+				if (selecting) {
+					controller.undoStack.push(
+						new DeleteNodes(
+							firstSelected,
+							controller.record.getSelected().actions,
+							"delete",
+						),
+					);
+					controller.deleteSelectedSkills();
+				}
+			} else if (evt.key === "ArrowUp") {
+				if (selecting) {
+					if (evt.shiftKey) {
+						controller.timeline.resizeSelection(true);
+					} else {
+						controller.timeline.onClickTimelineAction(firstSelected - 1, false);
+					}
+					scrollToStart = true;
+					evt.preventDefault();
+				} else if (controller.record.length > 0) {
+					controller.timeline.onClickTimelineAction(controller.record.tailIndex, false);
+					scrollToStart = true;
+					evt.preventDefault();
+				}
+			} else if (evt.key === "ArrowDown") {
+				if (selecting) {
+					if (evt.shiftKey) {
+						controller.timeline.resizeSelection(false);
+					} else {
+						controller.timeline.onClickTimelineAction(lastSelected! + 1, false);
+					}
+					scrollToEnd = true;
+					evt.preventDefault();
+				} else if (controller.record.length > 0) {
+					controller.timeline.onClickTimelineAction(0, false);
+					scrollToEnd = true;
+					evt.preventDefault();
+				}
+			} else if (evt.key === "Home") {
+				controller.timeline.onClickTimelineAction(0, evt.shiftKey);
+				scrollToStart = true;
+			} else if (evt.key === "End") {
+				controller.timeline.onClickTimelineAction(
+					controller.record.tailIndex,
+					evt.shiftKey,
+				);
+				scrollToEnd = true;
+			} else if (evt.key === "Escape") {
+				controller.record.unselectAll();
+				controller.displayCurrentState();
+			} else if (evt.key === "a" && ctrlOrCmd) {
+				controller.timeline.onClickTimelineAction(0, false);
+				controller.timeline.onClickTimelineAction(controller.record.tailIndex, true);
+				evt.preventDefault();
+			}
+			// shared post-action effects
+			if (scrollToStart) {
+				this.scrollToTime(this.record.selectionStart?.tmp_startLockTime);
+				scrollEditorToFirstSelected();
+			} else if (scrollToEnd) {
+				this.scrollToTime(this.record.selectionEnd?.tmp_startLockTime);
+				scrollEditorToLastSelected();
 			}
 		}
 	}

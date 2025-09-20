@@ -2,6 +2,7 @@ import React from "react";
 import { Columns, FileFormat, LoadJsonFromFileOrUrl, SaveToFile } from "./Common";
 import { controller } from "../Controller/Controller";
 import { FileType } from "../Controller/Common";
+import { ImportTimelineFile } from "../Controller/UndoStack";
 import { localize } from "./Localization";
 import { ImageExport } from "./ImageExport";
 import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
@@ -11,10 +12,9 @@ type Fixme = any;
 export function LoadSave() {
 	const onFileLoad = (content: Fixme) => {
 		if (content.fileType === FileType.Record) {
-			// loadBattleRecordFromFile calls render methods, so no need to explicily
-			// invoke updateAllDisplay here
-			controller.loadBattleRecordFromFile(content);
-			controller.autoSave();
+			controller.undoStack.doThenPush(
+				new ImportTimelineFile(controller.record.serialized(), content),
+			);
 		} else if (
 			content.fileType === FileType.MarkerTrackIndividual ||
 			content.fileType === FileType.MarkerTracksCombined

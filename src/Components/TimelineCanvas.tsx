@@ -1,4 +1,11 @@
-import React, { useEffect, useRef, useReducer, useContext, CSSProperties } from "react";
+import React, { useEffect, useRef, useContext, CSSProperties } from "react";
+import {
+	MoveNodes,
+	SetActiveTimelineSlot,
+	AddTimelineSlot,
+	DeleteTimelineSlot,
+	CloneTimelineSlot,
+} from "../Controller/UndoStack";
 import {
 	AutoTickMarkElem,
 	CursorElem,
@@ -15,7 +22,7 @@ import {
 	SlotTimelineElem,
 	TimelineElem,
 	UntargetableMarkerTrack,
-	ViewOnlyCursorElem,
+	HistoricalCursorElem,
 	WarningMarkElem,
 } from "../Controller/Timeline";
 import { StaticFn, TimelineDimensions, TimelineDrawOptions } from "./Common";
@@ -506,14 +513,14 @@ function drawPotencyMarks(params: MarkerDrawParams<PotencyMarkElem>) {
 				break;
 			case ElemType.HealingMark:
 				ctx.fillStyle = colors.timeline.healingMark;
-				time += localize({ en: "healing potency" });
+				time += localize({ en: "healing potency", zh: "恢复威力" });
 				break;
 			// If it's a damage mark, adjust color based on whether the boss is untargetable
 			default:
 				ctx.fillStyle = untargetable
 					? colors.timeline.untargetableDamageMark
 					: colors.timeline.damageMark;
-				time += localize({ en: "damage potency" });
+				time += localize({ en: "damage potency", zh: "伤害威力" });
 		}
 
 		// Create the appropriate shape
@@ -1441,7 +1448,9 @@ export function drawTimelines(params: {
 					: [localize({ en: "set active", zh: "设为当前" }) as string],
 			onMouseUp: (info, mouseDownInHitbox) => {
 				if (mouseDownInHitbox) {
-					controller.setActiveSlot(slot);
+					controller.undoStack.doThenPush(
+						new SetActiveTimelineSlot(renderingProps.activeSlotIndex, slot),
+					);
 				}
 			},
 			pointerMouse: true,
@@ -1463,8 +1472,12 @@ export function drawTimelines(params: {
 				hoverTip: [localize({ en: "delete", zh: "删除" }) as string],
 				onMouseUp: (info, mouseDownInHitbox) => {
 					if (mouseDownInHitbox) {
-						controller.timeline.removeSlot(slot);
-						controller.displayCurrentState();
+						controller.undoStack.doThenPush(
+							new DeleteTimelineSlot(
+								renderingProps.activeSlotIndex,
+								controller.record.serialized(),
+							),
+						);
 					}
 				},
 				pointerMouse: true,
@@ -1503,8 +1516,8 @@ function drawCursors(params: {
 	};
 
 	// view only cursor
-	(sharedElemBins.get(ElemType.s_ViewOnlyCursor) ?? []).forEach((cursor) => {
-		const vcursor = cursor as ViewOnlyCursorElem;
+	(sharedElemBins.get(ElemType.s_HistoricalCursor) ?? []).forEach((cursor) => {
+		const vcursor = cursor as HistoricalCursorElem;
 		if (vcursor.enabled) {
 			const x =
 				displayOriginX +
@@ -1649,8 +1662,9 @@ function drawAddSlotButton(params: {
 		testInteraction(handle, {
 			onMouseUp: (info, mouseDownInHitbox) => {
 				if (mouseDownInHitbox) {
-					controller.timeline.addSlot();
-					controller.displayCurrentState();
+					controller.undoStack.doThenPush(
+						new AddTimelineSlot(renderingProps.activeSlotIndex),
+					);
 				}
 			},
 			pointerMouse: true,
@@ -1680,8 +1694,9 @@ function drawAddSlotButton(params: {
 		testInteraction(cloneHandle, {
 			onMouseUp: (info, mouseDownInHitbox) => {
 				if (mouseDownInHitbox) {
-					controller.cloneActiveSlot();
-					controller.displayCurrentState();
+					controller.undoStack.doThenPush(
+						new CloneTimelineSlot(renderingProps.activeSlotIndex),
+					);
 				}
 			},
 			pointerMouse: true,
@@ -1931,7 +1946,6 @@ export function TimelineCanvas(props: {
 	const scaledWidth = props.visibleWidth * dpr;
 	const scaledHeight = props.timelineHeight * dpr;
 
-	const [, forceUpdate] = useReducer((x) => x + 1, 0);
 	const activeColorTheme = useContext(ColorThemeContext);
 	const globalDragContext = useContext(DragTargetContext);
 	const lockContext = useContext(DragLockContext);
@@ -2222,9 +2236,6 @@ export function TimelineCanvas(props: {
 		onMouseUp: (e: any, x: number, y: number) => {
 			mouseX.current = x;
 			mouseY.current = y;
-			// Always end a background selection operation when the mouse is released, regardless of
-			// what element the cursor is hovering.
-			bgSelecting.current = false;
 			// Cancel any existing drag operation.
 			if (draggedSkillElem.current) {
 				const targetIndex = globalDragContext.dragTargetIndex;
@@ -2243,12 +2254,22 @@ export function TimelineCanvas(props: {
 					if (distance !== 0) {
 						// Even though we're automatically saving the edit, go through the whole song
 						// and dance of pretending an edit was made so state is properly synchronized.
+						controller.undoStack.push(
+							new MoveNodes(start, controller.record.getSelectionLength(), distance),
+						);
 						controller.record.moveSelected(distance);
-						controller.checkRecordValidity(controller.record, 0, true);
 						controller.autoSave();
-						updateInvalidStatus();
+						const status = updateInvalidStatus();
 						updateTimelineView();
-						controller.displayCurrentState();
+						const newStart = controller.record.selectionStartIndex;
+						if (newStart !== undefined) {
+							controller.displayHistoricalState(
+								status.skillUseTimes[newStart],
+								newStart,
+							);
+						} else {
+							controller.displayCurrentState();
+						}
 						manualRedrawInteractive = false;
 					}
 				}
@@ -2258,7 +2279,7 @@ export function TimelineCanvas(props: {
 					redrawInteractive();
 				}
 			}
-			if (!controller.shouldLoop) {
+			if (!controller.inputLocked) {
 				// Only handle mouseup events if we're not currently in an animation.
 				// This must run AFTER the prior drag check to ensure dropping an icon on top
 				// of a skill hitbox works properly.
@@ -2279,13 +2300,17 @@ export function TimelineCanvas(props: {
 					);
 				}
 			}
+			// Always end a background selection operation when the mouse is released, regardless of
+			// what element the cursor is hovering.
+			// Set this at the end to ensure mouseUp on top of a skill is properly handled.
+			bgSelecting.current = false;
 		},
 		onMouseDown: (x: number, y: number) => {
 			mouseDownX.current = x;
 			mouseDownY.current = y;
 			mouseX.current = x;
 			mouseY.current = y;
-			if (!controller.shouldLoop) {
+			if (!controller.inputLocked) {
 				// Only handle mousedown events if we're not currently in an animation.
 				const mouseDownZones = getAllZones("mouseDown");
 				selectStartX.current = x;
@@ -2305,14 +2330,12 @@ export function TimelineCanvas(props: {
 				});
 			}
 		},
-		onKeyDown: (e: any) => {
-			if (!controller.shouldLoop) {
-				if (e.key === "Backspace" || e.key === "Delete") {
-					forceUpdate();
-					const firstSelected = controller.record.selectionStartIndex;
-					if (firstSelected !== undefined) {
-						controller.deleteSelectedSkill();
-					}
+		onKeyDown: (e: React.KeyboardEvent) => {
+			controller.handleTimelineKeyboardEvent(e);
+			if (!controller.inputLocked) {
+				if (e.key === "Escape") {
+					globalDragContext.setDragTarget(null, null);
+					setDraggedSkillElem(undefined);
 				}
 			}
 		},

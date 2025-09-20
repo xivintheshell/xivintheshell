@@ -163,6 +163,8 @@ export function IntroSection(props: { job: ShellJob }) {
 	const smallGap: CSSProperties = { marginBottom: 5 };
 	const colors = getCurrentThemeColors();
 	const job = props.job;
+	const bi = (k: string) => <ButtonIndicator text={k} />;
+	const modifierKey = bi(navigator.platform.includes("Mac") ? "cmd" : "ctrl");
 	return <div>
 		<Changelog />
 		<Expandable
@@ -190,21 +192,23 @@ export function IntroSection(props: { job: ShellJob }) {
 						en: <ul>
 							<li style={smallGap}>
 								Set your stats in <b>Config</b> on the right, then{" "}
-								<ButtonIndicator text={"apply and reset"} />
+								{bi("apply and reset")}.
 							</li>
 							<li style={smallGap}>
-								Click on a skill to use it. The simulation will always jump to when
-								the animation lock ends and the skill's cooldown becomes available.
+								Click on a skill to use it at the selected point in the timeline.
+								The simulation will always jump to when the last animation lock ends
+								and the skill's cooldown becomes available.
 							</li>
 							<li style={smallGap}>
-								Press <ButtonIndicator text={"u"} /> to delete the last added action
-								(effective when not running in real-time).
+								Press {bi("u")} to delete the last added action (effective when not
+								running in real-time). Use {modifierKey}+{bi("z")}
+								and {modifierKey}+{bi("y")} to undo/redo.
 							</li>
 							<li style={smallGap}>
 								Click on a buff applied to self to remove it. Clicking on certain
 								ground-targeted buffs like BLM's Ley Lines, DRK's Salt and Darkness,
 								and SCH's Sacred Soil temporarily disables their effects. Clicking
-								enable re-enables them.
+								again re-enables them.
 							</li>
 							<li style={smallGap}>
 								Click and drag in the visual timeline or use the "Timeline Editor"
@@ -214,14 +218,14 @@ export function IntroSection(props: { job: ShellJob }) {
 						zh: <ul>
 							<li style={smallGap}>
 								在右边<b>属性设置</b>里输入装备数据，然后点击{" "}
-								<ButtonIndicator text={"应用并重置时间轴"} />
+								{bi("应用并重置时间轴")} 。
 							</li>
 							<li style={smallGap}>
 								单击使用技能，如果CD还没转好，会自动等到转好然后重试。
 							</li>
 							<li style={smallGap}>
-								按 <ButtonIndicator text={"u"} />{" "}
-								删除时间线上的最后一个操作（实时模式下此操作无效）。
+								按 {bi("u")} 删除最后一个技能（实时模式下此操作无效）。按{" "}
+								{modifierKey}+{bi("z")} 或 {modifierKey}+{bi("y")} 可撤销或重做。
 							</li>
 							<li style={smallGap}>
 								左键单击可以移除自己身上的buff。地面区域类的buff，像“黑魔纹”（如暗黑骑士的”腐秽大地“和学者的”野战治疗阵“），在单击关闭后可以被再次点击开启。
@@ -255,44 +259,44 @@ export function IntroSection(props: { job: ShellJob }) {
 					{localize({
 						en: <ul>
 							<li style={smallGap}>
-								Holding <ButtonIndicator text={"shift"} /> lets you scroll
-								horizontally
+								Holding {bi("shift")} lets you scroll horizontally.
 							</li>
 							<li style={smallGap}>
-								Click to select/unselect a single skill on the timeline. Shift click
-								to select a sequence of skills
+								Click to select/unselect a single skill on the timeline.{" "}
+								{bi("shift")}+click or click/drag to select a sequence of skills.
 							</li>
 							<li style={smallGap}>
-								<ButtonIndicator text={"backspace"} /> or{" "}
-								<ButtonIndicator text={"delete"} /> to delete the selected skill and
-								everything after it
+								Use {bi("backspace")} or {bi("delete")} to delete the selected
+								skill(s).
+							</li>
+							<li style={smallGap}>
+								Use {modifierKey}+{bi("c")} and {modifierKey}+{bi("v")} to
+								copy/paste skills.
 							</li>
 							<li style={smallGap}>
 								Click on the timeline's ruler-like header to view historical game
-								states. While doing so, the main control region will have an{" "}
-								<b style={{ color: "darkorange" }}>orange</b> border and you will
-								not be able to use skills. Click on somewhere else on the timeline
-								to cancel.
+								states. Click on somewhere else on the timeline to return to the
+								most recent game state.
 							</li>
 						</ul>,
 						zh: <ul>
 							<li style={smallGap}>
-								按住 <ButtonIndicator text={"shift"} />{" "}
-								时滑动鼠标滚轮可以横向滚动时间线。
+								按住 {bi("shift")} 时滑动鼠标滚轮可以横向滚动时间线。
 							</li>
 							<li style={smallGap}>
-								单击选中/取消选中时间轴上的单个技能。已经选中一个技能时，按住{" "}
-								<ButtonIndicator text={"shift"} />{" "}
-								点击另一个技能会选中期间的所有操作。
+								单击选中时间轴上的单个技能，再次单击取消选中。在时间轴上框选，或在选中一个技能时按住
+								shift 点击另一个技能，会选中期间的所有操作。 {bi("shift")}{" "}
+								点击另一个技能，会选中期间的所有操作。
 							</li>
 							<li style={smallGap}>
-								按 <ButtonIndicator text={"backspace"} /> 或{" "}
-								<ButtonIndicator text={"delete"} /> 删除选中技能及其之后的所有操作。
+								按 {bi("backspace")} 或 {bi("delete")} 删除选中技能。
 							</li>
 							<li style={smallGap}>
-								选中某技能或者刻度上的某时间时，可以看到相应时间的职业资源状态。此时控制区域边框变为
-								<b style={{ color: "darkorange" }}>橙色</b>
-								且无法使用技能。点击控制区域或时间轴空白处取消。
+								按 {modifierKey}+{bi("c")} 或 {modifierKey}+{bi("v")}{" "}
+								复制或粘贴技能。
+							</li>
+							<li style={smallGap}>
+								选中某技能或者刻度上的某时间时，可以看到相应时间的职业资源状态。点击时间轴空白处取消，并回到最新的资源状态。
 							</li>
 						</ul>,
 						ja: <ul>
@@ -300,6 +304,7 @@ export function IntroSection(props: { job: ShellJob }) {
 								<ButtonIndicator text={"shift"} />
 								を押しながらスクロールすると横スクロールできます。
 							</li>
+							{/* TODO outdated */}
 							<li style={smallGap}>
 								タイムライン上のアクションをクリックすると選択できます。
 								<ButtonIndicator text={"shift"} />
