@@ -11,7 +11,7 @@ import React from "react";
 import fs from "node:fs";
 import { ActionKey } from "../Game/Data";
 import { controller } from "../Controller/Controller";
-import { setCachedValue, ReplayMode } from "../Controller/Common";
+import { setCachedValue, ReplayMode, TickMode } from "../Controller/Common";
 import {
 	Line,
 	SerializedLine,
@@ -66,6 +66,10 @@ const SLOT_1_INIT_ACTIONS = (
 ).map((key) => skillNode(key).serialized());
 
 beforeEach(() => {
+	controller.setTimeControlSettings({
+		timeScale: 2,
+		tickMode: TickMode.Manual,
+	});
 	const data = new Map<string, string>();
 	const mockLocalStorage = {
 		getItem: vi.fn((key: string) => data.get(key) ?? null),
@@ -580,9 +584,10 @@ describe("copy and paste", () => {
 		undoRedoTest(
 			[
 				{
-					action: () => {
+					action: async () => {
 						controller.timeline.onClickTimelineAction(2, false);
 						mockKeyDown("v", true);
+						await navigator.clipboard.readText();
 					},
 					line: [
 						SLOT_0_INIT_ACTIONS[0],
@@ -599,27 +604,152 @@ describe("copy and paste", () => {
 		),
 	);
 
-	it.fails("copies jump at start of record in discord mode", () => {
-		// test currently fails because parsing isn't very smart and won't detect non-emote starts
+	it(
+		"copies and pastes skills with target counts",
+		undoRedoTest([
+			{
+				action: () => {
+					controller.requestUseSkill({ skillName: "HIGH_FIRE_II", targetCount: 2 }, true);
+					controller.requestUseSkill({ skillName: "FLARE", targetCount: 3 }, true);
+					controller.requestUseSkill(
+						{ skillName: "HIGH_BLIZZARD_II", targetCount: 4 },
+						true,
+					);
+					controller.requestUseSkill({ skillName: "FREEZE", targetCount: 5 }, true);
+				},
+				line: [
+					...SLOT_0_INIT_ACTIONS,
+					skillNode("HIGH_FIRE_II", 2).serialized(),
+					skillNode("FLARE", 3).serialized(),
+					skillNode("HIGH_BLIZZARD_II", 4).serialized(),
+					skillNode("FREEZE", 5).serialized(),
+				],
+			},
+			{
+				action: async () => {
+					controller.timeline.onClickTimelineAction(7, false);
+					controller.timeline.onClickTimelineAction(8, true);
+					mockKeyDown("c", true);
+					controller.record.unselectAll();
+					mockKeyDown("v", true);
+					expect(await navigator.clipboard.readText()).toStrictEqual(
+						"High Fire 2, Flare",
+					);
+				},
+				line: [
+					...SLOT_0_INIT_ACTIONS,
+					skillNode("HIGH_FIRE_II", 2).serialized(),
+					skillNode("FLARE", 3).serialized(),
+					skillNode("HIGH_BLIZZARD_II", 4).serialized(),
+					skillNode("FREEZE", 5).serialized(),
+					skillNode("HIGH_FIRE_II", 2).serialized(),
+					skillNode("FLARE", 3).serialized(),
+				],
+			},
+		]),
+	);
+
+	it("copies jump at start of record in discord mode", async () => {
+		// copy/paste within the app uses an internal cache for the result nodes, so it skips parsing
+		controller.clipboardMode = "discord";
 		mockKeyDown("a", true);
 		mockKeyDown("c", true);
 		controller.record.unselectAll();
 		mockKeyDown("v", true);
+		expect(await navigator.clipboard.readText()).toStrictEqual(
+			"jump 0.000 :F3: :B3: :F3: :B3: :F3: :B3:",
+		);
 		expect(controller.record.serialized().actions).toStrictEqual([
 			...SLOT_0_INIT_ACTIONS,
 			...SLOT_0_INIT_ACTIONS,
 		]);
 	});
 
-	// it("copies tsv to clipboard", undoRedoTest([{action: () => {}, line: []}]));
+	it(
+		"pastes discord emotes",
+		undoRedoTest([
+			{
+				action: async () => {
+					await navigator.clipboard.writeText(":Transpose: :B3: :B4:");
+					mockKeyDown("v", true);
+					await navigator.clipboard.readText();
+				},
+				line: [
+					...SLOT_0_INIT_ACTIONS,
+					skillNode("TRANSPOSE").serialized(),
+					skillNode("BLIZZARD_III").serialized(),
+					skillNode("BLIZZARD_IV").serialized(),
+				],
+			},
+		]),
+	);
 
-	// it("pastes tab-separated columns with only skill column", undoRedoTest([{action: () => {}, line: []}]));
+	it.fails(
+		"pastes wait at start of record in discord mode",
+		undoRedoTest(
+			// in discord mode, non-skill nodes at the start of the sequence aren't parsed properly
+			[
+				{
+					action: async () => {
+						controller.clipboardMode = "discord";
+						await navigator.clipboard.writeText("wait 1.000 :F3: :B3:");
+						mockKeyDown("v", true);
+						await navigator.clipboard.readText();
+					},
+					line: [
+						...SLOT_0_INIT_ACTIONS,
+						durationWaitNode(1).serialized(),
+						skillNode("FIRE_III").serialized(),
+						skillNode("BLIZZARD_III").serialized(),
+					],
+				},
+			],
+		),
+	);
 
-	// it("pastes tab-separated columns with target count and skills", undoRedoTest([{action: () => {}, line: []}]));
+	it("copies tsv to clipboard", async () => {
+		controller.clipboardMode = "tsv";
+		controller.timeline.onClickTimelineAction(1, false);
+		controller.timeline.onClickTimelineAction(3, true);
+		mockKeyDown("c", true);
+		expect(await navigator.clipboard.readText()).toStrictEqual(
+			"0.000\t1\tFire 3\n3.542\t1\tBlizzard 3\n6.000\t1\tFire 3",
+		);
+	});
 
-	// it("copies discord emotes to clipboard", undoRedoTest([{action: () => {}, line: []}]));
+	it(
+		"pastes columns with only skill column",
+		undoRedoTest([
+			{
+				action: async () => {
+					await navigator.clipboard.writeText("Blizzard 4\nAddle");
+					mockKeyDown("v", true);
+					await navigator.clipboard.readText();
+				},
+				line: [
+					...SLOT_0_INIT_ACTIONS,
+					skillNode("BLIZZARD_IV").serialized(),
+					skillNode("ADDLE").serialized(),
+				],
+			},
+		]),
+	);
 
-	// it("copies and pastes skills with target counts", undoRedoTest([{action: () => {}, line: []}]));
-
-	// it("pastes discord emotes", undoRedoTest([{action: () => {}, line: []}]));
+	it(
+		"pastes tab-separated columns with target count and skills",
+		undoRedoTest([
+			{
+				action: async () => {
+					await navigator.clipboard.writeText("3\tFreeze\n4\tHigh Fire 2");
+					mockKeyDown("v", true);
+					await navigator.clipboard.readText();
+				},
+				line: [
+					...SLOT_0_INIT_ACTIONS,
+					skillNode("FREEZE", 3).serialized(),
+					skillNode("HIGH_FIRE_II", 4).serialized(),
+				],
+			},
+		]),
+	);
 });

@@ -24,10 +24,14 @@ import { getCurrentLanguage } from "../Components/Localization";
 
 export type ClipboardMode = "plain" | "tsv" | "discord";
 
-// Because plain text and discord emoji serialization do not track target counts, we must track
-// target counts separately. Note that this will also be applied to any external copies that occur
-// after copying a multi-target ability.
-let copiedTargetCounts: number[] = [];
+// When the cliipboard is invoked, check its contents against the last string copied within
+// XIV in the Shell. If it matches, then a paste operation should insert nodes present in lastCopyNodes.
+// This works around a limitation in parsing, where sequences of discord emojis can't parse a
+// non-skill node at the start of the sequence.
+// Furthermore, clipboard formats that aren't TSV don't serialized with target counts. The cached
+// lastCopyNodes value ensures target count information isn't lost.
+let lastCopyString: string | undefined = undefined;
+let lastCopyNodes: ActionNode[] = [];
 
 const SEP_ZH = "、";
 const SEP_EN = ", ";
@@ -39,12 +43,12 @@ function serializeToClipboard(mode: ClipboardMode): string {
 	if (start === undefined) {
 		return "";
 	}
-	copiedTargetCounts = actions.map((action) => action.targetCount);
+	let result = "";
 	if (mode === "plain") {
 		const items: string[] = [];
 		actions.forEach((node) => items.push(node.toLocalizedString()));
 		const sep = getCurrentLanguage() === "zh" ? SEP_ZH : SEP_EN;
-		return items.join(sep);
+		result = items.join(sep);
 	} else if (mode === "tsv") {
 		// Export 3 columns of
 		// timestamp | target count | name
@@ -59,7 +63,7 @@ function serializeToClipboard(mode: ClipboardMode): string {
 				].join("\t"),
 			),
 		);
-		return rows.join("\n");
+		result = rows.join("\n");
 	} else if (mode === "discord") {
 		const items: string[] = [];
 		actions.forEach((node) => {
@@ -79,10 +83,13 @@ function serializeToClipboard(mode: ClipboardMode): string {
 				items.push(node.toLocalizedString());
 			}
 		});
-		return items.join(" ");
+		result = items.join(" ");
+	} else {
+		console.error("invalid clipboard mode", mode);
 	}
-	console.error("invalid clipboard mode", mode);
-	return "";
+	lastCopyString = result;
+	lastCopyNodes = actions;
+	return result;
 }
 
 function isNumberOrDecimal(c: string): boolean {
@@ -142,7 +149,7 @@ function checkNonSkillNode(text: string, lookahead3: string | undefined) {
 	return undefined;
 }
 
-function parseTextNode(text: string, targetCount: number): ActionNode | undefined {
+function parseTextNode(text: string, targetCount: number = 1): ActionNode | undefined {
 	// Before parsing skills, parse other kinds of nodes.
 	const otherNode = checkNonSkillNode(text, undefined);
 	if (otherNode !== undefined) {
@@ -156,10 +163,11 @@ function parseTextNode(text: string, targetCount: number): ActionNode | undefine
 }
 
 function parsePasted(text: string): ActionNode[] | undefined {
+	if (text === lastCopyString) {
+		return lastCopyNodes;
+	}
 	const lines = text.split("\n");
 	const nodes: ActionNode[] = [];
-	const getNextTargetCount = () =>
-		nodes.length < copiedTargetCounts.length ? copiedTargetCounts[nodes.length] : 1;
 	for (const line of lines) {
 		const stripped = line.trimStart();
 		if (line.includes("\t")) {
@@ -217,7 +225,7 @@ function parsePasted(text: string): ActionNode[] | undefined {
 							.get(controller.gameConfig.job)!
 							.get(buffer);
 						if (emoteMapLookup !== undefined) {
-							nodes.push(skillNode(emoteMapLookup, getNextTargetCount()));
+							nodes.push(skillNode(emoteMapLookup));
 						} else {
 							console.error("unrecognized discord emote", buffer);
 						}
@@ -256,7 +264,7 @@ function parsePasted(text: string): ActionNode[] | undefined {
 			}
 			toks.forEach((tok) => {
 				if (tok.length > 0) {
-					const node = parseTextNode(tok.trim(), getNextTargetCount());
+					const node = parseTextNode(tok.trim());
 					if (node !== undefined) {
 						nodes.push(node);
 					}
@@ -281,7 +289,7 @@ export function paste() {
 		.readText()
 		.then((clipText) => {
 			const parsed = parsePasted(clipText);
-			if (parsed === undefined) {
+			if (parsed === undefined || parsed.length === 0) {
 				console.error("failed to paste parsed clipboard contents:");
 				console.error(clipText);
 				return;

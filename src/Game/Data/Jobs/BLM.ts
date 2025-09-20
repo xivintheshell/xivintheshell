@@ -25,7 +25,7 @@ export const BLM_ACTIONS = ensureRecord<ActionData>()({
 		id: 149,
 		name: "Transpose",
 		label: { zh: "星灵移位", ja: "トランス" },
-		discordEmote: "transpose",
+		discordEmote: "Transpose",
 	},
 	THUNDER_III: {
 		id: 153,
