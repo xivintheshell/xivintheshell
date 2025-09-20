@@ -2205,10 +2205,6 @@ class Controller {
 			this.undoStack.redo();
 			processed = true;
 		} else if (evt.key === "Paste" || (evt.key === "v" && ctrlOrCmd)) {
-			// If there's currently selected stuff, delete the selection first.
-			if (selecting) {
-				controller.deleteSelectedSkills();
-			}
 			paste();
 			processed = true;
 		} else if (evt.key === "Copy" || (evt.key === "c" && ctrlOrCmd)) {

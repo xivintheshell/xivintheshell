@@ -9,7 +9,6 @@
 
 import React from "react";
 import fs from "node:fs";
-// import userEvent from "@testing-library/user-event";
 import { ActionKey } from "../Game/Data";
 import { controller } from "../Controller/Controller";
 import { setCachedValue, ReplayMode } from "../Controller/Common";
@@ -99,7 +98,6 @@ function undoRedoTest(
 		action: () => void;
 		line: SerializedLine;
 		testPost?: () => void;
-		undoCount?: number;
 	}[],
 	params:
 		| {
@@ -108,19 +106,24 @@ function undoRedoTest(
 		  }
 		| undefined = undefined,
 ) {
-	return () => {
-		params?.pre?.();
+	// needs to be async to allow blocking on clipboard functions
+	return async () => {
+		await params?.pre?.();
 		const initialState = controller.record.serialized().actions;
-		actions.forEach(({ action, line, testPost, undoCount }, i) => {
+		for (let i = 0; i < actions.length; i++) {
+			const { action, line, testPost } = actions[i];
+			const undoStackSize = controller.undoStack.length;
 			// Perform the action, then check the expected active record state afterwards.
-			action();
+			await action();
+			const undoCount = controller.undoStack.length - undoStackSize;
+			assert(undoCount >= 0);
 			expect(
 				controller.record.serialized().actions,
 				`line after index ${i} did not match`,
 			).toStrictEqual(line);
 			const activeSlotIndex = controller.timeline.activeSlotIndex;
 			// Undo the action(s), and check that state matches that of the previous step.
-			for (let j = 0; j < (undoCount ?? 1); j++) {
+			for (let j = 0; j < undoCount; j++) {
 				controller.undoStack.undo();
 			}
 			expect(
@@ -128,7 +131,7 @@ function undoRedoTest(
 				`undo after index ${i} did not match`,
 			).toStrictEqual(i === 0 ? initialState : actions[i - 1].line);
 			// Redo the action(s) and check that the action was correctly re-applied.
-			for (let j = 0; j < (undoCount ?? 1); j++) {
+			for (let j = 0; j < undoCount; j++) {
 				controller.undoStack.redo();
 			}
 			expect(
@@ -139,17 +142,17 @@ function undoRedoTest(
 				controller.timeline.activeSlotIndex,
 				`expected slot after redo of index ${i} did not match`,
 			).toStrictEqual(activeSlotIndex);
-			testPost?.();
-		});
-		params?.post?.();
+			await testPost?.();
+		}
+		await params?.post?.();
 	};
 }
 
-function mockKeyDown(key: string) {
+function mockKeyDown(key: string, ctrl: boolean = false) {
 	// We can't use @testing-library/user-event directly because we handle focus weirdly and these
 	// aren't proper browser tests, so we manually create fake keyboard events.
 	// @ts-expect-error missing a bunch of react-specific properties
-	const evt: React.KeyboardEvent = new KeyboardEvent("keydown", { key });
+	const evt: React.KeyboardEvent = new KeyboardEvent("keydown", { key, ctrlKey: ctrl });
 	// Assume all events are processed by both the timeline key handler and the global key handler.
 	controller.handleTimelineKeyboardEvent(evt);
 	controller.handleKeyboardEvent(evt);
@@ -398,7 +401,6 @@ describe("timeline slot manipulation", () => {
 						new DeleteTimelineSlot(0, controller.record.serialized()),
 					);
 				},
-				undoCount: 3,
 				line: SLOT_1_INIT_ACTIONS,
 				testPost: () => {
 					expect(controller.timeline.activeSlotIndex).toStrictEqual(0);
@@ -407,7 +409,7 @@ describe("timeline slot manipulation", () => {
 			},
 			{
 				action: () => controller.undoStack.doThenPush(new SetActiveTimelineSlot(0, 1)),
-				line: [...SLOT_1_INIT_ACTIONS, skillNode("DRILL", 1).serialized()],
+				line: [...SLOT_1_INIT_ACTIONS, skillNode("DRILL").serialized()],
 			},
 		]),
 	);
@@ -420,7 +422,7 @@ describe("bulk skill and config interactions", () => {
 			{
 				action: () =>
 					controller.requestUseSkill({ skillName: "BLIZZARD_IV", targetCount: 1 }, true),
-				line: [...SLOT_0_INIT_ACTIONS, skillNode("BLIZZARD_IV", 1).serialized()],
+				line: [...SLOT_0_INIT_ACTIONS, skillNode("BLIZZARD_IV").serialized()],
 			},
 			{
 				action: () =>
@@ -519,26 +521,105 @@ describe("bulk skill and config interactions", () => {
 	);
 });
 
-// describe("copy and paste", () => {
-// 	it("copies timeline and pastes to self", undoRedoTest([{action: () => {}, line: []}]));
+// Hacky polyfill for clipboard
+let clip = "";
+const writeText = async (text: string) => {
+	clip = text;
+};
+const readText = async () => clip;
+Object.defineProperty(navigator, "clipboard", { value: { writeText, readText } });
 
-// 	it("copies jump at start of record in discord mode", undoRedoTest([{action: () => {}, line: []}]));
+describe("copy and paste", () => {
+	beforeEach(async () => {
+		controller.clipboardMode = "plain";
+		clip = "";
+	});
 
-// 	it("copies plaintext to clipboard en", undoRedoTest([{action: () => {}, line: []}]));
+	it(
+		"copies timeline and pastes at end",
+		undoRedoTest([
+			{
+				action: () => {
+					controller.timeline.onClickTimelineAction(2, false);
+					controller.timeline.onClickTimelineAction(3, true);
+					// Copy a B3/F3 pair
+					mockKeyDown("c", true);
+					// and paste it at the end
+					controller.record.unselectAll();
+					mockKeyDown("v", true);
+				},
+				line: [
+					...SLOT_0_INIT_ACTIONS,
+					skillNode("BLIZZARD_III").serialized(),
+					skillNode("FIRE_III").serialized(),
+				],
+			},
+		]),
+	);
 
-// 	it("copies plaintext to clipboard zh", undoRedoTest([{action: () => {}, line: []}]));
+	it(
+		"cuts timeline",
+		undoRedoTest([
+			{
+				action: () => {
+					controller.timeline.onClickTimelineAction(1, false);
+					controller.timeline.onClickTimelineAction(3, true);
+					mockKeyDown("x", true);
+				},
+				line: [SLOT_0_INIT_ACTIONS[0], ...SLOT_0_INIT_ACTIONS.slice(4)],
+				testPost: async () =>
+					expect(await navigator.clipboard.readText()).toStrictEqual(
+						"Fire 3, Blizzard 3, Fire 3",
+					),
+			},
+		]),
+	);
 
-// 	it("copies tsv to clipboard", undoRedoTest([{action: () => {}, line: []}]));
+	it(
+		"pastes to the middle of the timeline",
+		undoRedoTest(
+			[
+				{
+					action: () => {
+						controller.timeline.onClickTimelineAction(2, false);
+						mockKeyDown("v", true);
+					},
+					line: [
+						SLOT_0_INIT_ACTIONS[0],
+						SLOT_0_INIT_ACTIONS[1],
+						skillNode("FIRE_IV").serialized(),
+						skillNode("ADDLE").serialized(),
+						...SLOT_0_INIT_ACTIONS.slice(2),
+					],
+				},
+			],
+			{
+				pre: async () => navigator.clipboard.writeText("Fire 4, Addle"),
+			},
+		),
+	);
 
-// 	it("copies discord emotes to clipboard", undoRedoTest([{action: () => {}, line: []}]));
+	it.fails("copies jump at start of record in discord mode", () => {
+		// test currently fails because parsing isn't very smart and won't detect non-emote starts
+		mockKeyDown("a", true);
+		mockKeyDown("c", true);
+		controller.record.unselectAll();
+		mockKeyDown("v", true);
+		expect(controller.record.serialized().actions).toStrictEqual([
+			...SLOT_0_INIT_ACTIONS,
+			...SLOT_0_INIT_ACTIONS,
+		]);
+	});
 
-// 	it("pastes comma-separated skill names from clipboard", undoRedoTest([{action: () => {}, line: []}]));
+	// it("copies tsv to clipboard", undoRedoTest([{action: () => {}, line: []}]));
 
-// 	it("copies and pastes skills with target counts", undoRedoTest([{action: () => {}, line: []}]));
+	// it("pastes tab-separated columns with only skill column", undoRedoTest([{action: () => {}, line: []}]));
 
-// 	it("pastes tab-separated columns with only skill column", undoRedoTest([{action: () => {}, line: []}]));
+	// it("pastes tab-separated columns with target count and skills", undoRedoTest([{action: () => {}, line: []}]));
 
-// 	it("pastes tab-separated columns with target count and skills", undoRedoTest([{action: () => {}, line: []}]));
+	// it("copies discord emotes to clipboard", undoRedoTest([{action: () => {}, line: []}]));
 
-// 	it("pastes discord emotes", undoRedoTest([{action: () => {}, line: []}]));
-// });
+	// it("copies and pastes skills with target counts", undoRedoTest([{action: () => {}, line: []}]));
+
+	// it("pastes discord emotes", undoRedoTest([{action: () => {}, line: []}]));
+});

@@ -26,6 +26,10 @@ export class UndoStack {
 		this.actions = [];
 	}
 
+	get length(): number {
+		return this.actions.length;
+	}
+
 	push(action: TimelineInteraction) {
 		// Add a new interaction, cutting off all actions at the cursor and afterwards.
 		this.actions.splice(this.cursor, this.actions.length - this.cursor, action);
