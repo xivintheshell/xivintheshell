@@ -2135,7 +2135,7 @@ class Controller {
 
 	step(t: number, canUndo: boolean = false) {
 		let node: ActionNode | undefined;
-		let index = this.record.tailIndex;
+		let index = this.record.tailIndex + 1;
 		if (this.displayingUpToDateGameState) {
 			node = this.#requestTick({ deltaTime: t, waitKind: "duration" });
 			this.autoSave();
@@ -2152,7 +2152,7 @@ class Controller {
 
 	stepUntil(t: number, canUndo: boolean = false) {
 		let node: ActionNode | undefined;
-		let index = this.record.tailIndex;
+		let index = this.record.tailIndex + 1;
 		if (this.displayingUpToDateGameState) {
 			node = this.#requestTick({
 				deltaTime: t - this.game.getDisplayTime(),

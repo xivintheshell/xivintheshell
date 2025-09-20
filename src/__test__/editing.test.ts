@@ -12,7 +12,15 @@ import fs from "node:fs";
 // import userEvent from "@testing-library/user-event";
 import { controller } from "../Controller/Controller";
 import { setCachedValue } from "../Controller/Common";
-import { SerializedLine, jumpToTimestampNode, skillNode } from "../Controller/Record";
+import {
+	SerializedLine,
+	jumpToTimestampNode,
+	skillNode,
+	setResourceNode,
+	durationWaitNode,
+	waitForMPNode,
+} from "../Controller/Record";
+import { MoveNodes } from "../Controller/UndoStack";
 
 const readFileToString = (relPath: string) => {
 	const absPath = "src/__test__/Asset/interactions/" + relPath;
@@ -57,8 +65,8 @@ function undoRedoTest(
 	actions: { action: () => void; line: SerializedLine; testPost?: () => void }[],
 	params:
 		| {
-				pre: (() => void) | undefined;
-				post: (() => void) | undefined;
+				pre?: () => void;
+				post?: () => void;
 		  }
 		| undefined = undefined,
 ) {
@@ -186,19 +194,122 @@ describe("individual skill interactions", () => {
 		]),
 	);
 
-	// it("moves selected skills", undoRedoTest([{action: () => {}, line: []}]));
+	it(
+		"moves single selected skill",
+		undoRedoTest([
+			{
+				action: () => {
+					// Move the first F3 before the jump event
+					controller.timeline.onClickTimelineAction(1, false);
+					// Because of weird state synchronization stuff, there's no method that implicitly
+					// pushes to the undo stack on move.
+					controller.undoStack.push(new MoveNodes(1, 1, -1));
+					controller.record.moveSelected(-1);
+				},
+				line: [
+					SLOT_0_INIT_ACTIONS[1],
+					SLOT_0_INIT_ACTIONS[0],
+					...SLOT_0_INIT_ACTIONS.slice(2),
+				],
+			},
+		]),
+	);
 
-	// it("adds buff toggle node");
+	it(
+		"moves multiple selected skills",
+		undoRedoTest([
+			{
+				action: () => {
+					// Move the 2 nodes (f3, b3) forward by 2
+					controller.timeline.onClickTimelineAction(1, false);
+					controller.timeline.onClickTimelineAction(2, true);
+					controller.undoStack.push(new MoveNodes(1, 2, 2));
+					controller.record.moveSelected(2);
+				},
+				line: [
+					SLOT_0_INIT_ACTIONS[0],
+					SLOT_0_INIT_ACTIONS[3],
+					SLOT_0_INIT_ACTIONS[4],
+					SLOT_0_INIT_ACTIONS[1],
+					SLOT_0_INIT_ACTIONS[2],
+					...SLOT_0_INIT_ACTIONS.slice(5),
+				],
+			},
+		]),
+	);
 
-	// it("adds duration wait nodes", undoRedoTest([{action: () => {}, line: []}]));
+	it(
+		"adds buff toggle node",
+		undoRedoTest([
+			{
+				action: () => controller.requestToggleBuff("THUNDERHEAD", true),
+				line: [...SLOT_0_INIT_ACTIONS, setResourceNode("THUNDERHEAD").serialized()],
+			},
+		]),
+	);
 
-	// it("adds target jump nodes", undoRedoTest([{action: () => {}, line: []}]));
+	it(
+		"adds duration wait node",
+		undoRedoTest([
+			{
+				action: () => {
+					controller.step(5, true);
+				},
+				line: [...SLOT_0_INIT_ACTIONS, durationWaitNode(5).serialized()],
+			},
+			{
+				action: () => {
+					controller.timeline.onClickTimelineAction(1, false);
+					controller.step(2.5, true);
+				},
+				line: [
+					SLOT_0_INIT_ACTIONS[0],
+					durationWaitNode(2.5).serialized(),
+					...SLOT_0_INIT_ACTIONS.slice(1),
+					durationWaitNode(5).serialized(),
+				],
+			},
+		]),
+	);
 
-	// it("waits for mp/lucid tick", undoRedoTest([{action: () => {}, line: []}]));
+	it(
+		"adds target jump node and MP tick nodes, then removes idle time",
+		undoRedoTest([
+			{
+				action: () => controller.stepUntil(30, true),
+				line: [...SLOT_0_INIT_ACTIONS, jumpToTimestampNode(30).serialized()],
+			},
+			{
+				action: () => controller.waitTillNextMpOrLucidTick(),
+				line: [
+					...SLOT_0_INIT_ACTIONS,
+					jumpToTimestampNode(30).serialized(),
+					waitForMPNode().serialized(),
+				],
+			},
+			{
+				action: () => controller.removeTrailingIdleTime(),
+				line: SLOT_0_INIT_ACTIONS,
+			},
+		]),
+	);
 
-	// it("removes trailing idle time for empty timeline", undoRedoTest([{action: () => {}, line: []}]));
-
-	// it("removes trailing idle time for non-empty timeline", undoRedoTest([{action: () => {}, line: []}]));
+	it(
+		"removes trailing idle time with no skills",
+		undoRedoTest(
+			[
+				{
+					action: () => controller.stepUntil(11, true),
+					line: [jumpToTimestampNode(11).serialized()],
+				},
+				{
+					action: () => controller.removeTrailingIdleTime(),
+					line: [],
+				},
+			],
+			{ pre: () => controller.setConfigAndRestart(controller.gameConfig.serialized()) },
+		),
+	);
 });
 
 // describe("bulk skill and config interactions", () => {
