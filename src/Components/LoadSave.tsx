@@ -2,7 +2,7 @@ import React from "react";
 import { Columns, FileFormat, LoadJsonFromFileOrUrl, SaveToFile } from "./Common";
 import { controller } from "../Controller/Controller";
 import { FileType } from "../Controller/Common";
-import { ImportTimeline } from "../Controller/UndoStack";
+import { ImportTimelineFile } from "../Controller/UndoStack";
 import { localize } from "./Localization";
 import { ImageExport } from "./ImageExport";
 import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
@@ -13,7 +13,7 @@ export function LoadSave() {
 	const onFileLoad = (content: Fixme) => {
 		if (content.fileType === FileType.Record) {
 			controller.undoStack.doThenPush(
-				new ImportTimeline(controller.record.serialized(), content),
+				new ImportTimelineFile(controller.record.serialized(), content),
 			);
 		} else if (
 			content.fileType === FileType.MarkerTrackIndividual ||

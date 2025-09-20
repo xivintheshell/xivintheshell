@@ -10,7 +10,7 @@ import {
 	TickMode,
 } from "./Common";
 import { ClipboardMode, copy, paste } from "./Clipboard";
-import { UndoStack, AddNode, DeleteNodes } from "./UndoStack";
+import { UndoStack, AddNode, DeleteNodes, AddNodeBulk } from "./UndoStack";
 import { GameState } from "../Game/GameState";
 import {
 	getAutoReplacedSkillName,
@@ -1856,6 +1856,7 @@ class Controller {
 
 	// Used for trying to add a preset skill sequence to the current timeline
 	tryAddLine(line: Line, replayMode = ReplayMode.SkillSequence) {
+		const endIndex = controller.record.length;
 		const replayResult = this.#replay({ line: line, replayMode: replayMode });
 		if (!replayResult.success) {
 			this.rewindUntilBefore(replayResult.firstAddedIndex, false);
@@ -1866,6 +1867,7 @@ class Controller {
 			);
 			return false;
 		} else {
+			this.undoStack.push(new AddNodeBulk(line.actions, endIndex, "preset"));
 			this.autoSave();
 			updateInvalidStatus();
 			return true;
@@ -2135,7 +2137,7 @@ class Controller {
 
 	step(t: number, canUndo: boolean = false) {
 		let node: ActionNode | undefined;
-		let index = this.record.tailIndex + 1;
+		let index = this.record.length;
 		if (this.displayingUpToDateGameState) {
 			node = this.#requestTick({ deltaTime: t, waitKind: "duration" });
 			this.autoSave();
@@ -2152,7 +2154,7 @@ class Controller {
 
 	stepUntil(t: number, canUndo: boolean = false) {
 		let node: ActionNode | undefined;
-		let index = this.record.tailIndex + 1;
+		let index = this.record.length;
 		if (this.displayingUpToDateGameState) {
 			node = this.#requestTick({
 				deltaTime: t - this.game.getDisplayTime(),

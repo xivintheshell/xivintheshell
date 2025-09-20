@@ -71,15 +71,11 @@ function PresetLine(props: { line: Line }) {
 			onClickFn={() => {
 				const start = controller.record.selectionStartIndex;
 				if (controller.displayingUpToDateGameState) {
-					const end = controller.record.length;
-					if (controller.tryAddLine(line, ReplayMode.SkillSequence)) {
-						controller.undoStack.push(new AddNodeBulk(line.actions, end, "preset"));
-					}
+					controller.tryAddLine(line, ReplayMode.SkillSequence);
 					controller.updateAllDisplay();
 					controller.scrollToTime();
 				} else if (start !== undefined) {
-					controller.insertRecordNodes(line.actions, start);
-					controller.undoStack.push(new AddNodeBulk(line.actions, start, "preset"));
+					controller.undoStack.doThenPush(new AddNodeBulk(line.actions, start, "preset"));
 				}
 			}}
 		/>

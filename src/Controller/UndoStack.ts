@@ -345,7 +345,7 @@ export class ConfigApply extends TimelineInteraction {
 	}
 }
 
-export class ImportTimeline extends TimelineInteraction {
+export class ImportTimelineFile extends TimelineInteraction {
 	// TODO: only set new record after an undo to save memory?
 	oldRecord: SerializedRecord;
 	importedRecord: SerializedRecord;

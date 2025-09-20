@@ -12,8 +12,9 @@ import fs from "node:fs";
 // import userEvent from "@testing-library/user-event";
 import { ActionKey } from "../Game/Data";
 import { controller } from "../Controller/Controller";
-import { setCachedValue } from "../Controller/Common";
+import { setCachedValue, ReplayMode } from "../Controller/Common";
 import {
+	Line,
 	SerializedLine,
 	jumpToTimestampNode,
 	skillNode,
@@ -22,11 +23,14 @@ import {
 	waitForMPNode,
 } from "../Controller/Record";
 import {
+	AddNodeBulk,
+	ConfigApply,
 	MoveNodes,
 	AddTimelineSlot,
 	CloneTimelineSlot,
 	SetActiveTimelineSlot,
 	DeleteTimelineSlot,
+	ImportTimelineFile,
 } from "../Controller/UndoStack";
 
 const readFileToString = (relPath: string) => {
@@ -409,17 +413,113 @@ describe("timeline slot manipulation", () => {
 	);
 });
 
-// describe("bulk skill and config interactions", () => {
-// 	it("can import from file", undoRedoTest([{action: () => {}, line: []}]));
+describe("bulk skill and config interactions", () => {
+	it(
+		"can import from file",
+		undoRedoTest([
+			{
+				action: () =>
+					controller.requestUseSkill({ skillName: "BLIZZARD_IV", targetCount: 1 }, true),
+				line: [...SLOT_0_INIT_ACTIONS, skillNode("BLIZZARD_IV", 1).serialized()],
+			},
+			{
+				action: () =>
+					controller.undoStack.doThenPush(
+						new ImportTimelineFile(
+							controller.record.serialized(),
+							JSON.parse(recordString1),
+						),
+					),
+				line: SLOT_1_INIT_ACTIONS,
+			},
+		]),
+	);
 
-// 	it("can import skill sequence preset", undoRedoTest([{action: () => {}, line: []}]));
+	it(
+		"can append skill sequence preset",
+		undoRedoTest([
+			{
+				action: () => {
+					const line = new Line();
+					line.actions = [skillNode("PARADOX"), skillNode("ADDLE")];
+					controller.tryAddLine(line, ReplayMode.SkillSequence);
+				},
+				line: [
+					...SLOT_0_INIT_ACTIONS,
+					skillNode("PARADOX").serialized(),
+					skillNode("ADDLE").serialized(),
+				],
+			},
+		]),
+	);
 
-// 	it("can apply config change", undoRedoTest([{action: () => {}, line: []}]));
+	it(
+		"can insert skill sequence preset",
+		undoRedoTest([
+			{
+				action: () =>
+					controller.undoStack.doThenPush(
+						new AddNodeBulk([skillNode("FIRE_IV"), skillNode("SPRINT")], 2, "preset"),
+					),
+				line: [
+					SLOT_0_INIT_ACTIONS[0],
+					SLOT_0_INIT_ACTIONS[1],
+					skillNode("FIRE_IV").serialized(),
+					skillNode("SPRINT").serialized(),
+					...SLOT_0_INIT_ACTIONS.slice(2),
+				],
+			},
+		]),
+	);
 
-// 	it("can apply and reset config change", undoRedoTest([{action: () => {}, line: []}]));
-// });
+	it(
+		"can apply config change",
+		undoRedoTest([
+			{
+				action: () => {
+					const oldConfig = controller.gameConfig.serialized();
+					controller.setConfigAndRestart(
+						{
+							...oldConfig,
+							spellSpeed: 520,
+							criticalHit: 3800,
+						},
+						false,
+					);
+					controller.undoStack.push(
+						new ConfigApply(oldConfig, controller.gameConfig.serialized(), undefined),
+					);
+				},
+				line: SLOT_0_INIT_ACTIONS,
+			},
+		]),
+	);
 
-// describe("copy and patse", () => {
+	it(
+		"can apply and reset config change",
+		undoRedoTest([
+			{
+				action: () => {
+					const oldConfig = controller.gameConfig.serialized();
+					const oldRecord = controller.record.serialized();
+					controller.setConfigAndRestart(
+						{
+							...controller.gameConfig.serialized(),
+							job: "RDM",
+						},
+						true,
+					);
+					controller.undoStack.push(
+						new ConfigApply(oldConfig, controller.gameConfig.serialized(), oldRecord),
+					);
+				},
+				line: [],
+			},
+		]),
+	);
+});
+
+// describe("copy and paste", () => {
 // 	it("copies timeline and pastes to self", undoRedoTest([{action: () => {}, line: []}]));
 
 // 	it("copies jump at start of record in discord mode", undoRedoTest([{action: () => {}, line: []}]));
