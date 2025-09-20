@@ -9,6 +9,8 @@ import React, {
 	DragEventHandler,
 } from "react";
 import { controller } from "../Controller/Controller";
+import { MoveNodes, DeleteNodes } from "../Controller/UndoStack";
+import { copy, paste } from "../Controller/Clipboard";
 import { ActionNode, ActionType, Record, RecordValidStatus } from "../Controller/Record";
 import { StaticFn, Columns } from "./Common";
 import { getCurrentThemeColors, ThemeColors } from "./ColorTheme";
@@ -34,7 +36,14 @@ const HIGHLIGHT_ALPHA_HEX = "3f";
 export let refreshTimelineEditor = () => {};
 // [sz] It brings me no joy to write another pair of global setter functions that live outside the
 // React life cycle, but we don't really have a better way to pass the active timeline slot at the moment.
-export let updateInvalidStatus = () => {};
+export let updateInvalidStatus: () => RecordValidStatus = () => {
+	return {
+		isValid: false,
+		invalidActions: [],
+		skillUseTimes: [],
+		straightenedIfValid: undefined,
+	};
+};
 export let updateActiveTimelineEditor = (slotSwapFn: () => void) => {
 	slotSwapFn();
 };
@@ -83,6 +92,7 @@ const TR_STYLE: CSSProperties = {
 	width: "100%",
 	height: "1.6em",
 	userSelect: "none",
+	outline: "none",
 };
 
 const getDropTargetStyle = (colors: ThemeColors): CSSProperties => {
@@ -105,6 +115,7 @@ function TimelineActionElement(props: {
 	isInvalid: boolean;
 	includeDetails: boolean;
 	usedAt: number;
+	onKeyDown: (e: React.KeyboardEvent) => void;
 	refObj?: React.RefObject<HTMLTableRowElement | null>;
 }) {
 	const colors = getCurrentThemeColors();
@@ -228,11 +239,13 @@ function TimelineActionElement(props: {
 				controller.timeline.onClickTimelineAction(props.index, e.shiftKey);
 			} else {
 				controller.timeline.onClickTimelineAction(props.index, e.shiftKey);
-				if (props.node.tmp_startLockTime) {
+				if (props.node.tmp_startLockTime !== undefined) {
 					controller.scrollToTime(props.node.tmp_startLockTime);
 				}
 			}
 		}}
+		tabIndex={-1} /* key events are only received if it has a tabIndex */
+		onKeyDown={props.onKeyDown}
 	>
 		{indexCell}
 		{timestampCell}
@@ -241,10 +254,12 @@ function TimelineActionElement(props: {
 }
 
 export let scrollEditorToFirstSelected = () => {};
+export let scrollEditorToLastSelected = () => {};
 
 export function TimelineEditor() {
 	const colors = getCurrentThemeColors();
 	const firstSelected: React.RefObject<HTMLTableRowElement | null> = useRef(null);
+	const lastSelected: React.RefObject<HTMLTableRowElement | null> = useRef(null);
 
 	const [isDirty, setDirty] = useState<boolean>(false);
 	const [recordValidStatus, setRecordValidStatus] = useState<RecordValidStatus | undefined>(
@@ -268,7 +283,9 @@ export function TimelineEditor() {
 		updateInvalidStatus = () => {
 			// This is called by the controller to ensure timestamps are properly propagated to the
 			// timeline editor table.
-			setRecordValidStatus(controller.checkRecordValidity(controller.record, 0, true));
+			const status = controller.checkRecordValidity(controller.record, 0, true);
+			setRecordValidStatus(status);
+			return status;
 		};
 		// When switching the active timeline slot, we must ensure that the batched edits are
 		// discarded.
@@ -288,12 +305,21 @@ export function TimelineEditor() {
 		scrollEditorToFirstSelected = () => {
 			// lmfao this dirty hack again
 			setTimeout(() => {
-				if (firstSelected.current) {
-					firstSelected.current.scrollIntoView({
-						behavior: "smooth",
-						block: "nearest",
-					});
-				}
+				firstSelected.current?.scrollIntoView({
+					behavior: "smooth",
+					block: "nearest",
+				});
+			}, 0);
+		};
+		scrollEditorToLastSelected = () => {
+			setTimeout(() => {
+				(controller.record.getSelectionLength() === 1
+					? firstSelected
+					: lastSelected
+				).current?.scrollIntoView({
+					behavior: "smooth",
+					block: "nearest",
+				});
 			}, 0);
 		};
 		// Check the validity of the current record so we get timestamps of all actions
@@ -526,7 +552,6 @@ export function TimelineEditor() {
 	const buttonStyle: CSSProperties = {
 		display: "block",
 		width: "100%",
-		marginBottom: 10,
 		padding: 3,
 	};
 	const doRecordEdit = (action: (record: Record) => number | undefined) => {
@@ -553,49 +578,80 @@ export function TimelineEditor() {
 			updateTimelineView();
 		}
 	};
-	const toolbar = <div style={{ marginBottom: 6, flex: 1 }}>
+	const peekUndo = controller.undoStack.peekUndoMessage();
+	const peekRedo = controller.undoStack.peekRedoMessage();
+	const toolbar = <div
+		style={{ marginBottom: 6, flex: 1, display: "flex", flexDirection: "column", gap: 10 }}
+	>
 		<button
 			style={buttonStyle}
-			onClick={(e) => doRecordEdit((record) => record.moveSelected(-1))}
+			onClick={(e) =>
+				doRecordEdit((record) => {
+					controller.undoStack.push(
+						new MoveNodes(record.selectionStartIndex!, record.getSelectionLength(), -1),
+					);
+					return record.moveSelected(-1);
+				})
+			}
 		>
 			{localize({ en: "move up", zh: "上移" })}
 		</button>
 
 		<button
 			style={buttonStyle}
-			onClick={(e) => doRecordEdit((record) => record.moveSelected(1))}
+			onClick={(e) =>
+				doRecordEdit((record) => {
+					controller.undoStack.push(
+						new MoveNodes(record.selectionStartIndex!, record.getSelectionLength(), 1),
+					);
+					return record.moveSelected(1);
+				})
+			}
 		>
 			{localize({ en: "move down", zh: "下移" })}
 		</button>
 
 		<button
 			style={buttonStyle}
-			onClick={(e) => doRecordEdit((record) => record.deleteSelected())}
+			onClick={(e) =>
+				doRecordEdit((record) => {
+					controller.undoStack.push(
+						new DeleteNodes(
+							record.selectionStartIndex!,
+							record.getSelected().actions,
+							"delete",
+						),
+					);
+					return record.deleteSelected();
+				})
+			}
 		>
 			{localize({ en: "delete selected", zh: "删除所选" })}
 		</button>
 
 		<button
 			style={buttonStyle}
-			onClick={(e) =>
-				doRecordEdit((record) => {
-					const selectionLength = record.getSelectionLength();
-					if (selectionLength > 1) {
+			onClick={(e) => {
+				const selectionLength = controller.record.getSelectionLength();
+				if (selectionLength > 1) {
+					doRecordEdit((record) => {
 						// To make use of the existing moveSelected abstraction, we do the following:
 						// 1. Deselect everything except the current tail
 						// 2. Call `moveSelected(-1 * (selectionLength - 1))`
 						// 3. Call `selectUntil` on the original range
 						const originalStart = record.selectionStartIndex!;
 						const originalEnd = record.selectionEndIndex!;
+						controller.undoStack.push(
+							new MoveNodes(originalEnd, 1, -(selectionLength - 1)),
+						);
 						record.selectSingle(originalEnd);
 						record.moveSelected(-(selectionLength - 1));
 						record.selectSingle(originalStart);
 						record.selectUntil(originalEnd);
 						return record.selectionStartIndex;
-					}
-					return undefined;
-				})
-			}
+					});
+				}
+			}}
 		>
 			{localize({
 				en: <>
@@ -610,7 +666,66 @@ export function TimelineEditor() {
 				</>,
 			})}
 		</button>
+		<hr
+			style={{
+				backgroundColor: colors.bgLowContrast,
+				height: 2,
+				marginTop: -2,
+				marginBottom: -2,
+				border: 0,
+				width: "100%",
+			}}
+		/>
+		<div style={{ display: "flex", flexDirection: "row", gap: 6 }}>
+			<button
+				style={buttonStyle}
+				onClick={copy}
+				disabled={controller.record.getSelectionLength() === 0}
+			>
+				{localize({ en: "copy ", zh: "复制" })}
+			</button>
+			<button style={buttonStyle} onClick={paste}>
+				{localize({ en: "paste ", zh: "粘贴" })}
+			</button>
+		</div>
+		<button
+			style={buttonStyle}
+			onClick={() => controller.undoStack.undo()}
+			disabled={peekUndo === undefined}
+		>
+			{localize({ en: "undo ", zh: "撤消" })}
+			{localize(peekUndo ?? { en: "" })}
+		</button>
+		<button
+			style={buttonStyle}
+			onClick={() => controller.undoStack.redo()}
+			disabled={peekRedo === undefined}
+		>
+			{localize({ en: "redo ", zh: "重做" })}
+			{localize(peekRedo ?? { en: "" })}
+		</button>
 	</div>;
+
+	const rowKeyHandler = (e: React.KeyboardEvent) => {
+		const firstSelected = controller.record.selectionStartIndex;
+		const selecting = firstSelected !== undefined;
+		if (selecting) {
+			if (e.key === "Backspace" || e.key === "Delete") {
+				// Don't use the shared controller codepath since we operate on the temporary edit record
+				doRecordEdit((record) => {
+					controller.undoStack.push(
+						new DeleteNodes(firstSelected, record.getSelected().actions, "delete"),
+					);
+					return record.deleteSelected();
+				});
+			} else {
+				controller.handleTimelineKeyboardEvent(e);
+				if (e.key === "Escape") {
+					globalDragTarget.setDragTarget(null, null);
+				}
+			}
+		}
+	};
 
 	const includeDetails = true;
 
@@ -619,6 +734,7 @@ export function TimelineEditor() {
 	const invalidIndices = new Set(recordValidStatus?.invalidActions.map((ac) => ac.index));
 	controller.record.actions.forEach((action, i) => {
 		const isFirstSelected = !isDirty && i === controller.record.selectionStartIndex;
+		const isLastSelected = !isDirty && i === controller.record.selectionEndIndex;
 		actionsList.push(
 			<TimelineActionElement
 				key={i}
@@ -629,7 +745,8 @@ export function TimelineEditor() {
 				isInvalid={invalidIndices.has(i)}
 				usedAt={recordValidStatus?.skillUseTimes[i] ?? 0}
 				includeDetails={includeDetails}
-				refObj={isFirstSelected ? firstSelected : undefined}
+				onKeyDown={rowKeyHandler}
+				refObj={isFirstSelected ? firstSelected : isLastSelected ? lastSelected : undefined}
 			/>,
 		);
 	});
@@ -779,6 +896,7 @@ export function TimelineEditor() {
 					</div>,
 					defaultSize: 40,
 					fullBorder: true,
+					showScrollbar: true,
 				},
 				{
 					content: applySection(),

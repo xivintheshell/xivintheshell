@@ -1,5 +1,6 @@
 import React, { CSSProperties } from "react";
 import { Clickable, ContentNode, Help, ProgressBar, StaticFn } from "./Common";
+import { updateInvalidStatus } from "./TimelineEditor";
 import type { GameState } from "../Game/GameState";
 import { controller } from "../Controller/Controller";
 import { localize, localizeResourceType } from "./Localization";
@@ -461,10 +462,11 @@ function Buff(props: BuffProps) {
 				style={style}
 				onClickFn={() => {
 					if (props.onSelf) {
-						controller.requestToggleBuff(props.rscType);
+						controller.requestToggleBuff(props.rscType, true);
 						controller.updateStatusDisplay(controller.game);
 						controller.updateSkillButtons(controller.game);
 						controller.autoSave();
+						updateInvalidStatus();
 					}
 				}}
 			/>
@@ -851,7 +853,7 @@ export class StatusDisplay extends React.Component {
 									</div>
 									<div className="paragraph">
 										<b style={{ color: "mediumpurple" }}>purple</b> border:
-										receiving input
+										up-to-date, receiving input
 									</div>
 									<div className="paragraph">
 										<b style={{ color: "mediumseagreen" }}>green</b> border:
@@ -859,7 +861,7 @@ export class StatusDisplay extends React.Component {
 									</div>
 									<div className="paragraph">
 										<b style={{ color: "darkorange" }}>orange</b> border:
-										viewing historical state, not receiving input
+										viewing historical state, receiving input
 									</div>
 								</>,
 								zh: <>
@@ -876,10 +878,11 @@ export class StatusDisplay extends React.Component {
 									</div>
 									<div className="paragraph">
 										<b style={{ color: "darkorange" }}>橙色</b>
-										边框：正在查看历史状态，未接收输入
+										边框：正在查看历史状态，可接收输入
 									</div>
 								</>,
 								ja: <>
+									{/* TODO JA OUTDATED */}
 									<div className="paragraph">
 										<span style={{ color: "lightgray" }}>グレー</span> : 未選択
 									</div>

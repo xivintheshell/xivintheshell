@@ -21,16 +21,19 @@ export const PCT_ACTIONS = ensureRecord<ActionData>()({
 		id: 34656,
 		name: "Fire II in Red",
 		label: { zh: "烈炎之红", ja: "レッドファイラ" },
+		discordEmote: "Fire2inRed",
 	},
 	AERO_II_IN_GREEN: {
 		id: 34657,
 		name: "Aero II in Green",
 		label: { zh: "烈风之绿", ja: "グリーンエアロラ" },
+		discordEmote: "Aero2inGreen",
 	},
 	WATER_II_IN_BLUE: {
 		id: 34658,
 		name: "Water II in Blue",
 		label: { zh: "激水之蓝", ja: "ブルーウォタラ" },
+		discordEmote: "Water2inBlue",
 	},
 	BLIZZARD_IN_CYAN: {
 		id: 34653,
@@ -51,16 +54,19 @@ export const PCT_ACTIONS = ensureRecord<ActionData>()({
 		id: 34659,
 		name: "Blizzard II in Cyan",
 		label: { zh: "冰冻之蓝青", ja: "イエローストンラ" },
+		discordEmote: "Blizzard2inCyan",
 	},
 	STONE_II_IN_YELLOW: {
 		id: 34660,
 		name: "Stone II in Yellow",
 		label: { zh: "坚石之纯黄", ja: "マゼンタサンダラ" },
+		discordEmote: "Stone2inYellow",
 	},
 	THUNDER_II_IN_MAGENTA: {
 		id: 34661,
 		name: "Thunder II in Magenta",
 		label: { zh: "震雷之品红", ja: "" },
+		discordEmote: "Thunder2inMagenta",
 	},
 	HOLY_IN_WHITE: {
 		id: 34662,

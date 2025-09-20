@@ -101,7 +101,6 @@ function TimelineMain() {
 		setCallbacks={setCallbacks}
 		setPointerMouse={setPointerMouse}
 	/>;
-	const isFirefox = navigator.userAgent.indexOf("Firefox") >= 0;
 	const colorContext = useContext(ColorThemeContext);
 	const bg = getThemeField(colorContext, "bgMediumContrast");
 	return <div style={{ position: "relative" }}>
@@ -116,7 +115,6 @@ function TimelineMain() {
 				overflowY: "clip",
 				outline: "1px solid " + bg,
 				cursor: pointerMouse ? "pointer" : "default",
-				paddingBottom: isFirefox ? 10 : 0,
 			}}
 			ref={myRef}
 			onScroll={() => {
@@ -237,7 +235,7 @@ function TimelineTabs() {
 					</div>,
 				},
 				{
-					titleNode: localize({ en: "Display settings", zh: "显示设置" }),
+					titleNode: localize({ en: "Settings", zh: "设置" }),
 					contentNode: <TimelineDisplaySettings />,
 				},
 			]}
@@ -246,60 +244,67 @@ function TimelineTabs() {
 			height={TIMELINE_SETTINGS_HEIGHT}
 			defaultSelectedIndex={undefined}
 		/>
-		{renderDragLock && <div
-			style={{
-				position: "absolute",
-				top: 0,
-				right: 280,
-				height: TABS_TITLE_HEIGHT,
-				lineHeight: `${TABS_TITLE_HEIGHT}px`,
-				verticalAlign: "middle",
-				cursor: "pointer",
-				userSelect: "none",
-			}}
-			onClick={(e) => {
-				e.preventDefault();
-				setDragLock(!dragLock);
-			}}
-		>
-			{localize({ en: "drag lock", zh: "拖动锁" })}{" "}
-			<Help
-				topic="dragLock"
-				content={localize({
-					en: <div>When locked, disables click/drag to rearrange timeline skills.</div>,
-					zh: <div>锁定时，禁止用单击并拖动来改变技能轴。</div>,
-				})}
-			/>{" "}
-			<IconContext.Provider
-				value={{
-					color: dragLock ? (getThemeField(colors, "accent") as string) : undefined,
-					style: {
-						width: 12,
-						height: 12,
-						verticalAlign: "baseline",
-					},
-				}}
-			>
-				{dragLock ? <FaLock /> : <FaLockOpen />}
-			</IconContext.Provider>
-		</div>}
-		{renderScaleSlider && <Slider
-			uniqueName={"timelineDisplayScale"}
-			description={localize({ en: "horizontal scale ", zh: "水平缩放 " })}
-			defaultValue={"0.4"}
+		<div
 			style={{
 				position: "absolute",
 				top: 0,
 				right: 6,
-				height: TABS_TITLE_HEIGHT,
-				lineHeight: `${TABS_TITLE_HEIGHT}px`,
-				verticalAlign: "middle",
+				display: "flex",
+				flexDirection: "row",
+				gap: 20,
 			}}
-			onChange={(newVal) => {
-				controller.timeline.setHorizontalScale(parseFloat(newVal));
-				controller.scrollToTime();
-			}}
-		/>}
+		>
+			{renderDragLock && <div
+				style={{
+					height: TABS_TITLE_HEIGHT,
+					lineHeight: `${TABS_TITLE_HEIGHT}px`,
+					verticalAlign: "middle",
+					cursor: "pointer",
+					userSelect: "none",
+				}}
+				onClick={(e) => {
+					e.preventDefault();
+					setDragLock(!dragLock);
+				}}
+			>
+				{localize({ en: "drag lock", zh: "拖动锁" })}{" "}
+				<Help
+					topic="dragLock"
+					content={localize({
+						en: <div>
+							When locked, disables click/drag to rearrange timeline skills.
+						</div>,
+						zh: <div>锁定时，禁止用单击并拖动来改变技能轴。</div>,
+					})}
+				/>{" "}
+				<IconContext.Provider
+					value={{
+						color: dragLock ? (getThemeField(colors, "accent") as string) : undefined,
+						style: {
+							width: 12,
+							height: 12,
+							verticalAlign: "baseline",
+						},
+					}}
+				>
+					{dragLock ? <FaLock /> : <FaLockOpen />}
+				</IconContext.Provider>
+			</div>}
+			{renderScaleSlider && <Slider
+				uniqueName={"timelineDisplayScale"}
+				description={localize({ en: "horizontal scale ", zh: "水平缩放 " })}
+				defaultValue={"0.4"}
+				style={{
+					height: TABS_TITLE_HEIGHT,
+					lineHeight: `${TABS_TITLE_HEIGHT}px`,
+					verticalAlign: "middle",
+				}}
+				onChange={(newVal) => {
+					controller.timeline.setHorizontalScale(parseFloat(newVal));
+					controller.scrollToTime();
+				}}
+			/>}
+		</div>
 	</div>;
 }
 

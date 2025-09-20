@@ -16,7 +16,7 @@ export const MAX_TIMELINE_SLOTS = 4;
 
 export const enum ElemType {
 	s_Cursor = "s_Cursor",
-	s_ViewOnlyCursor = "s_ViewOnlyCursor",
+	s_HistoricalCursor = "s_HistoricalCursor",
 	DamageMark = "DamageMark",
 	HealingMark = "HealingMark",
 	AggroMark = "AggroMark",
@@ -48,8 +48,8 @@ export type CursorElem = TimelineElemBase & {
 	type: ElemType.s_Cursor;
 	displayTime: number;
 };
-export type ViewOnlyCursorElem = TimelineElemBase & {
-	type: ElemType.s_ViewOnlyCursor;
+export type HistoricalCursorElem = TimelineElemBase & {
+	type: ElemType.s_HistoricalCursor;
 	displayTime: number;
 	enabled: boolean;
 };
@@ -119,7 +119,7 @@ export type SerializedMarker = TimelineElemBase & {
 	description: string;
 };
 
-export type SharedTimelineElem = CursorElem | ViewOnlyCursorElem;
+export type SharedTimelineElem = CursorElem | HistoricalCursorElem;
 
 export type SlotTimelineElem =
 	| PotencyMarkElem
@@ -131,7 +131,7 @@ export type SlotTimelineElem =
 	| SkillElem;
 
 function isSharedElem(elem: TimelineElem) {
-	return elem.type === ElemType.s_Cursor || elem.type === ElemType.s_ViewOnlyCursor;
+	return elem.type === ElemType.s_Cursor || elem.type === ElemType.s_HistoricalCursor;
 }
 
 export type TimelineElem = SharedTimelineElem | SlotTimelineElem;
@@ -343,11 +343,29 @@ export class Timeline {
 		this.#save();
 	}
 
-	addSlot() {
-		this.slots.push({ job: "BLM", elements: [] });
-		console.assert(this.slots.length <= MAX_TIMELINE_SLOTS);
-		this.activeSlotIndex = this.slots.length - 1;
+	addSlotAtIndex(idx: number) {
+		if (idx < 0 || idx > this.slots.length || this.slots.length + 1 > MAX_TIMELINE_SLOTS) {
+			console.error("attempted to add slot at invalid index", idx);
+			return;
+		}
+		// move other save data up 1 slot, traversing them from highest to lowest
+		for (let i = MAX_TIMELINE_SLOTS - 1; i >= idx; i--) {
+			let str = getCachedValue(`gameRecord${i}`);
+			if (str !== null) {
+				setCachedValue(`gameRecord${i + 1}`, str);
+			}
+			str = getCachedValue(`gameTimeInfo${i}`);
+			if (str !== null) {
+				setCachedValue(`gameTimeInfo${i + 1}`, str);
+			}
+		}
+		this.slots.splice(idx, 0, { job: "BLM", elements: [] });
+		this.activeSlotIndex = idx;
 		controller.setConfigAndRestart(controller.gameConfig);
+	}
+
+	addSlot() {
+		this.addSlotAtIndex(this.slots.length);
 	}
 
 	removeSlot(idx: number) {
@@ -420,7 +438,7 @@ export class Timeline {
 			displayTime: 0, // gets updated later (it seems)
 		});
 		this.addElement({
-			type: ElemType.s_ViewOnlyCursor,
+			type: ElemType.s_HistoricalCursor,
 			time: 0,
 			displayTime: 0,
 			enabled: false,
@@ -524,6 +542,10 @@ export class Timeline {
 	}
 
 	onClickTimelineAction(index: number, bShift: boolean) {
+		if (index < 0 || index >= controller.record.length) {
+			return;
+		}
+
 		controller.record.onClickNode(index, bShift);
 
 		updateSkillSequencePresetsView();
@@ -536,6 +558,26 @@ export class Timeline {
 		} else {
 			// just clicked on the only selected node and unselected it. Still show historical state
 			controller.displayHistoricalState(-Infinity, index);
+		}
+	}
+
+	resizeSelection(left: boolean) {
+		// Resizes the record selection by 1 skill.
+		// Example:
+		//   old selection: __xx__
+		//   resizeSelection(true)
+		//   new selection: _xxx__
+		//   resizeSelection(false)
+		//   new selection: __xx__
+		//   resizeSelection(false) called 2x
+		//   new selection: ___xx_
+		const start = controller.record.selectionStartIndex;
+		const end = controller.record.selectionEndIndex;
+		if (start !== undefined && end !== undefined) {
+			const target = (controller.record.startIsPivot ? end : start) + (left ? -1 : 1);
+			if (target >= 0 && target < controller.record.length) {
+				this.onClickTimelineAction(target, true);
+			}
 		}
 	}
 
