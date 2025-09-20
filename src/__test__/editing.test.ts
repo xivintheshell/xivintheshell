@@ -10,6 +10,7 @@
 import React from "react";
 import fs from "node:fs";
 // import userEvent from "@testing-library/user-event";
+import { ActionKey } from "../Game/Data";
 import { controller } from "../Controller/Controller";
 import { setCachedValue } from "../Controller/Common";
 import {
@@ -20,7 +21,13 @@ import {
 	durationWaitNode,
 	waitForMPNode,
 } from "../Controller/Record";
-import { MoveNodes } from "../Controller/UndoStack";
+import {
+	MoveNodes,
+	AddTimelineSlot,
+	CloneTimelineSlot,
+	SetActiveTimelineSlot,
+	DeleteTimelineSlot,
+} from "../Controller/UndoStack";
 
 const readFileToString = (relPath: string) => {
 	const absPath = "src/__test__/Asset/interactions/" + relPath;
@@ -29,10 +36,33 @@ const readFileToString = (relPath: string) => {
 
 // Slot 0: [blm] jump to 0, f3, b3, f3, b3, f3, b3
 const recordString0 = readFileToString("slot_0_blm.txt");
+const SLOT_0_INIT_ACTIONS = [
+	jumpToTimestampNode(0),
+	skillNode("FIRE_III"),
+	skillNode("BLIZZARD_III"),
+	skillNode("FIRE_III"),
+	skillNode("BLIZZARD_III"),
+	skillNode("FIRE_III"),
+	skillNode("BLIZZARD_III"),
+].map((it) => it.serialized());
 // Slot 1: [mch] wf and then a million ogcd spam
 const recordString1 = readFileToString("slot_1_mch.txt");
+const SLOT_1_INIT_ACTIONS = (
+	[
+		"WILDFIRE",
+		"DOUBLE_CHECK",
+		"CHECKMATE",
+		"TACTICIAN",
+		"DISMANTLE",
+		"HEAD_GRAZE",
+		"ARMS_LENGTH",
+		"SECOND_WIND",
+		"TINCTURE",
+		"SPRINT",
+	] as ActionKey[]
+).map((key) => skillNode(key).serialized());
 
-const suiteSetup = () => {
+beforeEach(() => {
 	const data = new Map<string, string>();
 	const mockLocalStorage = {
 		getItem: vi.fn((key: string) => data.get(key) ?? null),
@@ -48,21 +78,25 @@ const suiteSetup = () => {
 	setCachedValue("gameTime0", '{"countdown":10,"elapsedTime":25.199999999999996}');
 	setCachedValue("gameRecord1", recordString1);
 	setCachedValue("gameTime1", '{"countdown":0,"elapsedTime":7}');
+	while (controller.timeline.slots.length > 2) {
+		controller.timeline.removeSlot(2);
+	}
+	// Must come after removeSlot calls
 	setCachedValue("activeSlotIndex", "0");
-	["gameRecord2", "gameTime2", "gameRecord3", "gameTime3"].forEach((it) =>
-		localStorage.removeItem(it),
-	);
 	controller.tryAutoLoad();
 	return () => vi.restoreAllMocks();
-};
-
-beforeEach(suiteSetup);
+});
 
 // Helper function to create a test that performs actions, checks that the resulting line in the
 // active slot matches the expectation after calling an undo/redo.
 // Tests which check config changes should verify config manually.
 function undoRedoTest(
-	actions: { action: () => void; line: SerializedLine; testPost?: () => void }[],
+	actions: {
+		action: () => void;
+		line: SerializedLine;
+		testPost?: () => void;
+		undoCount?: number;
+	}[],
 	params:
 		| {
 				pre?: () => void;
@@ -73,25 +107,34 @@ function undoRedoTest(
 	return () => {
 		params?.pre?.();
 		const initialState = controller.record.serialized().actions;
-		actions.forEach(({ action, line, testPost }, i) => {
+		actions.forEach(({ action, line, testPost, undoCount }, i) => {
 			// Perform the action, then check the expected active record state afterwards.
 			action();
 			expect(
 				controller.record.serialized().actions,
 				`line after index ${i} did not match`,
 			).toStrictEqual(line);
-			// Undo the action, and check that state matches that of the previous step.
-			controller.undoStack.undo();
+			const activeSlotIndex = controller.timeline.activeSlotIndex;
+			// Undo the action(s), and check that state matches that of the previous step.
+			for (let j = 0; j < (undoCount ?? 1); j++) {
+				controller.undoStack.undo();
+			}
 			expect(
 				controller.record.serialized().actions,
 				`undo after index ${i} did not match`,
 			).toStrictEqual(i === 0 ? initialState : actions[i - 1].line);
-			// Redo the action and check that the action was correctly re-applied.
-			controller.undoStack.redo();
+			// Redo the action(s) and check that the action was correctly re-applied.
+			for (let j = 0; j < (undoCount ?? 1); j++) {
+				controller.undoStack.redo();
+			}
 			expect(
 				controller.record.serialized().actions,
 				`redo after index ${i} did not match`,
 			).toStrictEqual(line);
+			expect(
+				controller.timeline.activeSlotIndex,
+				`expected slot after redo of index ${i} did not match`,
+			).toStrictEqual(activeSlotIndex);
 			testPost?.();
 		});
 		params?.post?.();
@@ -107,16 +150,6 @@ function mockKeyDown(key: string) {
 	controller.handleTimelineKeyboardEvent(evt);
 	controller.handleKeyboardEvent(evt);
 }
-
-const SLOT_0_INIT_ACTIONS = [
-	jumpToTimestampNode(0),
-	skillNode("FIRE_III"),
-	skillNode("BLIZZARD_III"),
-	skillNode("FIRE_III"),
-	skillNode("BLIZZARD_III"),
-	skillNode("FIRE_III"),
-	skillNode("BLIZZARD_III"),
-].map((it) => it.serialized());
 
 describe("individual skill interactions", () => {
 	it(
@@ -312,6 +345,70 @@ describe("individual skill interactions", () => {
 	);
 });
 
+describe("timeline slot manipulation", () => {
+	it(
+		"creates a new empty timeline with the same config",
+		undoRedoTest([
+			{
+				action: () => controller.undoStack.doThenPush(new AddTimelineSlot(0)),
+				line: [],
+				testPost: () =>
+					expect(controller.gameConfig.serialized()).toStrictEqual(
+						JSON.parse(recordString0)["config"],
+					),
+			},
+		]),
+	);
+
+	// Deleting an inactive slot is allowed, but currently hidden to the UI, so we only test deleting the active slot.
+	it(
+		"switches, clones, and deletes the current slot",
+		undoRedoTest([
+			{
+				action: () => controller.undoStack.doThenPush(new SetActiveTimelineSlot(0, 1)),
+				line: SLOT_1_INIT_ACTIONS,
+				testPost: () => expect(controller.timeline.activeSlotIndex).toStrictEqual(1),
+			},
+			{
+				action: () => controller.undoStack.doThenPush(new CloneTimelineSlot(1)),
+				line: SLOT_1_INIT_ACTIONS,
+				testPost: () => {
+					expect(controller.timeline.activeSlotIndex).toStrictEqual(2);
+					expect(controller.timeline.slots.length).toStrictEqual(3);
+				},
+			},
+			// Add an extra action to slot 2, then switch to + delete slot 0.
+			// The new slot 0 should contain slot 1's original actions, while the new slot 1
+			// contains the new skill, and slot 2 is empty.
+			{
+				action: () => {
+					controller.requestUseSkill(
+						{
+							skillName: "DRILL",
+							targetCount: 1,
+						},
+						true,
+					);
+					controller.undoStack.doThenPush(new SetActiveTimelineSlot(2, 0));
+					controller.undoStack.doThenPush(
+						new DeleteTimelineSlot(0, controller.record.serialized()),
+					);
+				},
+				undoCount: 3,
+				line: SLOT_1_INIT_ACTIONS,
+				testPost: () => {
+					expect(controller.timeline.activeSlotIndex).toStrictEqual(0);
+					expect(controller.timeline.slots.length).toStrictEqual(2);
+				},
+			},
+			{
+				action: () => controller.undoStack.doThenPush(new SetActiveTimelineSlot(0, 1)),
+				line: [...SLOT_1_INIT_ACTIONS, skillNode("DRILL", 1).serialized()],
+			},
+		]),
+	);
+});
+
 // describe("bulk skill and config interactions", () => {
 // 	it("can import from file", undoRedoTest([{action: () => {}, line: []}]));
 
@@ -344,11 +441,4 @@ describe("individual skill interactions", () => {
 // 	it("pastes tab-separated columns with target count and skills", undoRedoTest([{action: () => {}, line: []}]));
 
 // 	it("pastes discord emotes", undoRedoTest([{action: () => {}, line: []}]));
-// });
-
-// describe("timeline slot manipulation", () => {
-// 	it("creates a new empty timeline with the same config", undoRedoTest([{action: () => {}, line: []}]));
-
-// 	// Deleting an inactive slot is allowed, but currently hidden to the UI.
-// 	it("switches, clones, and deletes the current slot", undoRedoTest([{action: () => {}, line: []}]));
 // });
