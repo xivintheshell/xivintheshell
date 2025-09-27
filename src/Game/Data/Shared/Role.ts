@@ -2,40 +2,42 @@ import { ensureRecord } from "../../../utilities";
 import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
 export const ROLE_ACTIONS = ensureRecord<ActionData>()({
-	ARMS_LENGTH: { name: "Arm's Length", label: { zh: "亲疏自行" } }, // Tanks, Melee, Phys Ranged
+	ARMS_LENGTH: { id: 7548, name: "Arm's Length", label: { zh: "亲疏自行" } }, // Tanks, Melee, Phys Ranged
 
-	SECOND_WIND: { name: "Second Wind", label: { zh: "内丹" } }, // Melee & Phys Ranged
+	SECOND_WIND: { id: 7541, name: "Second Wind", label: { zh: "内丹" } }, // Melee & Phys Ranged
 
-	HEAD_GRAZE: { name: "Head Graze", label: { zh: "伤头" } }, // Phys Ranged. Not bothering with Leg/Foot Graze at this point
+	HEAD_GRAZE: { id: 7551, name: "Head Graze", label: { zh: "伤头" } }, // Phys Ranged. Not bothering with Leg/Foot Graze at this point
 
-	ESUNA: { name: "Esuna", label: { zh: "康复" } },
-	RESCUE: { name: "Rescue", label: { zh: "营救" } },
+	ESUNA: { id: 7568, name: "Esuna", label: { zh: "康复" } },
+	RESCUE: { id: 7571, name: "Rescue", label: { zh: "营救" } },
 
-	ADDLE: { name: "Addle", label: { zh: "病毒", ja: "アドル" }, discordEmote: "Addle" },
+	ADDLE: { id: 7560, name: "Addle", label: { zh: "病毒", ja: "アドル" }, discordEmote: "Addle" },
 	// Discord emote for swiftcast is different between PCT and BLM, so we set it dynamically
-	SWIFTCAST: { name: "Swiftcast", label: { zh: "即刻咏唱", ja: "迅速魔" } },
+	SWIFTCAST: { id: 7561, name: "Swiftcast", label: { zh: "即刻咏唱", ja: "迅速魔" } },
 	LUCID_DREAMING: {
+		id: 7562,
 		name: "Lucid Dreaming",
 		label: { zh: "醒梦", ja: "ルーシッドドリーム" },
 		discordEmote: "Lucid",
 	},
 	SURECAST: {
+		id: 7559,
 		name: "Surecast",
 		label: { zh: "沉稳咏唱", ja: "堅実魔" },
 		discordEmote: "Surecast",
 	},
 
-	FEINT: { name: "Feint", label: { zh: "牵制" } },
-	BLOODBATH: { name: "Bloodbath", label: { zh: "浴血" } },
-	TRUE_NORTH: { name: "True North", label: { zh: "真北" } },
-	LEG_SWEEP: { name: "Leg Sweep", label: { zh: "扫腿" } },
+	FEINT: { id: 7549, name: "Feint", label: { zh: "牵制" } },
+	BLOODBATH: { id: 7542, name: "Bloodbath", label: { zh: "浴血" } },
+	TRUE_NORTH: { id: 7546, name: "True North", label: { zh: "真北" } },
+	LEG_SWEEP: { id: 7863, name: "Leg Sweep", label: { zh: "扫腿" } },
 
-	RAMPART: { name: "Rampart", label: { zh: "铁壁" } },
-	REPRISAL: { name: "Reprisal", label: { zh: "雪仇" } },
-	LOW_BLOW: { name: "Low Blow", label: { zh: "下踢" } },
-	INTERJECT: { name: "Interject", label: { zh: "插言" } },
-	PROVOKE: { name: "Provoke", label: { zh: "挑衅" } },
-	SHIRK: { name: "Shirk", label: { zh: "退避" } },
+	RAMPART: { id: 7531, name: "Rampart", label: { zh: "铁壁" } },
+	REPRISAL: { id: 7535, name: "Reprisal", label: { zh: "雪仇" } },
+	LOW_BLOW: { id: 7540, name: "Low Blow", label: { zh: "下踢" } },
+	INTERJECT: { id: 7538, name: "Interject", label: { zh: "插言" } },
+	PROVOKE: { id: 7533, name: "Provoke", label: { zh: "挑衅" } },
+	SHIRK: { id: 7537, name: "Shirk", label: { zh: "退避" } },
 });
 
 export const ROLE_COOLDOWNS = ensureRecord<CooldownData>()({

@@ -1,5 +1,6 @@
 import React from "react";
 import { Columns, FileFormat, LoadJsonFromFileOrUrl, SaveToFile } from "./Common";
+import { FflogsImportFlow } from "./FflogsImport";
 import { controller } from "../Controller/Controller";
 import { FileType } from "../Controller/Common";
 import { ImportTimelineFile } from "../Controller/UndoStack";
@@ -126,19 +127,24 @@ export function LoadSave() {
 	return <Columns contentHeight={TIMELINE_COLUMNS_HEIGHT}>
 		{[
 			{
-				defaultSize: 25,
+				defaultSize: 20,
 				title: textImportTitle,
 				content: textImportContent,
 			},
 			{
-				defaultSize: 30,
+				defaultSize: 25,
 				title: textExportTitle,
 				content: textExportContent,
 			},
 			{
-				defaultSize: 45,
+				defaultSize: 35,
 				title: imageExportTitle,
 				content: <ImageExport />,
+			},
+			{
+				defaultSize: 20,
+				title: <>{localize({ en: "FFLogs Import" })}</>,
+				content: <FflogsImportFlow />,
 			},
 		]}
 	</Columns>;
