@@ -240,6 +240,8 @@ ALL_JOBS.forEach((job) => {
 const skillAssetPaths: Map<ActionKey, string> = new Map();
 const MISSING_ASSET_PATH = "General/Missing.png";
 
+export const skillIdMap = new Map<number, ActionKey>();
+
 const seenUnknownNames = new Set<string>();
 const normalizedSkillNameMap = new Map<string, ActionKey>();
 export const zhSkillNameMap = new Map<string, ActionKey>();
@@ -305,6 +307,7 @@ export function getAllSkills<T extends GameState>(job: ShellJob): Map<ActionKey,
 }
 
 function setSkill<T extends GameState>(job: ShellJob, skillName: ActionKey, skill: Skill<T>) {
+	// Initialize a bunch of different hashmaps for looking up skills by different keys.
 	skillMap.get(job)!.set(skillName, skill as Skill<GameState>);
 	discordEmoteSkillMap
 		.get(job)!
@@ -321,6 +324,9 @@ function setSkill<T extends GameState>(job: ShellJob, skillName: ActionKey, skil
 		jaSkillNameMap.set(label.ja as string, skillName);
 	}
 	skillAssetPaths.set(skillName, skill.assetPath);
+	if (ACTIONS[skillName].id !== undefined) {
+		skillIdMap.set(ACTIONS[skillName].id, skillName);
+	}
 }
 
 // Helper function to transform an optional<number | function> that has a default number value into a function.

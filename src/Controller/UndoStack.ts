@@ -179,15 +179,22 @@ export class DeleteNodes extends TimelineInteraction {
 export class AddNodeBulk extends TimelineInteraction {
 	nodes: ActionNode[];
 	index: number;
-	source: "preset" | "paste";
+	source: "preset" | "paste" | "fflogs";
 
-	constructor(nodes: ActionNode[], index: number, source: "preset" | "paste") {
+	constructor(nodes: ActionNode[], index: number, source: "preset" | "paste" | "fflogs") {
 		super({
 			en:
 				source === "preset"
 					? "add preset sequence"
-					: `paste ${nodes.length} ${maybePluralActions(nodes.length)}`,
-			zh: source === "preset" ? "增加技能序列预设" : `粘贴${nodes.length}技能`,
+					: source === "paste"
+						? `paste ${nodes.length} ${maybePluralActions(nodes.length)}`
+						: "fflogs import",
+			zh:
+				source === "preset"
+					? "增加技能序列预设"
+					: source === "paste"
+						? `粘贴${nodes.length}技能`
+						: "fflogs进口",
 		});
 		this.nodes = nodes;
 		this.index = index;
