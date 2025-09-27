@@ -132,6 +132,11 @@ export function LoadSave() {
 				content: textImportContent,
 			},
 			{
+				defaultSize: 20,
+				title: <>{localize({ en: "Import fight from FFLogs" })}</>,
+				content: <FflogsImportFlow />,
+			},
+			{
 				defaultSize: 25,
 				title: textExportTitle,
 				content: textExportContent,
@@ -140,11 +145,6 @@ export function LoadSave() {
 				defaultSize: 35,
 				title: imageExportTitle,
 				content: <ImageExport />,
-			},
-			{
-				defaultSize: 20,
-				title: <>{localize({ en: "FFLogs Import" })}</>,
-				content: <FflogsImportFlow />,
 			},
 		]}
 	</Columns>;
