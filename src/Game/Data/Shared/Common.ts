@@ -10,6 +10,7 @@ export const COMMON_ACTIONS = ensureRecord<ActionData>()({
 		label: { zh: "爆发药", ja: "薬" },
 	},
 	SPRINT: {
+		id: 3,
 		name: "Sprint",
 		label: { zh: "疾跑", ja: "スプリント" },
 	},
