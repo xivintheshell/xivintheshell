@@ -2,39 +2,39 @@ import { ensureRecord } from "../../../utilities";
 import { ActionData, CooldownData, ResourceData } from "../types";
 
 export const TANK_LB3_ACTIONS = ensureRecord<ActionData>()({
-	LAST_BASTION: { name: "Last Bastion", label: { zh: "终极堡垒" } },
-	LAND_WAKER: { name: "Land Waker", label: { zh: "原初大地" } },
-	DARK_FORCE: { name: "Dark Force", label: { zh: "暗黑之力" } },
-	GUNMETAL_SOUL: { name: "Gunmetal Soul", label: { zh: "灵魂之青" } },
+	LAST_BASTION: { id: 199, name: "Last Bastion", label: { zh: "终极堡垒" } },
+	LAND_WAKER: { id: 4240, name: "Land Waker", label: { zh: "原初大地" } },
+	DARK_FORCE: { id: 4241, name: "Dark Force", label: { zh: "暗黑之力" } },
+	GUNMETAL_SOUL: { id: 17105, name: "Gunmetal Soul", label: { zh: "灵魂之青" } },
 });
 
 export const HEALER_LB3_ACTIONS = ensureRecord<ActionData>()({
-	PULSE_OF_LIFE: { name: "Pulse of Life" },
-	ANGEL_FEATHERS: { name: "Angel Feathers" },
-	ASTRAL_STASIS: { name: "Astral Stasis" },
-	TECHNE_MAKRE: { name: "Techne Makre" },
+	PULSE_OF_LIFE: { id: 208, name: "Pulse of Life" },
+	ANGEL_FEATHERS: { id: 4247, name: "Angel Feathers" },
+	ASTRAL_STASIS: { id: 4248, name: "Astral Stasis" },
+	TECHNE_MAKRE: { id: 24859, name: "Techne Makre" },
 });
 
 export const MELEE_LB3_ACTIONS = ensureRecord<ActionData>()({
-	FINAL_HEAVEN: { name: "Final Heaven" },
-	DRAGONSONG_DIVE: { name: "Dragonsong Dive" },
-	CHIMATSURI: { name: "Chimatsuri" },
-	DOOM_OF_THE_LIVING: { name: "Doom of the Living" },
-	THE_END: { name: "The End" },
-	WORLD_SWALLOWER: { name: "World-swallower" },
+	FINAL_HEAVEN: { id: 202, name: "Final Heaven" },
+	DRAGONSONG_DIVE: { id: 4242, name: "Dragonsong Dive" },
+	CHIMATSURI: { id: 4243, name: "Chimatsuri" },
+	DOOM_OF_THE_LIVING: { id: 7861, name: "Doom of the Living" },
+	THE_END: { id: 24858, name: "The End" },
+	WORLD_SWALLOWER: { id: 34866, name: "World-swallower" },
 });
 
 export const RANGED_LB3_ACTIONS = ensureRecord<ActionData>()({
-	SAGITTARIUS_ARROW: { name: "Sagittarius Arrow" },
-	SATELLITE_BEAM: { name: "Satellite Beam" },
-	CRIMSON_LOTUS: { name: "Crimson Lotus" },
+	SAGITTARIUS_ARROW: { id: 4244, name: "Sagittarius Arrow" },
+	SATELLITE_BEAM: { id: 4245, name: "Satellite Beam" },
+	CRIMSON_LOTUS: { id: 17106, name: "Crimson Lotus" },
 });
 
 export const CASTER_LB3_ACTIONS = ensureRecord<ActionData>()({
-	METEOR: { name: "Meteor" },
-	TERAFLARE: { name: "Teraflare" },
-	VERMILLION_SCOURGE: { name: "Vermillion Scourge" },
-	CHROMATIC_FANTASY: { name: "Chromatic Fantasy" },
+	METEOR: { id: 205, name: "Meteor" },
+	TERAFLARE: { id: 3009, name: "Teraflare" },
+	VERMILLION_SCOURGE: { id: 7862, name: "Vermillion Scourge" },
+	CHROMATIC_FANTASY: { id: 34867, name: "Chromatic Fantasy" },
 });
 
 // Tank LB3 Status effects
@@ -58,20 +58,20 @@ export const LIMIT_BREAK_COOLDOWNS = ensureRecord<CooldownData>()({
 export const SHARED_LIMIT_BREAK_ACTIONS = ensureRecord<ActionData>()({
 	UNKNOWN: { name: "Unknown" },
 
-	SHIELD_WALL: { name: "Shield Wall" },
-	STRONGHOLD: { name: "Stronghold" },
+	SHIELD_WALL: { id: 197, name: "Shield Wall" },
+	STRONGHOLD: { id: 198, name: "Stronghold" },
 
-	HEALING_WIND: { name: "Healing Wind" },
-	BREATH_OF_THE_EARTH: { name: "Breath of the Earth" },
+	HEALING_WIND: { id: 206, name: "Healing Wind" },
+	BREATH_OF_THE_EARTH: { id: 207, name: "Breath of the Earth" },
 
-	BRAVER: { name: "Braver" },
-	BLADEDANCE: { name: "Bladedance" },
+	BRAVER: { id: 200, name: "Braver" },
+	BLADEDANCE: { id: 201, name: "Bladedance" },
 
-	BIGSHOT: { name: "Big Shot" },
-	DESPERADO: { name: "Desperado" },
+	BIGSHOT: { id: 4238, name: "Big Shot" },
+	DESPERADO: { id: 4239, name: "Desperado" },
 
-	SKYSHARD: { name: "Skyshard" },
-	STARSTORM: { name: "Starstorm" },
+	SKYSHARD: { id: 203, name: "Skyshard" },
+	STARSTORM: { id: 204, name: "Starstorm" },
 });
 
 export const SHARED_LIMIT_BREAK_RESOURCES = ensureRecord<ResourceData>()({
