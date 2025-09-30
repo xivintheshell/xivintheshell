@@ -1,5 +1,16 @@
 [
 	{
+		"date": "9/29/25",
+		"changes": [
+			"Updated the text of the timeline editor help tooltip.",
+			"New developer blog post (English only): https://blog.xivintheshell.com/posts/progressive-ux-improvements/"
+		],
+		"changes_zh": [
+			"更新了时间轴编辑器的帮助工具提示"
+		],
+		"level": "minor"
+	},
+	{
 		"date": "9/20/25",
 		"changes": [
 			"[!] Skills can now be inserted in the middle of a timeline.",

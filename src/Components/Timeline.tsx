@@ -208,18 +208,10 @@ function TimelineTabs() {
 							topic={"timeline editor"}
 							content={
 								<div>
-									<div className={"paragraph"} style={{ color: "orangered" }}>
-										<b>
-											{localize({
-												en: "Has the bare minimum features but might still be buggy (let me know). Would recommend going over Instructions/Troubleshoot first, plus saving data to drive in case bugs mess up the entire tool",
-												zh: "本编辑器仍在开发中，不过有最基本的各项功能，请务必向我们汇报任何发现的bug。",
-											})}
-										</b>
-									</div>
 									<div className={"paragraph"}>
 										{localize({
-											en: "I hope it's otherwise self-explanatory. Note that edits made here are not saved until they're applied to the actual timeline.",
-											zh: "使用前最好先阅读使用指南并时刻保存各项数据。",
+											en: 'Table view for editing the current timeline. Changes made here are not saved until the "apply changes" button is pressed.',
+											zh: "用于编辑当前时间轴的表格视图。所做的修改在点击“应用并保存”按钮后才会保存。",
 										})}
 									</div>
 								</div>
