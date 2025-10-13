@@ -15,6 +15,7 @@
 
 from collections import defaultdict
 import csv
+import math
 import json
 import sys
 
@@ -73,6 +74,10 @@ def parse_csv(src, dst):
                 toks = ability.split()
                 ability = " ".join(toks[:-2])
                 cast_duration = float(toks[-2])
+                if cast_duration > 0:
+                    # For some reason, logs usually track durations ending with x.70
+                    # instead of the whole second, which is more accurate.
+                    cast_duration += 0.3
             description = row["Override Description"] or ability
             hide = row["Hide Text"] == "y"
             # parse timestamp into seconds

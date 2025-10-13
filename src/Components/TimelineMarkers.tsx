@@ -607,6 +607,15 @@ export class TimelineMarkers extends React.Component {
 				/>
 			</p>
 			<p>
+				{/* TODO localize */}
+				<span>{localize({ en: "Quantum (en): " })}</span>
+				<LoadCombinedTracksBtn
+					displayName={"The Final Verse Q40 by shanzhe"}
+					url={PRESET_MARKERS_BASE + "final_verse_q40.txt"}
+					offsetStr={this.state.offsetStr}
+				/>
+			</p>
+			<p>
 				<span>{localize({ en: "EX trial: ", zh: "极神：" })}</span>
 				<LoadCombinedTracksBtn
 					displayName={localize({
