@@ -1,5 +1,12 @@
 [
 	{
+		"date": "10/13/25",
+		"changes": [
+			"Added tracks for The Final Verse (Quantum) Q40."
+		],
+		"level": "minor"
+	},
+	{
 		"date": "9/29/25",
 		"changes": [
 			"Updated the text of the timeline editor help tooltip.",
