@@ -69,6 +69,7 @@ export interface Job {
 	usesMp?: boolean;
 	limitBreak?: LimitBreak3ActionKey; // Enforce actually specifying an LB3 action
 	limitBreakBuff?: TankLimitBreak3ResourceKey; // Only Tank LBs have a buff at the moment, so limit it to those
+	mainStat: "strength" | "dexterity" | "intelligence" | "mind";
 }
 
 // jobs are in the order they appear in the job guide
@@ -79,12 +80,14 @@ export const TANKS = ensureRecord<Job>()({
 		usesMp: true,
 		limitBreak: "LAST_BASTION",
 		limitBreakBuff: "LAST_BASTION",
+		mainStat: "strength",
 	},
 	WAR: {
 		role: "TANK",
 		implementationLevel: "LIVE",
 		limitBreak: "LAND_WAKER",
 		limitBreakBuff: "LAND_WAKER",
+		mainStat: "strength",
 	},
 	DRK: {
 		role: "TANK",
@@ -92,12 +95,14 @@ export const TANKS = ensureRecord<Job>()({
 		usesMp: true,
 		limitBreak: "DARK_FORCE",
 		limitBreakBuff: "DARK_FORCE",
+		mainStat: "strength",
 	},
 	GNB: {
 		role: "TANK",
 		implementationLevel: "LIVE",
 		limitBreak: "GUNMETAL_SOUL",
 		limitBreakBuff: "GUNMETAL_SOUL",
+		mainStat: "strength",
 	},
 });
 export type Tanks = typeof TANKS;
@@ -109,24 +114,28 @@ export const HEALERS = ensureRecord<Job>()({
 		implementationLevel: "TESTING",
 		usesMp: true,
 		limitBreak: "PULSE_OF_LIFE",
+		mainStat: "mind",
 	},
 	SCH: {
 		role: "HEALER",
 		implementationLevel: "TESTING",
 		usesMp: true,
 		limitBreak: "ANGEL_FEATHERS",
+		mainStat: "mind",
 	},
 	AST: {
 		role: "HEALER",
 		implementationLevel: "TESTING",
 		usesMp: true,
 		limitBreak: "ASTRAL_STASIS",
+		mainStat: "mind",
 	},
 	SGE: {
 		role: "HEALER",
 		implementationLevel: "TESTING",
 		usesMp: true,
 		limitBreak: "TECHNE_MAKRE",
+		mainStat: "mind",
 	},
 });
 export type Healers = typeof HEALERS;
@@ -137,31 +146,37 @@ export const MELEE = ensureRecord<Job>()({
 		role: "MELEE",
 		implementationLevel: "LIVE",
 		limitBreak: "FINAL_HEAVEN",
+		mainStat: "strength",
 	},
 	DRG: {
 		role: "MELEE",
 		implementationLevel: "LIVE",
 		limitBreak: "DRAGONSONG_DIVE",
+		mainStat: "strength",
 	},
 	NIN: {
 		role: "MELEE",
 		implementationLevel: "LIVE",
 		limitBreak: "CHIMATSURI",
+		mainStat: "dexterity",
 	},
 	SAM: {
 		role: "MELEE",
 		implementationLevel: "LIVE",
 		limitBreak: "DOOM_OF_THE_LIVING",
+		mainStat: "strength",
 	},
 	RPR: {
 		role: "MELEE",
 		implementationLevel: "LIVE",
 		limitBreak: "THE_END",
+		mainStat: "strength",
 	},
 	VPR: {
 		role: "MELEE",
 		implementationLevel: "LIVE",
 		limitBreak: "WORLD_SWALLOWER",
+		mainStat: "dexterity",
 	},
 });
 export type Melee = typeof MELEE;
@@ -172,16 +187,19 @@ export const RANGED = ensureRecord<Job>()({
 		role: "RANGED",
 		implementationLevel: "LIVE",
 		limitBreak: "SAGITTARIUS_ARROW",
+		mainStat: "dexterity",
 	},
 	MCH: {
 		role: "RANGED",
 		implementationLevel: "LIVE",
 		limitBreak: "SATELLITE_BEAM",
+		mainStat: "dexterity",
 	},
 	DNC: {
 		role: "RANGED",
 		implementationLevel: "LIVE",
 		limitBreak: "CRIMSON_LOTUS",
+		mainStat: "dexterity",
 	},
 });
 export type Ranged = typeof RANGED;
@@ -193,24 +211,28 @@ export const CASTERS = ensureRecord<Job>()({
 		implementationLevel: "LIVE",
 		usesMp: true,
 		limitBreak: "METEOR",
+		mainStat: "intelligence",
 	},
 	SMN: {
 		role: "CASTER",
 		implementationLevel: "LIVE",
 		usesMp: true,
 		limitBreak: "TERAFLARE",
+		mainStat: "intelligence",
 	},
 	RDM: {
 		role: "CASTER",
 		implementationLevel: "LIVE",
 		usesMp: true,
 		limitBreak: "VERMILLION_SCOURGE",
+		mainStat: "intelligence",
 	},
 	PCT: {
 		role: "CASTER",
 		implementationLevel: "LIVE",
 		usesMp: true,
 		limitBreak: "CHROMATIC_FANTASY",
+		mainStat: "intelligence",
 	},
 });
 export const LIMITED = ensureRecord<Job>()({
@@ -218,6 +240,7 @@ export const LIMITED = ensureRecord<Job>()({
 		role: "LIMITED",
 		implementationLevel: "TESTING",
 		usesMp: true,
+		mainStat: "intelligence",
 	},
 });
 export type Casters = typeof CASTERS;
@@ -238,6 +261,7 @@ export const JOBS = {
 			role: "LIMITED",
 			implementationLevel: "UNIMPLEMENTED",
 			usesMp: false,
+			mainStat: "strength",
 		},
 	}),
 };

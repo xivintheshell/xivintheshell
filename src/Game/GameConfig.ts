@@ -35,7 +35,7 @@ const CURRENT_BIS_WD = 152;
 
 // These fields should (and initialResourceOverrides) should change every time the job changes,
 // while remaining fields are kept the same.
-type DynamicConfigField =
+export type DynamicConfigField =
 	| "spellSpeed"
 	| "skillSpeed"
 	| "criticalHit"
@@ -45,7 +45,7 @@ type DynamicConfigField =
 	| "tenacity"
 	| "main";
 
-type DynamicConfigPart = {
+export type DynamicConfigPart = {
 	[Property in DynamicConfigField]: number;
 };
 

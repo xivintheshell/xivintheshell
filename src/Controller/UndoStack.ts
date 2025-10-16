@@ -179,22 +179,15 @@ export class DeleteNodes extends TimelineInteraction {
 export class AddNodeBulk extends TimelineInteraction {
 	nodes: ActionNode[];
 	index: number;
-	source: "preset" | "paste" | "fflogs";
+	source: "preset" | "paste";
 
-	constructor(nodes: ActionNode[], index: number, source: "preset" | "paste" | "fflogs") {
+	constructor(nodes: ActionNode[], index: number, source: "preset" | "paste") {
 		super({
 			en:
 				source === "preset"
 					? "add preset sequence"
-					: source === "paste"
-						? `paste ${nodes.length} ${maybePluralActions(nodes.length)}`
-						: "fflogs import",
-			zh:
-				source === "preset"
-					? "增加技能序列预设"
-					: source === "paste"
-						? `粘贴${nodes.length}技能`
-						: "fflogs进口",
+					: `paste ${nodes.length} ${maybePluralActions(nodes.length)}`,
+			zh: source === "preset" ? "增加技能序列预设" : `粘贴${nodes.length}技能`,
 		});
 		this.nodes = nodes;
 		this.index = index;
@@ -209,6 +202,45 @@ export class AddNodeBulk extends TimelineInteraction {
 
 	override redo() {
 		controller.insertRecordNodes(this.nodes, this.index);
+	}
+}
+
+export class ImportLog extends TimelineInteraction {
+	nodes: ActionNode[];
+	index: number;
+	oldConfig: SerializedConfig;
+	newConfig: SerializedConfig;
+
+	constructor(
+		nodes: ActionNode[],
+		index: number,
+		oldConfig: SerializedConfig,
+		newConfig: SerializedConfig,
+	) {
+		super({
+			en: "import from fflogs",
+			zh: "fflogs进口",
+		});
+		this.nodes = nodes;
+		this.index = index;
+		this.oldConfig = oldConfig;
+		this.newConfig = newConfig;
+	}
+
+	override undo() {
+		controller.record.selectSingle(this.index);
+		controller.record.selectUntil(this.index + this.nodes.length - 1);
+		controller.deleteSelectedSkills();
+		controller.setConfigAndRestart(this.oldConfig, false);
+		controller.updateAllDisplay();
+		controller.scrollToTime();
+	}
+
+	override redo() {
+		controller.insertRecordNodes(this.nodes, this.index);
+		controller.setConfigAndRestart(this.newConfig, false);
+		controller.updateAllDisplay();
+		controller.scrollToTime();
 	}
 }
 

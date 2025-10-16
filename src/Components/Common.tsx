@@ -494,6 +494,7 @@ type InputProps = {
 	width?: number;
 	style?: CSSProperties;
 	componentColor?: string; // overrides entire component's color
+	autoFocus?: boolean;
 };
 
 export function Input(props: InputProps) {
@@ -521,6 +522,7 @@ export function Input(props: InputProps) {
 			// When the input field is focused, native commands like arrow key + undo/redo should
 			// work as expected, and not be intercepted by the top-level app's key listeners.
 			onKeyDown={(e) => e.stopPropagation()}
+			autoFocus={props.autoFocus}
 		/>
 	</div>;
 }
