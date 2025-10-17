@@ -620,13 +620,9 @@ export function Checkbox(props: {
 		setChecked(defaultChecked);
 		props.onChange(defaultChecked);
 	}, []);
-	const checkboxStyle: CSSProperties = {
-		position: "relative",
-		top: 3,
-		marginRight: "0.25em",
-	};
 	return <div style={{ marginBottom: 5 }}>
 		<input
+			className="shellCheckbox"
 			type="checkbox"
 			onChange={(e) => {
 				const newVal = e.currentTarget.checked;
@@ -635,7 +631,6 @@ export function Checkbox(props: {
 				props.onChange(newVal);
 			}}
 			checked={checked}
-			style={checkboxStyle}
 		/>
 		<span>{props.label}</span>
 	</div>;
@@ -790,6 +785,7 @@ const HELP_MOUSEOVER_HYSTERESIS_MS = 100;
 export function Help(props: {
 	topic: string; // need to be unique globally
 	content: ContentNode;
+	container?: React.RefObject<HTMLElement | null>;
 }) {
 	const colors = getCurrentThemeColors();
 	const style: CSSProperties = {
@@ -829,7 +825,9 @@ export function Help(props: {
 		>
 			<span style={{ position: "relative", top: -1, color: "white" }}>&#63;</span>
 		</span>
-		<Tooltip.Portal container={document.getElementById("globalHelpTooltipAnchor")}>
+		<Tooltip.Portal
+			container={props.container ?? document.getElementById("globalHelpTooltipAnchor")}
+		>
 			<Tooltip.Positioner
 				className="tooltip-positioner"
 				anchor={document.getElementById(`help-${props.topic}`)}

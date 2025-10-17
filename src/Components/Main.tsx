@@ -356,14 +356,14 @@ export default class Main extends React.Component<{ command?: string }> {
 					border-radius: 0.4em;
 				}
 				.help-tooltip {
-				    color: ${colors.text};
-				    background-color: ${colors.tipBackground};
-				    opacity: 0.98;
-				    max-width: 300px;
-				    outline: 1px solid ${colors.bgHighContrast};
-				    transition: none;
-				    font-size: 100%;
-				    z-index: 10;
+					color: ${colors.text};
+					background-color: ${colors.tipBackground};
+					opacity: 0.98;
+					max-width: 300px;
+					outline: 1px solid ${colors.bgHighContrast};
+					transition: none;
+					font-size: 100%;
+					z-index: 10;
 				}
 				button:disabled {
 					background-color: ${colors.background};

@@ -91,6 +91,12 @@
     margin: 10px 0;
 }
 
+.shellCheckbox {
+    position: relative;
+    top: 3;
+    margin-right: 0.25em
+}
+
 /*
 copied when migrating from react-tooltip to baseui
 https://github.com/ReactTooltip/react-tooltip/blob/master/src/components/Tooltip/styles.module.css

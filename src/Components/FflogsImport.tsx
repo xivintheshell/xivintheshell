@@ -3,9 +3,9 @@ import { Dialog } from "@base-ui-components/react/dialog";
 import { FaXmark } from "react-icons/fa6";
 import { ImportLog } from "../Controller/UndoStack";
 import { controller } from "../Controller/Controller";
-import { skillNode, jumpToTimestampNode, ActionNode } from "../Controller/Record";
+import { skillNode, jumpToTimestampNode, durationWaitNode, ActionNode } from "../Controller/Record";
 import { ActionKey } from "../Game/Data";
-import { ALL_JOBS, JOBS, ShellJob } from "../Game/Data/Jobs";
+import { JOBS, ShellJob } from "../Game/Data/Jobs";
 import { skillIdMap } from "../Game/Skills";
 import { ProcMode, LevelSync } from "../Game/Common";
 import {
@@ -14,7 +14,7 @@ import {
 	DynamicConfigField,
 	SerializedConfig,
 } from "../Game/GameConfig";
-import { Input } from "./Common";
+import { Input, Help } from "./Common";
 import { ColorThemeContext, getCurrentThemeColors } from "./ColorTheme";
 import { localize } from "./Localization";
 
@@ -73,13 +73,15 @@ const FFLOGS_JOB_MAP = new Map<string, ShellJob>([
 const FILTERED_ACTION_IDS = new Set([
 	7, // auto-attack
 	33218, // quadruple technical finish (for some reason different from hitting the button?)
+	34682, // star prism heal component
 ]);
 
 interface IntermediateLogImportState {
 	playerName: string;
 	job: ShellJob;
 	level?: LevelSync;
-	inferredConfig: Partial<DynamicConfigPart>;
+	statsInLog: boolean;
+	inferredConfig?: Partial<DynamicConfigPart>;
 	actions: ActionNode[];
 	timestamps: number[];
 	combatStartTime: number;
@@ -163,30 +165,51 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
 		const job = FFLOGS_JOB_MAP.get(actor.type)!;
 		const name = `${actor.name} @ ${actor.server}`;
 		let level: LevelSync | undefined = undefined;
-		const inferredStats: Partial<DynamicConfigPart> = {};
+		let inferredConfig: DynamicConfigPart | undefined = undefined;
 		const fight = data.data.reportData.report.fights[0];
 		const castEvents = [];
 		const timestamps = [];
-		for (const entry of data.data.reportData.report.events.data) {
+		// If a "begin cast" is left at the end of the loop without a paired "cast", don't bother
+		// adding it to the timeline since we can safely assume it was canceled.
+		let stagedBeginEvent: any | undefined = undefined;
+		for (let entry of data.data.reportData.report.events.data) {
+			// TODO parse buff removal events that correspond to actions
 			if (
 				entry.type === "cast" &&
 				entry.sourceID === params.playerID &&
 				!FILTERED_ACTION_IDS.has(entry.abilityGameID)
 			) {
+				// If the cast ID does not match the previously-encountered begin cast, then
+				// assume the begin cast was canceled, and discard it.
+				// Otherwise, use the timestamp of the "begin cast" event for simulation reference.
+				if (stagedBeginEvent !== undefined) {
+					if (stagedBeginEvent.abilityGameID === entry.abilityGameID) {
+						entry = stagedBeginEvent;
+					}
+					stagedBeginEvent = undefined;
+				}
 				castEvents.push(entry);
 				timestamps.push(entry.timestamp);
+			} else if (
+				entry.type === "begincast" &&
+				entry.sourceID === params.playerID &&
+				!FILTERED_ACTION_IDS.has(entry.abilityGameID)
+			) {
+				stagedBeginEvent = entry;
 			} else if (entry.type === "combatantinfo") {
 				// These stats are only populated for the log creator; these fields are otherwise
 				// left undefined.
 				level = entry.level;
-				inferredStats.main = entry[JOBS[job].mainStat];
-				inferredStats.spellSpeed = entry.spellSpeed;
-				inferredStats.skillSpeed = entry.skillSpeed;
-				inferredStats.criticalHit = entry.criticalHit;
-				inferredStats.directHit = entry.directHit;
-				inferredStats.determination = entry.determination;
-				inferredStats.piety = entry.piety;
-				inferredStats.tenacity = entry.tenacity;
+				inferredConfig = {
+					main: entry[JOBS[job].mainStat],
+					spellSpeed: entry.spellSpeed,
+					skillSpeed: entry.skillSpeed,
+					criticalHit: entry.criticalHit,
+					directHit: entry.directHit,
+					determination: entry.determination,
+					piety: entry.piety,
+					tenacity: entry.tenacity,
+				};
 			}
 		}
 		const castSkills: ActionKey[] = castEvents.map((event: any) => {
@@ -208,7 +231,10 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
 			playerName: name,
 			job,
 			level,
-			inferredConfig: inferredStats,
+			statsInLog:
+				inferredConfig !== undefined &&
+				Object.values(inferredConfig).every((x) => x !== undefined),
+			inferredConfig,
 			actions: nodes,
 			timestamps,
 			combatStartTime: fight.endTime - fight.combatTime,
@@ -223,7 +249,7 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
  *
  * Also generates a new entry in the undo stack.
  */
-function applyImportedActions(state: IntermediateLogImportState) {
+async function applyImportedActions(state: IntermediateLogImportState, resetTimeline: boolean) {
 	// Reset the controller's GameConfig.
 	const oldConfig = controller.gameConfig.serialized();
 	const newConfig: SerializedConfig = {
@@ -231,14 +257,23 @@ function applyImportedActions(state: IntermediateLogImportState) {
 		procMode: ProcMode.Always,
 		job: state.job,
 	};
-	Object.assign(state.inferredConfig);
+	for (const [field, value] of Object.entries(state.inferredConfig ?? {})) {
+		if (typeof value === "number") {
+			// @ts-expect-error can't check property keys
+			newConfig[field] = value;
+		}
+	}
 	if (state.level !== undefined) {
 		newConfig.level = state.level;
 	}
 	controller.setConfigAndRestart(
 		newConfig,
-		newConfig.job !== oldConfig.job || oldConfig.procMode !== newConfig.procMode,
+		resetTimeline ||
+			newConfig.job !== oldConfig.job ||
+			oldConfig.procMode !== newConfig.procMode,
 	);
+	const initialRecordLength = controller.record.length;
+	const finalNodes: ActionNode[] = [];
 	const nodes = state.actions;
 	// If the first action has a cast time, then assume it was hardcasted.
 	if (nodes.length > 0) {
@@ -252,7 +287,7 @@ function applyImportedActions(state: IntermediateLogImportState) {
 			castLength > 0
 				? targetUseTime - castLength + GameConfig.getSlidecastWindow(castLength)
 				: targetUseTime;
-		nodes.splice(0, 0, jumpToTimestampNode(jumpTargetTime));
+		finalNodes.push(jumpToTimestampNode(jumpTargetTime), nodes[0]);
 		console.log("target use time:", targetUseTime);
 		// If the target use time is before countdown begins, then set the countdown to the floor of that duration
 		if (-jumpTargetTime > controller.gameConfig.countdown) {
@@ -262,8 +297,42 @@ function applyImportedActions(state: IntermediateLogImportState) {
 			});
 		}
 	}
-	controller.undoStack.push(new ImportLog(nodes, controller.record.length, oldConfig, newConfig));
-	controller.insertRecordNodes(nodes, controller.record.length);
+	controller.insertRecordNodes(finalNodes, controller.record.length);
+	console.assert(nodes.length === state.timestamps.length);
+	// Iterate over each node, and insert wait events as needed.
+	// The head node's timestamp is already fixed by the initial countdown + jump event.
+	let warned = false;
+	for (let i = 1; i < nodes.length; i++) {
+		const node = nodes[i];
+		const actualTimestamp = (state.timestamps[i] - state.combatStartTime) / 1000;
+		const expectedWait = controller.game.getSkillAvailabilityStatus(
+			// @ts-expect-error use proper casting/annotation later
+			nodes[i].info.skillName,
+		).timeTillAvailable;
+		const actualWait = actualTimestamp - controller.game.getDisplayTime();
+		const delta = actualWait - expectedWait;
+		// delta > 3.5: add a fixed timestamp wait, since this is probably used to wait for a target mechanic
+		// delta <= 3.5: add a duration wait, since this is probably a late weave
+		// |delta| <= 0.05: do nothing
+		// delta < -0.05: sps is probably wrong; raise a warning
+		const newNodes = [];
+		if (delta > 3.5) {
+			newNodes.push(jumpToTimestampNode(actualTimestamp));
+		} else if (delta > 0.05) {
+			newNodes.push(durationWaitNode(actualWait));
+		} else if (delta < -0.05 && !warned) {
+			console.error(
+				`skill availability time was later than actual usage time (delta=${-delta})`,
+			);
+			warned = true;
+		}
+		newNodes.push(node);
+		finalNodes.push(...newNodes);
+		controller.insertRecordNodes(newNodes, controller.record.length);
+	}
+	console.log(`inserted ${finalNodes.length - nodes.length} wait/jump nodes`);
+	// this is NOT atomic, but oh well
+	controller.undoStack.push(new ImportLog(finalNodes, initialRecordLength, oldConfig, newConfig));
 	controller.autoSave();
 }
 
@@ -283,6 +352,7 @@ enum LogImportFlowState {
 	AWAITING_LOG_LINK,
 	QUERYING_LOG_LINK,
 	ADJUSTING_CONFIG,
+	PROCESSING_IMPORT,
 }
 
 export function FflogsImportFlow() {
@@ -291,6 +361,9 @@ export function FflogsImportFlow() {
 	const handleStyle: React.CSSProperties = {};
 	const lightMode = useContext(ColorThemeContext) === "Light";
 	const colors = getCurrentThemeColors();
+
+	const [resetOnImport, setResetOnImport] = useState(true);
+	const dialogRef = useRef<HTMLDivElement | null>(null);
 
 	const [logLink, setLogLink] = useState("");
 	const [flowState, setFlowState] = useState<LogImportFlowState>(
@@ -312,6 +385,7 @@ export function FflogsImportFlow() {
 	</div>;
 
 	// 1. QUERY AND IMPORT LOG
+	// TODO: replace this with a formset so hitting enter submits the query
 	const importLogComponent = <div>
 		<Input
 			description={
@@ -319,6 +393,7 @@ export function FflogsImportFlow() {
 			}
 			onChange={setLogLink}
 			width={50}
+			defaultValue={logLink}
 			autoFocus
 		/>
 		<br />
@@ -331,7 +406,6 @@ export function FflogsImportFlow() {
 						queryPlayerEvents(parseLogURL(logLink))
 							.then((state) => {
 								intermediateImportState.current = state;
-								console.log(state);
 								console.log(`attempting to import ${state.actions.length} skills`);
 							})
 							.finally(() => {
@@ -357,29 +431,111 @@ export function FflogsImportFlow() {
 	// 2. ADJUST STATS
 	// TODO localize and share code with config
 	// TODO add back arrow
-	// TODO add flag for whether current timeline must be reset
 	// TODO populate stat fields + level that aren't inferred
+	const needsForceReset = () =>
+		controller.gameConfig.job !== intermediateImportState.current?.job;
+	const configHelp = <Help
+		container={dialogRef}
+		topic="fflogsConfigReset"
+		content={localize({
+			en: <div>
+				FFLogs only records exact combat stats for the player that created the log. All
+				other stats must be entered manually. Any configuration not specified in this
+				dialog, including initial resource overrides, will use the values set in the main
+				"Config" panel.
+				<br />
+				After a log import, the "proc mode" field is set to "Always". You can manually
+				adjust this later.
+			</div>,
+		})}
+	/>;
+	const resetActiveHelp = <Help
+		container={dialogRef}
+		topic="fflogsConfigResetActive"
+		content={localize({
+			en: <div>
+				<i>
+					Actions in the current timeline will be cleared and replaced with those imported
+					from the log.
+				</i>
+				<br />
+				FFLogs does not record actions performed before combat begins. To add pre-pull
+				actions, manually insert them after importing, or add them beforehand and uncheck
+				this option.
+			</div>,
+		})}
+	/>;
+	const resetInactiveHelp = <Help
+		container={dialogRef}
+		topic="fflogsConfigResetActive"
+		content={localize({
+			en: <span>
+				<i>
+					Actions imported from the log will be added to the end of the existing timeline.
+				</i>
+			</span>,
+		})}
+	/>;
 	const statBlock = <div>
-		<p>adjust inferred configuration for {intermediateImportState.current?.playerName}</p>
-		<div style={{ marginBottom: 10 }}>
+		{localize({
+			en: <p>
+				Reading {intermediateImportState.current?.actions.length ?? 0} skills for{" "}
+				<b>{intermediateImportState.current?.playerName}</b>
+			</p>,
+		})}
+		{intermediateImportState.current?.statsInLog
+			? localize({
+					en: "Using stats found in log. Please adjust as needed.",
+				})
+			: localize({
+					en: "Exact stats not found in log. Please enter manually or adjust with the Config pane after import.",
+				})}{" "}
+		{configHelp}
+		<hr style={{ marginTop: 10, marginBottom: 10 }} />
+		<div>
 			<span>{localize({ en: "job: ", zh: "职业：" })}</span>
+			{intermediateImportState.current?.job ?? controller.game.job}
+		</div>
+		{intermediateImportState.current && <div style={{ marginBottom: 10 }}>
+			<span>{localize({ en: "level: ", zh: "等级：" })}</span>
 			<select
 				style={{ outline: "none", color: colors.text }}
-				value={intermediateImportState.current?.job ?? controller.game.job}
-				onChange={(s) => {
-					intermediateImportState.current!.job = s.target.value as ShellJob;
+				value={intermediateImportState.current!.level}
+				onChange={(e) => {
+					intermediateImportState.current!.level = parseInt(e.target.value) as LevelSync;
 				}}
 			>
-				{ALL_JOBS.filter((job) => JOBS[job].implementationLevel !== "UNIMPLEMENTED").map(
-					(job) => <option key={job} value={job}>
-						{job}
-					</option>,
-				)}
+				<option key={LevelSync.lvl100} value={LevelSync.lvl100}>
+					100
+				</option>
+				<option key={LevelSync.lvl90} value={LevelSync.lvl90}>
+					90
+				</option>
+				<option key={LevelSync.lvl80} value={LevelSync.lvl80}>
+					80
+				</option>
+				<option key={LevelSync.lvl70} value={LevelSync.lvl70}>
+					70
+				</option>
 			</select>
-		</div>
+		</div>}
 		{intermediateImportState.current &&
-			Object.entries(intermediateImportState.current.inferredConfig).map(
-				([field, value]) => <div key={field}>
+			Object.entries(
+				intermediateImportState.current.inferredConfig ?? {
+					spellSpeed: "",
+					skillSpeed: "",
+					criticalHit: "",
+					directHit: "",
+					determination: "",
+					piety: "",
+				},
+			)
+				.filter(
+					// main stat and tenacity are hidden to the user
+					([field, _]) => field !== "main" && field !== "tenacity",
+				)
+				.map(([field, value]) => <div key={field}>
+					{/* TODO these fields need proper synchronization */}
 					<Input
 						style={{ display: "inline-block", color: colors.text }}
 						defaultValue={value?.toString() ?? ""}
@@ -387,34 +543,86 @@ export function FflogsImportFlow() {
 						onChange={(v) => {
 							const parsed = parseInt(v);
 							if (!isNaN(parsed)) {
+								if (intermediateImportState.current!.inferredConfig === undefined) {
+									intermediateImportState.current!.inferredConfig = {};
+								}
 								intermediateImportState.current!.inferredConfig[
 									field as DynamicConfigField
 								] = parsed;
+								console.log(intermediateImportState);
 							}
 						}}
 					/>
-				</div>,
-			)}
+				</div>)}
+		<hr style={{ marginTop: 10, marginBottom: 10 }} />
+		{/* Do not use the common Checkbox component, since that backs values to localStorage. */}
+		{needsForceReset() ? (
+			<div style={{ marginBottom: 5 }}>
+				<span>
+					{localize({ en: "Imported actions will replace the current timeline." })}
+				</span>
+			</div>
+		) : (
+			<div style={{ marginBottom: 5 }}>
+				<input
+					className="shellCheckbox"
+					type="checkbox"
+					onChange={(e) => {
+						setResetOnImport(e.currentTarget.checked);
+					}}
+					checked={resetOnImport}
+				/>
+				<span>{localize({ en: "Reset timeline on import" })} </span>
+				{resetOnImport ? resetActiveHelp : resetInactiveHelp}
+			</div>
+		)}
 		<button
+			style={{ marginTop: 10 }}
 			onClick={() => {
 				if (intermediateImportState.current) {
-					applyImportedActions(intermediateImportState.current);
+					setFlowState(LogImportFlowState.PROCESSING_IMPORT);
+					// Use a timeout to force a render update before beginning the import process.
+					// applyImportedActions adds a bunch of nodes one at a time, which forces a ton
+					// of re-renders in quick succession due to some bad design choices in the controller.
+					// Without the timeout, stuff would hang.
+					new Promise<void>((resolve) =>
+						setTimeout(() => {
+							applyImportedActions(
+								intermediateImportState.current!,
+								resetOnImport || needsForceReset(),
+							);
+							resolve();
+						}, 0),
+					).finally(() => {
+						setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
+						intermediateImportState.current = undefined;
+						setDialogOpen(false);
+					});
 				} else {
 					console.error("intermediate state was undefined when confirming import");
+					setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
+					intermediateImportState.current = undefined;
+					setDialogOpen(false);
 				}
-				intermediateImportState.current = undefined;
-				setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
-				setDialogOpen(false);
 			}}
 		>
-			go
+			{localize({
+				en: "go",
+				zh: "确定",
+			})}
 		</button>
 	</div>;
+
+	// 3. PROCESS LOG IMPORT
+	const processingSpinner = <div>processing actions...</div>;
 
 	// GLUE
 	// TODO check auth validity again here, and also on component initialization?
 	const cancelButton = <button onClick={() => setFlowState(LogImportFlowState.AWAITING_LOG_LINK)}>
-		cancel import
+		{localize({
+			en: "cancel",
+			zh: "取消",
+		})}
 	</button>;
 
 	const mainComponent =
@@ -424,12 +632,18 @@ export function FflogsImportFlow() {
 				? importLogComponent
 				: flowState === LogImportFlowState.QUERYING_LOG_LINK
 					? querySpinner
-					: statBlock;
+					: flowState === LogImportFlowState.ADJUSTING_CONFIG
+						? statBlock
+						: processingSpinner;
 
-	const body = <div>
+	const body = <div ref={dialogRef}>
 		{mainComponent}
 		<br />
-		{flowState > LogImportFlowState.AWAITING_LOG_LINK && cancelButton}
+		{/* Don't render the cancel button during the processing state, because controller actions are irreversible at that point. */}
+		{flowState > LogImportFlowState.AWAITING_LOG_LINK &&
+		flowState !== LogImportFlowState.PROCESSING_IMPORT
+			? cancelButton
+			: undefined}
 	</div>;
 
 	// Don't use a bespoke Clickable component for the expand button, since it suppresses Dialog.Trigger's

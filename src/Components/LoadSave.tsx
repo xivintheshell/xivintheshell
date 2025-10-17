@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Columns, FileFormat, LoadJsonFromFileOrUrl, SaveToFile } from "./Common";
 import { FflogsImportFlow } from "./FflogsImport";
 import { controller } from "../Controller/Controller";
@@ -7,10 +7,12 @@ import { ImportTimelineFile } from "../Controller/UndoStack";
 import { localize } from "./Localization";
 import { ImageExport } from "./ImageExport";
 import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
+import { getThemeField, ColorThemeContext } from "./ColorTheme";
 
 type Fixme = any;
 
 export function LoadSave() {
+	const colors = useContext(ColorThemeContext);
 	const onFileLoad = (content: Fixme) => {
 		if (content.fileType === FileType.Record) {
 			controller.undoStack.doThenPush(
@@ -113,10 +115,20 @@ export function LoadSave() {
 		en: "Import fight from file",
 		zh: "从文件导入战斗",
 	});
-	const textImportContent = <LoadJsonFromFileOrUrl
-		allowLoadFromUrl={false}
-		onLoadFn={onFileLoad}
-	/>;
+	const textImportContent = <>
+		<LoadJsonFromFileOrUrl allowLoadFromUrl={false} onLoadFn={onFileLoad} />
+		<hr
+			style={{
+				marginTop: 15,
+				border: "none",
+				borderTop: ("1px solid " + getThemeField(colors, "bgHighContrast")) as string,
+			}}
+		/>
+		<div style={{ marginTop: 15, marginBottom: 10 }}>
+			<b>{localize({ en: "Import fight from FFLogs" })}</b>
+		</div>
+		<FflogsImportFlow />
+	</>;
 	const imageExportTitle = <>
 		{localize({
 			en: "Image Export",
@@ -127,22 +139,17 @@ export function LoadSave() {
 	return <Columns contentHeight={TIMELINE_COLUMNS_HEIGHT}>
 		{[
 			{
-				defaultSize: 20,
+				defaultSize: 25,
 				title: textImportTitle,
 				content: textImportContent,
 			},
 			{
-				defaultSize: 20,
-				title: <>{localize({ en: "Import fight from FFLogs" })}</>,
-				content: <FflogsImportFlow />,
-			},
-			{
-				defaultSize: 25,
+				defaultSize: 30,
 				title: textExportTitle,
 				content: textExportContent,
 			},
 			{
-				defaultSize: 35,
+				defaultSize: 45,
 				title: imageExportTitle,
 				content: <ImageExport />,
 			},

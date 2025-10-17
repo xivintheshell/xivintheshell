@@ -27,7 +27,7 @@ export const SCH_ACTIONS = ensureRecord<ActionData>()({
 		},
 	},
 	WHISPERING_DAWN: {
-		id: 803,
+		id: 16537,
 		name: "Whispering Dawn",
 		label: {
 			zh: "仙光的低语",
@@ -67,7 +67,7 @@ export const SCH_ACTIONS = ensureRecord<ActionData>()({
 		},
 	},
 	FEY_ILLUMINATION: {
-		id: 805,
+		id: 16538,
 		name: "Fey Illumination",
 		label: {
 			zh: "异想的幻光",
