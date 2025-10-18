@@ -52,6 +52,10 @@ function handleUrlCommands(command?: string) {
 				setCachedValue("gameRecord" + i.toString(), JSON.stringify(content));
 			}
 		}
+	} else if (command === "code") {
+		// Used by FFLogs authorization flow; don't do anything.
+		// The dialog component will automatically open itself by reading the URL parameters.
+		console.log("FFLogs authorization triggered.");
 	} else if (command !== undefined) {
 		console.log("unrecognized command '" + command + "'");
 	}
