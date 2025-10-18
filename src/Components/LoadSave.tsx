@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { Columns, FileFormat, LoadJsonFromFileOrUrl, SaveToFile } from "./Common";
-import { FflogsImportFlow } from "./FflogsImport";
+import { FflogsImportFlow } from "./FFLogs/ImportInterface";
 import { controller } from "../Controller/Controller";
 import { FileType } from "../Controller/Common";
 import { ImportTimelineFile } from "../Controller/UndoStack";
