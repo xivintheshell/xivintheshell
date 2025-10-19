@@ -11,7 +11,8 @@
 // - Token + PKCE sequence request success/failure
 // - GraphQL query failure
 // - PCT M1S log (includes Tempera Coat/Grassa pops)
-// - SCH log (for some reason Energy Drain ID isn't getting registered properly?)
+// - PCT FRU log
+// - SCH log w/ recorded stats (for some reason Energy Drain ID isn't getting registered properly?)
 // - BLM 7.2 AMR log (really long; kind of a perf test)
 // - SAM log with Tengentsu pop + synced SAM log with Third Eye pop
 // - Currently unsupported cases to test later:

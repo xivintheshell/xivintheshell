@@ -12,6 +12,7 @@ import {
 	ActionNode,
 	ActionType,
 	SkillNodeInfo,
+	skillNode,
 } from "../../Controller/Record";
 import { ActionKey, ResourceKey } from "../../Game/Data";
 import { JOBS, ShellJob } from "../../Game/Data/Jobs";
@@ -27,6 +28,7 @@ import { Input, Help, StaticFn } from "../Common";
 import { ColorThemeContext, getCurrentThemeColors } from "../ColorTheme";
 import { getCurrentLanguage, localize, localizeSkillName } from "../Localization";
 import { AccessTokenStatus, getAccessToken, initiateFflogsAuth } from "./Auth";
+import { PCT_ACTIONS } from "../../Game/Data/Jobs/PCT";
 
 // === INTERFACING WITH FFLOGS GRAPHQL API ===
 interface LogQueryParams {
@@ -106,7 +108,7 @@ interface IntermediateLogImportState {
 	level?: LevelSync;
 	statsInLog: boolean;
 	inferredConfig?: Partial<DynamicConfigPart>;
-	buffRemovals: Map<ResourceKey, number[]>;
+	buffRemovalActions: { popKey: ActionKey; applyKey: ActionKey; timestamp: number }[];
 	actions: SkillNodeInfo[];
 	timestamps: number[];
 	combatStartTime: number;
@@ -118,7 +120,17 @@ const BUFF_IDS = {
 	BLACKEST_NIGHT: 1001178,
 	TENGENTSU: 1003853,
 	THIRD_EYE: 1001232,
+	CREST_OF_TIME_BORROWED: 1002596,
 };
+
+const POP_MAP = new Map<ActionKey, ActionKey>([
+	["TEMPERA_COAT_POP", "TEMPERA_COAT"],
+	["TEMPERA_GRASSA_POP", "TEMPERA_GRASSA"],
+	["THE_BLACKEST_NIGHT_POP", "THE_BLACKEST_NIGHT"],
+	["TENGENTSU_POP", "TENGENTSU"],
+	["THIRD_EYE_POP", "THIRD_EYE"],
+	["ARCANE_CREST_POP", "ARCANE_CREST"],
+]);
 
 /**
  * Issue a GraphQL query given fight report ID, fight index ID, and player index ID.
@@ -128,6 +140,7 @@ const BUFF_IDS = {
  */
 async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLogImportState> {
 	if (castQueryCache.has(params)) {
+		console.log("in-memory query cache hit for", params);
 		return castQueryCache.get(params)!;
 	}
 
@@ -197,8 +210,10 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
 	// PCT's Tempera Coat/Grassa, SAM's Tengentsu, and DRK's Blackest Night.
 	// Buff removals do not distinguish between natural expiry, explicit click-offs, and triggers
 	// due to damage taken.
-	const trackedBuffRemovals = new Map<ResourceKey, Set<number>>();
+	// The removal map should track the "Pop" action rather than the actual buff resource.
+	const trackedBuffRemovals = new Map<ActionKey, Set<number>>();
 	const trackedBuffApplies = new Map<ResourceKey, Set<number>>();
+	const grassaCastTimestamps = new Set<number>();
 	for (let entry of data.data.reportData.report.events.data) {
 		if (entry.sourceID !== params.playerID) {
 			continue;
@@ -216,6 +231,13 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
 			}
 			castEvents.push(entry);
 			timestamps.push(entry.timestamp);
+			// Sometimes buff removal events don't get picked up by a log.
+			// For robustness, we treat the cast of Tempera Grassa as a proxy for buff removal
+			// (its application delay is instant so this is accurate).
+			// We then need to produce an artificial grassa buff removal event afterwads.
+			if (entry.abilityGameID === PCT_ACTIONS.TEMPERA_GRASSA.id) {
+				grassaCastTimestamps.add(entry.timestamp);
+			}
 		} else if (entry.type === "begincast" && !FILTERED_ACTION_IDS.has(entry.abilityGameID)) {
 			stagedBeginEvent = entry;
 		} else if (entry.type === "combatantinfo") {
@@ -232,38 +254,38 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
 				piety: entry.piety,
 				tenacity: entry.tenacity,
 			};
-		} else if (entry.type === "removebuff" && entry.targetID === params.playerID) {
-			let buffToAdd: ResourceKey | undefined = undefined;
+		} else if (entry.type === "removebuff") {
+			let popToAdd: ActionKey | undefined = undefined;
 			const ts = entry.timestamp;
 			const abilityGameID = entry.abilityGameID;
-			if (job === "PCT") {
-				// Do not add "Pop Tempera Coat" if the removal was caused by a Tempera Grassa cast.
-				if (
-					abilityGameID === BUFF_IDS.TEMPERA_COAT &&
-					!trackedBuffApplies.get("TEMPERA_GRASSA")?.has(ts)
-				) {
-					buffToAdd = "TEMPERA_COAT";
+			if (job === "PCT" && entry.targetID === params.playerID) {
+				if (abilityGameID === BUFF_IDS.TEMPERA_COAT) {
+					popToAdd = "TEMPERA_COAT_POP";
 				} else if (abilityGameID === BUFF_IDS.TEMPERA_GRASSA) {
-					buffToAdd = "TEMPERA_GRASSA";
+					popToAdd = "TEMPERA_GRASSA_POP";
 				}
 			} else if (job === "DRK") {
 				if (abilityGameID === BUFF_IDS.BLACKEST_NIGHT) {
-					buffToAdd = "BLACKEST_NIGHT";
+					popToAdd = "THE_BLACKEST_NIGHT_POP";
 				}
-			} else if (job === "SAM") {
+			} else if (job === "SAM" && entry.targetID === params.playerID) {
 				if (abilityGameID === BUFF_IDS.TENGENTSU) {
-					buffToAdd = "TENGENTSU";
+					popToAdd = "TENGENTSU_POP";
 				} else if (abilityGameID === BUFF_IDS.THIRD_EYE) {
-					buffToAdd = "THIRD_EYE";
+					popToAdd = "THIRD_EYE_POP";
+				}
+			} else if (job === "RPR" && entry.targetID === params.playerID) {
+				if (abilityGameID === BUFF_IDS.CREST_OF_TIME_BORROWED) {
+					popToAdd = "ARCANE_CREST_POP";
 				}
 			}
 			// TODO deal with SGE shields
-			// TODO crest of time borrowed, riddle of earth?
-			if (buffToAdd !== undefined) {
-				if (!trackedBuffRemovals.has(buffToAdd)) {
-					trackedBuffRemovals.set(buffToAdd, new Set([ts]));
+			// TODO deal with floor effects like paint lines and ley lines
+			if (popToAdd !== undefined) {
+				if (!trackedBuffRemovals.has(popToAdd)) {
+					trackedBuffRemovals.set(popToAdd, new Set([ts]));
 				} else {
-					trackedBuffRemovals.get(buffToAdd)!.add(ts);
+					trackedBuffRemovals.get(popToAdd)!.add(ts);
 				}
 			}
 		} else if (entry.type === "applybuff" && entry.targetID === params.playerID) {
@@ -275,12 +297,23 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
 					trackedBuffApplies.set("TEMPERA_GRASSA", new Set());
 				}
 				trackedBuffApplies.get("TEMPERA_GRASSA")!.add(entry.timestamp);
-				// The "applybuff" event should come before the Coat "removebuff", but it never
-				// hurts to be safe.
-				trackedBuffRemovals.get("TEMPERA_COAT")?.delete(entry.timestamp);
 			}
 		}
 	}
+	// Remove all supposed tempera coat pops that overlap a grassa usage.
+	trackedBuffApplies
+		.get("TEMPERA_GRASSA")
+		?.forEach((timestamp) => trackedBuffRemovals.get("TEMPERA_COAT_POP")?.delete(timestamp));
+	// Add a new dummy grassa pop event if a cast event was picked up without a matching buff creation event.
+	grassaCastTimestamps.forEach((timestamp) => {
+		if (!trackedBuffApplies.get("TEMPERA_GRASSA")?.has(timestamp)) {
+			if (!trackedBuffRemovals.has("TEMPERA_GRASSA")) {
+				trackedBuffRemovals.set("TEMPERA_GRASSA", new Set([timestamp + 10]));
+			} else {
+				trackedBuffRemovals.get("TEMPERA_GRASSA")!.add(timestamp + 10);
+			}
+		}
+	});
 	const actions: SkillNodeInfo[] = castEvents.map((event: any) => {
 		const id = event.abilityGameID;
 		const key = skillIdMap.has(id)
@@ -308,12 +341,17 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
 			inferredConfig !== undefined &&
 			Object.values(inferredConfig).every((x) => x !== undefined),
 		inferredConfig,
-		buffRemovals: new Map(
-			trackedBuffRemovals.entries().map(
-				// No need to sort since Set preserves insertion order, and events came chronologically
-				([key, set]) => [key, Array.from(set)],
+		buffRemovalActions: Array.from(
+			trackedBuffRemovals.entries().flatMap(([key, set]) =>
+				set.entries().map(([timestamp]) => {
+					return {
+						popKey: key,
+						applyKey: POP_MAP.get(key)!,
+						timestamp,
+					};
+				}),
 			),
-		),
+		).sort((k1, k2) => k1.timestamp - k2.timestamp),
 		actions,
 		timestamps,
 		combatStartTime: fight.endTime - fight.combatTime,
@@ -330,8 +368,8 @@ interface ApplyImportProgress {
 	// First 5 events where there's a significant timestamp mismatch.
 	deltas: {
 		skill: ActionKey;
-		logTime: string;
-		simTime: string;
+		logTime: number;
+		simTime: number;
 	}[];
 	spilledDeltas: number;
 }
@@ -388,7 +426,7 @@ function* applyImportedActions(state: IntermediateLogImportState, resetTimeline:
 			? targetUseTime - castLength + GameConfig.getSlidecastWindow(castLength)
 			: targetUseTime;
 	toInsert.unshift(jumpToTimestampNode(jumpTargetTime));
-	console.log("target use time:", targetUseTime);
+	console.log("initial jump time:", targetUseTime);
 	// If the target use time is before countdown begins, then set the countdown to the floor of that duration
 	if (-jumpTargetTime > controller.gameConfig.countdown) {
 		controller.setConfigAndRestart({
@@ -412,11 +450,20 @@ function* applyImportedActions(state: IntermediateLogImportState, resetTimeline:
 	// (presumably) not require an additional wait event, splicing them in the middle will
 	// result in far fewer render attempts.
 	let nonSkillNodeCount = 1; // from initial jump event
-	let warned = false;
 	const cd = controller.gameConfig.countdown;
+	// Splice in "Pop" actions as we iterate through skills.
+	// If the next pop action would occur between the last skill and the current skill, then insert
+	// the pop skill here. The precise timing is irrelevant to us because XIV in the Shell can currently
+	// only add buffs when a user specifies a skill, and we want to err on the conservative side of
+	// the buff still being present.
+	// We don't really care if the iterator wasn't fully consumed at the end of the log, since that
+	// means a pop occurred after the player's last skill was added.
+	const popActionIter = state.buffRemovalActions[Symbol.iterator]();
+	let nextPopAction = popActionIter.next();
 	for (let i = 1; i < actions.length; i++) {
 		// action[i] will correspond to
 		// controller.record.actions[initialRecordLength + i + nonSkillNodeCount]
+		// Since iteration starts at i=1, i-1 and recordIndex-1 are always valid.
 		const action = actions[i];
 		const recordIndex = initialRecordLength + i + nonSkillNodeCount;
 		const simNode = controller.record.actions[recordIndex];
@@ -427,34 +474,65 @@ function* applyImportedActions(state: IntermediateLogImportState, resetTimeline:
 		// earlier spells).
 		console.assert(simNode.info.type === ActionType.Skill && simNode.tmp_startLockTime);
 		const expectedTimestamp = simNode.tmp_startLockTime! - cd;
+		const prevNode = controller.record.actions[recordIndex - 1];
+		const prevLockEndTimestamp = prevNode.tmp_endLockTime! - cd;
+		if (!nextPopAction.done) {
+			const { popKey, applyKey, timestamp } = nextPopAction.value;
+			const nextPopTimestamp = (timestamp - state.combatStartTime) / 1000;
+			// console.log(popKey, nextPopTimestamp, "vs.", lastLockEndTimestamp, expectedTimestamp)
+			let insertIndex = undefined;
+			if (prevLockEndTimestamp > nextPopTimestamp) {
+				// If the pop occurred during the animation lock of the last skill:
+				// - If the skill is not the buff applier, insert the pop one before.
+				// - If the skill is the buff applier, insert the pop right here.
+				if (
+					prevNode.info.type === ActionType.Skill &&
+					prevNode.info.skillName === applyKey
+				) {
+					insertIndex = recordIndex;
+				} else {
+					insertIndex = recordIndex - 1;
+				}
+			} else if (actualTimestamp > nextPopTimestamp) {
+				// Compare against actual log timestamp, not shell expected timestamp, in order to
+				// preempt potential wait events.
+				insertIndex = recordIndex;
+			}
+			if (insertIndex !== undefined) {
+				// console.log("insert", popKey, "index", insertIndex, `(was at time ${StaticFn.displayTime(nextPopTimestamp, 3)})`);
+				controller.insertRecordNode(skillNode(popKey), insertIndex);
+				nextPopAction = popActionIter.next();
+				// To ensure timings are accurate, redo this action iteration after pushing the fake "pop" action.
+				// This also handles the rare case of two consecutive buff pops.
+				i--;
+				nonSkillNodeCount++;
+				continue;
+			}
+		}
 		const delta = actualTimestamp - expectedTimestamp!;
+		const tol = 0.05;
 		// delta > 3.5: add a fixed timestamp wait, since this is probably used to wait for a target mechanic
 		// delta <= 3.5: add a duration wait, since this is probably a late weave
-		// |delta| <= 0.05: do nothing
-		// delta < -0.05: sps is probably wrong; raise a warning
+		// |delta| <= tol: do nothing
+		// delta < -tol: sps is probably wrong; report to user
 		if (delta > 3.5) {
+			// console.log("insert jump to", StaticFn.displayTime(actualTimestamp, 3), "index", recordIndex);
 			controller.insertRecordNode(jumpToTimestampNode(actualTimestamp), recordIndex);
 			nonSkillNodeCount++;
-		} else if (delta > 0.05) {
-			const actualWait =
-				actualTimestamp - controller.record.actions[recordIndex - 1].tmp_endLockTime! + cd;
+		} else if (delta > tol) {
+			const actualWait = actualTimestamp - prevLockEndTimestamp;
 			console.assert(actualWait > 0);
+			// console.log("insert wait", StaticFn.displayTime(actualWait, 3), "index", recordIndex);
 			controller.insertRecordNode(durationWaitNode(actualWait), recordIndex);
 			nonSkillNodeCount++;
-		} else if (delta < -0.05) {
-			if (!warned) {
-				console.error(
-					`skill availability time was later than actual usage time (delta=${-delta})`,
-				);
-				warned = true;
-			}
+		} else if (delta < -tol) {
 			if (progress.deltas.length >= 5) {
 				progress.spilledDeltas++;
 			} else {
 				progress.deltas.push({
 					skill: name,
-					logTime: StaticFn.displayTime(actualTimestamp, 3),
-					simTime: StaticFn.displayTime(expectedTimestamp!, 3),
+					logTime: actualTimestamp,
+					simTime: expectedTimestamp,
 				});
 			}
 		}
@@ -515,6 +593,7 @@ export function FflogsImportFlow() {
 		if (open || flowState !== LogImportFlowState.PROCESSING_IMPORT) {
 			if (!open && flowState === LogImportFlowState.IMPORT_DONE) {
 				setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
+				setImportProgress(null);
 			}
 			_setDialogOpen(open);
 		}
@@ -880,7 +959,8 @@ export function FflogsImportFlow() {
 			{localize({
 				en:
 					"Some simulated actions had timestamps in XIV in the Shell different from the recorded values in FFLogs. " +
-					"This means there's either a bug in our site, or the configured spell speed/skill speed/fps was incorrect.",
+					"Minor differences are normal, but if you see a very large discrepancy," +
+					"This means there's either a bug in the Shell, or the configured spell speed/skill speed/fps was incorrect.",
 			})}
 		</div>
 		<table>
@@ -889,13 +969,15 @@ export function FflogsImportFlow() {
 					<th>{localize({ en: "skill", zh: "技能" })}</th>
 					<th>{localize({ en: "actual log time" })}</th>
 					<th>{localize({ en: "expected shell time" })}</th>
+					<th>{localize({ en: "difference", zh: "差别" })}</th>
 				</tr>
 			</thead>
 			<tbody>
 				{importProgress.deltas.map((info, i) => <tr key={i}>
 					<td>{localizeSkillName(info.skill)}</td>
-					<td>{info.logTime}</td>
-					<td>{info.simTime}</td>
+					<td>{StaticFn.displayTime(info.logTime, 3)}</td>
+					<td>{StaticFn.displayTime(info.simTime, 3)}</td>
+					<td>{StaticFn.displayTime(info.logTime - info.simTime, 3)}</td>
 				</tr>)}
 			</tbody>
 		</table>
