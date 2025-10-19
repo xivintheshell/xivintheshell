@@ -359,6 +359,7 @@ function* applyImportedActions(state: IntermediateLogImportState, resetTimeline:
 	// result in far fewer render attempts.
 	let nonSkillNodeCount = 1; // from initial jump event
 	let warned = false;
+	const cd = controller.gameConfig.countdown;
 	for (let i = 1; i < actions.length; i++) {
 		// action[i] will correspond to
 		// controller.record.actions[initialRecordLength + i + nonSkillNodeCount]
@@ -367,11 +368,11 @@ function* applyImportedActions(state: IntermediateLogImportState, resetTimeline:
 		const simNode = controller.record.actions[recordIndex];
 		const actualTimestamp = (state.timestamps[i] - state.combatStartTime) / 1000;
 		const name = action.skillName;
-		const expectedTimestamp = simNode.tmp_startLockTime;
 		// Note that the sim node name may not match the expected skill name because state may
 		// become invalid (e.g. Paradox becoming B1/F1 because of MP tick shenanigans breaking
 		// earlier spells).
-		console.assert(simNode.info.type === ActionType.Skill && expectedTimestamp);
+		console.assert(simNode.info.type === ActionType.Skill && simNode.tmp_startLockTime);
+		const expectedTimestamp = simNode.tmp_startLockTime! - cd;
 		const delta = actualTimestamp - expectedTimestamp!;
 		// delta > 3.5: add a fixed timestamp wait, since this is probably used to wait for a target mechanic
 		// delta <= 3.5: add a duration wait, since this is probably a late weave
@@ -382,7 +383,7 @@ function* applyImportedActions(state: IntermediateLogImportState, resetTimeline:
 			nonSkillNodeCount++;
 		} else if (delta > 0.05) {
 			const actualWait =
-				actualTimestamp - controller.record.actions[recordIndex - 1].tmp_endLockTime!;
+				actualTimestamp - controller.record.actions[recordIndex - 1].tmp_endLockTime! + cd;
 			console.assert(actualWait > 0);
 			controller.insertRecordNode(durationWaitNode(actualWait), recordIndex);
 			nonSkillNodeCount++;
@@ -419,22 +420,22 @@ function* applyImportedActions(state: IntermediateLogImportState, resetTimeline:
 
 /**
  * State of user through the log import flow.
- *
- * The order of user interactions is as follows:
- * 0. Authenticate user if necessary (probably just save a PKCE secret?)
- *    need to make sure also works for cn.fflogs
- * 1. User provides log link
- * 1a. If link does not have specific fight + player, prompt user to select like xivanalysis does
- * 2. Set job + level. User checks inferred stats, or supplies own + option to replace or append to current timeline
- * 3. Imported actions are added, and dialog progress is reset
  */
 enum LogImportFlowState {
+	/** Waiting for the user to initiate authentication. */
 	AWAITING_AUTH,
+	/** Issued authentication query to FFLogs; awaiting result. */
 	CHECKING_AUTH,
+	/** User authenticated; awaiting log link. */
 	AWAITING_LOG_LINK,
+	/** Log link provided; submitting query to obtain log data. */
 	QUERYING_LOG_LINK,
+	/** Fight selected; user is adjusting configuration values. */
 	ADJUSTING_CONFIG,
+	/** Imported nodes are being added to the controller. */
 	PROCESSING_IMPORT,
+	/** Import completed; showing results to user. */
+	IMPORT_DONE,
 }
 
 export function FflogsImportFlow() {
@@ -458,10 +459,14 @@ export function FflogsImportFlow() {
 		// Adding nodes from an import is not atomic, so we prevent the user from closing the dialog
 		// while processing nodes to not break controller state.
 		if (open || flowState !== LogImportFlowState.PROCESSING_IMPORT) {
+			if (!open && flowState === LogImportFlowState.IMPORT_DONE) {
+				setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
+			}
 			_setDialogOpen(open);
 		}
 	};
 
+	// Automatically perform authentication on component load.
 	useEffect(() => {
 		if (
 			!new URLSearchParams(window.location.search).has("code") &&
@@ -502,6 +507,13 @@ export function FflogsImportFlow() {
 	// Intermediate logimport state is valid iff flowState is ADJUSTING_CONFIG.
 	const intermediateImportState = useRef<IntermediateLogImportState | undefined>(undefined);
 
+	const cancelButton = <button onClick={() => setFlowState(LogImportFlowState.AWAITING_LOG_LINK)}>
+		{localize({
+			en: "cancel",
+			zh: "取消",
+		})}
+	</button>;
+
 	// 0. AUTH
 	const authComponent = <div>
 		<button
@@ -541,7 +553,7 @@ export function FflogsImportFlow() {
 						queryPlayerEvents(parseLogURL(logLink))
 							.then((state) => {
 								intermediateImportState.current = state;
-								console.log(`attempting to import ${state.actions.length} skills`);
+								console.log(`preparing to import ${state.actions.length} skills`);
 							})
 							.finally(() => {
 								setFlowState(LogImportFlowState.ADJUSTING_CONFIG);
@@ -730,11 +742,8 @@ export function FflogsImportFlow() {
 						gen.forEach((progress) => {
 							setImportProgress({ ...progress });
 						});
-						setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
+						setFlowState(LogImportFlowState.IMPORT_DONE);
 						intermediateImportState.current = undefined;
-						// Use the raw setter since we know the state is transitioning here and the
-						// dialog is safe to close.
-						_setDialogOpen(false);
 					}, 0);
 				} else {
 					console.error("intermediate state was undefined when confirming import");
@@ -749,54 +758,74 @@ export function FflogsImportFlow() {
 				zh: "确定",
 			})}
 		</button>
+		<br />
+		{cancelButton}
 	</div>;
 
 	// 3. PROCESS LOG IMPORT
+	const importProgressTable = importProgress?.deltas.length && <div>
+		<hr />
+		<div>
+			{localize({
+				en:
+					"Some simulated actions had timestamps in XIV in the Shell different from the recorded values in FFLogs. " +
+					"This means there's either a bug in our site, or the configured spell speed/skill speed/fps was incorrect.",
+			})}
+		</div>
+		<table>
+			<thead>
+				<tr>
+					<th>{localize({ en: "skill", zh: "技能" })}</th>
+					<th>{localize({ en: "actual log time" })}</th>
+					<th>{localize({ en: "expected shell time" })}</th>
+				</tr>
+			</thead>
+			<tbody>
+				{importProgress.deltas.map((info, i) => <tr key={i}>
+					<td>{localizeSkillName(info.skill)}</td>
+					<td>{info.logTime}</td>
+					<td>{info.simTime}</td>
+				</tr>)}
+			</tbody>
+		</table>
+		{importProgress.spilledDeltas ? (
+			<span>{localize({ en: `...and ${importProgress.spilledDeltas} more` })}</span>
+		) : undefined}
+	</div>;
 	const processingSpinner = <div>
-		<div>processing actions...</div>
+		<div>
+			{localize({
+				en: "processing actions...",
+				zh: "正在技能处理中...",
+			})}
+		</div>
 		<br />
 		{importProgress && <div>
 			<span>
 				{importProgress.processed} / {importProgress.total}
 			</span>
 			<br />
-			{importProgress.deltas.length && <div>
-				{localize({
-					en:
-						"Some simulated actions had timestamps in XIV in the Shell different from the recorded values in FFLogs. " +
-						"This likely means there's either a bug in our site, or the configured spell speed/skill speed/fps was incorrect.",
-				})}
-			</div>}
-			{importProgress.deltas.length && <table>
-				<thead>
-					<tr>
-						<th>{localize({ en: "name" })}</th>
-						<th>{localize({ en: "actual log time" })}</th>
-						<th>{localize({ en: "expected shell time" })}</th>
-					</tr>
-				</thead>
-				<tbody>
-					{importProgress.deltas.map((info, i) => <tr key={i}>
-						<td>{localizeSkillName(info.skill)}</td>
-						<td>{info.logTime}</td>
-						<td>{info.simTime}</td>
-					</tr>)}
-				</tbody>
-			</table>}
-			{importProgress.spilledDeltas > 0 ? (
-				<span>{localize({ en: `...and ${importProgress.spilledDeltas} more` })}</span>
-			) : undefined}
+			{importProgressTable}
 		</div>}
 	</div>;
 
-	// GLUE
-	// TODO check auth validity again here, and also on component initialization?
-	const cancelButton = <button onClick={() => setFlowState(LogImportFlowState.AWAITING_LOG_LINK)}>
+	// 4. IMPORT DONE; TIME TO CELEBRATE
+	const importSummary = <div>
+		<b>{localize({ en: "Import successful!", zh: "进口成功！" })}</b>
 		{localize({
-			en: "cancel",
-			zh: "取消",
+			en: " You may now close this dialog.",
+			zh: "您现在可以关闭此对话框。",
 		})}
-	</button>;
+		<br />
+		{importProgressTable}
+		<br />
+		<button onClick={() => setDialogOpen(false)}>
+			{localize({
+				en: "finish",
+				zh: "完成",
+			})}
+		</button>
+	</div>;
 
 	const mainComponent =
 		flowState === LogImportFlowState.AWAITING_AUTH ? (
@@ -811,19 +840,13 @@ export function FflogsImportFlow() {
 			statBlock
 		) : flowState === LogImportFlowState.PROCESSING_IMPORT ? (
 			processingSpinner
+		) : flowState === LogImportFlowState.IMPORT_DONE ? (
+			importSummary
 		) : (
 			<div>Bad state: {flowState}. Please contact us with a bug report.</div>
 		);
 
-	const body = <div ref={dialogRef}>
-		{mainComponent}
-		<br />
-		{/* Don't render the cancel button during the processing state, because controller actions are irreversible at that point. */}
-		{flowState > LogImportFlowState.AWAITING_LOG_LINK &&
-		flowState !== LogImportFlowState.PROCESSING_IMPORT
-			? cancelButton
-			: undefined}
-	</div>;
+	const body = <div ref={dialogRef}>{mainComponent}</div>;
 
 	// Don't use a bespoke Clickable component for the expand button, since it suppresses Dialog.Trigger's
 	// built-in dismiss behavior.
