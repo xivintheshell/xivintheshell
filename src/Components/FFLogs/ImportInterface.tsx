@@ -7,10 +7,11 @@ import { FaXmark } from "react-icons/fa6";
 import { ImportLog } from "../../Controller/UndoStack";
 import { controller } from "../../Controller/Controller";
 import {
-	skillNode,
 	jumpToTimestampNode,
 	durationWaitNode,
 	ActionNode,
+	ActionType,
+	SkillNodeInfo,
 } from "../../Controller/Record";
 import { ActionKey } from "../../Game/Data";
 import { JOBS, ShellJob } from "../../Game/Data/Jobs";
@@ -103,7 +104,7 @@ interface IntermediateLogImportState {
 	level?: LevelSync;
 	statsInLog: boolean;
 	inferredConfig?: Partial<DynamicConfigPart>;
-	actions: ActionNode[];
+	actions: SkillNodeInfo[];
 	timestamps: number[];
 	combatStartTime: number;
 }
@@ -157,7 +158,8 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
 	const queryCacheKey = `fflogsCache/${params.reportCode}-${params.fightID}-${params.playerID}`;
 	// TODO error handling
 	const cacheEntry = sessionStorage.getItem(queryCacheKey);
-	const data = cacheEntry === null
+	const data =
+		cacheEntry === null
 			? await fetch(params.apiBaseUrl, options)
 					.then((response) => response.json())
 					.then((blob) => {
@@ -169,16 +171,9 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
 						return blob;
 					})
 			: JSON.parse(cacheEntry);
-	// TODO combatantinfo entry can give stats and pre-buffs
 	// TODO check/pair calculateddamage instances to identify multi-target abilities
-	// TODO check pre-cast abilities
-	// TODO filter+pair begin cast abilities
-	// TODO deal with canceled casts
-	// TODO explicit waits
 	// TODO manual buff toggles
-	const actor: any = Object.values(
-		data.data.reportData.report.playerDetails.data.playerDetails,
-	)
+	const actor: any = Object.values(data.data.reportData.report.playerDetails.data.playerDetails)
 		.flat()
 		.filter(
 			// TODO handle indexerror and lookup error
@@ -248,7 +243,15 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
 			return "NEVER";
 		}
 	});
-	const nodes = castSkills.map((key) => skillNode(key));
+	const actions = castSkills.map((key) => {
+		return {
+			type: ActionType.Skill,
+			skillName: key,
+			// TODO set these fields properly
+			targetCount: 1,
+			healTargetCount: undefined,
+		} as SkillNodeInfo;
+	});
 	const state: IntermediateLogImportState = {
 		playerName: name,
 		job,
@@ -257,7 +260,7 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
 			inferredConfig !== undefined &&
 			Object.values(inferredConfig).every((x) => x !== undefined),
 		inferredConfig,
-		actions: nodes,
+		actions,
 		timestamps,
 		combatStartTime: fight.endTime - fight.combatTime,
 	};
@@ -281,22 +284,16 @@ interface ApplyImportProgress {
 
 /**
  * STATEFUL function that applies the parsed action nodes and config to the active timeline in-place.
- * Generates a single new entry in the undo stack.
+ * Creates a single new entry in the undo stack upon success.
  *
- * This function can take a long time to run because we need to check skill usage timestamps after
- * every action, so we cannot bulk-insert nodes (see note at the end of this comment) and must add
- * nodes one at a time. Unfortunately, rendering timing logic is very tied to these controller
- * methods, so we incur a re-render on every single node entry.
+ * Yields a snapshot of processing progress, but it should generally be fast enough to not be relevant.
  *
- * As such, this function is a generator to keep the page responsive. It yields each time
- * a node is added.
- * 
+ * This function can take a bit of time run because adding nodes invokes controller methods that may
+ * trigger re-renders, and we need to splice in wait/jump nodes in the middle.
+ * For most logs, there should not be very many node insertions, but in degenerate cases where
+ * a log is very very off and many jumps need to be added, things may go wrong.
+ *
  * This design CAN create broken intermediate states if the log import flow is closed prematurely.
- *
- * NOTE: A more performant approach would be to bulk insert all skill nodes once, then iterate
- * through them one by one, splicing in jump nodes as necessary. This approach does not require
- * rewriting the controller to be stateless, and minimizes the number of re-renders by only
- * writing nodes when a jump must be inserted.
  */
 function* applyImportedActions(state: IntermediateLogImportState, resetTimeline: boolean) {
 	// Reset the controller's GameConfig.
@@ -322,59 +319,73 @@ function* applyImportedActions(state: IntermediateLogImportState, resetTimeline:
 			oldConfig.procMode !== newConfig.procMode,
 	);
 	const initialRecordLength = controller.record.length;
-	const finalNodes: ActionNode[] = [];
-	const nodes = state.actions;
-	// If the first action has a cast time, then assume it was hardcasted.
-	if (nodes.length > 0) {
-		const skillCastTimestamp = state.timestamps[0];
-		const targetUseTime = (skillCastTimestamp - state.combatStartTime) / 1000;
-		const castLength = controller.game.getSkillAvailabilityStatus(
-			// @ts-expect-error use proper casting/annotation later
-			nodes[0].info.skillName,
-		).castTime;
-		const jumpTargetTime =
-			castLength > 0
-				? targetUseTime - castLength + GameConfig.getSlidecastWindow(castLength)
-				: targetUseTime;
-		finalNodes.push(jumpToTimestampNode(jumpTargetTime), nodes[0]);
-		console.log("target use time:", targetUseTime);
-		// If the target use time is before countdown begins, then set the countdown to the floor of that duration
-		if (-jumpTargetTime > controller.gameConfig.countdown) {
-			controller.setConfigAndRestart({
-				...newConfig,
-				countdown: -Math.floor(jumpTargetTime),
-			});
-		}
+	const actions = state.actions;
+	console.assert(actions.length === state.timestamps.length);
+	if (actions.length === 0) {
+		return { processed: 0, total: 0, deltas: [], spilledDeltas: 0 };
 	}
-	controller.insertRecordNodes(finalNodes, controller.record.length);
-	console.assert(nodes.length === state.timestamps.length);
+	const toInsert = actions.map((info) => new ActionNode(info));
+	// If the first action has a cast time, then assume it was hardcasted.
+	const skillCastTimestamp = state.timestamps[0];
+	const targetUseTime = (skillCastTimestamp - state.combatStartTime) / 1000;
+	const castLength = controller.game.getSkillAvailabilityStatus(actions[0].skillName).castTime;
+	const jumpTargetTime =
+		castLength > 0
+			? targetUseTime - castLength + GameConfig.getSlidecastWindow(castLength)
+			: targetUseTime;
+	toInsert.unshift(jumpToTimestampNode(jumpTargetTime));
+	console.log("target use time:", targetUseTime);
+	// If the target use time is before countdown begins, then set the countdown to the floor of that duration
+	if (-jumpTargetTime > controller.gameConfig.countdown) {
+		controller.setConfigAndRestart({
+			...newConfig,
+			countdown: -Math.floor(jumpTargetTime),
+		});
+	}
+	// Bulk insert the initial jump event + all action nodes.
+	controller.insertRecordNodes(toInsert, initialRecordLength);
 	const progress: ApplyImportProgress = {
 		processed: 1,
-		total: nodes.length,
+		total: actions.length,
 		deltas: [],
 		spilledDeltas: 0,
 	};
-	// Iterate over each node, and insert wait events as needed.
-	// The head node's timestamp is already fixed by the initial countdown + jump event.
+	// Iterate over each node, splicing in wait events as needed.
+	// The first node's timestamp was already fixed by the initial countdown + jump event.
+	//
+	// This approach is much more performant than inserting record nodes one at a time because
+	// controller methods very indiscreetly force UI state updates. Since most nodes will
+	// (presumably) not require an additional wait event, splicing them in the middle will
+	// result in far fewer render attempts.
+	let nonSkillNodeCount = 1; // from initial jump event
 	let warned = false;
-	for (let i = 1; i < nodes.length; i++) {
-		const node = nodes[i];
+	for (let i = 1; i < actions.length; i++) {
+		// action[i] will correspond to
+		// controller.record.actions[initialRecordLength + i + nonSkillNodeCount]
+		const action = actions[i];
+		const recordIndex = initialRecordLength + i + nonSkillNodeCount;
+		const simNode = controller.record.actions[recordIndex];
 		const actualTimestamp = (state.timestamps[i] - state.combatStartTime) / 1000;
-		// @ts-expect-error use proper casting/annotation later
-		const name = nodes[i].info.skillName;
-		const expectedWait = controller.game.getSkillAvailabilityStatus(name).timeTillAvailable;
-		const now = controller.game.getDisplayTime()
-		const actualWait = actualTimestamp - now;
-		const delta = actualWait - expectedWait;
+		const name = action.skillName;
+		const expectedTimestamp = simNode.tmp_startLockTime;
+		// Note that the sim node name may not match the expected skill name because state may
+		// become invalid (e.g. Paradox becoming B1/F1 because of MP tick shenanigans breaking
+		// earlier spells).
+		console.assert(simNode.info.type === ActionType.Skill && expectedTimestamp);
+		const delta = actualTimestamp - expectedTimestamp!;
 		// delta > 3.5: add a fixed timestamp wait, since this is probably used to wait for a target mechanic
 		// delta <= 3.5: add a duration wait, since this is probably a late weave
 		// |delta| <= 0.05: do nothing
 		// delta < -0.05: sps is probably wrong; raise a warning
-		const newNodes = [];
 		if (delta > 3.5) {
-			newNodes.push(jumpToTimestampNode(actualTimestamp));
+			controller.insertRecordNode(jumpToTimestampNode(actualTimestamp), recordIndex);
+			nonSkillNodeCount++;
 		} else if (delta > 0.05) {
-			newNodes.push(durationWaitNode(actualWait));
+			const actualWait =
+				actualTimestamp - controller.record.actions[recordIndex - 1].tmp_endLockTime!;
+			console.assert(actualWait > 0);
+			controller.insertRecordNode(durationWaitNode(actualWait), recordIndex);
+			nonSkillNodeCount++;
 		} else if (delta < -0.05) {
 			if (!warned) {
 				console.error(
@@ -388,19 +399,19 @@ function* applyImportedActions(state: IntermediateLogImportState, resetTimeline:
 				progress.deltas.push({
 					skill: name,
 					logTime: StaticFn.displayTime(actualTimestamp, 3),
-					simTime: StaticFn.displayTime(now + expectedWait, 3),
+					simTime: StaticFn.displayTime(expectedTimestamp!, 3),
 				});
 			}
 		}
 		progress.processed++;
-		newNodes.push(node);
-		finalNodes.push(...newNodes);
-		controller.insertRecordNodes(newNodes, controller.record.length);
 		yield progress;
 	}
-	console.log(`inserted ${finalNodes.length - nodes.length} wait/jump nodes`);
+	const insertedNodes = controller.record.actions.slice(initialRecordLength);
+	console.log(`inserted ${nonSkillNodeCount} non-skill nodes`);
 	// this is NOT atomic, but oh well
-	controller.undoStack.push(new ImportLog(finalNodes, initialRecordLength, oldConfig, newConfig));
+	controller.undoStack.push(
+		new ImportLog(insertedNodes, initialRecordLength, oldConfig, newConfig),
+	);
 	controller.autoSave();
 }
 
@@ -440,9 +451,8 @@ export function FflogsImportFlow() {
 
 	const [logLink, setLogLink] = useState("");
 	const [flowState, setFlowState] = useState<LogImportFlowState>(
-		LogImportFlowState.AWAITING_AUTH
+		LogImportFlowState.AWAITING_AUTH,
 	);
-	const [applyImportGenerator, setApplyImportGenerator] = useState<Generator<ApplyImportProgress> | null>(null);
 	const [importProgress, setImportProgress] = useState<ApplyImportProgress | null>(null);
 	const setDialogOpen = (open: boolean) => {
 		// Adding nodes from an import is not atomic, so we prevent the user from closing the dialog
@@ -450,10 +460,13 @@ export function FflogsImportFlow() {
 		if (open || flowState !== LogImportFlowState.PROCESSING_IMPORT) {
 			_setDialogOpen(open);
 		}
-	}
+	};
 
 	useEffect(() => {
-		if (!(new URLSearchParams(window.location.search).has("code")) && window.sessionStorage.getItem("fflogsAuthToken") !== null) {
+		if (
+			!new URLSearchParams(window.location.search).has("code") &&
+			window.sessionStorage.getItem("fflogsAuthToken") !== null
+		) {
 			setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
 			console.log("already authorized to fflogs");
 			return;
@@ -545,9 +558,9 @@ export function FflogsImportFlow() {
 		</button>
 		<br />
 		<br />
-		<button
-			onClick={() => setFlowState(LogImportFlowState.AWAITING_AUTH)}
-		>{localize({ en: "back to authorization", zh: "从新授权" })}</button>
+		<button onClick={() => setFlowState(LogImportFlowState.AWAITING_AUTH)}>
+			{localize({ en: "back to authorization", zh: "从新授权" })}
+		</button>
 	</div>;
 
 	// TODO add an actual spinner
@@ -712,18 +725,17 @@ export function FflogsImportFlow() {
 						intermediateImportState.current!,
 						resetOnImport || needsForceReset(),
 					);
-					gen.forEach((progress, i) => {
-						// Only update UI once ever 10 iterations to avoid throttling the UI.
-						// TODO fix this since it doesn't actually work
-						if (i % 10 === 1) {
-							setImportProgress({...progress});
-						}
-					})
-					setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
-					intermediateImportState.current = undefined;
-					// Use the raw setter since we know the state is transitioning here and the
-					// dialog is safe to close.
-					_setDialogOpen(false);
+					// We use a dummy setTimeout to ensure we transition the UI to the processing screen.
+					setTimeout(() => {
+						gen.forEach((progress) => {
+							setImportProgress({ ...progress });
+						});
+						setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
+						intermediateImportState.current = undefined;
+						// Use the raw setter since we know the state is transitioning here and the
+						// dialog is safe to close.
+						_setDialogOpen(false);
+					}, 0);
 				} else {
 					console.error("intermediate state was undefined when confirming import");
 					setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
@@ -742,43 +754,39 @@ export function FflogsImportFlow() {
 	// 3. PROCESS LOG IMPORT
 	const processingSpinner = <div>
 		<div>processing actions...</div>
-		<br/>
-		{
-			importProgress && <div>
-				<span>{importProgress.processed} / {importProgress.total}</span>
-				<br/>
-				{
-					importProgress.deltas.length &&
-					<div>
-						{localize({
-							en: "Some simulated actions had timestamps in XIV in the Shell different from the recorded values in FFLogs. " +
-								"This likely means there's either a bug in our site, or the configured spell speed/skill speed/fps was incorrect."
-						})}
-					</div>
-				}
-				{importProgress.deltas.length && <table>
-					<thead>
-						<tr>
-							<th>{localize({en: "name"})}</th>
-							<th>{localize({en: "actual log time"})}</th>
-							<th>{localize({en: "expected shell time"})}</th>
-						</tr>
-					</thead>
-					<tbody>
-					{
-						importProgress.deltas.map((info, i) =>
-							<tr key={i}>
-								<td>{localizeSkillName(info.skill)}</td>
-								<td>{info.logTime}</td>
-								<td>{info.simTime}</td>
-							</tr>
-						)
-					}
-					</tbody>
-				</table>}
-				{importProgress.spilledDeltas > 0 ? <span>{localize({en: `...and ${importProgress.spilledDeltas} more`})}</span> : undefined}
-			</div>
-		}
+		<br />
+		{importProgress && <div>
+			<span>
+				{importProgress.processed} / {importProgress.total}
+			</span>
+			<br />
+			{importProgress.deltas.length && <div>
+				{localize({
+					en:
+						"Some simulated actions had timestamps in XIV in the Shell different from the recorded values in FFLogs. " +
+						"This likely means there's either a bug in our site, or the configured spell speed/skill speed/fps was incorrect.",
+				})}
+			</div>}
+			{importProgress.deltas.length && <table>
+				<thead>
+					<tr>
+						<th>{localize({ en: "name" })}</th>
+						<th>{localize({ en: "actual log time" })}</th>
+						<th>{localize({ en: "expected shell time" })}</th>
+					</tr>
+				</thead>
+				<tbody>
+					{importProgress.deltas.map((info, i) => <tr key={i}>
+						<td>{localizeSkillName(info.skill)}</td>
+						<td>{info.logTime}</td>
+						<td>{info.simTime}</td>
+					</tr>)}
+				</tbody>
+			</table>}
+			{importProgress.spilledDeltas > 0 ? (
+				<span>{localize({ en: `...and ${importProgress.spilledDeltas} more` })}</span>
+			) : undefined}
+		</div>}
 	</div>;
 
 	// GLUE
@@ -791,17 +799,21 @@ export function FflogsImportFlow() {
 	</button>;
 
 	const mainComponent =
-		flowState === LogImportFlowState.AWAITING_AUTH
-			? authComponent
-			: flowState === LogImportFlowState.CHECKING_AUTH
-				? authProcessingComponent
-				: flowState === LogImportFlowState.AWAITING_LOG_LINK
-					? importLogComponent
-					: flowState === LogImportFlowState.QUERYING_LOG_LINK
-						? querySpinner
-						: flowState === LogImportFlowState.ADJUSTING_CONFIG
-							? statBlock
-							: processingSpinner;
+		flowState === LogImportFlowState.AWAITING_AUTH ? (
+			authComponent
+		) : flowState === LogImportFlowState.CHECKING_AUTH ? (
+			authProcessingComponent
+		) : flowState === LogImportFlowState.AWAITING_LOG_LINK ? (
+			importLogComponent
+		) : flowState === LogImportFlowState.QUERYING_LOG_LINK ? (
+			querySpinner
+		) : flowState === LogImportFlowState.ADJUSTING_CONFIG ? (
+			statBlock
+		) : flowState === LogImportFlowState.PROCESSING_IMPORT ? (
+			processingSpinner
+		) : (
+			<div>Bad state: {flowState}. Please contact us with a bug report.</div>
+		);
 
 	const body = <div ref={dialogRef}>
 		{mainComponent}
@@ -817,7 +829,12 @@ export function FflogsImportFlow() {
 	// built-in dismiss behavior.
 	const dialogTrigger = <div className="clickable">
 		<span style={handleStyle}>
-			<span className="clickableLinkLike">click to open dialog</span>
+			<span className="clickableLinkLike">
+				{localize({
+					en: "Click to open dialog",
+					zh: "点击弹出对话框",
+				})}
+			</span>
 		</span>
 	</div>;
 
@@ -840,14 +857,16 @@ export function FflogsImportFlow() {
 			/>
 			<Dialog.Popup
 				className="Popup visibleScrollbar"
-				id="changelogPopup"
+				id="dialogPopup"
 				style={{
 					backgroundColor: colors.background,
 					border: "1px solid " + colors.bgMediumContrast,
 					color: colors.text,
 				}}
 			>
-				<Dialog.Title render={<h3>Import from FFLogs</h3>} />
+				<Dialog.Title
+					render={<h3>{localize({ en: "Import from FFLogs", zh: "FFLogs进口" })}</h3>}
+				/>
 				<Dialog.Close render={exitTrigger} nativeButton={false} />
 				<Dialog.Description className="Description" render={body} />
 			</Dialog.Popup>
