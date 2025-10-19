@@ -22,9 +22,9 @@ import {
 	DynamicConfigField,
 	SerializedConfig,
 } from "../../Game/GameConfig";
-import { Input, Help } from "../Common";
+import { Input, Help, StaticFn } from "../Common";
 import { ColorThemeContext, getCurrentThemeColors } from "../ColorTheme";
-import { localize } from "../Localization";
+import { localize, localizeSkillName } from "../Localization";
 import { AccessTokenStatus, getAccessToken, initiateFflogsAuth } from "./Auth";
 
 // === INTERFACING WITH FFLOGS GRAPHQL API ===
@@ -57,7 +57,6 @@ function parseLogURL(urlString: string): LogQueryParams {
 		throw new Error("must pick specific fight and specific player (will fix later)");
 	}
 	return {
-		// user endpoint lets us retrieve private logs, which is possible through the PKCE flow
 		apiBaseUrl: `https://${url.hostname}/api/v2/user/`,
 		reportCode,
 		fightID,
@@ -145,7 +144,7 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
-			Authorization: `Bearer ${window.localStorage.getItem("fflogsAuthToken")}`,
+			Authorization: `Bearer ${window.sessionStorage.getItem("fflogsAuthToken")}`,
 			// Uncomment the next 2 lines if bypassing PKCE
 			// // @ts-expect-error typescript doesn't like import.meta
 			// Authorization: `Bearer ${import.meta.env.VITE_FFLOGS_CLIENT_TOKEN}`,
@@ -158,123 +157,148 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
 	const queryCacheKey = `fflogsCache/${params.reportCode}-${params.fightID}-${params.playerID}`;
 	// TODO error handling
 	const cacheEntry = sessionStorage.getItem(queryCacheKey);
-	return (
-		cacheEntry === null
-			? fetch(params.apiBaseUrl, options)
+	const data = cacheEntry === null
+			? await fetch(params.apiBaseUrl, options)
 					.then((response) => response.json())
 					.then((blob) => {
 						// TODO figure out eviction policy to make sure we don't exceed sessionstorage limits,
 						// or don't cache the whole request
-						sessionStorage.setItem(queryCacheKey, JSON.stringify(blob));
+						if (blob["error"] === undefined) {
+							window.sessionStorage.setItem(queryCacheKey, JSON.stringify(blob));
+						}
 						return blob;
 					})
-			: Promise.resolve(JSON.parse(cacheEntry))
-	).then((data) => {
-		// TODO combatantinfo entry can give stats and pre-buffs
-		// TODO check/pair calculateddamage instances to identify multi-target abilities
-		// TODO check pre-cast abilities
-		// TODO filter+pair begin cast abilities
-		// TODO deal with canceled casts
-		// TODO explicit waits
-		// TODO manual buff toggles
-		const actor: any = Object.values(
-			data.data.reportData.report.playerDetails.data.playerDetails,
-		)
-			.flat()
-			.filter(
-				// TODO handle indexerror and lookup error
-				(actor: any) => actor.id === params.playerID,
-			)[0];
-		const job = FFLOGS_JOB_MAP.get(actor.type)!;
-		const name = `${actor.name} @ ${actor.server}`;
-		let level: LevelSync | undefined = undefined;
-		let inferredConfig: DynamicConfigPart | undefined = undefined;
-		const fight = data.data.reportData.report.fights[0];
-		const castEvents = [];
-		const timestamps = [];
-		// If a "begin cast" is left at the end of the loop without a paired "cast", don't bother
-		// adding it to the timeline since we can safely assume it was canceled.
-		let stagedBeginEvent: any | undefined = undefined;
-		for (let entry of data.data.reportData.report.events.data) {
-			// TODO parse buff removal events that correspond to actions
-			if (
-				entry.type === "cast" &&
-				entry.sourceID === params.playerID &&
-				!FILTERED_ACTION_IDS.has(entry.abilityGameID)
-			) {
-				// If the cast ID does not match the previously-encountered begin cast, then
-				// assume the begin cast was canceled, and discard it.
-				// Otherwise, use the timestamp of the "begin cast" event for simulation reference.
-				if (stagedBeginEvent !== undefined) {
-					if (stagedBeginEvent.abilityGameID === entry.abilityGameID) {
-						entry = stagedBeginEvent;
-					}
-					stagedBeginEvent = undefined;
+			: JSON.parse(cacheEntry);
+	// TODO combatantinfo entry can give stats and pre-buffs
+	// TODO check/pair calculateddamage instances to identify multi-target abilities
+	// TODO check pre-cast abilities
+	// TODO filter+pair begin cast abilities
+	// TODO deal with canceled casts
+	// TODO explicit waits
+	// TODO manual buff toggles
+	const actor: any = Object.values(
+		data.data.reportData.report.playerDetails.data.playerDetails,
+	)
+		.flat()
+		.filter(
+			// TODO handle indexerror and lookup error
+			(actor: any) => actor.id === params.playerID,
+		)[0];
+	const job = FFLOGS_JOB_MAP.get(actor.type)!;
+	const name = `${actor.name} @ ${actor.server}`;
+	let level: LevelSync | undefined = undefined;
+	let inferredConfig: DynamicConfigPart | undefined = undefined;
+	const fight = data.data.reportData.report.fights[0];
+	const castEvents = [];
+	const timestamps = [];
+	// If a "begin cast" is left at the end of the loop without a paired "cast", don't bother
+	// adding it to the timeline since we can safely assume it was canceled.
+	let stagedBeginEvent: any | undefined = undefined;
+	for (let entry of data.data.reportData.report.events.data) {
+		// TODO parse buff removal events that correspond to actions
+		if (
+			entry.type === "cast" &&
+			entry.sourceID === params.playerID &&
+			!FILTERED_ACTION_IDS.has(entry.abilityGameID)
+		) {
+			// If the cast ID does not match the previously-encountered begin cast, then
+			// assume the begin cast was canceled, and discard it.
+			// Otherwise, use the timestamp of the "begin cast" event for simulation reference.
+			if (stagedBeginEvent !== undefined) {
+				if (stagedBeginEvent.abilityGameID === entry.abilityGameID) {
+					entry = stagedBeginEvent;
 				}
-				castEvents.push(entry);
-				timestamps.push(entry.timestamp);
-			} else if (
-				entry.type === "begincast" &&
-				entry.sourceID === params.playerID &&
-				!FILTERED_ACTION_IDS.has(entry.abilityGameID)
-			) {
-				stagedBeginEvent = entry;
-			} else if (entry.type === "combatantinfo") {
-				// These stats are only populated for the log creator; these fields are otherwise
-				// left undefined.
-				level = entry.level;
-				inferredConfig = {
-					main: entry[JOBS[job].mainStat],
-					spellSpeed: entry.spellSpeed,
-					skillSpeed: entry.skillSpeed,
-					criticalHit: entry.criticalHit,
-					directHit: entry.directHit,
-					determination: entry.determination,
-					piety: entry.piety,
-					tenacity: entry.tenacity,
-				};
+				stagedBeginEvent = undefined;
 			}
+			castEvents.push(entry);
+			timestamps.push(entry.timestamp);
+		} else if (
+			entry.type === "begincast" &&
+			entry.sourceID === params.playerID &&
+			!FILTERED_ACTION_IDS.has(entry.abilityGameID)
+		) {
+			stagedBeginEvent = entry;
+		} else if (entry.type === "combatantinfo") {
+			// These stats are only populated for the log creator; these fields are otherwise
+			// left undefined.
+			level = entry.level;
+			inferredConfig = {
+				main: entry[JOBS[job].mainStat],
+				spellSpeed: entry.spellSpeed,
+				skillSpeed: entry.skillSpeed,
+				criticalHit: entry.criticalHit,
+				directHit: entry.directHit,
+				determination: entry.determination,
+				piety: entry.piety,
+				tenacity: entry.tenacity,
+			};
 		}
-		const castSkills: ActionKey[] = castEvents.map((event: any) => {
-			const id = event.abilityGameID;
-			if (skillIdMap.has(id)) {
-				return skillIdMap.get(id)!;
-			} else if (
-				// Assume really high IDs (like 34600430) are tincture usages
-				id > 30000000
-			) {
-				return "TINCTURE";
-			} else {
-				console.error("unknown action id", id);
-				return "NEVER";
-			}
-		});
-		const nodes = castSkills.map((key) => skillNode(key));
-		const state: IntermediateLogImportState = {
-			playerName: name,
-			job,
-			level,
-			statsInLog:
-				inferredConfig !== undefined &&
-				Object.values(inferredConfig).every((x) => x !== undefined),
-			inferredConfig,
-			actions: nodes,
-			timestamps,
-			combatStartTime: fight.endTime - fight.combatTime,
-		};
-		castQueryCache.set(params, state);
-		return state;
+	}
+	const castSkills: ActionKey[] = castEvents.map((event: any) => {
+		const id = event.abilityGameID;
+		if (skillIdMap.has(id)) {
+			return skillIdMap.get(id)!;
+		} else if (
+			// Assume really high IDs (like 34600430) are tincture usages
+			id > 30000000
+		) {
+			return "TINCTURE";
+		} else {
+			console.error("unknown action id", id);
+			return "NEVER";
+		}
 	});
+	const nodes = castSkills.map((key) => skillNode(key));
+	const state: IntermediateLogImportState = {
+		playerName: name,
+		job,
+		level,
+		statsInLog:
+			inferredConfig !== undefined &&
+			Object.values(inferredConfig).every((x) => x !== undefined),
+		inferredConfig,
+		actions: nodes,
+		timestamps,
+		combatStartTime: fight.endTime - fight.combatTime,
+	};
+	castQueryCache.set(params, state);
+	return state;
 }
 
 // === PROCESSING LOGGED ACTIONS ===
 
+interface ApplyImportProgress {
+	processed: number;
+	total: number;
+	// First 5 events where there's a significant timestamp mismatch.
+	deltas: {
+		skill: ActionKey;
+		logTime: string;
+		simTime: string;
+	}[];
+	spilledDeltas: number;
+}
+
 /**
  * STATEFUL function that applies the parsed action nodes and config to the active timeline in-place.
+ * Generates a single new entry in the undo stack.
  *
- * Also generates a new entry in the undo stack.
+ * This function can take a long time to run because we need to check skill usage timestamps after
+ * every action, so we cannot bulk-insert nodes (see note at the end of this comment) and must add
+ * nodes one at a time. Unfortunately, rendering timing logic is very tied to these controller
+ * methods, so we incur a re-render on every single node entry.
+ *
+ * As such, this function is a generator to keep the page responsive. It yields each time
+ * a node is added.
+ * 
+ * This design CAN create broken intermediate states if the log import flow is closed prematurely.
+ *
+ * NOTE: A more performant approach would be to bulk insert all skill nodes once, then iterate
+ * through them one by one, splicing in jump nodes as necessary. This approach does not require
+ * rewriting the controller to be stateless, and minimizes the number of re-renders by only
+ * writing nodes when a jump must be inserted.
  */
-async function applyImportedActions(state: IntermediateLogImportState, resetTimeline: boolean) {
+function* applyImportedActions(state: IntermediateLogImportState, resetTimeline: boolean) {
 	// Reset the controller's GameConfig.
 	const oldConfig = controller.gameConfig.serialized();
 	const newConfig: SerializedConfig = {
@@ -324,17 +348,23 @@ async function applyImportedActions(state: IntermediateLogImportState, resetTime
 	}
 	controller.insertRecordNodes(finalNodes, controller.record.length);
 	console.assert(nodes.length === state.timestamps.length);
+	const progress: ApplyImportProgress = {
+		processed: 1,
+		total: nodes.length,
+		deltas: [],
+		spilledDeltas: 0,
+	};
 	// Iterate over each node, and insert wait events as needed.
 	// The head node's timestamp is already fixed by the initial countdown + jump event.
 	let warned = false;
 	for (let i = 1; i < nodes.length; i++) {
 		const node = nodes[i];
 		const actualTimestamp = (state.timestamps[i] - state.combatStartTime) / 1000;
-		const expectedWait = controller.game.getSkillAvailabilityStatus(
-			// @ts-expect-error use proper casting/annotation later
-			nodes[i].info.skillName,
-		).timeTillAvailable;
-		const actualWait = actualTimestamp - controller.game.getDisplayTime();
+		// @ts-expect-error use proper casting/annotation later
+		const name = nodes[i].info.skillName;
+		const expectedWait = controller.game.getSkillAvailabilityStatus(name).timeTillAvailable;
+		const now = controller.game.getDisplayTime()
+		const actualWait = actualTimestamp - now;
 		const delta = actualWait - expectedWait;
 		// delta > 3.5: add a fixed timestamp wait, since this is probably used to wait for a target mechanic
 		// delta <= 3.5: add a duration wait, since this is probably a late weave
@@ -345,15 +375,28 @@ async function applyImportedActions(state: IntermediateLogImportState, resetTime
 			newNodes.push(jumpToTimestampNode(actualTimestamp));
 		} else if (delta > 0.05) {
 			newNodes.push(durationWaitNode(actualWait));
-		} else if (delta < -0.05 && !warned) {
-			console.error(
-				`skill availability time was later than actual usage time (delta=${-delta})`,
-			);
-			warned = true;
+		} else if (delta < -0.05) {
+			if (!warned) {
+				console.error(
+					`skill availability time was later than actual usage time (delta=${-delta})`,
+				);
+				warned = true;
+			}
+			if (progress.deltas.length >= 5) {
+				progress.spilledDeltas++;
+			} else {
+				progress.deltas.push({
+					skill: name,
+					logTime: StaticFn.displayTime(actualTimestamp, 3),
+					simTime: StaticFn.displayTime(now + expectedWait, 3),
+				});
+			}
 		}
+		progress.processed++;
 		newNodes.push(node);
 		finalNodes.push(...newNodes);
 		controller.insertRecordNodes(newNodes, controller.record.length);
+		yield progress;
 	}
 	console.log(`inserted ${finalNodes.length - nodes.length} wait/jump nodes`);
 	// this is NOT atomic, but oh well
@@ -384,7 +427,7 @@ enum LogImportFlowState {
 }
 
 export function FflogsImportFlow() {
-	const [dialogOpen, setDialogOpen] = useState<boolean>(
+	const [dialogOpen, _setDialogOpen] = useState<boolean>(
 		// The dialog should be opened upon returning from the FFLogs auth flow.
 		new URLSearchParams(window.location.search).has("code"),
 	);
@@ -397,15 +440,22 @@ export function FflogsImportFlow() {
 
 	const [logLink, setLogLink] = useState("");
 	const [flowState, setFlowState] = useState<LogImportFlowState>(
-		// TODO validate auth token?
-		window.sessionStorage.getItem("fflogsAuthToken") === null
-			? LogImportFlowState.AWAITING_AUTH
-			: LogImportFlowState.AWAITING_LOG_LINK,
+		LogImportFlowState.AWAITING_AUTH
 	);
+	const [applyImportGenerator, setApplyImportGenerator] = useState<Generator<ApplyImportProgress> | null>(null);
+	const [importProgress, setImportProgress] = useState<ApplyImportProgress | null>(null);
+	const setDialogOpen = (open: boolean) => {
+		// Adding nodes from an import is not atomic, so we prevent the user from closing the dialog
+		// while processing nodes to not break controller state.
+		if (open || flowState !== LogImportFlowState.PROCESSING_IMPORT) {
+			_setDialogOpen(open);
+		}
+	}
 
 	useEffect(() => {
-		if (flowState !== LogImportFlowState.AWAITING_AUTH) {
-			console.log("already authorized");
+		if (!(new URLSearchParams(window.location.search).has("code")) && window.sessionStorage.getItem("fflogsAuthToken") !== null) {
+			setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
+			console.log("already authorized to fflogs");
 			return;
 		}
 		setFlowState(LogImportFlowState.CHECKING_AUTH);
@@ -416,17 +466,17 @@ export function FflogsImportFlow() {
 				} else if (dialogOpen && status === AccessTokenStatus.UNAUTHORIZED) {
 					// Automatically attempt to perform authorization flow.
 					initiateFflogsAuth()
-						.then(() => {
-							getAccessToken().then((status) => {
-								setFlowState(
-									status === AccessTokenStatus.SUCCESS
-										? LogImportFlowState.AWAITING_LOG_LINK
-										: LogImportFlowState.AWAITING_AUTH,
-								);
-							});
+						.then(getAccessToken)
+						.then((status) => {
+							setFlowState(
+								status === AccessTokenStatus.SUCCESS
+									? LogImportFlowState.AWAITING_LOG_LINK
+									: LogImportFlowState.AWAITING_AUTH,
+							);
 						})
 						.catch((e) => {
 							console.log("Error during automatic FFLogs authentication");
+							console.error(e);
 							setFlowState(LogImportFlowState.AWAITING_AUTH);
 						});
 				} else {
@@ -495,7 +545,9 @@ export function FflogsImportFlow() {
 		</button>
 		<br />
 		<br />
-		<button>{localize({ en: "back to authorization", zh: "从新授权" })}</button>
+		<button
+			onClick={() => setFlowState(LogImportFlowState.AWAITING_AUTH)}
+		>{localize({ en: "back to authorization", zh: "从新授权" })}</button>
 	</div>;
 
 	// TODO add an actual spinner
@@ -656,23 +708,22 @@ export function FflogsImportFlow() {
 			onClick={() => {
 				if (intermediateImportState.current) {
 					setFlowState(LogImportFlowState.PROCESSING_IMPORT);
-					// Use a timeout to force a render update before beginning the import process.
-					// applyImportedActions adds a bunch of nodes one at a time, which forces a ton
-					// of re-renders in quick succession due to some bad design choices in the controller.
-					// Without the timeout, stuff would hang.
-					new Promise<void>((resolve) =>
-						setTimeout(() => {
-							applyImportedActions(
-								intermediateImportState.current!,
-								resetOnImport || needsForceReset(),
-							);
-							resolve();
-						}, 0),
-					).finally(() => {
-						setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
-						intermediateImportState.current = undefined;
-						setDialogOpen(false);
-					});
+					const gen = applyImportedActions(
+						intermediateImportState.current!,
+						resetOnImport || needsForceReset(),
+					);
+					gen.forEach((progress, i) => {
+						// Only update UI once ever 10 iterations to avoid throttling the UI.
+						// TODO fix this since it doesn't actually work
+						if (i % 10 === 1) {
+							setImportProgress({...progress});
+						}
+					})
+					setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
+					intermediateImportState.current = undefined;
+					// Use the raw setter since we know the state is transitioning here and the
+					// dialog is safe to close.
+					_setDialogOpen(false);
 				} else {
 					console.error("intermediate state was undefined when confirming import");
 					setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
@@ -689,7 +740,46 @@ export function FflogsImportFlow() {
 	</div>;
 
 	// 3. PROCESS LOG IMPORT
-	const processingSpinner = <div>processing actions...</div>;
+	const processingSpinner = <div>
+		<div>processing actions...</div>
+		<br/>
+		{
+			importProgress && <div>
+				<span>{importProgress.processed} / {importProgress.total}</span>
+				<br/>
+				{
+					importProgress.deltas.length &&
+					<div>
+						{localize({
+							en: "Some simulated actions had timestamps in XIV in the Shell different from the recorded values in FFLogs. " +
+								"This likely means there's either a bug in our site, or the configured spell speed/skill speed/fps was incorrect."
+						})}
+					</div>
+				}
+				{importProgress.deltas.length && <table>
+					<thead>
+						<tr>
+							<th>{localize({en: "name"})}</th>
+							<th>{localize({en: "actual log time"})}</th>
+							<th>{localize({en: "expected shell time"})}</th>
+						</tr>
+					</thead>
+					<tbody>
+					{
+						importProgress.deltas.map((info, i) =>
+							<tr key={i}>
+								<td>{localizeSkillName(info.skill)}</td>
+								<td>{info.logTime}</td>
+								<td>{info.simTime}</td>
+							</tr>
+						)
+					}
+					</tbody>
+				</table>}
+				{importProgress.spilledDeltas > 0 ? <span>{localize({en: `...and ${importProgress.spilledDeltas} more`})}</span> : undefined}
+			</div>
+		}
+	</div>;
 
 	// GLUE
 	// TODO check auth validity again here, and also on component initialization?
