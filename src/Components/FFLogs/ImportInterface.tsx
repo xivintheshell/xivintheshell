@@ -28,7 +28,7 @@ import { Input, Help, StaticFn } from "../Common";
 import { ColorThemeContext, getCurrentThemeColors } from "../ColorTheme";
 import { getCurrentLanguage, localize, localizeSkillName } from "../Localization";
 import { AccessTokenStatus, getAccessToken, initiateFflogsAuth } from "./Auth";
-import { PCT_ACTIONS } from "../../Game/Data/Jobs/PCT";
+import { updateInvalidStatus } from "../TimelineEditor";
 
 // === INTERFACING WITH FFLOGS GRAPHQL API ===
 interface LogQueryParams {
@@ -213,7 +213,6 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
 	// The removal map should track the "Pop" action rather than the actual buff resource.
 	const trackedBuffRemovals = new Map<ActionKey, Set<number>>();
 	const trackedBuffApplies = new Map<ResourceKey, Set<number>>();
-	const grassaCastTimestamps = new Set<number>();
 	for (let entry of data.data.reportData.report.events.data) {
 		if (entry.sourceID !== params.playerID) {
 			continue;
@@ -231,13 +230,13 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
 			}
 			castEvents.push(entry);
 			timestamps.push(entry.timestamp);
-			// Sometimes buff removal events don't get picked up by a log.
-			// For robustness, we treat the cast of Tempera Grassa as a proxy for buff removal
-			// (its application delay is instant so this is accurate).
-			// We then need to produce an artificial grassa buff removal event afterwads.
-			if (entry.abilityGameID === PCT_ACTIONS.TEMPERA_GRASSA.id) {
-				grassaCastTimestamps.add(entry.timestamp);
-			}
+			// NOTE: It is sometimes possible for a cast of Tempera Grassa to perfectly overlap with
+			// a damage event removing the Tempera Coat buff, as is the case in shanzhe's test FRU log.
+			// PoV with this happening: https://youtu.be/0VbiXoZh5cc?t=675
+			// (Grassa's CD rolls, but Tempera Coat's CD is reduced by 60s instead of 30s)
+			//
+			// We treat the subsequent Tempera Grassa cast as invalid, though it technically is
+			// possible to remove that cast with some pre-processing here.
 		} else if (entry.type === "begincast" && !FILTERED_ACTION_IDS.has(entry.abilityGameID)) {
 			stagedBeginEvent = entry;
 		} else if (entry.type === "combatantinfo") {
@@ -304,16 +303,6 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
 	trackedBuffApplies
 		.get("TEMPERA_GRASSA")
 		?.forEach((timestamp) => trackedBuffRemovals.get("TEMPERA_COAT_POP")?.delete(timestamp));
-	// Add a new dummy grassa pop event if a cast event was picked up without a matching buff creation event.
-	grassaCastTimestamps.forEach((timestamp) => {
-		if (!trackedBuffApplies.get("TEMPERA_GRASSA")?.has(timestamp)) {
-			if (!trackedBuffRemovals.has("TEMPERA_GRASSA")) {
-				trackedBuffRemovals.set("TEMPERA_GRASSA", new Set([timestamp + 10]));
-			} else {
-				trackedBuffRemovals.get("TEMPERA_GRASSA")!.add(timestamp + 10);
-			}
-		}
-	});
 	const actions: SkillNodeInfo[] = castEvents.map((event: any) => {
 		const id = event.abilityGameID;
 		const key = skillIdMap.has(id)
@@ -365,7 +354,7 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
 interface ApplyImportProgress {
 	processed: number;
 	total: number;
-	// First 5 events where there's a significant timestamp mismatch.
+	// First several events where there's a significant timestamp mismatch.
 	deltas: {
 		skill: ActionKey;
 		logTime: number;
@@ -526,7 +515,7 @@ function* applyImportedActions(state: IntermediateLogImportState, resetTimeline:
 			controller.insertRecordNode(durationWaitNode(actualWait), recordIndex);
 			nonSkillNodeCount++;
 		} else if (delta < -tol) {
-			if (progress.deltas.length >= 5) {
+			if (progress.deltas.length >= 10) {
 				progress.spilledDeltas++;
 			} else {
 				progress.deltas.push({
@@ -546,6 +535,7 @@ function* applyImportedActions(state: IntermediateLogImportState, resetTimeline:
 		new ImportLog(insertedNodes, initialRecordLength, oldConfig, newConfig),
 	);
 	controller.autoSave();
+	updateInvalidStatus();
 }
 
 // === COMPONENT STATE MACHINE ===
@@ -959,16 +949,16 @@ export function FflogsImportFlow() {
 			{localize({
 				en:
 					"Some simulated actions had timestamps in XIV in the Shell different from the recorded values in FFLogs. " +
-					"Minor differences are normal, but if you see a very large discrepancy," +
-					"This means there's either a bug in the Shell, or the configured spell speed/skill speed/fps was incorrect.",
+					"Minor differences are normal, but if you see a very large discrepancy, " +
+					"this means there's either a bug in XIV in the Shell, or the configured spell speed/skill speed/fps was incorrect.",
 			})}
 		</div>
 		<table>
 			<thead>
 				<tr>
 					<th>{localize({ en: "skill", zh: "技能" })}</th>
-					<th>{localize({ en: "actual log time" })}</th>
-					<th>{localize({ en: "expected shell time" })}</th>
+					<th>{localize({ en: "log time" })}</th>
+					<th>{localize({ en: "shell time" })}</th>
 					<th>{localize({ en: "difference", zh: "差别" })}</th>
 				</tr>
 			</thead>
