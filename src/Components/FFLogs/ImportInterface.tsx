@@ -13,7 +13,7 @@ import {
 	ActionType,
 	SkillNodeInfo,
 } from "../../Controller/Record";
-import { ActionKey } from "../../Game/Data";
+import { ActionKey, ResourceKey } from "../../Game/Data";
 import { JOBS, ShellJob } from "../../Game/Data/Jobs";
 import { skillIdMap } from "../../Game/Skills";
 import { ProcMode, LevelSync } from "../../Game/Common";
@@ -25,7 +25,7 @@ import {
 } from "../../Game/GameConfig";
 import { Input, Help, StaticFn } from "../Common";
 import { ColorThemeContext, getCurrentThemeColors } from "../ColorTheme";
-import { localize, localizeSkillName } from "../Localization";
+import { getCurrentLanguage, localize, localizeSkillName } from "../Localization";
 import { AccessTokenStatus, getAccessToken, initiateFflogsAuth } from "./Auth";
 
 // === INTERFACING WITH FFLOGS GRAPHQL API ===
@@ -65,7 +65,9 @@ function parseLogURL(urlString: string): LogQueryParams {
 	};
 }
 
-// TODO cache in persistent storage instead? would have to deal with versioning though
+// In-memory cache for log import state.
+// This cache is transient to avoid any versioning concerns and interactions with browser-imposed
+// limits on sessionStorage/localStorage, as responses can become quite large.
 const castQueryCache = new Map<LogQueryParams, IntermediateLogImportState>();
 
 const FFLOGS_JOB_MAP = new Map<string, ShellJob>([
@@ -104,10 +106,19 @@ interface IntermediateLogImportState {
 	level?: LevelSync;
 	statsInLog: boolean;
 	inferredConfig?: Partial<DynamicConfigPart>;
+	buffRemovals: Map<ResourceKey, number[]>;
 	actions: SkillNodeInfo[];
 	timestamps: number[];
 	combatStartTime: number;
 }
+
+const BUFF_IDS = {
+	TEMPERA_COAT: 1003686,
+	TEMPERA_GRASSA: 1003687,
+	BLACKEST_NIGHT: 1001178,
+	TENGENTSU: 1003853,
+	THIRD_EYE: 1001232,
+};
 
 /**
  * Issue a GraphQL query given fight report ID, fight index ID, and player index ID.
@@ -155,22 +166,14 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
 			variables: params,
 		}),
 	};
-	const queryCacheKey = `fflogsCache/${params.reportCode}-${params.fightID}-${params.playerID}`;
-	// TODO error handling
-	const cacheEntry = sessionStorage.getItem(queryCacheKey);
-	const data =
-		cacheEntry === null
-			? await fetch(params.apiBaseUrl, options)
-					.then((response) => response.json())
-					.then((blob) => {
-						// TODO figure out eviction policy to make sure we don't exceed sessionstorage limits,
-						// or don't cache the whole request
-						if (blob["error"] === undefined) {
-							window.sessionStorage.setItem(queryCacheKey, JSON.stringify(blob));
-						}
-						return blob;
-					})
-			: JSON.parse(cacheEntry);
+	const data = await fetch(params.apiBaseUrl, options)
+		.then((response) => response.json())
+		.then((blob) => {
+			if (blob["error"] !== undefined) {
+				throw new Error(blob["error"]);
+			}
+			return blob;
+		});
 	// TODO check/pair calculateddamage instances to identify multi-target abilities
 	// TODO manual buff toggles
 	const actor: any = Object.values(data.data.reportData.report.playerDetails.data.playerDetails)
@@ -189,13 +192,19 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
 	// If a "begin cast" is left at the end of the loop without a paired "cast", don't bother
 	// adding it to the timeline since we can safely assume it was canceled.
 	let stagedBeginEvent: any | undefined = undefined;
+	// Map buff tags to timestamps at which they were removed.
+	// This is populated for jobs that have gauge events tied to the consumption of buffs, such as
+	// PCT's Tempera Coat/Grassa, SAM's Tengentsu, and DRK's Blackest Night.
+	// Buff removals do not distinguish between natural expiry, explicit click-offs, and triggers
+	// due to damage taken.
+	const trackedBuffRemovals = new Map<ResourceKey, Set<number>>();
+	const trackedBuffApplies = new Map<ResourceKey, Set<number>>();
 	for (let entry of data.data.reportData.report.events.data) {
+		if (entry.sourceID !== params.playerID) {
+			continue;
+		}
 		// TODO parse buff removal events that correspond to actions
-		if (
-			entry.type === "cast" &&
-			entry.sourceID === params.playerID &&
-			!FILTERED_ACTION_IDS.has(entry.abilityGameID)
-		) {
+		if (entry.type === "cast" && !FILTERED_ACTION_IDS.has(entry.abilityGameID)) {
 			// If the cast ID does not match the previously-encountered begin cast, then
 			// assume the begin cast was canceled, and discard it.
 			// Otherwise, use the timestamp of the "begin cast" event for simulation reference.
@@ -207,11 +216,7 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
 			}
 			castEvents.push(entry);
 			timestamps.push(entry.timestamp);
-		} else if (
-			entry.type === "begincast" &&
-			entry.sourceID === params.playerID &&
-			!FILTERED_ACTION_IDS.has(entry.abilityGameID)
-		) {
+		} else if (entry.type === "begincast" && !FILTERED_ACTION_IDS.has(entry.abilityGameID)) {
 			stagedBeginEvent = entry;
 		} else if (entry.type === "combatantinfo") {
 			// These stats are only populated for the log creator; these fields are otherwise
@@ -227,23 +232,66 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
 				piety: entry.piety,
 				tenacity: entry.tenacity,
 			};
+		} else if (entry.type === "removebuff" && entry.targetID === params.playerID) {
+			let buffToAdd: ResourceKey | undefined = undefined;
+			const ts = entry.timestamp;
+			const abilityGameID = entry.abilityGameID;
+			if (job === "PCT") {
+				// Do not add "Pop Tempera Coat" if the removal was caused by a Tempera Grassa cast.
+				if (
+					abilityGameID === BUFF_IDS.TEMPERA_COAT &&
+					!trackedBuffApplies.get("TEMPERA_GRASSA")?.has(ts)
+				) {
+					buffToAdd = "TEMPERA_COAT";
+				} else if (abilityGameID === BUFF_IDS.TEMPERA_GRASSA) {
+					buffToAdd = "TEMPERA_GRASSA";
+				}
+			} else if (job === "DRK") {
+				if (abilityGameID === BUFF_IDS.BLACKEST_NIGHT) {
+					buffToAdd = "BLACKEST_NIGHT";
+				}
+			} else if (job === "SAM") {
+				if (abilityGameID === BUFF_IDS.TENGENTSU) {
+					buffToAdd = "TENGENTSU";
+				} else if (abilityGameID === BUFF_IDS.THIRD_EYE) {
+					buffToAdd = "THIRD_EYE";
+				}
+			}
+			// TODO deal with SGE shields
+			// TODO crest of time borrowed, riddle of earth?
+			if (buffToAdd !== undefined) {
+				if (!trackedBuffRemovals.has(buffToAdd)) {
+					trackedBuffRemovals.set(buffToAdd, new Set([ts]));
+				} else {
+					trackedBuffRemovals.get(buffToAdd)!.add(ts);
+				}
+			}
+		} else if (entry.type === "applybuff" && entry.targetID === params.playerID) {
+			// This is a special case for PCT's Tempera Coat/Grassa interaction.
+			// When Tempera Grassa is cast, a "removebuff" event for Tempera Coat is generated
+			// with the same timestamp, but we should not produce a "Pop Tempera Coat" action.
+			if (job === "PCT" && entry.abilityGameID === BUFF_IDS.TEMPERA_GRASSA) {
+				if (!trackedBuffApplies.has("TEMPERA_GRASSA")) {
+					trackedBuffApplies.set("TEMPERA_GRASSA", new Set());
+				}
+				trackedBuffApplies.get("TEMPERA_GRASSA")!.add(entry.timestamp);
+				// The "applybuff" event should come before the Coat "removebuff", but it never
+				// hurts to be safe.
+				trackedBuffRemovals.get("TEMPERA_COAT")?.delete(entry.timestamp);
+			}
 		}
 	}
-	const castSkills: ActionKey[] = castEvents.map((event: any) => {
+	const actions: SkillNodeInfo[] = castEvents.map((event: any) => {
 		const id = event.abilityGameID;
-		if (skillIdMap.has(id)) {
-			return skillIdMap.get(id)!;
-		} else if (
-			// Assume really high IDs (like 34600430) are tincture usages
-			id > 30000000
-		) {
-			return "TINCTURE";
-		} else {
+		const key = skillIdMap.has(id)
+			? skillIdMap.get(id)!
+			: // Assume really high IDs (like 34600430) are tincture usages
+				id > 30000000
+				? "TINCTURE"
+				: "NEVER";
+		if (key === "NEVER") {
 			console.error("unknown action id", id);
-			return "NEVER";
 		}
-	});
-	const actions = castSkills.map((key) => {
 		return {
 			type: ActionType.Skill,
 			skillName: key,
@@ -260,6 +308,12 @@ async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLo
 			inferredConfig !== undefined &&
 			Object.values(inferredConfig).every((x) => x !== undefined),
 		inferredConfig,
+		buffRemovals: new Map(
+			trackedBuffRemovals.entries().map(
+				// No need to sort since Set preserves insertion order, and events came chronologically
+				([key, set]) => [key, Array.from(set)],
+			),
+		),
 		actions,
 		timestamps,
 		combatStartTime: fight.endTime - fight.combatTime,
@@ -532,11 +586,83 @@ export function FflogsImportFlow() {
 	const authProcessingComponent = <div>verifying authentication...</div>;
 
 	// 1. QUERY AND IMPORT LOG
-	// TODO: replace this with a formset so hitting enter submits the query
-	const importLogComponent = <div>
+	const limitations = <div>
+		<div>
+			<b>{localize({ en: "Limitations", zh: "限制" })}</b>
+		</div>
+		{getCurrentLanguage() === "zh" && <div>
+			<i>我们现在还在开发FFLogs进口功能，所以许多标签还没有完全被翻译。</i>🙇🏻
+		</div>}
+		<div>
+			{localize({ en: "Log import is currently subject to the following limitations:" })}
+		</div>
+		<ul>
+			<li>
+				{localize({
+					en: "FFLogs only records combat stats for the creator of the log, so stats must be manually entered for other players.",
+				})}
+			</li>
+			<li>
+				{localize({
+					en: "FFLogs cannot record actions that were performed before combat began. Pre-pull actions must be entered manually before import.",
+				})}
+			</li>
+			<li>
+				{localize({
+					en: "Manual buff click-offs, and buff toggles from entering/leaving a zone (for example: leaving Ley Lines or Sacred Soil) are not currently processed by XIV in the Shell.",
+				})}
+			</li>
+			<li>
+				{localize({
+					en: "The offset of MP and Lucid Dreaming ticks are not currently synchronized in XIV in the Shell.",
+				})}
+			</li>
+			<li>
+				{localize({
+					en: "XIV in the Shell currently ignores the number of enemies hit by an ability.",
+				})}
+			</li>
+			<li>
+				{localize({
+					en: "XIV in the Shell does not record job gauge updates that are affected by random factors, or by whether an enemy is hit or killed.",
+				})}
+			</li>
+		</ul>
+		<div>
+			{localize({
+				en: "These may change in future updates.",
+			})}
+		</div>
+	</div>;
+
+	const importLogComponent = <form
+		onSubmit={(e) => {
+			e.preventDefault();
+			if (flowState === LogImportFlowState.AWAITING_LOG_LINK) {
+				setFlowState(LogImportFlowState.QUERYING_LOG_LINK);
+				try {
+					queryPlayerEvents(parseLogURL(logLink)).then((state) => {
+						intermediateImportState.current = state;
+						console.log(`preparing to import ${state.actions.length} skills`);
+						setFlowState(LogImportFlowState.ADJUSTING_CONFIG);
+					});
+				} catch (e) {
+					console.error(e);
+					window.alert(e);
+					setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
+				}
+			}
+		}}
+	>
+		{/* TODO automatically submit on paste, like xiva does? */}
 		<Input
 			description={
-				<div>enter an fflogs URL (must have both player and exact fight selected)</div>
+				<div>
+					{localize({
+						en: "enter an FFLogs report link",
+						zh: "请输入FFLogs日志网址",
+					})}
+				</div>
 			}
 			onChange={setLogLink}
 			width={50}
@@ -545,26 +671,8 @@ export function FflogsImportFlow() {
 		/>
 		<br />
 		<button
+			type="submit"
 			disabled={flowState !== LogImportFlowState.AWAITING_LOG_LINK || !logLink}
-			onClick={() => {
-				if (flowState === LogImportFlowState.AWAITING_LOG_LINK) {
-					setFlowState(LogImportFlowState.QUERYING_LOG_LINK);
-					try {
-						queryPlayerEvents(parseLogURL(logLink))
-							.then((state) => {
-								intermediateImportState.current = state;
-								console.log(`preparing to import ${state.actions.length} skills`);
-							})
-							.finally(() => {
-								setFlowState(LogImportFlowState.ADJUSTING_CONFIG);
-							});
-					} catch (e) {
-						console.error(e);
-						window.alert(e);
-						setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
-					}
-				}
-			}}
 		>
 			{localize({ en: "import", zh: "进口" })}
 		</button>
@@ -573,7 +681,9 @@ export function FflogsImportFlow() {
 		<button onClick={() => setFlowState(LogImportFlowState.AWAITING_AUTH)}>
 			{localize({ en: "back to authorization", zh: "从新授权" })}
 		</button>
-	</div>;
+		<hr />
+		{limitations}
+	</form>;
 
 	// TODO add an actual spinner
 	const querySpinner = <div>
@@ -707,7 +817,8 @@ export function FflogsImportFlow() {
 					/>
 				</div>)}
 		<hr style={{ marginTop: 10, marginBottom: 10 }} />
-		{/* Do not use the common Checkbox component, since that backs values to localStorage. */}
+		{/* Do not use the common Checkbox component, since that backs values to localStorage and
+		we don't want to persist its state. */}
 		{needsForceReset() ? (
 			<div style={{ marginBottom: 5 }}>
 				<span>
