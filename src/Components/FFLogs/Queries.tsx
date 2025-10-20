@@ -3,7 +3,7 @@ import { ActionType, SkillNodeInfo } from "../../Controller/Record";
 import { LevelSync } from "../../Game/Common";
 import { ActionKey, ResourceKey } from "../../Game/Data";
 import { JOBS, ShellJob } from "../../Game/Data/Jobs";
-import { DynamicConfigPart } from "../../Game/GameConfig";
+import { ConfigData } from "../../Game/GameConfig";
 import { skillIdMap } from "../../Game/Skills";
 import { localize, LocalizedContent } from "../Localization";
 
@@ -111,7 +111,7 @@ export interface IntermediateLogImportState {
 	job: ShellJob;
 	level?: LevelSync;
 	statsInLog: boolean;
-	inferredConfig?: Partial<DynamicConfigPart>;
+	inferredConfig?: Partial<ConfigData>;
 	buffRemovalActions: { popKey: ActionKey; applyKey: ActionKey; timestamp: number }[];
 	actions: SkillNodeInfo[];
 	timestamps: number[];
@@ -372,7 +372,7 @@ export async function queryPlayerEvents(
 	const job = FFLOGS_JOB_MAP.get(actor.type)!;
 	const name = formatPlayerName(actor);
 	let level: LevelSync | undefined = undefined;
-	let inferredConfig: DynamicConfigPart | undefined = undefined;
+	let inferredConfig: Partial<ConfigData> | undefined = undefined;
 	const fight = data.reportData.report.fights[0];
 	const castEvents = [];
 	const timestamps = [];

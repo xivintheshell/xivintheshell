@@ -15,10 +15,15 @@ import {
 } from "../../Controller/Record";
 import { ActionKey } from "../../Game/Data";
 import { ProcMode, LevelSync } from "../../Game/Common";
-import { GameConfig, DynamicConfigField, SerializedConfig } from "../../Game/GameConfig";
+import { GameConfig, SerializedConfig } from "../../Game/GameConfig";
 import { Input, Help, StaticFn } from "../Common";
 import { ColorThemeContext, getCurrentThemeColors } from "../ColorTheme";
-import { getCurrentLanguage, localize, localizeSkillName } from "../Localization";
+import {
+	getCurrentLanguage,
+	localize,
+	localizeConfigField,
+	localizeSkillName,
+} from "../Localization";
 import { updateInvalidStatus } from "../TimelineEditor";
 import { AccessTokenStatus, getAccessToken, initiateFflogsAuth } from "./Auth";
 import {
@@ -756,21 +761,36 @@ export function FflogsImportFlow() {
 					<Input
 						style={{ display: "inline-block", color: colors.text }}
 						defaultValue={value?.toString() ?? ""}
-						description={field + ": "}
+						// @ts-expect-error can't verify property typing easily
+						description={localizeConfigField(field)}
 						onChange={(v) => {
 							const parsed = parseInt(v);
 							if (!isNaN(parsed)) {
 								if (intermediateImportState.current!.inferredConfig === undefined) {
 									intermediateImportState.current!.inferredConfig = {};
 								}
-								intermediateImportState.current!.inferredConfig[
-									field as DynamicConfigField
-								] = parsed;
-								console.log(intermediateImportState);
+								// @ts-expect-error not properly validating
+								intermediateImportState.current!.inferredConfig[field] = parsed;
+								console.log("new field should be " + parsed);
 							}
 						}}
 					/>
 				</div>)}
+		<Input
+			style={{ display: "inline-block", color: colors.text, marginTop: 10 }}
+			defaultValue={""}
+			description={localizeConfigField("fps")}
+			onChange={(v) => {
+				const parsed = parseInt(v);
+				if (!isNaN(parsed)) {
+					if (intermediateImportState.current!.inferredConfig === undefined) {
+						intermediateImportState.current!.inferredConfig = {};
+					}
+					intermediateImportState.current!.inferredConfig["fps"] = parsed;
+					console.log(intermediateImportState);
+				}
+			}}
+		/>
 		<hr style={{ marginTop: 10, marginBottom: 10 }} />
 		{/* Do not use the common Checkbox component, since that backs values to localStorage and
 		we don't want to persist its state. */}
