@@ -11,343 +11,26 @@ import {
 	durationWaitNode,
 	ActionNode,
 	ActionType,
-	SkillNodeInfo,
 	skillNode,
 } from "../../Controller/Record";
-import { ActionKey, ResourceKey } from "../../Game/Data";
-import { JOBS, ShellJob } from "../../Game/Data/Jobs";
-import { skillIdMap } from "../../Game/Skills";
+import { ActionKey } from "../../Game/Data";
 import { ProcMode, LevelSync } from "../../Game/Common";
-import {
-	GameConfig,
-	DynamicConfigPart,
-	DynamicConfigField,
-	SerializedConfig,
-} from "../../Game/GameConfig";
+import { GameConfig, DynamicConfigField, SerializedConfig } from "../../Game/GameConfig";
 import { Input, Help, StaticFn } from "../Common";
 import { ColorThemeContext, getCurrentThemeColors } from "../ColorTheme";
 import { getCurrentLanguage, localize, localizeSkillName } from "../Localization";
-import { AccessTokenStatus, getAccessToken, initiateFflogsAuth } from "./Auth";
 import { updateInvalidStatus } from "../TimelineEditor";
-
-// === INTERFACING WITH FFLOGS GRAPHQL API ===
-interface LogQueryParams {
-	apiBaseUrl: string;
-	reportCode: string;
-	fightID: number;
-	playerID: number;
-}
-
-// TODO: return partial<LogQueryParams> and handle errors
-function parseLogURL(urlString: string): LogQueryParams {
-	const url = URL.parse(urlString)!;
-	// TODO allow cn.fflogs or kr.fflogs
-	if (url === null || (url.hostname !== "www.fflogs.com" && url.hostname !== "cn.fflogs.com")) {
-		throw new Error("must pass a valid fflogs link");
-	}
-	const pathParts = url.pathname.split("/");
-	console.assert(pathParts.length > 0);
-	const reportCode = pathParts[pathParts.length - 1];
-	// Example:
-	// ?fight=19&type=casts&source=405&view=events
-	// If fight and source are unspecified, the user must be prompted to select a specific
-	// fight and player, similar to XIVAnalysis.
-	const searchParams = url.searchParams;
-	const fightID = parseInt(searchParams.get("fight")!);
-	const playerID = parseInt(searchParams.get("source")!);
-	// TODO
-	if (!fightID || !playerID) {
-		throw new Error("must pick specific fight and specific player (will fix later)");
-	}
-	return {
-		apiBaseUrl: `https://${url.hostname}/api/v2/user/`,
-		reportCode,
-		fightID,
-		playerID,
-	};
-}
-
-// In-memory cache for log import state.
-// This cache is transient to avoid any versioning concerns and interactions with browser-imposed
-// limits on sessionStorage/localStorage, as responses can become quite large.
-const castQueryCache = new Map<LogQueryParams, IntermediateLogImportState>();
-
-const FFLOGS_JOB_MAP = new Map<string, ShellJob>([
-	["Paladin", "PLD"],
-	["Warrior", "WAR"],
-	["DarkKnight", "DRK"],
-	["Gunbreaker", "GNB"],
-	["WhiteMage", "WHM"],
-	["Scholar", "SCH"],
-	["Astrologian", "AST"],
-	["Sage", "SGE"],
-	["Monk", "MNK"],
-	["Dragoon", "DRG"],
-	["Ninja", "NIN"],
-	["Viper", "VPR"],
-	["Samurai", "SAM"],
-	["Reaper", "RPR"],
-	["Bard", "BRD"],
-	["Machinist", "MCH"],
-	["Dancer", "DNC"],
-	["BlackMage", "BLM"],
-	["RedMage", "RDM"],
-	["Pictomancer", "PCT"],
-	["BlueMage", "BLU"],
-]);
-
-const FILTERED_ACTION_IDS = new Set([
-	7, // auto-attack
-	33218, // quadruple technical finish (for some reason different from hitting the button?)
-	34682, // star prism heal component
-]);
-
-interface IntermediateLogImportState {
-	playerName: string;
-	job: ShellJob;
-	level?: LevelSync;
-	statsInLog: boolean;
-	inferredConfig?: Partial<DynamicConfigPart>;
-	buffRemovalActions: { popKey: ActionKey; applyKey: ActionKey; timestamp: number }[];
-	actions: SkillNodeInfo[];
-	timestamps: number[];
-	combatStartTime: number;
-}
-
-const BUFF_IDS = {
-	TEMPERA_COAT: 1003686,
-	TEMPERA_GRASSA: 1003687,
-	BLACKEST_NIGHT: 1001178,
-	TENGENTSU: 1003853,
-	THIRD_EYE: 1001232,
-	CREST_OF_TIME_BORROWED: 1002596,
-};
-
-const POP_MAP = new Map<ActionKey, ActionKey>([
-	["TEMPERA_COAT_POP", "TEMPERA_COAT"],
-	["TEMPERA_GRASSA_POP", "TEMPERA_GRASSA"],
-	["THE_BLACKEST_NIGHT_POP", "THE_BLACKEST_NIGHT"],
-	["TENGENTSU_POP", "TENGENTSU"],
-	["THIRD_EYE_POP", "THIRD_EYE"],
-	["ARCANE_CREST_POP", "ARCANE_CREST"],
-]);
-
-/**
- * Issue a GraphQL query given fight report ID, fight index ID, and player index ID.
- * These can be parsed from a report URL that has a fight/player selected, or retrieved by query.
- *
- * This function is stateless.
- */
-async function queryPlayerEvents(params: LogQueryParams): Promise<IntermediateLogImportState> {
-	if (castQueryCache.has(params)) {
-		console.log("in-memory query cache hit for", params);
-		return castQueryCache.get(params)!;
-	}
-
-	// TODO handle pagination
-	const query = `
-	query GetPlayerEvents($reportCode: String, $fightID: Int, $playerID: Int) {
-		reportData {
-			report(code: $reportCode) {
-				events(sourceID: $playerID, fightIDs: [$fightID]) {
-					data
-					nextPageTimestamp
-				}
-				fights(fightIDs: [$fightID]) {
-					name
-					combatTime
-					startTime
-					endTime
-				}
-				playerDetails(fightIDs: [$fightID])
-			}
-		}
-	}
-	`;
-
-	const options = {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-			Authorization: `Bearer ${window.sessionStorage.getItem("fflogsAuthToken")}`,
-			// Uncomment the next 2 lines if bypassing PKCE
-			// // @ts-expect-error typescript doesn't like import.meta
-			// Authorization: `Bearer ${import.meta.env.VITE_FFLOGS_CLIENT_TOKEN}`,
-		},
-		body: JSON.stringify({
-			query,
-			variables: params,
-		}),
-	};
-	const data = await fetch(params.apiBaseUrl, options)
-		.then((response) => response.json())
-		.then((blob) => {
-			if (blob["error"] !== undefined) {
-				throw new Error(blob["error"]);
-			}
-			return blob;
-		});
-	// TODO check/pair calculateddamage instances to identify multi-target abilities
-	// TODO manual buff toggles
-	const actor: any = Object.values(data.data.reportData.report.playerDetails.data.playerDetails)
-		.flat()
-		.filter(
-			// TODO handle indexerror and lookup error
-			(actor: any) => actor.id === params.playerID,
-		)[0];
-	const job = FFLOGS_JOB_MAP.get(actor.type)!;
-	const name = `${actor.name} @ ${actor.server}`;
-	let level: LevelSync | undefined = undefined;
-	let inferredConfig: DynamicConfigPart | undefined = undefined;
-	const fight = data.data.reportData.report.fights[0];
-	const castEvents = [];
-	const timestamps = [];
-	// If a "begin cast" is left at the end of the loop without a paired "cast", don't bother
-	// adding it to the timeline since we can safely assume it was canceled.
-	let stagedBeginEvent: any | undefined = undefined;
-	// Map buff tags to timestamps at which they were removed.
-	// This is populated for jobs that have gauge events tied to the consumption of buffs, such as
-	// PCT's Tempera Coat/Grassa, SAM's Tengentsu, and DRK's Blackest Night.
-	// Buff removals do not distinguish between natural expiry, explicit click-offs, and triggers
-	// due to damage taken.
-	// The removal map should track the "Pop" action rather than the actual buff resource.
-	const trackedBuffRemovals = new Map<ActionKey, Set<number>>();
-	const trackedBuffApplies = new Map<ResourceKey, Set<number>>();
-	for (let entry of data.data.reportData.report.events.data) {
-		if (entry.sourceID !== params.playerID) {
-			continue;
-		}
-		// TODO parse buff removal events that correspond to actions
-		if (entry.type === "cast" && !FILTERED_ACTION_IDS.has(entry.abilityGameID)) {
-			// If the cast ID does not match the previously-encountered begin cast, then
-			// assume the begin cast was canceled, and discard it.
-			// Otherwise, use the timestamp of the "begin cast" event for simulation reference.
-			if (stagedBeginEvent !== undefined) {
-				if (stagedBeginEvent.abilityGameID === entry.abilityGameID) {
-					entry = stagedBeginEvent;
-				}
-				stagedBeginEvent = undefined;
-			}
-			castEvents.push(entry);
-			timestamps.push(entry.timestamp);
-			// NOTE: It is sometimes possible for a cast of Tempera Grassa to perfectly overlap with
-			// a damage event removing the Tempera Coat buff, as is the case in shanzhe's test FRU log.
-			// PoV with this happening: https://youtu.be/0VbiXoZh5cc?t=675
-			// (Grassa's CD rolls, but Tempera Coat's CD is reduced by 60s instead of 30s)
-			//
-			// We treat the subsequent Tempera Grassa cast as invalid, though it technically is
-			// possible to remove that cast with some pre-processing here.
-		} else if (entry.type === "begincast" && !FILTERED_ACTION_IDS.has(entry.abilityGameID)) {
-			stagedBeginEvent = entry;
-		} else if (entry.type === "combatantinfo") {
-			// These stats are only populated for the log creator; these fields are otherwise
-			// left undefined.
-			level = entry.level;
-			inferredConfig = {
-				main: entry[JOBS[job].mainStat],
-				spellSpeed: entry.spellSpeed,
-				skillSpeed: entry.skillSpeed,
-				criticalHit: entry.criticalHit,
-				directHit: entry.directHit,
-				determination: entry.determination,
-				piety: entry.piety,
-				tenacity: entry.tenacity,
-			};
-		} else if (entry.type === "removebuff") {
-			let popToAdd: ActionKey | undefined = undefined;
-			const ts = entry.timestamp;
-			const abilityGameID = entry.abilityGameID;
-			if (job === "PCT" && entry.targetID === params.playerID) {
-				if (abilityGameID === BUFF_IDS.TEMPERA_COAT) {
-					popToAdd = "TEMPERA_COAT_POP";
-				} else if (abilityGameID === BUFF_IDS.TEMPERA_GRASSA) {
-					popToAdd = "TEMPERA_GRASSA_POP";
-				}
-			} else if (job === "DRK") {
-				if (abilityGameID === BUFF_IDS.BLACKEST_NIGHT) {
-					popToAdd = "THE_BLACKEST_NIGHT_POP";
-				}
-			} else if (job === "SAM" && entry.targetID === params.playerID) {
-				if (abilityGameID === BUFF_IDS.TENGENTSU) {
-					popToAdd = "TENGENTSU_POP";
-				} else if (abilityGameID === BUFF_IDS.THIRD_EYE) {
-					popToAdd = "THIRD_EYE_POP";
-				}
-			} else if (job === "RPR" && entry.targetID === params.playerID) {
-				if (abilityGameID === BUFF_IDS.CREST_OF_TIME_BORROWED) {
-					popToAdd = "ARCANE_CREST_POP";
-				}
-			}
-			// TODO deal with SGE shields
-			// TODO deal with floor effects like paint lines and ley lines
-			if (popToAdd !== undefined) {
-				if (!trackedBuffRemovals.has(popToAdd)) {
-					trackedBuffRemovals.set(popToAdd, new Set([ts]));
-				} else {
-					trackedBuffRemovals.get(popToAdd)!.add(ts);
-				}
-			}
-		} else if (entry.type === "applybuff" && entry.targetID === params.playerID) {
-			// This is a special case for PCT's Tempera Coat/Grassa interaction.
-			// When Tempera Grassa is cast, a "removebuff" event for Tempera Coat is generated
-			// with the same timestamp, but we should not produce a "Pop Tempera Coat" action.
-			if (job === "PCT" && entry.abilityGameID === BUFF_IDS.TEMPERA_GRASSA) {
-				if (!trackedBuffApplies.has("TEMPERA_GRASSA")) {
-					trackedBuffApplies.set("TEMPERA_GRASSA", new Set());
-				}
-				trackedBuffApplies.get("TEMPERA_GRASSA")!.add(entry.timestamp);
-			}
-		}
-	}
-	// Remove all supposed tempera coat pops that overlap a grassa usage.
-	trackedBuffApplies
-		.get("TEMPERA_GRASSA")
-		?.forEach((timestamp) => trackedBuffRemovals.get("TEMPERA_COAT_POP")?.delete(timestamp));
-	const actions: SkillNodeInfo[] = castEvents.map((event: any) => {
-		const id = event.abilityGameID;
-		const key = skillIdMap.has(id)
-			? skillIdMap.get(id)!
-			: // Assume really high IDs (like 34600430) are tincture usages
-				id > 30000000
-				? "TINCTURE"
-				: "NEVER";
-		if (key === "NEVER") {
-			console.error("unknown action id", id);
-		}
-		return {
-			type: ActionType.Skill,
-			skillName: key,
-			// TODO set these fields properly
-			targetCount: 1,
-			healTargetCount: undefined,
-		} as SkillNodeInfo;
-	});
-	const state: IntermediateLogImportState = {
-		playerName: name,
-		job,
-		level,
-		statsInLog:
-			inferredConfig !== undefined &&
-			Object.values(inferredConfig).every((x) => x !== undefined),
-		inferredConfig,
-		buffRemovalActions: Array.from(
-			trackedBuffRemovals.entries().flatMap(([key, set]) =>
-				set.entries().map(([timestamp]) => {
-					return {
-						popKey: key,
-						applyKey: POP_MAP.get(key)!,
-						timestamp,
-					};
-				}),
-			),
-		).sort((k1, k2) => k1.timestamp - k2.timestamp),
-		actions,
-		timestamps,
-		combatStartTime: fight.endTime - fight.combatTime,
-	};
-	castQueryCache.set(params, state);
-	return state;
-}
+import { AccessTokenStatus, getAccessToken, initiateFflogsAuth } from "./Auth";
+import {
+	FightInfo,
+	IntermediateLogImportState,
+	ParsedLogQueryParams,
+	parseLogURL,
+	PlayerInfo,
+	queryFightList,
+	queryPlayerEvents,
+	queryPlayerList,
+} from "./Queries";
 
 // === PROCESSING LOGGED ACTIONS ===
 
@@ -552,6 +235,10 @@ enum LogImportFlowState {
 	AWAITING_LOG_LINK,
 	/** Log link provided; submitting query to obtain log data. */
 	QUERYING_LOG_LINK,
+	/** Log link had multiple fights; user must select one. */
+	CHOOSE_FIGHT,
+	/** Log link selected fight but not player; user must select one. */
+	CHOOSE_PLAYER,
 	/** Fight selected; user is adjusting configuration values. */
 	ADJUSTING_CONFIG,
 	/** Imported nodes are being added to the controller. */
@@ -573,9 +260,43 @@ export function FflogsImportFlow() {
 	const dialogRef = useRef<HTMLDivElement | null>(null);
 
 	const [logLink, setLogLink] = useState("");
-	const [flowState, setFlowState] = useState<LogImportFlowState>(
+	const [flowState, _setFlowState] = useState<LogImportFlowState>(
 		LogImportFlowState.AWAITING_AUTH,
 	);
+	const setFlowState = (newFlowState: LogImportFlowState) => {
+		if (newFlowState === flowState) {
+			return;
+		}
+		// Clear intermediate state variables when transitioning between states.
+		if (flowState === LogImportFlowState.IMPORT_DONE) {
+			setImportProgress(null);
+		}
+		if (
+			newFlowState !== LogImportFlowState.ADJUSTING_CONFIG &&
+			newFlowState !== LogImportFlowState.PROCESSING_IMPORT
+		) {
+			intermediateImportState.current = undefined;
+		}
+		if (
+			newFlowState !== LogImportFlowState.CHOOSE_FIGHT &&
+			newFlowState !== LogImportFlowState.CHOOSE_PLAYER
+		) {
+			// fightList is valid during CHOOSE_PLAYER in case they wish to go back one page.
+			fightList.current = [];
+			playerList.current = [];
+		}
+		if (
+			![
+				LogImportFlowState.AWAITING_LOG_LINK,
+				LogImportFlowState.CHOOSE_FIGHT,
+				LogImportFlowState.CHOOSE_PLAYER,
+			].includes(newFlowState)
+		) {
+			logInfo.current = undefined;
+		}
+		_setFlowState(newFlowState);
+	};
+
 	const [importProgress, setImportProgress] = useState<ApplyImportProgress | null>(null);
 	const setDialogOpen = (open: boolean) => {
 		// Adding nodes from an import is not atomic, so we prevent the user from closing the dialog
@@ -583,7 +304,6 @@ export function FflogsImportFlow() {
 		if (open || flowState !== LogImportFlowState.PROCESSING_IMPORT) {
 			if (!open && flowState === LogImportFlowState.IMPORT_DONE) {
 				setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
-				setImportProgress(null);
 			}
 			_setDialogOpen(open);
 		}
@@ -627,6 +347,9 @@ export function FflogsImportFlow() {
 			.catch(() => setFlowState(LogImportFlowState.AWAITING_AUTH));
 	}, []);
 
+	const logInfo = useRef<ParsedLogQueryParams | undefined>(undefined);
+	const fightList = useRef<FightInfo[]>([]);
+	const playerList = useRef<PlayerInfo[]>([]);
 	// Intermediate logimport state is valid iff flowState is ADJUSTING_CONFIG.
 	const intermediateImportState = useRef<IntermediateLogImportState | undefined>(undefined);
 
@@ -707,19 +430,51 @@ export function FflogsImportFlow() {
 	const importLogComponent = <form
 		onSubmit={(e) => {
 			e.preventDefault();
-			if (flowState === LogImportFlowState.AWAITING_LOG_LINK) {
+			if (flowState !== LogImportFlowState.AWAITING_LOG_LINK) {
+				return;
+			}
+			try {
+				const partialLogInfo = parseLogURL(logLink);
+				if (partialLogInfo.error) {
+					throw new Error(localize(partialLogInfo.error).toString());
+				}
 				setFlowState(LogImportFlowState.QUERYING_LOG_LINK);
-				try {
-					queryPlayerEvents(parseLogURL(logLink)).then((state) => {
+				logInfo.current = partialLogInfo;
+				if (partialLogInfo.fightID === undefined) {
+					queryFightList(partialLogInfo.apiBaseUrl, partialLogInfo.reportCode).then(
+						(infos) => {
+							fightList.current = infos;
+							console.log("choosing from", infos.length, "fights");
+							setFlowState(LogImportFlowState.CHOOSE_FIGHT);
+						},
+					);
+				} else if (partialLogInfo.playerID === undefined) {
+					queryPlayerList(
+						partialLogInfo.apiBaseUrl,
+						partialLogInfo.reportCode,
+						partialLogInfo.fightID,
+					).then((infos) => {
+						fightList.current = [];
+						playerList.current = infos;
+						console.log("choosing from", infos.length, "players");
+						setFlowState(LogImportFlowState.CHOOSE_PLAYER);
+					});
+				} else {
+					queryPlayerEvents({
+						apiBaseUrl: partialLogInfo.apiBaseUrl,
+						reportCode: partialLogInfo.reportCode,
+						fightID: partialLogInfo.fightID,
+						playerID: partialLogInfo.playerID,
+					}).then((state) => {
 						intermediateImportState.current = state;
 						console.log(`preparing to import ${state.actions.length} skills`);
 						setFlowState(LogImportFlowState.ADJUSTING_CONFIG);
 					});
-				} catch (e) {
-					console.error(e);
-					window.alert(e);
-					setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
 				}
+			} catch (e) {
+				console.error(e);
+				window.alert(e);
+				setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
 			}
 		}}
 	>
@@ -756,7 +511,121 @@ export function FflogsImportFlow() {
 
 	// TODO add an actual spinner
 	const querySpinner = <div>
-		<p>retrieving log...</p>
+		<p>{localize({ en: "retrieving log...", zh: "正在检索日志..." })}</p>
+	</div>;
+
+	const runningFightOrPlayerQuery = useRef<boolean>(false);
+	const fightPicker = <div>
+		<b>{localize({ en: "Choose a fight", zh: "选择战场" })}</b>
+		<hr style={{ marginTop: 10, marginBottom: 10 }} />
+		<ul>
+			{fightList.current.map((info, i) => <li
+				key={i}
+				onClick={() => {
+					if (runningFightOrPlayerQuery.current) {
+						return;
+					}
+					const partialLogInfo = logInfo.current;
+					if (partialLogInfo === undefined) {
+						console.error("log info was undefined in fight choice state");
+						setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
+						return;
+					}
+					runningFightOrPlayerQuery.current = true;
+					queryPlayerList(partialLogInfo.apiBaseUrl, partialLogInfo.reportCode, info.id)
+						.then((infos) => {
+							playerList.current = infos;
+							partialLogInfo.fightID = info.id;
+							console.log("choosing from", infos.length, "players");
+							setFlowState(LogImportFlowState.CHOOSE_PLAYER);
+						})
+						.catch((e) => {
+							console.error(e);
+							window.alert(e);
+							setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
+						})
+						.finally(() => {
+							runningFightOrPlayerQuery.current = false;
+						});
+				}}
+			>
+				<span className="clickableLinkLike">
+					{new Date(info.unixStartTime).toLocaleString()}
+					{" - "}
+					{localize(info.label)}
+				</span>
+			</li>)}
+		</ul>
+		{cancelButton}
+	</div>;
+
+	const playerPicker = <div>
+		<b>{localize({ en: "Choose a player", zh: "选择队员" })}</b>
+		<hr style={{ marginTop: 10, marginBottom: 10 }} />
+		<ul>
+			{playerList.current.map((info, i) => <li
+				key={i}
+				onClick={() => {
+					if (runningFightOrPlayerQuery.current) {
+						return;
+					}
+					const partialLogInfo = logInfo.current;
+					if (partialLogInfo === undefined) {
+						console.error("log info was undefined in player choice state");
+						setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
+						return;
+					}
+					if (partialLogInfo.fightID === undefined) {
+						console.error("fight ID was undefined in player choice state");
+						setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
+						return;
+					}
+					runningFightOrPlayerQuery.current = true;
+					queryPlayerEvents({
+						apiBaseUrl: partialLogInfo.apiBaseUrl,
+						reportCode: partialLogInfo.reportCode,
+						fightID: partialLogInfo.fightID,
+						playerID: info.id,
+					})
+						.then((state) => {
+							intermediateImportState.current = state;
+							console.log(`preparing to import ${state.actions.length} skills`);
+							setFlowState(LogImportFlowState.ADJUSTING_CONFIG);
+						})
+						.catch((e) => {
+							console.error(e);
+							window.alert(e);
+							setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
+						})
+						.finally(() => {
+							runningFightOrPlayerQuery.current = false;
+						});
+				}}
+			>
+				<span className="clickableLinkLike">
+					{info.job}
+					{" - "}
+					{info.name}
+				</span>
+			</li>)}
+		</ul>
+		{fightList.current.length === 0 ? (
+			// If we came from fight selection, the cancel button should go back there.
+			// Otherwise, go back to link entry.
+			cancelButton
+		) : (
+			<button
+				onClick={() => {
+					setFlowState(LogImportFlowState.CHOOSE_FIGHT);
+					playerList.current = [];
+				}}
+			>
+				{localize({
+					en: "back to fight selection",
+					zh: "回到战场选择",
+				})}
+			</button>
+		)}
 	</div>;
 
 	// 2. ADJUST STATS
@@ -923,12 +792,10 @@ export function FflogsImportFlow() {
 							setImportProgress({ ...progress });
 						});
 						setFlowState(LogImportFlowState.IMPORT_DONE);
-						intermediateImportState.current = undefined;
 					}, 0);
 				} else {
 					console.error("intermediate state was undefined when confirming import");
 					setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
-					intermediateImportState.current = undefined;
 					setDialogOpen(false);
 				}
 			}}
@@ -957,8 +824,8 @@ export function FflogsImportFlow() {
 			<thead>
 				<tr>
 					<th>{localize({ en: "skill", zh: "技能" })}</th>
-					<th>{localize({ en: "log time" })}</th>
-					<th>{localize({ en: "shell time" })}</th>
+					<th>{localize({ en: "log time", zh: "日志时间" })}</th>
+					<th>{localize({ en: "shell time", zh: "模拟器时间" })}</th>
 					<th>{localize({ en: "difference", zh: "差别" })}</th>
 				</tr>
 			</thead>
@@ -978,8 +845,8 @@ export function FflogsImportFlow() {
 	const processingSpinner = <div>
 		<div>
 			{localize({
-				en: "processing actions...",
-				zh: "正在技能处理中...",
+				en: "processing actions (this may take a moment)...",
+				zh: "正在技能处理中（有可能会花一些时间）...",
 			})}
 		</div>
 		<br />
@@ -1019,6 +886,10 @@ export function FflogsImportFlow() {
 			importLogComponent
 		) : flowState === LogImportFlowState.QUERYING_LOG_LINK ? (
 			querySpinner
+		) : flowState === LogImportFlowState.CHOOSE_FIGHT ? (
+			fightPicker
+		) : flowState === LogImportFlowState.CHOOSE_PLAYER ? (
+			playerPicker
 		) : flowState === LogImportFlowState.ADJUSTING_CONFIG ? (
 			statBlock
 		) : flowState === LogImportFlowState.PROCESSING_IMPORT ? (

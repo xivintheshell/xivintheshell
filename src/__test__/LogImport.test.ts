@@ -12,10 +12,13 @@
 // - GraphQL query failure
 // - PCT M1S log (includes Tempera Coat/Grassa pops)
 // - PCT FRU log
-// - SCH log w/ recorded stats (for some reason Energy Drain ID isn't getting registered properly?)
+// - SCH AMR log w/ recorded stats (for some reason Energy Drain ID isn't getting registered properly?)
 // - BLM 7.2 AMR log (really long; kind of a perf test)
 // - SAM log with Tengentsu pop + synced SAM log with Third Eye pop
+// - Repeated query of log does not trigger fetch mock a second time
 // - Currently unsupported cases to test later:
 //   - Toxikon generation on SGE
 //   - Gauge generation on RPR on enemy death with DD active
 //   - Generic AoE log
+
+it("placeholder log import test", () => {});
