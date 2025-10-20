@@ -495,6 +495,7 @@ type InputProps = {
 	style?: CSSProperties;
 	componentColor?: string; // overrides entire component's color
 	autoFocus?: boolean;
+	placeholder?: string;
 };
 
 export function Input(props: InputProps) {
@@ -523,6 +524,7 @@ export function Input(props: InputProps) {
 			// work as expected, and not be intercepted by the top-level app's key listeners.
 			onKeyDown={(e) => e.stopPropagation()}
 			autoFocus={props.autoFocus}
+			placeholder={props.placeholder}
 		/>
 	</div>;
 }

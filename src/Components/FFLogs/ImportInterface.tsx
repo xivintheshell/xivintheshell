@@ -1,7 +1,7 @@
 // Components and logic for importing a fight from an FFLogs report.
 // This includes authorization and GraphQL queries against the fflogs v2 API.
 // See docs for details: https://www.fflogs.com/api/docs
-import React, { useEffect, useContext, useState, useRef } from "react";
+import React, { useEffect, useContext, useState, useRef, CSSProperties } from "react";
 import { Dialog } from "@base-ui-components/react/dialog";
 import { FaXmark } from "react-icons/fa6";
 import { ImportLog } from "../../Controller/UndoStack";
@@ -12,10 +12,11 @@ import {
 	ActionNode,
 	ActionType,
 	skillNode,
+	InvalidActionInfo,
 } from "../../Controller/Record";
 import { ActionKey } from "../../Game/Data";
 import { ProcMode, LevelSync } from "../../Game/Common";
-import { GameConfig, SerializedConfig } from "../../Game/GameConfig";
+import { ConfigData, GameConfig, SerializedConfig } from "../../Game/GameConfig";
 import { Input, Help, StaticFn } from "../Common";
 import { ColorThemeContext, getCurrentThemeColors } from "../ColorTheme";
 import {
@@ -23,8 +24,15 @@ import {
 	localize,
 	localizeConfigField,
 	localizeSkillName,
+	localizeSkillUnavailableReason,
 } from "../Localization";
-import { updateInvalidStatus } from "../TimelineEditor";
+import {
+	getBorderStyling,
+	INDEX_TD_STYLE,
+	TIMESTAMP_TD_STYLE,
+	TR_STYLE,
+	updateInvalidStatus,
+} from "../TimelineEditor";
 import { AccessTokenStatus, getAccessToken, initiateFflogsAuth } from "./Auth";
 import {
 	FightInfo,
@@ -57,6 +65,7 @@ interface ApplyImportProgress {
  * Creates a single new entry in the undo stack upon success.
  *
  * Yields a snapshot of processing progress, but it should generally be fast enough to not be relevant.
+ * Upon completion, returns a list of invalid actions in the finished timeline.
  *
  * This function can take a bit of time run because adding nodes invokes controller methods that may
  * trigger re-renders, and we need to splice in wait/jump nodes in the middle.
@@ -65,7 +74,10 @@ interface ApplyImportProgress {
  *
  * This design CAN create broken intermediate states if the log import flow is closed prematurely.
  */
-function* applyImportedActions(state: IntermediateLogImportState, resetTimeline: boolean) {
+function* applyImportedActions(
+	state: IntermediateLogImportState,
+	resetTimeline: boolean,
+): Generator<ApplyImportProgress, InvalidActionInfo[]> {
 	// Reset the controller's GameConfig.
 	const oldConfig = controller.gameConfig.serialized();
 	const newConfig: SerializedConfig = {
@@ -92,7 +104,8 @@ function* applyImportedActions(state: IntermediateLogImportState, resetTimeline:
 	const actions = state.actions;
 	console.assert(actions.length === state.timestamps.length);
 	if (actions.length === 0) {
-		return { processed: 0, total: 0, deltas: [], spilledDeltas: 0 };
+		yield { processed: 0, total: 0, deltas: [], spilledDeltas: 0 };
+		return [];
 	}
 	const toInsert = actions.map((info) => new ActionNode(info));
 	// If the first action has a cast time, then assume it was hardcasted.
@@ -224,10 +237,53 @@ function* applyImportedActions(state: IntermediateLogImportState, resetTimeline:
 		new ImportLog(insertedNodes, initialRecordLength, oldConfig, newConfig),
 	);
 	controller.autoSave();
-	updateInvalidStatus();
+	// TODO return timestamps here too
+	return updateInvalidStatus().invalidActions;
 }
 
 // === COMPONENT STATE MACHINE ===
+const ACTION_TD_STYLE: CSSProperties = {
+	textAlign: "left",
+	paddingLeft: "0.3em",
+};
+
+const EXPOSED_CONFIG_FIELDS: (keyof ConfigData)[] = [
+	"spellSpeed",
+	"skillSpeed",
+	"criticalHit",
+	"directHit",
+	"determination",
+	"piety",
+	"fps",
+];
+
+function ConfigField(props: {
+	field: keyof ConfigData;
+	inferredStateValue: number | undefined;
+	setValue: (v: number | undefined) => void;
+}) {
+	// If inferredStateValue is undefined, then read the current value of the controller's active config.
+	const colors = getCurrentThemeColors();
+	const controllerValue = controller.gameConfig[props.field] as number;
+	return <Input
+		style={{
+			display: "inline-block",
+			color: colors.text,
+		}}
+		defaultValue={props.inferredStateValue?.toString() ?? ""}
+		description={localizeConfigField(props.field)}
+		onChange={(v) => {
+			if (v.length === 0) {
+				props.setValue(undefined);
+			}
+			const parsed = parseInt(v);
+			if (!isNaN(parsed)) {
+				props.setValue(parsed);
+			}
+		}}
+		placeholder={controllerValue.toString()}
+	/>;
+}
 
 /**
  * State of user through the log import flow.
@@ -276,12 +332,14 @@ export function FflogsImportFlow() {
 		// Clear intermediate state variables when transitioning between states.
 		if (flowState === LogImportFlowState.IMPORT_DONE) {
 			setImportProgress(null);
+			setResetOnImport(true);
+			setInvalidActions([]);
 		}
 		if (
 			newFlowState !== LogImportFlowState.ADJUSTING_CONFIG &&
 			newFlowState !== LogImportFlowState.PROCESSING_IMPORT
 		) {
-			intermediateImportState.current = undefined;
+			setIntermediateImportState(undefined);
 		}
 		if (
 			newFlowState !== LogImportFlowState.CHOOSE_FIGHT &&
@@ -305,6 +363,8 @@ export function FflogsImportFlow() {
 	};
 
 	const [importProgress, setImportProgress] = useState<ApplyImportProgress | null>(null);
+	const [invalidActions, setInvalidActions] = useState<InvalidActionInfo[]>([]);
+
 	const setDialogOpen = (open: boolean) => {
 		// Adding nodes from an import is not atomic, so we prevent the user from closing the dialog
 		// while processing nodes to not break controller state.
@@ -359,7 +419,9 @@ export function FflogsImportFlow() {
 	const chosenFightInfo = useRef<FightInfo | undefined>(undefined);
 	const playerList = useRef<PlayerInfo[]>([]);
 	// Intermediate logimport state is valid iff flowState is ADJUSTING_CONFIG.
-	const intermediateImportState = useRef<IntermediateLogImportState | undefined>(undefined);
+	const [intermediateImportState, setIntermediateImportState] = useState<
+		IntermediateLogImportState | undefined
+	>(undefined);
 
 	const cancelButton = <button onClick={() => setFlowState(LogImportFlowState.AWAITING_LOG_LINK)}>
 		{localize({
@@ -419,12 +481,12 @@ export function FflogsImportFlow() {
 			</li>
 			<li>
 				{localize({
-					en: "XIV in the Shell currently ignores the number of enemies hit by an ability.",
+					en: "XIV in the Shell currently does not track when multiple enemies are hit by an ability.",
 				})}
 			</li>
 			<li>
 				{localize({
-					en: "XIV in the Shell does not record job gauge updates that are affected by random factors, or by whether an enemy is hit or killed.",
+					en: "XIV in the Shell does not reflect job gauge updates that are affected by random factors, or by whether an enemy is hit or killed.",
 				})}
 			</li>
 		</ul>
@@ -483,7 +545,7 @@ export function FflogsImportFlow() {
 						fightID: partialLogInfo.fightID,
 						playerID: partialLogInfo.playerID,
 					});
-					intermediateImportState.current = state;
+					setIntermediateImportState(state);
 					console.log(`preparing to import ${state.actions.length} skills`);
 					setFlowState(LogImportFlowState.ADJUSTING_CONFIG);
 				}
@@ -610,7 +672,7 @@ export function FflogsImportFlow() {
 						playerID: info.id,
 					})
 						.then((state) => {
-							intermediateImportState.current = state;
+							setIntermediateImportState(state);
 							console.log(`preparing to import ${state.actions.length} skills`);
 							setFlowState(LogImportFlowState.ADJUSTING_CONFIG);
 						})
@@ -654,8 +716,7 @@ export function FflogsImportFlow() {
 	// TODO localize and share code with config
 	// TODO add back arrow
 	// TODO populate stat fields + level that aren't inferred
-	const needsForceReset = () =>
-		controller.gameConfig.job !== intermediateImportState.current?.job;
+	const needsForceReset = () => controller.gameConfig.job !== intermediateImportState?.job;
 	const configHelp = <Help
 		container={dialogRef}
 		topic="fflogsConfigReset"
@@ -701,31 +762,34 @@ export function FflogsImportFlow() {
 	const statBlock = <div>
 		{localize({
 			en: <p>
-				Reading {intermediateImportState.current?.actions.length ?? 0} skills for{" "}
-				<b>{intermediateImportState.current?.playerName}</b>
+				Reading {intermediateImportState?.actions.length ?? 0} skills for{" "}
+				<b>{intermediateImportState?.playerName}</b>
 			</p>,
 		})}
-		{intermediateImportState.current?.statsInLog
+		{intermediateImportState?.statsInLog
 			? localize({
 					en: "Using stats found in log. Please adjust as needed.",
 				})
 			: localize({
-					en: "Exact stats not found in log. Please enter manually or adjust with the Config pane after import.",
+					en: "Exact stats not found in log; using values in current game config. Please enter manually or adjust with the Config pane after import.",
 				})}{" "}
 		{configHelp}
 		<hr style={{ marginTop: 10, marginBottom: 10 }} />
 		<div>
 			<span>{localize({ en: "job: ", zh: "职业：" })}</span>
-			{intermediateImportState.current?.job ?? controller.game.job}
+			{intermediateImportState?.job ?? controller.game.job}
 		</div>
-		{intermediateImportState.current && <div style={{ marginBottom: 10 }}>
+		{intermediateImportState && <div style={{ marginBottom: 10 }}>
 			<span>{localize({ en: "level: ", zh: "等级：" })}</span>
 			<select
 				style={{ outline: "none", color: colors.text }}
-				value={intermediateImportState.current!.level}
-				onChange={(e) => {
-					intermediateImportState.current!.level = parseInt(e.target.value) as LevelSync;
-				}}
+				value={intermediateImportState.level}
+				onChange={(e) =>
+					setIntermediateImportState({
+						...intermediateImportState,
+						level: parseInt(e.target.value) as LevelSync,
+					})
+				}
 			>
 				<option key={LevelSync.lvl100} value={LevelSync.lvl100}>
 					100
@@ -741,56 +805,25 @@ export function FflogsImportFlow() {
 				</option>
 			</select>
 		</div>}
-		{intermediateImportState.current &&
-			Object.entries(
-				intermediateImportState.current.inferredConfig ?? {
-					spellSpeed: "",
-					skillSpeed: "",
-					criticalHit: "",
-					directHit: "",
-					determination: "",
-					piety: "",
-				},
-			)
-				.filter(
-					// main stat and tenacity are hidden to the user
-					([field, _]) => field !== "main" && field !== "tenacity",
-				)
-				.map(([field, value]) => <div key={field}>
-					{/* TODO these fields need proper synchronization */}
-					<Input
-						style={{ display: "inline-block", color: colors.text }}
-						defaultValue={value?.toString() ?? ""}
-						// @ts-expect-error can't verify property typing easily
-						description={localizeConfigField(field)}
-						onChange={(v) => {
-							const parsed = parseInt(v);
-							if (!isNaN(parsed)) {
-								if (intermediateImportState.current!.inferredConfig === undefined) {
-									intermediateImportState.current!.inferredConfig = {};
-								}
-								// @ts-expect-error not properly validating
-								intermediateImportState.current!.inferredConfig[field] = parsed;
-								console.log("new field should be " + parsed);
-							}
-						}}
-					/>
-				</div>)}
-		<Input
-			style={{ display: "inline-block", color: colors.text, marginTop: 10 }}
-			defaultValue={""}
-			description={localizeConfigField("fps")}
-			onChange={(v) => {
-				const parsed = parseInt(v);
-				if (!isNaN(parsed)) {
-					if (intermediateImportState.current!.inferredConfig === undefined) {
-						intermediateImportState.current!.inferredConfig = {};
-					}
-					intermediateImportState.current!.inferredConfig["fps"] = parsed;
-					console.log(intermediateImportState);
-				}
-			}}
-		/>
+		<div style={{ display: "flex", gap: 1, flexDirection: "column" }}>
+			{EXPOSED_CONFIG_FIELDS.map((field) => <div key={field}>
+				<ConfigField
+					field={field}
+					inferredStateValue={intermediateImportState?.inferredConfig?.[field] as number}
+					setValue={(v) => {
+						if (intermediateImportState?.inferredConfig !== undefined) {
+							setIntermediateImportState({
+								...intermediateImportState,
+								inferredConfig: {
+									...intermediateImportState.inferredConfig,
+									[field]: v,
+								},
+							});
+						}
+					}}
+				/>
+			</div>)}
+		</div>
 		<hr style={{ marginTop: 10, marginBottom: 10 }} />
 		{/* Do not use the common Checkbox component, since that backs values to localStorage and
 		we don't want to persist its state. */}
@@ -817,17 +850,20 @@ export function FflogsImportFlow() {
 		<button
 			style={{ marginTop: 10 }}
 			onClick={() => {
-				if (intermediateImportState.current) {
+				if (intermediateImportState) {
 					setFlowState(LogImportFlowState.PROCESSING_IMPORT);
 					const gen = applyImportedActions(
-						intermediateImportState.current!,
+						intermediateImportState,
 						resetOnImport || needsForceReset(),
 					);
 					// We use a dummy setTimeout to ensure we transition the UI to the processing screen.
 					setTimeout(() => {
-						gen.forEach((progress) => {
-							setImportProgress({ ...progress });
-						});
+						let iter = gen.next();
+						while (!iter.done) {
+							setImportProgress({ ...iter.value });
+							iter = gen.next();
+						}
+						setInvalidActions(iter.value);
 						setFlowState(LogImportFlowState.IMPORT_DONE);
 					}, 0);
 				} else {
@@ -847,6 +883,20 @@ export function FflogsImportFlow() {
 	</div>;
 
 	// 3. PROCESS LOG IMPORT
+	const tableStyle: CSSProperties = {
+		position: "relative",
+		width: "100%",
+		borderCollapse: "collapse",
+		borderColor: colors.bgMediumContrast,
+		borderWidth: "1px",
+		borderStyle: "solid",
+	};
+	const thStyle: CSSProperties = {
+		backgroundColor: colors.timelineEditor.headerFooter,
+		...getBorderStyling(colors),
+	};
+	const trColor = (i: number) =>
+		i % 2 === 1 ? colors.timelineEditor.bgAlternateRow : "transparent";
 	const importProgressTable = importProgress?.deltas.length && <div>
 		<hr />
 		<div>
@@ -857,21 +907,36 @@ export function FflogsImportFlow() {
 					"this means there's either a bug in XIV in the Shell, or the configured spell speed/skill speed/fps was incorrect.",
 			})}
 		</div>
-		<table>
+		<table style={tableStyle}>
 			<thead>
-				<tr>
-					<th>{localize({ en: "skill", zh: "技能" })}</th>
-					<th>{localize({ en: "log time", zh: "日志时间" })}</th>
-					<th>{localize({ en: "shell time", zh: "模拟器时间" })}</th>
-					<th>{localize({ en: "difference", zh: "差别" })}</th>
+				<tr style={TR_STYLE}>
+					<th style={{ ...thStyle, ...ACTION_TD_STYLE, width: "35%" }}>
+						{localize({ en: "skill", zh: "技能" })}
+					</th>
+					<th style={{ ...thStyle, ...TIMESTAMP_TD_STYLE }}>
+						{localize({ en: "log time", zh: "日志时间" })}
+					</th>
+					<th style={{ ...thStyle, ...TIMESTAMP_TD_STYLE }}>
+						{localize({ en: "shell time", zh: "模拟器时间" })}
+					</th>
+					<th style={{ ...thStyle, ...TIMESTAMP_TD_STYLE }}>
+						{localize({ en: "difference", zh: "差别" })}
+					</th>
 				</tr>
 			</thead>
 			<tbody>
-				{importProgress.deltas.map((info, i) => <tr key={i}>
-					<td>{localizeSkillName(info.skill)}</td>
-					<td>{StaticFn.displayTime(info.logTime, 3)}</td>
-					<td>{StaticFn.displayTime(info.simTime, 3)}</td>
-					<td>{StaticFn.displayTime(info.logTime - info.simTime, 3)}</td>
+				{importProgress.deltas.map((info, i) => <tr
+					key={i}
+					style={{ ...TR_STYLE, background: trColor(i) }}
+				>
+					<td style={{ ...ACTION_TD_STYLE, width: "35%" }}>
+						{localizeSkillName(info.skill)}
+					</td>
+					<td style={TIMESTAMP_TD_STYLE}>{StaticFn.displayTime(info.logTime, 3)}</td>
+					<td style={TIMESTAMP_TD_STYLE}>{StaticFn.displayTime(info.simTime, 3)}</td>
+					<td style={TIMESTAMP_TD_STYLE}>
+						{StaticFn.displayTime(info.logTime - info.simTime, 3)}
+					</td>
 				</tr>)}
 			</tbody>
 		</table>
@@ -897,6 +962,46 @@ export function FflogsImportFlow() {
 	</div>;
 
 	// 4. IMPORT DONE; TIME TO CELEBRATE
+	const invalidActionsTable =
+		invalidActions.length > 0 ? (
+			<div>
+				{localize({
+					en: `The imported timeline produced ${invalidActions.length} invalid action${invalidActions.length === 1 ? "" : "s"}.`,
+				})}
+				<table style={tableStyle}>
+					<thead>
+						<tr style={TR_STYLE}>
+							<th style={{ ...thStyle, ...INDEX_TD_STYLE }}>#</th>
+							<th style={{ ...thStyle, ...ACTION_TD_STYLE }}>
+								{localize({ en: "action", zh: "技能" })}
+							</th>
+							<th style={{ ...thStyle, ...ACTION_TD_STYLE }}>
+								{localize({ en: "reason", zh: "理由" })}
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						{invalidActions.slice(0, 10).map((info, i) => <tr
+							key={i}
+							style={{ ...TR_STYLE, background: trColor(i) }}
+						>
+							<td style={INDEX_TD_STYLE}>{info.index}</td>
+							<td style={ACTION_TD_STYLE}>{info.node.toLocalizedString()}</td>
+							<td style={ACTION_TD_STYLE}>
+								{info.reason.unavailableReasons
+									.map(localizeSkillUnavailableReason)
+									.join(localize({ en: "; ", zh: "、" }).toString())}
+							</td>
+						</tr>)}
+					</tbody>
+				</table>
+				{invalidActions.length > 10 ? (
+					<span>{localize({ en: `...and ${invalidActions.length - 10} more` })}</span>
+				) : undefined}
+				<br />
+			</div>
+		) : undefined;
+
 	const importSummary = <div>
 		<b>{localize({ en: "Import successful!", zh: "进口成功！" })}</b>
 		{localize({
@@ -906,6 +1011,7 @@ export function FflogsImportFlow() {
 		<br />
 		{importProgressTable}
 		<br />
+		{invalidActionsTable}
 		<button onClick={() => setDialogOpen(false)}>
 			{localize({
 				en: "finish",

@@ -627,13 +627,15 @@ export class Line {
 	}
 }
 
+export type InvalidActionInfo = {
+	node: ActionNode;
+	index: number;
+	reason: SkillReadyStatus;
+};
+
 export type RecordValidStatus = {
 	isValid: boolean;
-	invalidActions: {
-		node: ActionNode;
-		index: number;
-		reason: SkillReadyStatus;
-	}[];
+	invalidActions: InvalidActionInfo[];
 	skillUseTimes: number[];
 	straightenedIfValid: Record | undefined;
 };

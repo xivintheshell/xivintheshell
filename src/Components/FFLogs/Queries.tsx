@@ -357,7 +357,7 @@ export async function queryPlayerEvents(
 		?.get(params.fightID)
 		?.get(params.playerID);
 	if (cacheValue !== undefined) {
-		console.log("in-memory query cache hit for", params);
+		console.log("query cache hit for", params);
 		return cacheValue;
 	}
 	const data = await fetchQuery(params.apiBaseUrl, PLAYER_EVENT_QUERY, params);
