@@ -64,11 +64,10 @@ export function parseLogURL(urlString: string): ParsedLogQueryParams {
 	// If fight and source are unspecified, the user must be prompted to select a specific
 	// fight and player, similar to XIVAnalysis.
 	const searchParams = url.searchParams;
-	const fightID = searchParams.has("fight") ? parseInt(searchParams.get("fight")!) : undefined;
-	const playerID =
-		fightID !== undefined && searchParams.has("source")
-			? parseInt(searchParams.get("source")!)
-			: undefined;
+	const maybeIntFightID = parseInt(searchParams.get("fight") ?? "NaN");
+	const fightID = isNaN(maybeIntFightID) ? undefined : maybeIntFightID;
+	const maybePlayerID = parseInt(searchParams.get("source") ?? "NaN");
+	const playerID = isNaN(maybePlayerID) ? undefined : maybePlayerID;
 	return {
 		apiBaseUrl: `https://${url.hostname}/api/v2/user/`,
 		reportCode,
@@ -167,10 +166,30 @@ query ListReportFights($reportCode: String) {
 	}
 }`;
 
+const LIST_FIGHT_IDS_QUERY = `
+query ListReportFightIDs($reportCode: String) {
+	reportData {
+		report(code: $reportCode) {
+			fights {
+				id
+			}
+		}
+	}
+}`;
+
 const LIST_PLAYERS_QUERY = `
 query ListFightPlayers($reportCode: String, $fightID: Int) {
 	reportData {
 		report(code: $reportCode) {
+			fights(fightIDs: [$fightID]) {
+				bossPercentage
+				encounterID
+				id
+				name
+				kill
+				startTime
+			}
+			startTime
 			playerDetails(fightIDs: [$fightID])
 		}
 	}
@@ -228,6 +247,32 @@ async function fetchQuery(apiBaseUrl: string, query: string, variables: any): Pr
 // hold true, right? Right???
 const fightQueryCache = new Map<ReportCode, FightInfo[]>();
 
+function formatFightInfo(
+	reportStartTime: number,
+	fightInfo: {
+		id: number;
+		name: string;
+		kill: boolean;
+		bossPercentage: number | null;
+		startTime: number;
+	},
+): FightInfo {
+	// We do not currently use the encounterID field, but we can do so in the future to
+	// add automatic marker import.
+	const pctString =
+		fightInfo.bossPercentage === null
+			? localize({ en: "(trash)", zh: "（垃圾）" }).toString()
+			: fightInfo.bossPercentage.toFixed(1) + "%";
+	return {
+		label: {
+			en: `${fightInfo.name} - ${fightInfo.kill ? "kill" : pctString}`,
+			zh: `${fightInfo.name} - ${fightInfo.kill ? "杀" : pctString}`,
+		},
+		id: fightInfo.id,
+		unixStartTime: reportStartTime + fightInfo.startTime,
+	};
+}
+
 export async function queryFightList(
 	apiBaseUrl: string,
 	reportCode: ReportCode,
@@ -238,43 +283,39 @@ export async function queryFightList(
 	}
 	const data = await fetchQuery(apiBaseUrl, LIST_FIGHTS_QUERY, { reportCode });
 	const reportStartTime = data.reportData.report.startTime as number;
-	const result = data.reportData.report.fights.map((fightInfo: any) => {
-		// We do not currently use the encounterID field, but we can do so in the future to
-		// add automatic marker import.
-		const pctString =
-			fightInfo.bossPercentage === null
-				? localize({ en: "(trash)", zh: "（垃圾）" }).toString()
-				: fightInfo.bossPercentage.toFixed(1) + "%";
-		return {
-			label: {
-				en: `${fightInfo.name} - ${fightInfo.kill ? "kill" : pctString}`,
-				zh: `${fightInfo.name} - ${fightInfo.kill ? "杀" : pctString}`,
-			},
-			id: fightInfo.id,
-			unixStartTime: reportStartTime + fightInfo.startTime,
-		};
-	});
+	const result = data.reportData.report.fights.map((fightInfo: any) =>
+		formatFightInfo(reportStartTime, fightInfo),
+	);
 	fightQueryCache.set(reportCode, result);
 	return result;
+}
+
+export async function queryLastFightID(
+	apiBaseUrl: string,
+	reportCode: ReportCode,
+): Promise<number> {
+	const data = await fetchQuery(apiBaseUrl, LIST_FIGHT_IDS_QUERY, { reportCode });
+	const ids = data.reportData.report.fights.map((info: any) => info.id);
+	return Math.max(...ids);
 }
 
 function formatPlayerName(actor: { name: string; server: string }): string {
 	return `${actor.name ?? localize({ en: "(name unknown)", zh: "（无名）" })} @ ${actor.server ?? localize({ en: "(world unknown)", zh: "（未知地区）" })}`;
 }
 
-// Map reportCode -> fightID -> list of player info
-const playerQueryCache = new Map<ReportCode, Map<FightID, PlayerInfo[]>>();
+// Map reportCode -> fightID -> fight label + list of player info
+const playerQueryCache = new Map<ReportCode, Map<FightID, [FightInfo, PlayerInfo[]]>>();
 export async function queryPlayerList(
 	apiBaseUrl: string,
 	reportCode: ReportCode,
 	fightID: FightID,
-): Promise<PlayerInfo[]> {
+): Promise<[FightInfo, PlayerInfo[]]> {
 	const cacheValue = playerQueryCache.get(reportCode)?.get(fightID);
 	if (cacheValue !== undefined) {
 		return cacheValue;
 	}
 	const data = await fetchQuery(apiBaseUrl, LIST_PLAYERS_QUERY, { reportCode, fightID });
-	const result = Object.values(data.reportData.report.playerDetails.data.playerDetails)
+	const players = Object.values(data.reportData.report.playerDetails.data.playerDetails)
 		.flat()
 		.map((playerInfo: any) => {
 			return {
@@ -283,12 +324,14 @@ export async function queryPlayerList(
 				job: FFLOGS_JOB_MAP.get(playerInfo.type) ?? "???",
 			};
 		});
+	const reportStartTime = data.reportData.report.startTime as number;
+	const fightInfo = formatFightInfo(reportStartTime, data.reportData.report.fights[0]);
 	if (!playerQueryCache.has(reportCode)) {
-		playerQueryCache.set(reportCode, new Map([[fightID, result]]));
+		playerQueryCache.set(reportCode, new Map([[fightID, [fightInfo, players]]]));
 	} else {
-		playerQueryCache.get(reportCode)!.set(fightID, result);
+		playerQueryCache.get(reportCode)!.set(fightID, [fightInfo, players]);
 	}
-	return result;
+	return [fightInfo, players];
 }
 
 // In-memory cache for log import state.

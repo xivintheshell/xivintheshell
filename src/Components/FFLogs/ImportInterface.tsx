@@ -28,6 +28,7 @@ import {
 	parseLogURL,
 	PlayerInfo,
 	queryFightList,
+	queryLastFightID,
 	queryPlayerEvents,
 	queryPlayerList,
 } from "./Queries";
@@ -284,6 +285,7 @@ export function FflogsImportFlow() {
 			// fightList is valid during CHOOSE_PLAYER in case they wish to go back one page.
 			fightList.current = [];
 			playerList.current = [];
+			chosenFightInfo.current = undefined;
 		}
 		if (
 			![
@@ -349,6 +351,7 @@ export function FflogsImportFlow() {
 
 	const logInfo = useRef<ParsedLogQueryParams | undefined>(undefined);
 	const fightList = useRef<FightInfo[]>([]);
+	const chosenFightInfo = useRef<FightInfo | undefined>(undefined);
 	const playerList = useRef<PlayerInfo[]>([]);
 	// Intermediate logimport state is valid iff flowState is ADJUSTING_CONFIG.
 	const intermediateImportState = useRef<IntermediateLogImportState | undefined>(undefined);
@@ -428,7 +431,7 @@ export function FflogsImportFlow() {
 	</div>;
 
 	const importLogComponent = <form
-		onSubmit={(e) => {
+		onSubmit={async (e) => {
 			e.preventDefault();
 			if (flowState !== LogImportFlowState.AWAITING_LOG_LINK) {
 				return;
@@ -439,37 +442,45 @@ export function FflogsImportFlow() {
 					throw new Error(localize(partialLogInfo.error).toString());
 				}
 				setFlowState(LogImportFlowState.QUERYING_LOG_LINK);
+				// Special case: if the URL parameters contained fight=last, then issue an extra
+				// query to get the ID of the last fight.
+				if (new URL(logLink).searchParams.get("fight") === "last") {
+					console.log("querying last fight ID");
+					const lastFightID = await queryLastFightID(
+						partialLogInfo.apiBaseUrl,
+						partialLogInfo.reportCode,
+					);
+					partialLogInfo.fightID = lastFightID;
+				}
 				logInfo.current = partialLogInfo;
 				if (partialLogInfo.fightID === undefined) {
-					queryFightList(partialLogInfo.apiBaseUrl, partialLogInfo.reportCode).then(
-						(infos) => {
-							fightList.current = infos;
-							console.log("choosing from", infos.length, "fights");
-							setFlowState(LogImportFlowState.CHOOSE_FIGHT);
-						},
+					const infos = await queryFightList(
+						partialLogInfo.apiBaseUrl,
+						partialLogInfo.reportCode,
 					);
+					fightList.current = infos;
+					console.log("choosing from", infos.length, "fights");
+					setFlowState(LogImportFlowState.CHOOSE_FIGHT);
 				} else if (partialLogInfo.playerID === undefined) {
-					queryPlayerList(
+					const infos = await queryPlayerList(
 						partialLogInfo.apiBaseUrl,
 						partialLogInfo.reportCode,
 						partialLogInfo.fightID,
-					).then((infos) => {
-						fightList.current = [];
-						playerList.current = infos;
-						console.log("choosing from", infos.length, "players");
-						setFlowState(LogImportFlowState.CHOOSE_PLAYER);
-					});
+					);
+					fightList.current = [];
+					[chosenFightInfo.current, playerList.current] = infos;
+					console.log("choosing from", playerList.current.length, "players");
+					setFlowState(LogImportFlowState.CHOOSE_PLAYER);
 				} else {
-					queryPlayerEvents({
+					const state = await queryPlayerEvents({
 						apiBaseUrl: partialLogInfo.apiBaseUrl,
 						reportCode: partialLogInfo.reportCode,
 						fightID: partialLogInfo.fightID,
 						playerID: partialLogInfo.playerID,
-					}).then((state) => {
-						intermediateImportState.current = state;
-						console.log(`preparing to import ${state.actions.length} skills`);
-						setFlowState(LogImportFlowState.ADJUSTING_CONFIG);
 					});
+					intermediateImportState.current = state;
+					console.log(`preparing to import ${state.actions.length} skills`);
+					setFlowState(LogImportFlowState.ADJUSTING_CONFIG);
 				}
 			} catch (e) {
 				console.error(e);
@@ -534,9 +545,9 @@ export function FflogsImportFlow() {
 					runningFightOrPlayerQuery.current = true;
 					queryPlayerList(partialLogInfo.apiBaseUrl, partialLogInfo.reportCode, info.id)
 						.then((infos) => {
-							playerList.current = infos;
+							[chosenFightInfo.current, playerList.current] = infos;
 							partialLogInfo.fightID = info.id;
-							console.log("choosing from", infos.length, "players");
+							console.log("choosing from", playerList.current.length, "players");
 							setFlowState(LogImportFlowState.CHOOSE_PLAYER);
 						})
 						.catch((e) => {
@@ -560,6 +571,12 @@ export function FflogsImportFlow() {
 	</div>;
 
 	const playerPicker = <div>
+		{chosenFightInfo.current && <span>
+			{new Date(chosenFightInfo.current.unixStartTime).toLocaleString()}
+			{" - "}
+			{localize(chosenFightInfo.current.label)}
+		</span>}
+		<br />
 		<b>{localize({ en: "Choose a player", zh: "选择队员" })}</b>
 		<hr style={{ marginTop: 10, marginBottom: 10 }} />
 		<ul>
