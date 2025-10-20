@@ -326,9 +326,6 @@ export function FflogsImportFlow() {
 		LogImportFlowState.AWAITING_AUTH,
 	);
 	const setFlowState = (newFlowState: LogImportFlowState) => {
-		if (newFlowState === flowState) {
-			return;
-		}
 		// Clear intermediate state variables when transitioning between states.
 		if (flowState === LogImportFlowState.IMPORT_DONE) {
 			setImportProgress(null);
@@ -387,31 +384,28 @@ export function FflogsImportFlow() {
 			return;
 		}
 		setFlowState(LogImportFlowState.CHECKING_AUTH);
-		getAccessToken()
-			.then((status) => {
+		async function initialTryAuth() {
+			let nextAuthState = LogImportFlowState.AWAITING_AUTH;
+			try {
+				const status = await getAccessToken();
 				if (status === AccessTokenStatus.SUCCESS) {
-					setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
+					nextAuthState = LogImportFlowState.AWAITING_LOG_LINK;
 				} else if (dialogOpen && status === AccessTokenStatus.UNAUTHORIZED) {
 					// Automatically attempt to perform authorization flow.
-					initiateFflogsAuth()
-						.then(getAccessToken)
-						.then((status) => {
-							setFlowState(
-								status === AccessTokenStatus.SUCCESS
-									? LogImportFlowState.AWAITING_LOG_LINK
-									: LogImportFlowState.AWAITING_AUTH,
-							);
-						})
-						.catch((e) => {
-							console.log("Error during automatic FFLogs authentication");
-							console.error(e);
-							setFlowState(LogImportFlowState.AWAITING_AUTH);
-						});
-				} else {
-					setFlowState(LogImportFlowState.AWAITING_AUTH);
+					await initiateFflogsAuth();
+					const newStatus = await getAccessToken();
+					console.log(newStatus)
+					if (newStatus === AccessTokenStatus.SUCCESS) {
+						nextAuthState = LogImportFlowState.AWAITING_LOG_LINK;
+					}
 				}
-			})
-			.catch(() => setFlowState(LogImportFlowState.AWAITING_AUTH));
+			} catch (e) {
+				console.log("Error during automatic FFLogs authentication");
+				console.error(e);
+			}
+			setFlowState(nextAuthState);
+		}
+		initialTryAuth();
 	}, []);
 
 	const logInfo = useRef<ParsedLogQueryParams | undefined>(undefined);
