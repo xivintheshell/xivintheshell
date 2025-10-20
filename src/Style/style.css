@@ -68,6 +68,25 @@
     box-shadow: 0 0 12px rgba(190, 15, 15, 0.4);
 }
 
+.importPage {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.importPage > hr {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.importPage > ul {
+    margin-block-start: 0;
+    margin-block-end: 0;
+}
+
+.importPage > ul > li + li {
+    margin-top: 5px;
+}
 
 /*======== individual elems ========*/
 

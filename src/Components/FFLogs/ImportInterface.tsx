@@ -431,24 +431,30 @@ export function FflogsImportFlow() {
 	</button>;
 
 	// 0. AUTH
-	const authComponent = <div>
-		<button
-			onClick={() => {
-				initiateFflogsAuth();
-				setFlowState(LogImportFlowState.CHECKING_AUTH);
-			}}
-		>
-			click here to authenticate your fflogs account
-		</button>
-		<br />
-		<br />
+	const authComponent = <div className="importPage">
+		<div>
+			<button
+				onClick={() => {
+					initiateFflogsAuth();
+					setFlowState(LogImportFlowState.CHECKING_AUTH);
+				}}
+			>
+				click here to authenticate your fflogs account
+			</button>
+		</div>
 		<span>(will redirect to www.fflogs.com)</span>
 	</div>;
 
-	const authProcessingComponent = <div>verifying authentication...</div>;
+	const authProcessingComponent = <div className="importPage">
+		<p>
+			{localize({
+				en: "verifying authentication...",
+			})}
+		</p>
+	</div>;
 
 	// 1. QUERY AND IMPORT LOG
-	const limitations = <div>
+	const limitations = <>
 		<div>
 			<b>{localize({ en: "Limitations", zh: "限制" })}</b>
 		</div>
@@ -457,145 +463,148 @@ export function FflogsImportFlow() {
 		</div>}
 		<div>
 			{localize({ en: "Log import is currently subject to the following limitations:" })}
-		</div>
-		<ul>
-			<li>
-				{localize({
-					en: "FFLogs only records combat stats for the creator of the log, so stats must be manually entered for other players.",
-				})}
-			</li>
-			<li>
-				{localize({
-					en: "FFLogs cannot record actions that were performed before combat began. Pre-pull actions must be entered manually before import.",
-				})}
-			</li>
-			<li>
-				{localize({
-					en: "Manual buff click-offs, and buff toggles from entering/leaving a zone (for example: leaving Ley Lines or Sacred Soil) are not currently processed by XIV in the Shell.",
-				})}
-			</li>
-			<li>
-				{localize({
-					en: "The offset of MP and Lucid Dreaming ticks are not currently synchronized in XIV in the Shell.",
-				})}
-			</li>
-			<li>
-				{localize({
-					en: "XIV in the Shell currently does not track when multiple enemies are hit by an ability.",
-				})}
-			</li>
-			<li>
-				{localize({
-					en: "XIV in the Shell does not reflect job gauge updates that are affected by random factors, or by whether an enemy is hit or killed.",
-				})}
-			</li>
-		</ul>
-		<div>
+			<ul>
+				<li>
+					{localize({
+						en: "FFLogs only records combat stats for the creator of the log, so stats must be manually entered for other players.",
+					})}
+				</li>
+				<li>
+					{localize({
+						en: "FFLogs cannot record actions that were performed before combat began. Pre-pull actions must be entered manually before import.",
+					})}
+				</li>
+				<li>
+					{localize({
+						en: "Manual buff click-offs, and buff toggles from entering/leaving a zone (for example: leaving Ley Lines or Sacred Soil) are not currently processed by XIV in the Shell.",
+					})}
+				</li>
+				<li>
+					{localize({
+						en: "The offset of MP and Lucid Dreaming ticks are not currently synchronized in XIV in the Shell.",
+					})}
+				</li>
+				<li>
+					{localize({
+						en: "XIV in the Shell currently does not track when multiple enemies are hit by an ability.",
+					})}
+				</li>
+				<li>
+					{localize({
+						en: "XIV in the Shell does not reflect job gauge updates that are affected by random factors, or by whether an enemy is hit or killed.",
+					})}
+				</li>
+			</ul>
 			{localize({
 				en: "These may change in future updates.",
 			})}
 		</div>
-	</div>;
+	</>;
 
-	const importLogComponent = <form
-		onSubmit={async (e) => {
-			e.preventDefault();
-			if (flowState !== LogImportFlowState.AWAITING_LOG_LINK) {
-				return;
-			}
-			try {
-				const partialLogInfo = parseLogURL(logLink);
-				if (partialLogInfo.error) {
-					throw new Error(localize(partialLogInfo.error).toString());
+	const importLogComponent = <div className="importPage">
+		<form
+			onSubmit={async (e) => {
+				e.preventDefault();
+				if (flowState !== LogImportFlowState.AWAITING_LOG_LINK) {
+					return;
 				}
-				setFlowState(LogImportFlowState.QUERYING_LOG_LINK);
-				// Special case: if the URL parameters contained fight=last, then issue an extra
-				// query to get the ID of the last fight.
-				if (new URL(logLink).searchParams.get("fight") === "last") {
-					console.log("querying last fight ID");
-					const lastFightID = await queryLastFightID(
-						partialLogInfo.apiBaseUrl,
-						partialLogInfo.reportCode,
-					);
-					partialLogInfo.fightID = lastFightID;
+				try {
+					const partialLogInfo = parseLogURL(logLink);
+					if (partialLogInfo.error) {
+						throw new Error(localize(partialLogInfo.error).toString());
+					}
+					setFlowState(LogImportFlowState.QUERYING_LOG_LINK);
+					// Special case: if the URL parameters contained fight=last, then issue an extra
+					// query to get the ID of the last fight.
+					if (new URL(logLink).searchParams.get("fight") === "last") {
+						console.log("querying last fight ID");
+						const lastFightID = await queryLastFightID(
+							partialLogInfo.apiBaseUrl,
+							partialLogInfo.reportCode,
+						);
+						partialLogInfo.fightID = lastFightID;
+					}
+					logInfo.current = partialLogInfo;
+					if (partialLogInfo.fightID === undefined) {
+						const infos = await queryFightList(
+							partialLogInfo.apiBaseUrl,
+							partialLogInfo.reportCode,
+						);
+						fightList.current = infos;
+						console.log("choosing from", infos.length, "fights");
+						setFlowState(LogImportFlowState.CHOOSE_FIGHT);
+					} else if (partialLogInfo.playerID === undefined) {
+						const infos = await queryPlayerList(
+							partialLogInfo.apiBaseUrl,
+							partialLogInfo.reportCode,
+							partialLogInfo.fightID,
+						);
+						fightList.current = [];
+						[chosenFightInfo.current, playerList.current] = infos;
+						console.log("choosing from", playerList.current.length, "players");
+						setFlowState(LogImportFlowState.CHOOSE_PLAYER);
+					} else {
+						const state = await queryPlayerEvents({
+							apiBaseUrl: partialLogInfo.apiBaseUrl,
+							reportCode: partialLogInfo.reportCode,
+							fightID: partialLogInfo.fightID,
+							playerID: partialLogInfo.playerID,
+						});
+						setIntermediateImportState(state);
+						console.log(`preparing to import ${state.actions.length} skills`);
+						setFlowState(LogImportFlowState.ADJUSTING_CONFIG);
+					}
+				} catch (e) {
+					console.error(e);
+					window.alert(e);
+					setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
 				}
-				logInfo.current = partialLogInfo;
-				if (partialLogInfo.fightID === undefined) {
-					const infos = await queryFightList(
-						partialLogInfo.apiBaseUrl,
-						partialLogInfo.reportCode,
-					);
-					fightList.current = infos;
-					console.log("choosing from", infos.length, "fights");
-					setFlowState(LogImportFlowState.CHOOSE_FIGHT);
-				} else if (partialLogInfo.playerID === undefined) {
-					const infos = await queryPlayerList(
-						partialLogInfo.apiBaseUrl,
-						partialLogInfo.reportCode,
-						partialLogInfo.fightID,
-					);
-					fightList.current = [];
-					[chosenFightInfo.current, playerList.current] = infos;
-					console.log("choosing from", playerList.current.length, "players");
-					setFlowState(LogImportFlowState.CHOOSE_PLAYER);
-				} else {
-					const state = await queryPlayerEvents({
-						apiBaseUrl: partialLogInfo.apiBaseUrl,
-						reportCode: partialLogInfo.reportCode,
-						fightID: partialLogInfo.fightID,
-						playerID: partialLogInfo.playerID,
-					});
-					setIntermediateImportState(state);
-					console.log(`preparing to import ${state.actions.length} skills`);
-					setFlowState(LogImportFlowState.ADJUSTING_CONFIG);
-				}
-			} catch (e) {
-				console.error(e);
-				window.alert(e);
-				setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
-			}
-		}}
-	>
-		{/* TODO automatically submit on paste, like xiva does? */}
-		<Input
-			description={
-				<div>
-					{localize({
-						en: "enter an FFLogs report link",
-						zh: "请输入FFLogs日志网址",
-					})}
-				</div>
-			}
-			onChange={setLogLink}
-			width={50}
-			defaultValue={logLink}
-			autoFocus
-		/>
-		<br />
-		<button
-			type="submit"
-			disabled={flowState !== LogImportFlowState.AWAITING_LOG_LINK || !logLink}
+			}}
 		>
-			{localize({ en: "import", zh: "进口" })}
-		</button>
-		<br />
-		<br />
-		<button onClick={() => setFlowState(LogImportFlowState.AWAITING_AUTH)}>
-			{localize({ en: "back to authorization", zh: "从新授权" })}
-		</button>
+			{/* TODO automatically submit on paste, like xiva does? */}
+			<Input
+				description={
+					<div>
+						{localize({
+							en: "enter an FFLogs report link",
+							zh: "请输入FFLogs日志网址",
+						})}
+					</div>
+				}
+				onChange={setLogLink}
+				width={50}
+				defaultValue={logLink}
+				autoFocus
+			/>
+			<div>
+				<button
+					type="submit"
+					disabled={flowState !== LogImportFlowState.AWAITING_LOG_LINK || !logLink}
+					style={{ marginTop: 10, marginBottom: 10 }}
+				>
+					{localize({ en: "import", zh: "进口" })}
+				</button>
+				<br />
+				<button
+					type="button"
+					onClick={() => setFlowState(LogImportFlowState.AWAITING_AUTH)}
+				>
+					{localize({ en: "back to authorization", zh: "从新授权" })}
+				</button>
+			</div>
+		</form>
 		<hr />
 		{limitations}
-	</form>;
+	</div>;
 
 	// TODO add an actual spinner
-	const querySpinner = <div>
+	const querySpinner = <div className="importPage">
 		<p>{localize({ en: "retrieving log...", zh: "正在检索日志..." })}</p>
 	</div>;
 
 	const runningFightOrPlayerQuery = useRef<boolean>(false);
-	const fightPicker = <div>
+	const fightPicker = <div className="importPage">
 		<b>{localize({ en: "Choose a fight", zh: "选择战场" })}</b>
-		<hr style={{ marginTop: 10, marginBottom: 10 }} />
 		<ul>
 			{fightList.current.map((info, i) => <li
 				key={i}
@@ -634,18 +643,16 @@ export function FflogsImportFlow() {
 				</span>
 			</li>)}
 		</ul>
-		{cancelButton}
+		<div>{cancelButton}</div>
 	</div>;
 
-	const playerPicker = <div>
+	const playerPicker = <div className="importPage">
 		{chosenFightInfo.current && <span>
 			{new Date(chosenFightInfo.current.unixStartTime).toLocaleString()}
 			{" - "}
 			{localize(chosenFightInfo.current.label)}
 		</span>}
-		<br />
 		<b>{localize({ en: "Choose a player", zh: "选择队员" })}</b>
-		<hr style={{ marginTop: 10, marginBottom: 10 }} />
 		<ul>
 			{playerList.current.map((info, i) => <li
 				key={i}
@@ -696,19 +703,21 @@ export function FflogsImportFlow() {
 		{fightList.current.length === 0 ? (
 			// If we came from fight selection, the cancel button should go back there.
 			// Otherwise, go back to link entry.
-			cancelButton
+			<div>{cancelButton}</div>
 		) : (
-			<button
-				onClick={() => {
-					setFlowState(LogImportFlowState.CHOOSE_FIGHT);
-					playerList.current = [];
-				}}
-			>
-				{localize({
-					en: "back to fight selection",
-					zh: "回到战场选择",
-				})}
-			</button>
+			<div>
+				<button
+					onClick={() => {
+						setFlowState(LogImportFlowState.CHOOSE_FIGHT);
+						playerList.current = [];
+					}}
+				>
+					{localize({
+						en: "back to fight selection",
+						zh: "回到战场选择",
+					})}
+				</button>
+			</div>
 		)}
 	</div>;
 
@@ -759,53 +768,57 @@ export function FflogsImportFlow() {
 			</span>,
 		})}
 	/>;
-	const statBlock = <div>
+	const statBlock = <div className="importPage">
 		{localize({
 			en: <p>
 				Reading {intermediateImportState?.actions.length ?? 0} skills for{" "}
 				<b>{intermediateImportState?.playerName}</b>
 			</p>,
 		})}
-		{intermediateImportState?.statsInLog
-			? localize({
-					en: "Using stats found in log. Please adjust as needed.",
-				})
-			: localize({
-					en: "Exact stats not found in log; using values in current game config. Please enter manually or adjust with the Config pane after import.",
-				})}{" "}
-		{configHelp}
-		<hr style={{ marginTop: 10, marginBottom: 10 }} />
 		<div>
-			<span>{localize({ en: "job: ", zh: "职业：" })}</span>
-			{intermediateImportState?.job ?? controller.game.job}
-		</div>
-		{intermediateImportState && <div style={{ marginBottom: 10 }}>
-			<span>{localize({ en: "level: ", zh: "等级：" })}</span>
-			<select
-				style={{ outline: "none", color: colors.text }}
-				value={intermediateImportState.level}
-				onChange={(e) =>
-					setIntermediateImportState({
-						...intermediateImportState,
-						level: parseInt(e.target.value) as LevelSync,
+			{intermediateImportState?.statsInLog
+				? localize({
+						en: "Using stats found in log. Please adjust as needed.",
 					})
-				}
-			>
-				<option key={LevelSync.lvl100} value={LevelSync.lvl100}>
-					100
-				</option>
-				<option key={LevelSync.lvl90} value={LevelSync.lvl90}>
-					90
-				</option>
-				<option key={LevelSync.lvl80} value={LevelSync.lvl80}>
-					80
-				</option>
-				<option key={LevelSync.lvl70} value={LevelSync.lvl70}>
-					70
-				</option>
-			</select>
-		</div>}
-		<div style={{ display: "flex", gap: 1, flexDirection: "column" }}>
+				: localize({
+						en: "Exact stats not found in log; using values in current game config. Please enter manually or adjust with the Config pane after import.",
+					})}{" "}
+			{configHelp}
+		</div>
+		<hr />
+		<div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+			<div>
+				<span>{localize({ en: "job: ", zh: "职业：" })}</span>
+				{intermediateImportState?.job ?? controller.game.job}
+			</div>
+			{intermediateImportState && <div>
+				<span>{localize({ en: "level: ", zh: "等级：" })}</span>
+				<select
+					style={{ outline: "none", color: colors.text }}
+					value={intermediateImportState.level}
+					onChange={(e) =>
+						setIntermediateImportState({
+							...intermediateImportState,
+							level: parseInt(e.target.value) as LevelSync,
+						})
+					}
+				>
+					<option key={LevelSync.lvl100} value={LevelSync.lvl100}>
+						100
+					</option>
+					<option key={LevelSync.lvl90} value={LevelSync.lvl90}>
+						90
+					</option>
+					<option key={LevelSync.lvl80} value={LevelSync.lvl80}>
+						80
+					</option>
+					<option key={LevelSync.lvl70} value={LevelSync.lvl70}>
+						70
+					</option>
+				</select>
+			</div>}
+		</div>
+		<div style={{ display: "flex", gap: 5, flexDirection: "column" }}>
 			{EXPOSED_CONFIG_FIELDS.map((field) => <div key={field}>
 				<ConfigField
 					field={field}
@@ -824,17 +837,17 @@ export function FflogsImportFlow() {
 				/>
 			</div>)}
 		</div>
-		<hr style={{ marginTop: 10, marginBottom: 10 }} />
+		<hr />
 		{/* Do not use the common Checkbox component, since that backs values to localStorage and
 		we don't want to persist its state. */}
 		{needsForceReset() ? (
-			<div style={{ marginBottom: 5 }}>
+			<div>
 				<span>
 					{localize({ en: "Imported actions will replace the current timeline." })}
 				</span>
 			</div>
 		) : (
-			<div style={{ marginBottom: 5 }}>
+			<div>
 				<input
 					className="shellCheckbox"
 					type="checkbox"
@@ -847,39 +860,39 @@ export function FflogsImportFlow() {
 				{resetOnImport ? resetActiveHelp : resetInactiveHelp}
 			</div>
 		)}
-		<button
-			style={{ marginTop: 10 }}
-			onClick={() => {
-				if (intermediateImportState) {
-					setFlowState(LogImportFlowState.PROCESSING_IMPORT);
-					const gen = applyImportedActions(
-						intermediateImportState,
-						resetOnImport || needsForceReset(),
-					);
-					// We use a dummy setTimeout to ensure we transition the UI to the processing screen.
-					setTimeout(() => {
-						let iter = gen.next();
-						while (!iter.done) {
-							setImportProgress({ ...iter.value });
-							iter = gen.next();
-						}
-						setInvalidActions(iter.value);
-						setFlowState(LogImportFlowState.IMPORT_DONE);
-					}, 0);
-				} else {
-					console.error("intermediate state was undefined when confirming import");
-					setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
-					setDialogOpen(false);
-				}
-			}}
-		>
-			{localize({
-				en: "go",
-				zh: "确定",
-			})}
-		</button>
-		<br />
-		{cancelButton}
+		<div>
+			<button
+				onClick={() => {
+					if (intermediateImportState) {
+						setFlowState(LogImportFlowState.PROCESSING_IMPORT);
+						const gen = applyImportedActions(
+							intermediateImportState,
+							resetOnImport || needsForceReset(),
+						);
+						// We use a dummy setTimeout to ensure we transition the UI to the processing screen.
+						setTimeout(() => {
+							let iter = gen.next();
+							while (!iter.done) {
+								setImportProgress({ ...iter.value });
+								iter = gen.next();
+							}
+							setInvalidActions(iter.value);
+							setFlowState(LogImportFlowState.IMPORT_DONE);
+						}, 0);
+					} else {
+						console.error("intermediate state was undefined when confirming import");
+						setFlowState(LogImportFlowState.AWAITING_LOG_LINK);
+						setDialogOpen(false);
+					}
+				}}
+			>
+				{localize({
+					en: "go",
+					zh: "确定",
+				})}
+			</button>
+		</div>
+		<div>{cancelButton}</div>
 	</div>;
 
 	// 3. PROCESS LOG IMPORT
@@ -897,7 +910,7 @@ export function FflogsImportFlow() {
 	};
 	const trColor = (i: number) =>
 		i % 2 === 1 ? colors.timelineEditor.bgAlternateRow : "transparent";
-	const importProgressTable = importProgress?.deltas.length && <div>
+	const importProgressTable = importProgress?.deltas.length && <>
 		<hr />
 		<div>
 			{localize({
@@ -943,15 +956,14 @@ export function FflogsImportFlow() {
 		{importProgress.spilledDeltas ? (
 			<span>{localize({ en: `...and ${importProgress.spilledDeltas} more` })}</span>
 		) : undefined}
-	</div>;
-	const processingSpinner = <div>
+	</>;
+	const processingSpinner = <div className="importPage">
 		<div>
 			{localize({
 				en: "processing actions (this may take a moment)...",
 				zh: "正在技能处理中（有可能会花一些时间）...",
 			})}
 		</div>
-		<br />
 		{importProgress && <div>
 			<span>
 				{importProgress.processed} / {importProgress.total}
@@ -964,9 +976,9 @@ export function FflogsImportFlow() {
 	// 4. IMPORT DONE; TIME TO CELEBRATE
 	const invalidActionsTable =
 		invalidActions.length > 0 ? (
-			<div>
+			<>
 				{localize({
-					en: `The imported timeline produced ${invalidActions.length} invalid action${invalidActions.length === 1 ? "" : "s"}.`,
+					en: `The imported timeline produced ${invalidActions.length} invalid action${invalidActions.length === 1 ? "" : "s"}:`,
 				})}
 				<table style={tableStyle}>
 					<thead>
@@ -998,26 +1010,29 @@ export function FflogsImportFlow() {
 				{invalidActions.length > 10 ? (
 					<span>{localize({ en: `...and ${invalidActions.length - 10} more` })}</span>
 				) : undefined}
-				<br />
-			</div>
+			</>
 		) : undefined;
 
-	const importSummary = <div>
-		<b>{localize({ en: "Import successful!", zh: "进口成功！" })}</b>
-		{localize({
-			en: " You may now close this dialog.",
-			zh: "您现在可以关闭此对话框。",
-		})}
-		<br />
+	const importSummary = <div className="importPage">
+		<p>
+			<b>{localize({ en: "Import successful!", zh: "进口成功！" })}</b>
+			{localize({
+				en: " You may now close this dialog.",
+				zh: "您现在可以关闭此对话框。",
+			})}
+		</p>
 		{importProgressTable}
 		<br />
 		{invalidActionsTable}
-		<button onClick={() => setDialogOpen(false)}>
-			{localize({
-				en: "finish",
-				zh: "完成",
-			})}
-		</button>
+		<br />
+		<div>
+			<button onClick={() => setDialogOpen(false)}>
+				{localize({
+					en: "finish",
+					zh: "完成",
+				})}
+			</button>
+		</div>
 	</div>;
 
 	const mainComponent =
