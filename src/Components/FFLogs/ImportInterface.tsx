@@ -394,7 +394,7 @@ export function FflogsImportFlow() {
 					// Automatically attempt to perform authorization flow.
 					await initiateFflogsAuth();
 					const newStatus = await getAccessToken();
-					console.log(newStatus)
+					console.log(newStatus);
 					if (newStatus === AccessTokenStatus.SUCCESS) {
 						nextAuthState = LogImportFlowState.AWAITING_LOG_LINK;
 					}
