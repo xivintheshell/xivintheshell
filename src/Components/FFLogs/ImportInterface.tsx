@@ -30,7 +30,6 @@ import {
 	getBorderStyling,
 	INDEX_TD_STYLE,
 	TIMESTAMP_TD_STYLE,
-	TR_STYLE,
 	updateInvalidStatus,
 } from "../TimelineEditor";
 import { AccessTokenStatus, getAccessToken, initiateFflogsAuth } from "./Auth";
@@ -45,6 +44,12 @@ import {
 	queryPlayerEvents,
 	queryPlayerList,
 } from "./Queries";
+
+const TR_STYLE: CSSProperties = {
+	width: "100%",
+	height: "1.6em",
+	outline: "none",
+};
 
 // === PROCESSING LOGGED ACTIONS ===
 
@@ -417,6 +422,11 @@ export function FflogsImportFlow() {
 		IntermediateLogImportState | undefined
 	>(undefined);
 
+	const confirmButtonStyle: CSSProperties = {
+		color: colors.emphasis,
+		backgroundColor: colors.accent,
+	};
+
 	const cancelButton = <button onClick={() => setFlowState(LogImportFlowState.AWAITING_LOG_LINK)}>
 		{localize({
 			en: "cancel",
@@ -433,16 +443,25 @@ export function FflogsImportFlow() {
 					setFlowState(LogImportFlowState.CHECKING_AUTH);
 				}}
 			>
-				click here to authenticate your fflogs account
+				{localize({
+					en: "click here to authorize your fflogs account",
+					zh: "点击此处进行授权fflogs账户",
+				})}
 			</button>
 		</div>
-		<span>(will redirect to www.fflogs.com)</span>
+		<span>
+			{localize({
+				en: "(will redirect to www.fflogs.com)",
+				zh: "（将重定向到www.fflogs.com）",
+			})}
+		</span>
 	</div>;
 
 	const authProcessingComponent = <div className="importPage">
 		<p>
 			{localize({
-				en: "verifying authentication...",
+				en: "verifying authorization...",
+				zh: "验证授权...",
 			})}
 		</p>
 	</div>;
@@ -453,7 +472,7 @@ export function FflogsImportFlow() {
 			<b>{localize({ en: "Limitations", zh: "限制" })}</b>
 		</div>
 		{getCurrentLanguage() === "zh" && <div>
-			<i>我们现在还在开发FFLogs进口功能，所以许多标签还没有完全被翻译。</i>🙇🏻
+			<i>我们现在还在开发FFLogs导入功能，所以许多标签还没有完全被翻译。</i>🙇🏻
 		</div>}
 		<div>
 			{localize({ en: "Log import is currently subject to the following limitations:" })}
@@ -495,6 +514,7 @@ export function FflogsImportFlow() {
 		</div>
 	</>;
 
+	const importButtonDisabled = flowState !== LogImportFlowState.AWAITING_LOG_LINK || !logLink;
 	const importLogComponent = <div className="importPage">
 		<form
 			onSubmit={async (e) => {
@@ -565,20 +585,20 @@ export function FflogsImportFlow() {
 						})}
 					</div>
 				}
+				style={{ width: "100%" }}
 				onChange={setLogLink}
-				width={50}
 				defaultValue={logLink}
+				fullWidthInput
 				autoFocus
 			/>
-			<div>
+			<div className="buttonHolder" style={{ marginTop: 10 }}>
 				<button
+					style={importButtonDisabled ? {} : confirmButtonStyle}
 					type="submit"
-					disabled={flowState !== LogImportFlowState.AWAITING_LOG_LINK || !logLink}
-					style={{ marginTop: 10, marginBottom: 10 }}
+					disabled={importButtonDisabled}
 				>
-					{localize({ en: "import", zh: "进口" })}
+					{localize({ en: "import", zh: "导入" })}
 				</button>
-				<br />
 				<button
 					type="button"
 					onClick={() => setFlowState(LogImportFlowState.AWAITING_AUTH)}
@@ -648,6 +668,7 @@ export function FflogsImportFlow() {
 		</span>}
 		<b>{localize({ en: "Choose a player", zh: "选择队员" })}</b>
 		<ul>
+			{/* TODO sort jobs by role */}
 			{playerList.current.map((info, i) => <li
 				key={i}
 				onClick={() => {
@@ -837,7 +858,10 @@ export function FflogsImportFlow() {
 		{needsForceReset() ? (
 			<div>
 				<span>
-					{localize({ en: "Imported actions will replace the current timeline." })}
+					{localize({
+						en: "Imported actions will replace the current timeline.",
+						zh: "导入的技能会覆盖现有时间轴。",
+					})}
 				</span>
 			</div>
 		) : (
@@ -850,12 +874,18 @@ export function FflogsImportFlow() {
 					}}
 					checked={resetOnImport}
 				/>
-				<span>{localize({ en: "Reset timeline on import" })} </span>
+				<span>
+					{localize({
+						en: "Reset timeline on import",
+						zh: "导入时覆盖现有时间轴",
+					})}{" "}
+				</span>
 				{resetOnImport ? resetActiveHelp : resetInactiveHelp}
 			</div>
 		)}
-		<div>
+		<div className="buttonHolder">
 			<button
+				style={confirmButtonStyle}
 				onClick={() => {
 					if (intermediateImportState) {
 						setFlowState(LogImportFlowState.PROCESSING_IMPORT);
@@ -885,8 +915,8 @@ export function FflogsImportFlow() {
 					zh: "确定",
 				})}
 			</button>
+			{cancelButton}
 		</div>
-		<div>{cancelButton}</div>
 	</div>;
 
 	// 3. PROCESS LOG IMPORT
@@ -948,7 +978,12 @@ export function FflogsImportFlow() {
 			</tbody>
 		</table>
 		{importProgress.spilledDeltas ? (
-			<span>{localize({ en: `...and ${importProgress.spilledDeltas} more` })}</span>
+			<span>
+				{localize({
+					en: `...and ${importProgress.spilledDeltas} more`,
+					zh: `...还有另外${importProgress.spilledDeltas}个`,
+				})}
+			</span>
 		) : undefined}
 	</>;
 	const processingSpinner = <div className="importPage">
@@ -973,6 +1008,7 @@ export function FflogsImportFlow() {
 			<>
 				{localize({
 					en: `The imported timeline produced ${invalidActions.length} invalid action${invalidActions.length === 1 ? "" : "s"}:`,
+					zh: `导入的时间轴产生了${invalidActions.length}无效的技能：`,
 				})}
 				<table style={tableStyle}>
 					<thead>
@@ -1002,14 +1038,19 @@ export function FflogsImportFlow() {
 					</tbody>
 				</table>
 				{invalidActions.length > 10 ? (
-					<span>{localize({ en: `...and ${invalidActions.length - 10} more` })}</span>
+					<span>
+						{localize({
+							en: `...and ${invalidActions.length - 10} more`,
+							zh: `...还有另外${invalidActions.length - 10}个`,
+						})}
+					</span>
 				) : undefined}
 			</>
 		) : undefined;
 
 	const importSummary = <div className="importPage">
 		<p>
-			<b>{localize({ en: "Import successful!", zh: "进口成功！" })}</b>
+			<b>{localize({ en: "Import successful!", zh: "导入成功！" })}</b>
 			{localize({
 				en: " You may now close this dialog.",
 				zh: "您现在可以关闭此对话框。",
@@ -1052,7 +1093,21 @@ export function FflogsImportFlow() {
 			<div>Bad state: {flowState}. Please contact us with a bug report.</div>
 		);
 
-	const body = <div ref={dialogRef}>{mainComponent}</div>;
+	const body = <div ref={dialogRef}>
+		<style>{`
+			button {
+				min-width: 35%;
+			}
+			.buttonHolder {
+				width: 100%;
+				display: flex;
+				flex-direction: column;
+				gap: 0.8em;
+				align-items: start;
+			}
+		`}</style>
+		{mainComponent}
+	</div>;
 
 	// Don't use a bespoke Clickable component for the expand button, since it suppresses Dialog.Trigger's
 	// built-in dismiss behavior.
@@ -1074,7 +1129,6 @@ export function FflogsImportFlow() {
 		}}
 	/>;
 
-	// TODO share more code with changelog
 	return <Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
 		<Dialog.Trigger render={dialogTrigger} nativeButton={false} />
 		<Dialog.Portal>
@@ -1094,7 +1148,7 @@ export function FflogsImportFlow() {
 				}}
 			>
 				<Dialog.Title
-					render={<h3>{localize({ en: "Import from FFLogs", zh: "FFLogs进口" })}</h3>}
+					render={<h3>{localize({ en: "Import from FFLogs", zh: "FFLogs导入" })}</h3>}
 				/>
 				<Dialog.Close render={exitTrigger} nativeButton={false} />
 				<Dialog.Description className="Description" render={body} />

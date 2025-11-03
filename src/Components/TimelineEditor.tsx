@@ -88,7 +88,7 @@ const ACTION_TD_STYLE: CSSProperties = {
 	paddingLeft: "0.3em",
 };
 
-export const TR_STYLE: CSSProperties = {
+const TR_STYLE: CSSProperties = {
 	width: "100%",
 	height: "1.6em",
 	userSelect: "none",

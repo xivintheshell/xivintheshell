@@ -288,6 +288,17 @@ export function paste() {
 	navigator.clipboard
 		.readText()
 		.then((clipText) => {
+			// HACK: If the clipboard starts with https:// www. or cn. it probably means we're trying
+			// to paste from fflogs and forgot to focus the log input line. To be robust we should
+			// properly track focus, but as a fast-path fix to avoid hitting any parsing code we
+			// just short-circuit here.
+			if (
+				clipText.startsWith("https://") ||
+				clipText.startsWith("www.") ||
+				clipText.startsWith("cn.")
+			) {
+				return;
+			}
 			const parsed = parsePasted(clipText);
 			if (parsed === undefined || parsed.length === 0) {
 				console.error("failed to paste parsed clipboard contents:");

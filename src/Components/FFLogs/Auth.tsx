@@ -115,6 +115,8 @@ export async function getAccessToken(): Promise<AccessTokenStatus> {
 	}
 	if (searchParams.get("state") !== expectedState) {
 		console.error("PKCE response did not have expected state; resetting flow");
+		console.log("expected:", expectedState);
+		console.log("actual:", searchParams.get("state"));
 		clearPKCEAuthState();
 		return AccessTokenStatus.BAD_PKCE_STATE;
 	}

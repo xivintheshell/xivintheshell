@@ -125,7 +125,7 @@ export function LoadSave() {
 			}}
 		/>
 		<div style={{ marginTop: 15, marginBottom: 10 }}>
-			<b>{localize({ en: "Import fight from FFLogs" })}</b>
+			<b>{localize({ en: "Import fight from FFLogs", zh: "从FFLogs导入战斗" })}</b>
 		</div>
 		<FflogsImportFlow />
 	</>;

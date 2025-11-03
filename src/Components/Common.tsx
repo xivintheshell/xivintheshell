@@ -496,6 +496,9 @@ type InputProps = {
 	componentColor?: string; // overrides entire component's color
 	autoFocus?: boolean;
 	placeholder?: string;
+	// when this is set, the "width" field (which is really used as "size") is ignored
+	// and the input field stretches to the length of the container
+	fullWidthInput?: boolean;
 };
 
 export function Input(props: InputProps) {
@@ -503,20 +506,21 @@ export function Input(props: InputProps) {
 		if (props.onChange) props.onChange(e.target.value);
 	};
 	const themeColors = getCurrentThemeColors();
-	const width = props.width ?? 5;
+	const size = props.fullWidthInput ? undefined : (props.width ?? 5);
 	const inputStyle: CSSProperties = {
 		color: props.style?.color ?? props.componentColor ?? themeColors.text,
 		backgroundColor: "transparent",
 		outline: "none",
 		border: "none",
 		borderBottom: "1px solid " + (props.componentColor ?? themeColors.text),
+		width: props.fullWidthInput ? "100%" : undefined,
 	};
 	const overrideStyle = props.style ?? {};
 	return <div style={{ ...overrideStyle, ...{ color: props.componentColor } }}>
 		<span>{props.description /* + "(" + this.state.value + ")"*/}</span>
 		<input
 			style={inputStyle}
-			size={width}
+			size={size}
 			type="text"
 			value={props.defaultValue}
 			onChange={onChange}
