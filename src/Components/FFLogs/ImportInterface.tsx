@@ -20,7 +20,6 @@ import { ConfigData, GameConfig, SerializedConfig } from "../../Game/GameConfig"
 import { Input, Help, StaticFn } from "../Common";
 import { ColorThemeContext, getCurrentThemeColors } from "../ColorTheme";
 import {
-	getCurrentLanguage,
 	localize,
 	localizeConfigField,
 	localizeSkillName,
@@ -474,7 +473,7 @@ export function FflogsImportFlow() {
 		<div>
 			{localize({
 				en: "Log import is currently subject to the following limitations:",
-				zh: "目前的logs导入功能有以下局限性："
+				zh: "目前的logs导入功能有以下局限性：",
 			})}
 			<ul>
 				<li>
@@ -486,37 +485,37 @@ export function FflogsImportFlow() {
 				<li>
 					{localize({
 						en: "FFLogs cannot record actions that were performed before combat began. Pre-pull actions must be entered manually before import.",
-						zh: "FFLogs不会记录战斗正式开始（拉怪）前的技能。预读技能需要在导入logs前手动添加。"
+						zh: "FFLogs不会记录战斗正式开始（拉怪）前的技能。预读技能需要在导入logs前手动添加。",
 					})}
 				</li>
 				<li>
 					{localize({
 						en: "Manual buff click-offs, and buff toggles from entering/leaving a zone (for example: leaving Ley Lines or Sacred Soil) are not currently processed by XIV in the Shell.",
-						zh: "XIV in the Shell目前不支持识别手动点掉buff的操作，也暂时无法识别通过进入/离开某区域开关buff（比如离开黑魔纹或野战治疗阵）。"
+						zh: "XIV in the Shell目前不支持识别手动点掉buff的操作，也暂时无法识别通过进入/离开某区域开关buff（比如离开黑魔纹或野战治疗阵）。",
 					})}
 				</li>
 				<li>
 					{localize({
 						en: "The offset of MP and Lucid Dreaming ticks are not currently synchronized in XIV in the Shell.",
-						zh: "XIV in the Shell目前不支持从logs识别跳蓝和跳醒梦的间隔。"
+						zh: "XIV in the Shell目前不支持从logs识别跳蓝和跳醒梦的间隔。",
 					})}
 				</li>
 				<li>
 					{localize({
 						en: "XIV in the Shell currently does not track when multiple enemies are hit by an ability.",
-						zh: "XIV in the Shell目前不支持识别技能命中的目标数，默认所有技能仅击中一个目标。"
+						zh: "XIV in the Shell目前不支持识别技能命中的目标数，默认所有技能仅击中一个目标。",
 					})}
 				</li>
 				<li>
 					{localize({
 						en: "XIV in the Shell does not reflect job gauge updates that are affected by random factors, or by whether an enemy is hit or killed.",
-						zh: "XIV in the Shell目前不会显示由随机因素/目标被击中/目标死亡导致的职业量谱状态更新。"
+						zh: "XIV in the Shell目前不会显示由随机因素/目标被击中/目标死亡导致的职业量谱状态更新。",
 					})}
 				</li>
 			</ul>
 			{localize({
 				en: "These may change in future updates.",
-				zh: "这些状态更新可能会在以后的工具版本中显示。"
+				zh: "这些状态更新可能会在以后的工具版本中显示。",
 			})}
 		</div>
 	</>;
@@ -778,12 +777,10 @@ export function FflogsImportFlow() {
 				this option.
 			</div>,
 			zh: <div>
-				<i>
-					从logs导入的技能将覆盖当前时间轴里已有的技能。
-				</i>
+				<i>从logs导入的技能将覆盖当前时间轴里已有的技能。</i>
 				<br />
 				FFLogs不记录战斗开始（拉怪）前的技能。预读技能可以在导入后通过时间轴编辑器手动添加，或先手动输入预读技能，取消勾选此项，再导入logs。
-			</div>
+			</div>,
 		})}
 	/>;
 	const resetInactiveHelp = <Help
@@ -796,10 +793,8 @@ export function FflogsImportFlow() {
 				</i>
 			</span>,
 			zh: <span>
-				<i>
-					从logs导入的技能将被添加到当前时间轴末尾。
-				</i>
-			</span>
+				<i>从logs导入的技能将被添加到当前时间轴末尾。</i>
+			</span>,
 		})}
 	/>;
 	const statBlock = <div className="importPage">
@@ -809,18 +804,19 @@ export function FflogsImportFlow() {
 				<b>{intermediateImportState?.playerName}</b>
 			</p>,
 			zh: <p>
-				正在读取<b>{intermediateImportState?.playerName}</b>的{intermediateImportState?.actions.length ?? 0}个技能
-			</p>
+				正在读取<b>{intermediateImportState?.playerName}</b>的
+				{intermediateImportState?.actions.length ?? 0}个技能
+			</p>,
 		})}
 		<div>
 			{intermediateImportState?.statsInLog
 				? localize({
 						en: "Using stats found in log. Please adjust as needed.",
-						zh: "将使用logs中的装备数值。可按需手动调整。"
+						zh: "将使用logs中的装备数值。可按需手动调整。",
 					})
 				: localize({
 						en: "Exact stats not found in log; using values in current game config. Please enter manually or adjust with the Config pane after import. ",
-						zh: "Logs中未找到此玩家的装备数据，将使用当前属性设置界面的数值。请手动输入装备数值，或在导入后去属性设置界面调整。"
+						zh: "Logs中未找到此玩家的装备数据，将使用当前属性设置界面的数值。请手动输入装备数值，或在导入后去属性设置界面调整。",
 					})}
 			{configHelp}
 		</div>
@@ -966,8 +962,9 @@ export function FflogsImportFlow() {
 					"Some simulated actions had timestamps in XIV in the Shell different from the recorded values in FFLogs. " +
 					"Minor differences are normal, but if you see a very large discrepancy, " +
 					"this means there's either a bug in XIV in the Shell, or the configured spell speed/skill speed/fps was incorrect.",
-				zh: "由XIV in the Shell计算出的部分技能/操作的时间与它们在logs中记录的时间不一致。" +
-					"有微小的时间差是正常现象，但如果时间差较大，可能是因为XIV in the Shell有bug，或者属性设置界面的咏速/技速/帧率不准确。"
+				zh:
+					"由XIV in the Shell计算出的部分技能/操作的时间与它们在logs中记录的时间不一致。" +
+					"有微小的时间差是正常现象，但如果时间差较大，可能是因为XIV in the Shell有bug，或者属性设置界面的咏速/技速/帧率不准确。",
 			})}
 		</div>
 		<table style={tableStyle}>

@@ -113,12 +113,19 @@ export async function getAccessToken(): Promise<AccessTokenStatus> {
 		clearPKCEAuthState();
 		return AccessTokenStatus.NO_PKCE_VERIFIER;
 	}
+	// PKCE key exchange allows the use of a client-generated "state" that the server returns for
+	// verification. However, generating a key for a separate client may cause the API to return
+	// a different state variable. In principle we should error out if this doesn't match, but we
+	// instead just go with it.
+	// It seems like each "state" generates a new entry in the "authorized applications" tab of
+	// the FFLogs settings page. The FFLogs dev team did not ask in Discord about whether this is a bug.
 	if (searchParams.get("state") !== expectedState) {
-		console.error("PKCE response did not have expected state; resetting flow");
+		console.error("PKCE response did not have expected state; force setting new value");
 		console.log("expected:", expectedState);
 		console.log("actual:", searchParams.get("state"));
-		clearPKCEAuthState();
-		return AccessTokenStatus.BAD_PKCE_STATE;
+		window.localStorage.setItem(LOCALSTORAGE_PKCE_STATE_BLOB, searchParams.get("state")!);
+		// clearPKCEAuthState();
+		// return AccessTokenStatus.BAD_PKCE_STATE;
 	}
 	const tokenParams = new URLSearchParams({
 		client_id: CLIENT_ID,
