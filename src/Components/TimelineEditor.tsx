@@ -60,7 +60,7 @@ const EditorDragContext = createContext<
 	};
 });
 
-const getBorderStyling = (colors: ThemeColors) => {
+export const getBorderStyling = (colors: ThemeColors) => {
 	return {
 		borderColor: colors.bgMediumContrast,
 		borderWidth: "1px",
@@ -68,14 +68,14 @@ const getBorderStyling = (colors: ThemeColors) => {
 	};
 };
 
-const INDEX_TD_STYLE: CSSProperties = {
+export const INDEX_TD_STYLE: CSSProperties = {
 	width: "1.5%",
 	textAlign: "right",
 	paddingRight: "0.3em",
 	paddingLeft: "0.3em",
 };
 
-const TIMESTAMP_TD_STYLE: CSSProperties = {
+export const TIMESTAMP_TD_STYLE: CSSProperties = {
 	width: "12%", // seems like this is auto expanded to contain its content
 	textAlign: "right",
 	paddingRight: "0.3em",

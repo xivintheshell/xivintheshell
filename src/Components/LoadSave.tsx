@@ -1,15 +1,18 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Columns, FileFormat, LoadJsonFromFileOrUrl, SaveToFile } from "./Common";
+import { FflogsImportFlow } from "./FFLogs/ImportInterface";
 import { controller } from "../Controller/Controller";
 import { FileType } from "../Controller/Common";
 import { ImportTimelineFile } from "../Controller/UndoStack";
 import { localize } from "./Localization";
 import { ImageExport } from "./ImageExport";
 import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
+import { getThemeField, ColorThemeContext } from "./ColorTheme";
 
 type Fixme = any;
 
 export function LoadSave() {
+	const colors = useContext(ColorThemeContext);
 	const onFileLoad = (content: Fixme) => {
 		if (content.fileType === FileType.Record) {
 			controller.undoStack.doThenPush(
@@ -112,10 +115,20 @@ export function LoadSave() {
 		en: "Import fight from file",
 		zh: "从文件导入战斗",
 	});
-	const textImportContent = <LoadJsonFromFileOrUrl
-		allowLoadFromUrl={false}
-		onLoadFn={onFileLoad}
-	/>;
+	const textImportContent = <>
+		<LoadJsonFromFileOrUrl allowLoadFromUrl={false} onLoadFn={onFileLoad} />
+		<hr
+			style={{
+				marginTop: 15,
+				border: "none",
+				borderTop: ("1px solid " + getThemeField(colors, "bgHighContrast")) as string,
+			}}
+		/>
+		<div style={{ marginTop: 15, marginBottom: 10 }}>
+			<b>{localize({ en: "Import fight from FFLogs", zh: "从FFLogs导入战斗" })}</b>
+		</div>
+		<FflogsImportFlow />
+	</>;
 	const imageExportTitle = <>
 		{localize({
 			en: "Image Export",

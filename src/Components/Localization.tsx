@@ -8,6 +8,7 @@ import { controller } from "../Controller/Controller";
 import { ActionKey, ACTIONS, CooldownKey, COOLDOWNS, ResourceKey } from "../Game/Data";
 import { Data } from "../Game/Data/Data";
 import { PotencyModifierType } from "../Game/Potency";
+import { ConfigData } from "../Game/GameConfig";
 
 export type Language = "en" | "zh" | "ja";
 export type LocalizedContent = {
@@ -37,6 +38,28 @@ export function localizeDate(date: string, lang: Language): string {
 	}
 
 	return date;
+}
+
+export function localizeConfigField(key: keyof ConfigData): string {
+	switch (key) {
+		case "spellSpeed":
+			return localize({ en: "spell speed: ", zh: "咏速：" }).toString();
+		case "skillSpeed":
+			return localize({ en: "skill speed: ", zh: "技速：" }).toString();
+		case "fps":
+			return localize({ en: "FPS: ", zh: "帧率：" }).toString();
+		case "criticalHit":
+			return localize({ en: "crit: ", zh: "暴击：" }).toString();
+		case "directHit":
+			return localize({ en: "direct hit: ", zh: "直击：" }).toString();
+		case "determination":
+			return localize({ en: "determination: ", zh: "信念：" }).toString();
+		case "piety":
+			return localize({ en: "piety: ", zh: "信仰：" }).toString();
+		case "animationLock":
+			return localize({ en: "animation lock: ", zh: "能力技后摇：" }).toString();
+	}
+	return key;
 }
 
 export function localizeSkillName(text: ActionKey | string): string {

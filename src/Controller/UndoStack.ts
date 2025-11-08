@@ -205,6 +205,45 @@ export class AddNodeBulk extends TimelineInteraction {
 	}
 }
 
+export class ImportLog extends TimelineInteraction {
+	nodes: ActionNode[];
+	index: number;
+	oldConfig: SerializedConfig;
+	newConfig: SerializedConfig;
+
+	constructor(
+		nodes: ActionNode[],
+		index: number,
+		oldConfig: SerializedConfig,
+		newConfig: SerializedConfig,
+	) {
+		super({
+			en: "import from fflogs",
+			zh: "fflogs进口",
+		});
+		this.nodes = nodes;
+		this.index = index;
+		this.oldConfig = oldConfig;
+		this.newConfig = newConfig;
+	}
+
+	override undo() {
+		controller.record.selectSingle(this.index);
+		controller.record.selectUntil(this.index + this.nodes.length - 1);
+		controller.deleteSelectedSkills();
+		controller.setConfigAndRestart(this.oldConfig, false);
+		controller.updateAllDisplay();
+		controller.scrollToTime();
+	}
+
+	override redo() {
+		controller.insertRecordNodes(this.nodes, this.index);
+		controller.setConfigAndRestart(this.newConfig, false);
+		controller.updateAllDisplay();
+		controller.scrollToTime();
+	}
+}
+
 // === META STUFF ===
 export class SetActiveTimelineSlot extends TimelineInteraction {
 	oldIndex: number;

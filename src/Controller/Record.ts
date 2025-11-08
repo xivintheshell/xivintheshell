@@ -72,7 +72,7 @@ export type SerializedAction =
 // Because SkillNode serializes with the localized string value instead of an ActionKey,
 // It needs a different internal type.
 // SetResourceInfo serializes with ResourceKey, but we keep a separate type just for cleanliness.
-interface SkillNodeInfo {
+export interface SkillNodeInfo {
 	type: ActionType.Skill;
 	skillName: ActionKey;
 	targetCount: number;
@@ -627,13 +627,15 @@ export class Line {
 	}
 }
 
+export type InvalidActionInfo = {
+	node: ActionNode;
+	index: number;
+	reason: SkillReadyStatus;
+};
+
 export type RecordValidStatus = {
 	isValid: boolean;
-	invalidActions: {
-		node: ActionNode;
-		index: number;
-		reason: SkillReadyStatus;
-	}[];
+	invalidActions: InvalidActionInfo[];
 	skillUseTimes: number[];
 	straightenedIfValid: Record | undefined;
 };

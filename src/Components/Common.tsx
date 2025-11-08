@@ -494,6 +494,11 @@ type InputProps = {
 	width?: number;
 	style?: CSSProperties;
 	componentColor?: string; // overrides entire component's color
+	autoFocus?: boolean;
+	placeholder?: string;
+	// when this is set, the "width" field (which is really used as "size") is ignored
+	// and the input field stretches to the length of the container
+	fullWidthInput?: boolean;
 };
 
 export function Input(props: InputProps) {
@@ -501,26 +506,29 @@ export function Input(props: InputProps) {
 		if (props.onChange) props.onChange(e.target.value);
 	};
 	const themeColors = getCurrentThemeColors();
-	const width = props.width ?? 5;
+	const size = props.fullWidthInput ? undefined : (props.width ?? 5);
 	const inputStyle: CSSProperties = {
 		color: props.style?.color ?? props.componentColor ?? themeColors.text,
 		backgroundColor: "transparent",
 		outline: "none",
 		border: "none",
 		borderBottom: "1px solid " + (props.componentColor ?? themeColors.text),
+		width: props.fullWidthInput ? "100%" : undefined,
 	};
 	const overrideStyle = props.style ?? {};
 	return <div style={{ ...overrideStyle, ...{ color: props.componentColor } }}>
 		<span>{props.description /* + "(" + this.state.value + ")"*/}</span>
 		<input
 			style={inputStyle}
-			size={width}
+			size={size}
 			type="text"
 			value={props.defaultValue}
 			onChange={onChange}
 			// When the input field is focused, native commands like arrow key + undo/redo should
 			// work as expected, and not be intercepted by the top-level app's key listeners.
 			onKeyDown={(e) => e.stopPropagation()}
+			autoFocus={props.autoFocus}
+			placeholder={props.placeholder}
 		/>
 	</div>;
 }
@@ -618,13 +626,9 @@ export function Checkbox(props: {
 		setChecked(defaultChecked);
 		props.onChange(defaultChecked);
 	}, []);
-	const checkboxStyle: CSSProperties = {
-		position: "relative",
-		top: 3,
-		marginRight: "0.25em",
-	};
 	return <div style={{ marginBottom: 5 }}>
 		<input
+			className="shellCheckbox"
 			type="checkbox"
 			onChange={(e) => {
 				const newVal = e.currentTarget.checked;
@@ -633,7 +637,6 @@ export function Checkbox(props: {
 				props.onChange(newVal);
 			}}
 			checked={checked}
-			style={checkboxStyle}
 		/>
 		<span>{props.label}</span>
 	</div>;
@@ -788,6 +791,7 @@ const HELP_MOUSEOVER_HYSTERESIS_MS = 100;
 export function Help(props: {
 	topic: string; // need to be unique globally
 	content: ContentNode;
+	container?: React.RefObject<HTMLElement | null>;
 }) {
 	const colors = getCurrentThemeColors();
 	const style: CSSProperties = {
@@ -827,7 +831,9 @@ export function Help(props: {
 		>
 			<span style={{ position: "relative", top: -1, color: "white" }}>&#63;</span>
 		</span>
-		<Tooltip.Portal container={document.getElementById("globalHelpTooltipAnchor")}>
+		<Tooltip.Portal
+			container={props.container ?? document.getElementById("globalHelpTooltipAnchor")}
+		>
 			<Tooltip.Positioner
 				className="tooltip-positioner"
 				anchor={document.getElementById(`help-${props.topic}`)}

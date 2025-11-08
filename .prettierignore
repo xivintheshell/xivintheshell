@@ -3,6 +3,7 @@ build
 *.css
 *.txt
 .vite
+src/__test__/Asset/fflogs_responses
 src/changelog.json
 src/index.js
 public

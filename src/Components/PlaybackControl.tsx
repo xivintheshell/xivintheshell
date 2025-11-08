@@ -13,7 +13,7 @@ import { ConfigApply } from "../Controller/UndoStack";
 import { getCachedValue, setCachedValue, ShellVersion, TickMode } from "../Controller/Common";
 import { LevelSync, ProcMode } from "../Game/Common";
 import { getAllResources, getResourceInfo, ResourceOverrideData } from "../Game/Resources";
-import { localize, localizeResourceType } from "./Localization";
+import { localize, localizeConfigField, localizeResourceType } from "./Localization";
 import {
 	getThemeColors,
 	getCurrentThemeColors,
@@ -1338,18 +1338,19 @@ export function Config() {
 	};
 
 	// Stats that use ConfigInputField directly, without any bells and whistles
-	const genericInputStats: Array<[keyof ConfigFields, ContentNode]> = [
-		["criticalHit", localize({ en: "crit: ", zh: "暴击：" })],
-		["directHit", localize({ en: "direct hit: ", zh: "直击：" })],
-		["determination", localize({ en: "determination: ", zh: "信念：" })],
-		["piety", localize({ en: "piety: ", zh: "信仰：" })],
-		["animationLock", localize({ en: "animation lock: ", zh: "能力技后摇：" })],
+	const genericInputStats: (keyof ConfigFields)[] = [
+		"criticalHit",
+		"directHit",
+		"determination",
+		"piety",
+		"animationLock",
 	];
 
-	const genericInputStatWidgets = genericInputStats.map(([key, description]) => <ConfigInputField
+	const genericInputStatWidgets = genericInputStats.map((key) => <ConfigInputField
 		key={key}
 		name={key}
-		description={description}
+		// @ts-expect-error ConfigFields and ConfigData don't directly overlap
+		description={localizeConfigField(key)}
 		initial={configFields[key].toString()}
 		dispatch={configFieldDispatch}
 		imported={importedFields[key]}
@@ -1389,7 +1390,7 @@ export function Config() {
 			<Input
 				style={{ display: "inline-block", color: fieldColor("spellSpeed") }}
 				defaultValue={configFields.spellSpeed}
-				description={localize({ en: "spell speed: ", zh: "咏速：" })}
+				description={localizeConfigField("spellSpeed")}
 				onChange={singleDispatch("spellSpeed")}
 			/>
 			<span>
@@ -1421,7 +1422,7 @@ export function Config() {
 			<Input
 				style={{ display: "inline-block", color: fieldColor("skillSpeed") }}
 				defaultValue={configFields.skillSpeed}
-				description={localize({ en: "skill speed: ", zh: "技速：" })}
+				description={localizeConfigField("skillSpeed")}
 				onChange={singleDispatch("skillSpeed")}
 			/>
 			<span>
@@ -1455,7 +1456,7 @@ export function Config() {
 				componentColor={fpsAndCorrectionColor}
 				style={{ display: "inline-block" }}
 				defaultValue={configFields.fps}
-				description={localize({ en: "FPS: ", zh: "帧率：" })}
+				description={localizeConfigField("fps")}
 				onChange={singleDispatch("fps")}
 			/>
 			<span>

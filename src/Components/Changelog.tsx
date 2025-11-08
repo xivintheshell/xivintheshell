@@ -68,46 +68,7 @@ function getRenderedEntry(entry: ChangelogEntry) {
 	</div>;
 }
 
-// Partially copied from BaseUI's Dialog example
-// https://base-ui.com/react/components/dialog
 const changelogDialogStyles = `
-.Backdrop {
-  position: fixed;
-  inset: 0;
-  background-color: black;
-  transition: opacity 50ms cubic-bezier(0.45, 1.005, 0, 1.005);
-
-  &[data-starting-style],
-  &[data-ending-style] {
-	opacity: 0;
-  }
-}
-
-.Popup {
-  box-sizing: border-box;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 50vw;
-  height: 70vh;
-  max-height: 70vh;
-  overflow-y: scroll;
-  margin-top: -2rem;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
-  transition: all 50ms cubic-bezier(0.45, 1.005, 0, 1.005);
-
-  font-family: monospace;
-  font-size: 13px;
-
-  &[data-starting-style],
-  &[data-ending-style] {
-	opacity: 0;
-	transform: translate(-50%, -50%) scale(0.9);
-  }
-}
-
 .changelogGroup {
 	margin-top: 1em;
 	margin-bottom: 1em;

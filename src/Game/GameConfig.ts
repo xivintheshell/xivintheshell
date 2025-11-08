@@ -45,7 +45,7 @@ type DynamicConfigField =
 	| "tenacity"
 	| "main";
 
-type DynamicConfigPart = {
+export type DynamicConfigPart = {
 	[Property in DynamicConfigField]: number;
 };
 
