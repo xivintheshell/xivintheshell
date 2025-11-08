@@ -14,12 +14,12 @@ export const WAR_ACTIONS = ensureRecord<ActionData>()({
 	},
 	STORMS_PATH: {
 		id: 42,
-		name: "Storms Path",
+		name: "Storm's Path",
 		label: { zh: "暴风斩" },
 	},
 	STORMS_EYE: {
 		id: 45,
-		name: "Storms Eye",
+		name: "Storm's Eye",
 		label: { zh: "暴风碎" },
 	},
 	FELL_CLEAVE: {

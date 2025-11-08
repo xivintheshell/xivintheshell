@@ -248,6 +248,8 @@ const typos = new Map<string, string>([
 	["Lightning Shock", "Lightning Shot"],
 	["Wanderer's Minuet", "The Wanderer's Minuet"],
 	["Apex Arow", "Apex Arrow"],
+	["Storms Eye", "Storm's Eye"],
+	["Storms Path", "Storm's Path"],
 ]);
 /**
  * Attempt to retrieve an ActionKey member from the specified string. This function is run
@@ -259,6 +261,7 @@ const typos = new Map<string, string>([
  * - [GNB] "Lightning Shot" was incorrectly written as "Lightning Shock"
  * - [BRD] "The Wanderer's Minuet" was missing "The" at the start
  * - [BRD] "Apex Arrow" was written as "Apex Arow"
+ * - [WAR] "Storm's Eye" and "Storm's Path" were missing an apostrophe
  */
 export function getNormalizedSkillName(s: string): ActionKey | undefined {
 	if (typos.has(s)) {
