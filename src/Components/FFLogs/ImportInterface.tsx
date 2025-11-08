@@ -469,47 +469,54 @@ export function FflogsImportFlow() {
 	// 1. QUERY AND IMPORT LOG
 	const limitations = <>
 		<div>
-			<b>{localize({ en: "Limitations", zh: "限制" })}</b>
+			<b>{localize({ en: "Limitations", zh: "局限性" })}</b>
 		</div>
-		{getCurrentLanguage() === "zh" && <div>
-			<i>我们现在还在开发FFLogs导入功能，所以许多标签还没有完全被翻译。</i>🙇🏻
-		</div>}
 		<div>
-			{localize({ en: "Log import is currently subject to the following limitations:" })}
+			{localize({
+				en: "Log import is currently subject to the following limitations:",
+				zh: "目前的logs导入功能有以下局限性："
+			})}
 			<ul>
 				<li>
 					{localize({
 						en: "FFLogs only records combat stats for the creator of the log, so stats must be manually entered for other players.",
+						zh: "FFLogs文件仅包含上传玩家的配装数据，所以其他玩家的配装数据需要手动输入。",
 					})}
 				</li>
 				<li>
 					{localize({
 						en: "FFLogs cannot record actions that were performed before combat began. Pre-pull actions must be entered manually before import.",
+						zh: "FFLogs不会记录战斗正式开始（拉怪）前的技能。预读技能需要在导入logs前手动添加。"
 					})}
 				</li>
 				<li>
 					{localize({
 						en: "Manual buff click-offs, and buff toggles from entering/leaving a zone (for example: leaving Ley Lines or Sacred Soil) are not currently processed by XIV in the Shell.",
+						zh: "XIV in the Shell目前不支持识别手动点掉buff的操作，也暂时无法识别通过进入/离开某区域开关buff（比如离开黑魔纹或野战治疗阵）。"
 					})}
 				</li>
 				<li>
 					{localize({
 						en: "The offset of MP and Lucid Dreaming ticks are not currently synchronized in XIV in the Shell.",
+						zh: "XIV in the Shell目前不支持从logs识别跳蓝和跳醒梦的间隔。"
 					})}
 				</li>
 				<li>
 					{localize({
 						en: "XIV in the Shell currently does not track when multiple enemies are hit by an ability.",
+						zh: "XIV in the Shell目前不支持识别技能命中的目标数，默认所有技能仅击中一个目标。"
 					})}
 				</li>
 				<li>
 					{localize({
 						en: "XIV in the Shell does not reflect job gauge updates that are affected by random factors, or by whether an enemy is hit or killed.",
+						zh: "XIV in the Shell目前不会显示由随机因素/目标被击中/目标死亡导致的职业量谱状态更新。"
 					})}
 				</li>
 			</ul>
 			{localize({
 				en: "These may change in future updates.",
+				zh: "这些状态更新可能会在以后的工具版本中显示。"
 			})}
 		</div>
 	</>;
@@ -603,7 +610,7 @@ export function FflogsImportFlow() {
 					type="button"
 					onClick={() => setFlowState(LogImportFlowState.AWAITING_AUTH)}
 				>
-					{localize({ en: "back to authorization", zh: "从新授权" })}
+					{localize({ en: "back to authorization", zh: "重新授权" })}
 				</button>
 			</div>
 		</form>
@@ -613,12 +620,12 @@ export function FflogsImportFlow() {
 
 	// TODO add an actual spinner
 	const querySpinner = <div className="importPage">
-		<p>{localize({ en: "retrieving log...", zh: "正在检索日志..." })}</p>
+		<p>{localize({ en: "retrieving log...", zh: "正在检索logs" })}</p>
 	</div>;
 
 	const runningFightOrPlayerQuery = useRef<boolean>(false);
 	const fightPicker = <div className="importPage">
-		<b>{localize({ en: "Choose a fight", zh: "选择战场" })}</b>
+		<b>{localize({ en: "Choose a fight", zh: "选择战斗场次" })}</b>
 		<ul>
 			{fightList.current.map((info, i) => <li
 				key={i}
@@ -729,7 +736,7 @@ export function FflogsImportFlow() {
 				>
 					{localize({
 						en: "back to fight selection",
-						zh: "回到战场选择",
+						zh: "重选战斗场次",
 					})}
 				</button>
 			</div>
@@ -770,6 +777,13 @@ export function FflogsImportFlow() {
 				actions, manually insert them after importing, or add them beforehand and uncheck
 				this option.
 			</div>,
+			zh: <div>
+				<i>
+					从logs导入的技能将覆盖当前时间轴里已有的技能。
+				</i>
+				<br />
+				FFLogs不记录战斗开始（拉怪）前的技能。预读技能可以在导入后通过时间轴编辑器手动添加，或先手动输入预读技能，取消勾选此项，再导入logs。
+			</div>
 		})}
 	/>;
 	const resetInactiveHelp = <Help
@@ -781,6 +795,11 @@ export function FflogsImportFlow() {
 					Actions imported from the log will be added to the end of the existing timeline.
 				</i>
 			</span>,
+			zh: <span>
+				<i>
+					从logs导入的技能将被添加到当前时间轴末尾。
+				</i>
+			</span>
 		})}
 	/>;
 	const statBlock = <div className="importPage">
@@ -789,15 +808,20 @@ export function FflogsImportFlow() {
 				Reading {intermediateImportState?.actions.length ?? 0} skills for{" "}
 				<b>{intermediateImportState?.playerName}</b>
 			</p>,
+			zh: <p>
+				正在读取<b>{intermediateImportState?.playerName}</b>的{intermediateImportState?.actions.length ?? 0}个技能
+			</p>
 		})}
 		<div>
 			{intermediateImportState?.statsInLog
 				? localize({
 						en: "Using stats found in log. Please adjust as needed.",
+						zh: "将使用logs中的装备数值。可按需手动调整。"
 					})
 				: localize({
-						en: "Exact stats not found in log; using values in current game config. Please enter manually or adjust with the Config pane after import.",
-					})}{" "}
+						en: "Exact stats not found in log; using values in current game config. Please enter manually or adjust with the Config pane after import. ",
+						zh: "Logs中未找到此玩家的装备数据，将使用当前属性设置界面的数值。请手动输入装备数值，或在导入后去属性设置界面调整。"
+					})}
 			{configHelp}
 		</div>
 		<hr />
@@ -942,6 +966,8 @@ export function FflogsImportFlow() {
 					"Some simulated actions had timestamps in XIV in the Shell different from the recorded values in FFLogs. " +
 					"Minor differences are normal, but if you see a very large discrepancy, " +
 					"this means there's either a bug in XIV in the Shell, or the configured spell speed/skill speed/fps was incorrect.",
+				zh: "由XIV in the Shell计算出的部分技能/操作的时间与它们在logs中记录的时间不一致。" +
+					"有微小的时间差是正常现象，但如果时间差较大，可能是因为XIV in the Shell有bug，或者属性设置界面的咏速/技速/帧率不准确。"
 			})}
 		</div>
 		<table style={tableStyle}>
@@ -981,7 +1007,7 @@ export function FflogsImportFlow() {
 			<span>
 				{localize({
 					en: `...and ${importProgress.spilledDeltas} more`,
-					zh: `...还有另外${importProgress.spilledDeltas}个`,
+					zh: `还有另外${importProgress.spilledDeltas}个`,
 				})}
 			</span>
 		) : undefined}
@@ -990,7 +1016,7 @@ export function FflogsImportFlow() {
 		<div>
 			{localize({
 				en: "processing actions (this may take a moment)...",
-				zh: "正在技能处理中（有可能会花一些时间）...",
+				zh: "正在处理技能（可能会花一些时间）",
 			})}
 		</div>
 		{importProgress && <div>
@@ -1008,7 +1034,7 @@ export function FflogsImportFlow() {
 			<>
 				{localize({
 					en: `The imported timeline produced ${invalidActions.length} invalid action${invalidActions.length === 1 ? "" : "s"}:`,
-					zh: `导入的时间轴产生了${invalidActions.length}无效的技能：`,
+					zh: `导入的时间轴含有${invalidActions.length}个非法操作：`,
 				})}
 				<table style={tableStyle}>
 					<thead>
