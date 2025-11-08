@@ -2,8 +2,13 @@
 	{
 		"date": "11/7/25",
 		"changes": [
+			"Added the ability to import fights from FFLogs! You can find it in the Import/Export tab at the bottom of the page.",
 			"[WAR] Fixed a typo in the name of Storm's Path and Storm's Eye"
-		]
+		],
+		"changes_zh": [
+			"增加了从FFLogs导入战斗的功能！可以在下方的“导入/导出”部分找到。"
+		],
+		"level": "major"
 	},
 	{
 		"date": "10/13/25",
