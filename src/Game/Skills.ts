@@ -5,6 +5,7 @@ import { makeCooldown, getResourceInfo, ResourceInfo } from "./Resources";
 import { PotencyModifier } from "./Potency";
 import { ShellJob, ALL_JOBS, JOBS } from "./Data/Jobs";
 import { ActionKey, ACTIONS, CooldownKey, ResourceKey, RESOURCES, TraitKey } from "./Data";
+import { SCH_ACTIONS } from "./Data/Jobs/SCH";
 import { LimitBreakActionKey } from "./Data/Shared/LimitBreak";
 import { hasUnlockedTrait } from "../utilities";
 import { Data } from "./Data/Data";
@@ -241,6 +242,10 @@ const skillAssetPaths: Map<ActionKey, string> = new Map();
 const MISSING_ASSET_PATH = "General/Missing.png";
 
 export const skillIdMap = new Map<number, ActionKey>();
+// Because SCH's Energy Drain + Physick get clobbered by the SMN skills of the same name, we need
+// to hardcode the skill ID initialization here instead of in setSkill below.
+skillIdMap.set(SCH_ACTIONS.ENERGY_DRAIN.id, "ENERGY_DRAIN");
+skillIdMap.set(SCH_ACTIONS.PHYSICK.id, "PHYSICK");
 
 const seenUnknownNames = new Set<string>();
 const normalizedSkillNameMap = new Map<string, ActionKey>();

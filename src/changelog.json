@@ -1,5 +1,16 @@
 [
 	{
+		"date": "11/11/25",
+		"changes": [
+			"Fixed a bug where timeline skill tooltips would be acidentally cut off.",
+			"[SCH] Fixed a bug where Energy Drain and Physick were not recognized during log import."
+		],
+		"changes_zh": [
+			"修复了时间轴视化窗口内的技能工具提示会被隔断的问题。",
+			"【学者】修复了log导入时认不出“能量吸收”和“医术”技能的问题。"
+		]
+	},
+	{
 		"date": "11/7/25",
 		"changes": [
 			"Added the ability to import fights from FFLogs! You can find it in the Import/Export tab at the bottom of the page.",
