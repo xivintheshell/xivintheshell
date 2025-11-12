@@ -395,7 +395,8 @@ export function localizeModifierTag(modifierType: PotencyModifierType): string {
 }
 
 // TODO convert this into a context
-export let getCurrentLanguage: () => Language = () => "en";
+export let getCurrentLanguage: () => Language = () =>
+	(getCachedValue("language") || "en") as Language;
 
 function LanguageOption(props: { lang: Language; setCurrentLanguage: (lang: Language) => void }) {
 	let text = "English";
