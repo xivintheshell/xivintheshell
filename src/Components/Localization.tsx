@@ -411,7 +411,8 @@ export function localizeModifierTag(modifierType: PotencyModifierType): string {
 const DEFAULT_LOCALE = navigator.language === "zh-CN" || navigator.language === "zh" ? "zh" : "en";
 
 // TODO convert this into a context
-export let getCurrentLanguage: () => Language = () => DEFAULT_LOCALE;
+export let getCurrentLanguage: () => Language = () =>
+	(getCachedValue("language") || DEFAULT_LOCALE) as Language;
 
 function LanguageOption(props: { lang: Language; setCurrentLanguage: (lang: Language) => void }) {
 	let text = "English";
