@@ -134,7 +134,7 @@ function drawTip(params: {
 }) {
 	const { ctx, lines, images, viewInfo } = params;
 	let { mouseX: x, mouseY: y } = params;
-	const { colors, visibleWidth: canvasWidth } = viewInfo;
+	const { colors, visibleWidth: canvasWidth, renderingProps } = viewInfo;
 
 	if (!lines.length) return;
 
@@ -163,19 +163,28 @@ function drawTip(params: {
 
 	// compute optimal box position
 	const boxToMousePadding = 4;
-	const estimatedMouseHeight = 11;
+	const estimatedMouseSize = 11;
+	let forceRight = false;
 	if (y >= boxHeight + boxToMousePadding) {
 		// put on top
 		y = y - boxHeight - boxToMousePadding;
+	} else if (y + boxHeight <= renderingProps.timelineHeight) {
+		y = y + estimatedMouseSize + boxToMousePadding;
 	} else {
-		y = y + estimatedMouseHeight + boxToMousePadding;
+		// put on right if top/bottom both would not fit
+		forceRight = true;
 	}
-	if (x - boxWidth / 2 >= 0 && x + boxWidth / 2 < canvasWidth) {
-		x = x - boxWidth / 2;
-	} else if (x - boxWidth / 2 < 0) {
-		x = 0;
+	if (forceRight) {
+		y = y - boxHeight / 2;
+		x = x + estimatedMouseSize + boxToMousePadding;
 	} else {
-		x = canvasWidth - boxWidth;
+		if (x - boxWidth / 2 >= 0 && x + boxWidth / 2 < canvasWidth) {
+			x = x - boxWidth / 2;
+		} else if (x - boxWidth / 2 < 0) {
+			x = 0;
+		} else {
+			x = canvasWidth - boxWidth;
+		}
 	}
 
 	// start drawing
