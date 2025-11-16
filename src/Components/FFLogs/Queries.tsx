@@ -479,11 +479,11 @@ export async function queryPlayerEvents(
 	const actions: SkillNodeInfo[] = castEvents.map((event: any) => {
 		const id = event.abilityGameID;
 		const key =
-			(skillIdMap.get(id) ??
+			skillIdMap.get(id) ??
 			// Assume all other really high IDs (like 34600430) are tincture usages
-			id > 34000000)
+			(id > 34000000
 				? "TINCTURE"
-				: "NEVER";
+				: "NEVER");
 		if (key === "NEVER") {
 			console.error("unknown action id", id);
 		}
