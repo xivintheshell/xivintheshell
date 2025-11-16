@@ -481,9 +481,7 @@ export async function queryPlayerEvents(
 		const key =
 			skillIdMap.get(id) ??
 			// Assume all other really high IDs (like 34600430) are tincture usages
-			(id > 34000000
-				? "TINCTURE"
-				: "NEVER");
+			(id > 34000000 ? "TINCTURE" : "NEVER");
 		if (key === "NEVER") {
 			console.error("unknown action id", id);
 		}
