@@ -3,7 +3,7 @@ import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
 export const COMMON_ACTIONS = ensureRecord<ActionData>()({
 	NEVER: {
-		name: "Never",
+		name: "NEVER",
 	},
 	TINCTURE: {
 		name: "Tincture",

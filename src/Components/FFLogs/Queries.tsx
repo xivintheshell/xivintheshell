@@ -478,12 +478,10 @@ export async function queryPlayerEvents(
 		?.forEach((timestamp) => trackedBuffRemovals.get("TEMPERA_COAT_POP")?.delete(timestamp));
 	const actions: SkillNodeInfo[] = castEvents.map((event: any) => {
 		const id = event.abilityGameID;
-		const key = skillIdMap.has(id)
-			? skillIdMap.get(id)!
-			: // Assume really high IDs (like 34600430) are tincture usages
-				id > 30000000
-				? "TINCTURE"
-				: "NEVER";
+		const key =
+			skillIdMap.get(id) ??
+			// Assume all other really high IDs (like 34600430) are tincture usages
+			(id > 34000000 ? "TINCTURE" : "NEVER");
 		if (key === "NEVER") {
 			console.error("unknown action id", id);
 		}
