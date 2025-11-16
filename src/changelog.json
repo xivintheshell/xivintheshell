@@ -1,5 +1,11 @@
 [
 	{
+		"date": "11/15/25",
+		"changes": [
+			"Consumables like Pilgrim's Potions and Super-Ethers in FFLogs imports now display as unknown skills instead of Tinctures."
+		]
+	},
+	{
 		"date": "11/11/25",
 		"changes": [
 			"Fixed a bug where timeline skill tooltips would be acidentally cut off.",
