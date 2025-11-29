@@ -16,10 +16,19 @@ export const enum ReplayMode {
 }
 
 export const enum FileType {
+	/** A sequence of player abilities and associated configuration information. */
 	Record = "Record",
+	/** A sequence of player abilities. */
 	SkillSequencePresets = "SkillSequencePresets",
+	/** An individual track (displayed as one tiered line) in preset markers. */
 	MarkerTrackIndividual = "MarkerTrackIndividual",
+	/** A set of multiple tracks for preset markers, spanning multiple lines. */
 	MarkerTracksCombined = "MarkerTracksCombined",
+	/**
+	 * A collection of individual markers, as well as pointers to other MarkerTracksCombined
+	 * objects with phase timing information.
+	 */
+	MarkerTrackSet = "MarkerTrackSet",
 }
 
 export const enum TickMode {

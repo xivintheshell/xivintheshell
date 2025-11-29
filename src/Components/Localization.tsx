@@ -11,6 +11,18 @@ import { PotencyModifierType } from "../Game/Potency";
 import { ConfigData } from "../Game/GameConfig";
 
 export type Language = "en" | "zh" | "ja";
+
+export function localizeLanguage(l: Language): string {
+	const currentLang = getCurrentLanguage();
+	if (currentLang === "zh") {
+		return l === "en" ? "英文" : l === "zh" ? "中文" : "日文";
+	} else if (currentLang === "ja") {
+		return l === "en" ? "英語" : l === "zh" ? "中国語" : "日本語";
+	} else {
+		return l.toString();
+	}
+}
+
 export type LocalizedContent = {
 	en: ContentNode;
 	zh?: ContentNode;

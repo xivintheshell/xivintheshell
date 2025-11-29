@@ -1,8 +1,16 @@
-import React, { ChangeEvent, CSSProperties } from "react";
+import React, {
+	ChangeEvent,
+	createContext,
+	CSSProperties,
+	useContext,
+	useEffect,
+	useState,
+} from "react";
 import {
 	asyncFetch,
 	Columns,
 	ContentNode,
+	Expandable,
 	FileFormat,
 	Help,
 	Input,
@@ -11,13 +19,35 @@ import {
 	SaveToFile,
 } from "./Common";
 import { controller } from "../Controller/Controller";
-import { ElemType, MarkerElem, MarkerType, UntargetableMarkerTrack } from "../Controller/Timeline";
-import { localize, localizeBuffType } from "./Localization";
+import {
+	ElemType,
+	MarkerElem,
+	MarkerType,
+	SerializedMarker,
+	UntargetableMarkerTrack,
+} from "../Controller/Timeline";
+import {
+	Language,
+	localize,
+	localizeBuffType,
+	LocalizedContent,
+	localizeLanguage,
+} from "./Localization";
 import { getThemeField, MarkerColor, ColorThemeContext } from "./ColorTheme";
 import { Buff, buffInfos } from "../Game/Buffs";
 import { BuffType } from "../Game/Common";
 import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
 import { updateInvalidStatus } from "./TimelineEditor";
+import { FileType } from "../Controller/Common";
+import {
+	ARCHIVE_TRACKS,
+	displayFightKind,
+	FightKind,
+	LEGACY_ULTIMATE_TRACKS,
+	MarkerTrackMeta,
+	RECENT_CONTENT_TRACKS,
+	TRACK_META_MAP,
+} from "./TimelineMarkerPresets";
 
 export let setEditingMarkerValues = (marker: MarkerElem) => {};
 
@@ -25,7 +55,30 @@ export let updateMarkers_TimelineMarkerPresets = (trackBins: Map<number, MarkerE
 
 const PRESET_MARKERS_BASE = "/presets/markers/";
 
-type TimelineMarkersProp = {};
+export type MarkerTrackIndividual = {
+	fileType: FileType.MarkerTrackIndividual;
+	track: number;
+	markers: SerializedMarker[];
+};
+
+export type MarkerTracksCombined = {
+	fileType: FileType.MarkerTracksCombined;
+	tracks: MarkerTrackIndividual[];
+};
+
+type PhasedTrack = {
+	offset: number;
+	label: LocalizedContent;
+	fileName: string;
+};
+
+export type MarkerTrackSet = {
+	fileType: FileType.MarkerTrackSet;
+	// Note: when loading a trackset, any events that occur before the offset of a subsequent
+	// phase (e.g. a skipped enrage cast) will be cut off.
+	phasedTracks: PhasedTrack[];
+};
+
 type TimelineMarkersState = {
 	nextMarkerType: MarkerType;
 	nextMarkerColor: MarkerColor;
@@ -45,39 +98,389 @@ const asyncFetchJson = function (url: string, callback: (content: any) => void) 
 		try {
 			const content = JSON.parse(data);
 			callback(content);
-		} catch {
-			console.log("parse error");
+		} catch (e) {
+			console.log("Error fetching/parsing JSON " + url);
+			console.error(e);
 		}
 	});
 };
 
-function LoadCombinedTracksBtn(props: {
-	displayName: ContentNode;
-	url: string;
-	offsetStr: string;
-}) {
-	const style: CSSProperties = {
-		marginRight: 4,
-	};
-	const parsedOffset = parseTime(props.offsetStr);
+const OffsetContext = createContext("");
+
+function doPresetTrackLoad(
+	content: MarkerTracksCombined,
+	globalOffset?: string,
+	localOffset?: string,
+) {
+	const parsedGlobalOffset = parseTime(globalOffset ?? "");
+	const parsedLocalOffset = parseTime(localOffset ?? "");
+	controller.timeline.loadCombinedTracksPreset(
+		content,
+		(isNaN(parsedGlobalOffset) ? 0 : parsedGlobalOffset) +
+			(isNaN(parsedLocalOffset) ? 0 : parsedLocalOffset),
+	);
+	controller.updateStats();
+	controller.timeline.drawElements();
+}
+
+function LoadCombinedTracksBtn(props: { displayName: ContentNode; url: string }) {
+	const offsetCtx = useContext(OffsetContext);
 	return <button
-		style={style}
-		onClick={() => {
-			asyncFetchJson(props.url, (content) => {
-				controller.timeline.loadCombinedTracksPreset(
-					content,
-					!isNaN(parsedOffset) ? parsedOffset : 0,
-				);
-				controller.updateStats();
-				controller.timeline.drawElements();
-			});
-		}}
+		onClick={(e) =>
+			asyncFetchJson(props.url, (content) => doPresetTrackLoad(content, offsetCtx))
+		}
 	>
 		{props.displayName}
 	</button>;
 }
 
-export class TimelineMarkers extends React.Component {
+function metaToTitleText(meta: MarkerTrackMeta, showAuthors: boolean): LocalizedContent {
+	return {
+		en:
+			(meta.authors?.length ?? 0) > 0 && showAuthors
+				? `${meta.name.en} by ${meta.authors?.join(" & ")}`
+				: meta.name.en,
+		zh:
+			(meta.authors?.length ?? 0) > 0 && showAuthors
+				? `${meta.name.zh}（来自${meta.authors?.join("+")}）`
+				: meta.name.zh,
+	};
+}
+
+type TrackDisplayProps = { meta: MarkerTrackMeta; fileName: string; showAuthors: boolean };
+
+function TrackDisplay(props: TrackDisplayProps) {
+	return <div style={{ marginBlock: 1 }}>
+		<LoadCombinedTracksBtn
+			displayName={localize(metaToTitleText(props.meta, props.showAuthors))}
+			url={PRESET_MARKERS_BASE + props.fileName + ".txt"}
+		/>
+	</div>;
+}
+
+function TrackSetDisplay(props: TrackDisplayProps) {
+	const [offsetMap, setOffsetMap] = useState(new Map<string, string>());
+	const [phasedTracks, setPhasedTracks] = useState<PhasedTrack[] | undefined>(undefined);
+	useEffect(() => {
+		asyncFetchJson(PRESET_MARKERS_BASE + props.fileName + ".txt", (blob) => {
+			if (blob.fileType !== FileType.MarkerTrackSet) {
+				console.error(
+					`while parsing ${props.fileName}, got invalid file type ${blob.fileType}`,
+				);
+			} else {
+				setPhasedTracks(blob.phasedTracks);
+			}
+		});
+	}, []);
+	const body = <div style={{ display: "grid", gridTemplateColumns: "2fr 3fr", gap: 4 }}>
+		{phasedTracks?.map(({ offset, label, fileName }, i) => <React.Fragment key={i}>
+			<div style={{ gridRow: i + 1, gridColumn: 1 }}>
+				<Input
+					description="@"
+					defaultValue={offsetMap.get(fileName)?.toString() ?? ""}
+					onChange={(v: string) => setOffsetMap(new Map(offsetMap).set(fileName, v))}
+					width={8}
+					placeholder={offset.toString()}
+				/>
+			</div>
+			<div style={{ gridRow: i + 1, gridColumn: 2 }}>
+				<LoadCombinedTracksBtn
+					displayName={localize(label)}
+					url={PRESET_MARKERS_BASE + fileName}
+				/>
+			</div>
+		</React.Fragment>) ??
+			localize({
+				en: "loading phases...",
+			})}
+	</div>;
+	const globalOffset = useContext(OffsetContext);
+	return <div
+		style={{
+			display: "flex",
+			flexDirection: "column",
+			paddingBlock: 8,
+			paddingInline: 4,
+			marginBlockEnd: 10,
+			border: "1px dashed",
+		}}
+	>
+		<Expandable
+			title={`trackPresets-phase-${props.fileName}`}
+			titleNode={
+				<div
+					style={{
+						display: "inline-flex",
+						flexDirection: "row",
+						gap: 4,
+						alignItems: "center",
+						marginBottom: 4,
+					}}
+				>
+					<div>{localize(metaToTitleText(props.meta, props.showAuthors))}</div>
+					<div>
+						<button
+							onClick={(e) => {
+								e.stopPropagation(); // Don't trigger the expandable
+								// Ideally we would rewrite asyncFetchJson to be more promise-y and we
+								// can then await all the tracks being loaded together
+								phasedTracks?.forEach((track) =>
+									asyncFetchJson(
+										PRESET_MARKERS_BASE + track.fileName, // do not include txt extension here
+										// TODO apply action cutoff for next phase
+										(content) =>
+											doPresetTrackLoad(
+												content,
+												globalOffset,
+												offsetMap.get(track.fileName) ??
+													track.offset.toString(),
+											),
+									),
+								);
+							}}
+						>
+							{localize({ en: "Load all phases" })}
+						</button>
+					</div>
+				</div>
+			}
+			noMargin
+			autoIndent={false}
+			content={body}
+		/>
+	</div>;
+}
+
+type FightGroup = {
+	unphased: string[];
+	phased: string[];
+	// If all tracks in this group share the same author(s), then display it in the section label.
+	// Otherwise, display them individually.
+	commonAuthors?: string[];
+};
+
+function TrackCollection(props: {
+	label: LocalizedContent;
+	trackList: string[];
+	defaultShow?: boolean;
+}) {
+	// Group fight lists by their category + language. Phased fights are displayed after un-phased
+	// ones because their offsets require more space.
+	const trackGroups = new Map<FightKind, Map<Language, FightGroup>>();
+	const addToGroup = (fileName: string) => {
+		const trackMeta = TRACK_META_MAP.get(fileName);
+		if (!trackMeta) {
+			console.error("missing track metadata declaration for " + fileName);
+			return;
+		}
+		if (!trackGroups.has(trackMeta.fightKind)) {
+			trackGroups.set(trackMeta.fightKind, new Map());
+		}
+		const group = trackGroups.get(trackMeta.fightKind)!;
+		trackMeta.supportedLanguages.forEach((lang) => {
+			if (!group.has(lang)) {
+				group.set(lang, { unphased: [], phased: [], commonAuthors: trackMeta.authors });
+			}
+			const langGroup = group.get(lang)!;
+			(trackMeta.phased ? langGroup.phased : langGroup.unphased).push(fileName);
+			// i hate javascript i hate javascript i hate javascript
+			if (trackMeta.authors?.join("+") !== langGroup.commonAuthors?.join("+")) {
+				langGroup.commonAuthors = undefined;
+			}
+		});
+	};
+	props.trackList.map(addToGroup);
+	const pStyle: CSSProperties = { marginBlock: 1 };
+	const body = <div
+		style={{
+			display: "flex",
+			flexDirection: "column",
+			marginTop: 4,
+			paddingInlineStart: 6,
+			marginInlineStart: 10,
+		}}
+	>
+		{trackGroups
+			.entries()
+			.map(([kind, langMap], i) =>
+				langMap
+					.entries()
+					.flatMap(([lang, group]) => [
+						<div key={`${i}-${lang}`}>
+							<div
+								style={{
+									display: "flex",
+									flexDirection: "row",
+									flexWrap: "wrap",
+									gap: 4,
+									alignItems: "baseline",
+								}}
+							>
+								{localize({
+									en: group.commonAuthors ? (
+										<p style={pStyle}>
+											{displayFightKind(kind)} ({localizeLanguage(lang)}) by{" "}
+											{group.commonAuthors.join(" & ")}:
+										</p>
+									) : (
+										<p style={pStyle}>
+											{displayFightKind(kind)} ({localizeLanguage(lang)}):
+										</p>
+									),
+									zh: group.commonAuthors ? (
+										<p style={pStyle}>
+											{displayFightKind(kind)}（{localizeLanguage(lang)}，来自
+											{group.commonAuthors.join("+")}）：
+										</p>
+									) : (
+										<p style={pStyle}>
+											{displayFightKind(kind)}（{localizeLanguage(lang)}）：
+										</p>
+									),
+								})}
+								{group.unphased.map((label, j) => <TrackDisplay
+									key={j}
+									meta={TRACK_META_MAP.get(label)!}
+									fileName={label}
+									showAuthors={!group.commonAuthors}
+								/>)}
+							</div>
+							<div
+								style={{
+									width: "60%",
+									paddingInlineStart: 10,
+									marginInlineEnd: 10,
+								}}
+							>
+								{group.phased.map((label, j) => <TrackSetDisplay
+									key={j}
+									meta={TRACK_META_MAP.get(label)!}
+									fileName={label}
+									showAuthors={!group.commonAuthors}
+								/>)}
+							</div>
+						</div>,
+					])
+					.toArray(),
+			)
+			.toArray()}
+	</div>;
+	return <Expandable
+		title={`trackPresets-${props.label.en}`}
+		titleNode={localize(props.label)}
+		defaultShow={props.defaultShow}
+		autoIndent={false}
+		content={body}
+	/>;
+}
+
+export function TimelineMarkers() {
+	const [offsetStr, setOffsetStr] = useState("");
+	// TODO update these tooltips
+	const offsetHelpEn =
+		"When specified, all imported and preset tracks will start from the specified timestamp." +
+		" Use this to combine markers for multi-phase fights with varying kill times.";
+	const offsetHelpZh: string =
+		"不为空时，下方所有导入的时间轴文件和预设都将从这个时间点开始。可以用此功能自行组合不同P的时间轴文件。";
+	const parsedTime = parseTime(offsetStr);
+	const offsetInput = <Input
+		defaultValue={offsetStr}
+		description={
+			<>
+				<span
+					style={{
+						color: isNaN(parsedTime) || parsedTime === 0 ? "" : MarkerColor.Purple,
+					}}
+				>
+					{localize({
+						en: "Load tracks starting at timestamp ",
+						zh: "载入文件到此时间点 ",
+					})}
+				</span>
+				<Help
+					topic={"trackLoadOffset"}
+					content={localize({ en: offsetHelpEn, zh: offsetHelpZh })}
+				/>
+				:
+			</>
+		}
+		width={4}
+		onChange={setOffsetStr}
+	/>;
+
+	const actionsSection = <>
+		<button
+			onClick={() => {
+				controller.timeline.deleteAllMarkers();
+				controller.updateStats();
+			}}
+		>
+			{localize({ en: "clear all markers", zh: "清空当前" })}
+		</button>
+		<button
+			onClick={() => {
+				const count = controller.timeline.sortAndRemoveDuplicateMarkers();
+				if (count > 0) {
+					alert("removed " + count + " duplicate markers");
+				} else {
+					alert("no duplicate markers found");
+				}
+				controller.timeline.updateTimelineMarkers();
+			}}
+		>
+			{localize({ en: "remove duplicates", zh: "删除重复标记" })}
+		</button>
+		<span>
+			{localize({
+				en: ", click to delete single markers",
+				zh: "，可点击删除单个标记",
+			})}
+		</span>
+	</>;
+	// TODO: load/save buttons, custom marker/buff input
+	return <Columns contentHeight={TIMELINE_COLUMNS_HEIGHT}>
+		{[
+			{
+				defaultSize: 50,
+				content: <>
+					<p>
+						<b>{localize({ en: "Presets", zh: "预设文件" })}</b>
+					</p>
+					<div>{offsetInput}</div>
+					<TrackCollection
+						label={{ en: "Current content" }}
+						trackList={RECENT_CONTENT_TRACKS}
+						defaultShow
+					/>
+					<TrackCollection
+						label={{ en: "Legacy ultimates", zh: "过去绝本" }}
+						trackList={LEGACY_ULTIMATE_TRACKS}
+						defaultShow
+					/>
+					<p>
+						<b>Archive</b>
+					</p>
+					{Array.from(
+						ARCHIVE_TRACKS.entries().map(([header, trackList], i) => <div key={i}>
+							<TrackCollection label={{ en: header }} trackList={trackList} />
+						</div>),
+					)}
+				</>,
+			},
+			{
+				defaultSize: 50,
+				content: <>
+					{actionsSection}
+					<p>
+						<b>{localize({ en: "Add buffs/markers", zh: "添加buff和标记" })}</b>
+					</p>
+				</>,
+			},
+		]}
+	</Columns>;
+}
+
+export class OldTimelineMarkers extends React.Component {
 	state: TimelineMarkersState;
 
 	onColorChange: (evt: ChangeEvent<{ value: string }>) => void;
@@ -95,8 +498,8 @@ export class TimelineMarkers extends React.Component {
 
 	static contextType = ColorThemeContext;
 
-	constructor(props: TimelineMarkersProp) {
-		super(props);
+	constructor() {
+		super({});
 		setEditingMarkerValues = (marker: MarkerElem) => {
 			if (marker.markerType === MarkerType.Info) {
 				this.setState({
@@ -194,38 +597,6 @@ export class TimelineMarkers extends React.Component {
 				{displayName}
 			</option>;
 		};
-
-		const offsetHelpEn =
-			"When specified, all imported and preset tracks will start from the specified timestamp." +
-			" Use this to combine markers for multi-phase fights with varying kill times.";
-		const offsetHelpZh: string =
-			"不为空时，下方所有导入的时间轴文件和预设都将从这个时间点开始。可以用此功能自行组合不同P的时间轴文件。";
-		const parsedTime = parseTime(this.state.offsetStr);
-		const offsetInput = <Input
-			defaultValue={this.state.offsetStr}
-			description={
-				<>
-					<span
-						style={{
-							color: isNaN(parsedTime) || parsedTime === 0 ? "" : MarkerColor.Purple,
-						}}
-					>
-						{localize({
-							en: "Load tracks starting at timestamp ",
-							zh: "载入文件到此时间点 ",
-						})}
-					</span>
-					<Help
-						topic={"trackLoadOffset"}
-						content={localize({ en: offsetHelpEn, zh: offsetHelpZh })}
-					/>
-					:
-				</>
-			}
-			width={4}
-			style={{ ...inlineDiv, marginTop: 16 }}
-			onChange={this.setOffset}
-		/>;
 
 		const trackIndices: number[] = [];
 		this.state.trackBins.forEach((bin, trackIndex) => {
@@ -560,143 +931,6 @@ export class TimelineMarkers extends React.Component {
 				{localize({ en: "add marker", zh: "添加标记" })}
 			</button>
 		</form>;
-
-		// https://github.com/OverlayPlugin/cactbot/tree/main/ui/raidboss/data/07-dt
-		const presetsSection = <div style={{}}>
-			<p>
-				<span>
-					{localize({
-						en: "Current tier (en) by shanzhe: ",
-						zh: "当前版本（英文，来自shanzhe）：",
-					})}
-				</span>
-				<LoadCombinedTracksBtn
-					displayName={"M5S"}
-					url={PRESET_MARKERS_BASE + "m5s.txt"}
-					offsetStr={this.state.offsetStr}
-				/>
-				<LoadCombinedTracksBtn
-					displayName={"M6S"}
-					url={PRESET_MARKERS_BASE + "m6s.txt"}
-					offsetStr={this.state.offsetStr}
-				/>
-				<LoadCombinedTracksBtn
-					displayName={"M7S"}
-					url={PRESET_MARKERS_BASE + "m7s.txt"}
-					offsetStr={this.state.offsetStr}
-				/>
-				<LoadCombinedTracksBtn
-					displayName={"M8S full"}
-					url={PRESET_MARKERS_BASE + "m8s_full.txt"}
-					offsetStr={this.state.offsetStr}
-				/>
-				<LoadCombinedTracksBtn
-					displayName={"M8S P1 to adds"}
-					url={PRESET_MARKERS_BASE + "m8s_p1_through_adds.txt"}
-					offsetStr={this.state.offsetStr}
-				/>
-				<LoadCombinedTracksBtn
-					displayName={"M8S P1 post-adds"}
-					url={PRESET_MARKERS_BASE + "m8s_p1_post_adds.txt"}
-					offsetStr={this.state.offsetStr}
-				/>
-				<LoadCombinedTracksBtn
-					displayName={"M8S P2"}
-					url={PRESET_MARKERS_BASE + "m8s_p2.txt"}
-					offsetStr={this.state.offsetStr}
-				/>
-			</p>
-			<p>
-				{/* TODO localize */}
-				<span>{localize({ en: "Quantum (en): " })}</span>
-				<LoadCombinedTracksBtn
-					displayName={"The Final Verse Q40 by shanzhe"}
-					url={PRESET_MARKERS_BASE + "final_verse_q40.txt"}
-					offsetStr={this.state.offsetStr}
-				/>
-			</p>
-			<p>
-				<span>{localize({ en: "EX trial: ", zh: "极神：" })}</span>
-				<LoadCombinedTracksBtn
-					displayName={localize({
-						en: "Queen Eternal (en + zh) by 小盐",
-						zh: "永恒女王（英+中，来自小盐）",
-					})}
-					url={PRESET_MARKERS_BASE + "queen_eternal.txt"}
-					offsetStr={this.state.offsetStr}
-				/>
-			</p>
-			<p>
-				<span>
-					{localize({
-						en: "FRU (en) by Yara & shanzhe: ",
-						zh: "绝伊甸（英文，来自Yara+shanzhe）：",
-					})}
-				</span>
-				<LoadCombinedTracksBtn
-					displayName={localize({ en: "P1", zh: "P1" })}
-					url={PRESET_MARKERS_BASE + "fru_p1.txt"}
-					offsetStr={this.state.offsetStr}
-				/>
-				<LoadCombinedTracksBtn
-					displayName={localize({ en: "P2 + intermission", zh: "P2" })}
-					url={PRESET_MARKERS_BASE + "fru_p2.txt"}
-					offsetStr={this.state.offsetStr}
-				/>
-				<LoadCombinedTracksBtn
-					displayName={localize({ en: "P3 + P4", zh: "P3 + P4" })}
-					url={PRESET_MARKERS_BASE + "fru_p3_p4.txt"}
-					offsetStr={this.state.offsetStr}
-				/>
-				<LoadCombinedTracksBtn
-					displayName={localize({ en: "P5", zh: "P5" })}
-					url={PRESET_MARKERS_BASE + "fru_p5.txt"}
-					offsetStr={this.state.offsetStr}
-				/>
-				<LoadCombinedTracksBtn
-					displayName={localize({ en: "full fight", zh: "完整" })}
-					url={PRESET_MARKERS_BASE + "fru_en_full.txt"}
-					offsetStr={this.state.offsetStr}
-				/>
-			</p>
-			<p>
-				<span>
-					{localize({
-						en: "FRU (zh) by 小盐 & czmm: ",
-						zh: "绝伊甸（中文，来自小盐+czmm）：",
-					})}
-				</span>
-				<LoadCombinedTracksBtn
-					displayName={localize({ en: "full (12/8/24 ver)", zh: "完整（12/8/24版）" })}
-					url={PRESET_MARKERS_BASE + "fru_zh.txt"}
-					offsetStr={this.state.offsetStr}
-				/>
-			</p>
-			<p>
-				<span>{localize({ en: "Legacy ultimates: ", zh: "过去绝本（英文）：" })}</span>
-				<LoadCombinedTracksBtn
-					displayName={"DSR P2 by Caro"}
-					url={PRESET_MARKERS_BASE + "dsr_p2.txt"}
-					offsetStr={this.state.offsetStr}
-				/>
-				<LoadCombinedTracksBtn
-					displayName={"DSR P6 by Tischel"}
-					url={PRESET_MARKERS_BASE + "dsr_p6.txt"}
-					offsetStr={this.state.offsetStr}
-				/>
-				<LoadCombinedTracksBtn
-					displayName={"DSR P7 by Santa"}
-					url={PRESET_MARKERS_BASE + "dsr_p7.txt"}
-					offsetStr={this.state.offsetStr}
-				/>
-				<LoadCombinedTracksBtn
-					displayName={"TOP by Santa"}
-					url={PRESET_MARKERS_BASE + "TOP_2023_04_02.track"}
-					offsetStr={this.state.offsetStr}
-				/>
-			</p>
-		</div>;
-
 		return <>
 			<Columns contentHeight={TIMELINE_COLUMNS_HEIGHT}>
 				{[
@@ -705,11 +939,9 @@ export class TimelineMarkers extends React.Component {
 						content: <>
 							{actionsSection}
 							<br />
-							{offsetInput}
 							<p>
 								<b>{localize({ en: "Presets", zh: "预设文件" })}</b>
 							</p>
-							{presetsSection}
 							<p style={{ marginTop: 16 }}>
 								<b>{localize({ en: "Load from file", zh: "从文件导入" })}</b>{" "}
 								<Help
