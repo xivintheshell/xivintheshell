@@ -23,7 +23,7 @@ import {
 	ElemType,
 	MarkerElem,
 	MarkerType,
-	SerializedMarker,
+	MarkerTracksCombined,
 	UntargetableMarkerTrack,
 } from "../Controller/Timeline";
 import {
@@ -54,17 +54,6 @@ export let setEditingMarkerValues = (marker: MarkerElem) => {};
 export let updateMarkers_TimelineMarkerPresets = (trackBins: Map<number, MarkerElem[]>) => {};
 
 const PRESET_MARKERS_BASE = "/presets/markers/";
-
-export type MarkerTrackIndividual = {
-	fileType: FileType.MarkerTrackIndividual;
-	track: number;
-	markers: SerializedMarker[];
-};
-
-export type MarkerTracksCombined = {
-	fileType: FileType.MarkerTracksCombined;
-	tracks: MarkerTrackIndividual[];
-};
 
 type PhasedTrack = {
 	offset: number;
@@ -109,25 +98,38 @@ const OffsetContext = createContext("");
 
 function doPresetTrackLoad(
 	content: MarkerTracksCombined,
-	globalOffset?: string,
-	localOffset?: string,
+	opts?: {
+		globalOffset?: string;
+		localOffset?: string;
+		cutoff?: number;
+	},
 ) {
-	const parsedGlobalOffset = parseTime(globalOffset ?? "");
-	const parsedLocalOffset = parseTime(localOffset ?? "");
+	let parsedGlobalOffset = parseTime(opts?.globalOffset ?? "");
+	parsedGlobalOffset = isNaN(parsedGlobalOffset) ? 0 : parsedGlobalOffset;
+	const parsedLocalOffset = parseTime(opts?.localOffset ?? "");
 	controller.timeline.loadCombinedTracksPreset(
 		content,
-		(isNaN(parsedGlobalOffset) ? 0 : parsedGlobalOffset) +
-			(isNaN(parsedLocalOffset) ? 0 : parsedLocalOffset),
+		parsedGlobalOffset + (isNaN(parsedLocalOffset) ? 0 : parsedLocalOffset),
+		opts?.cutoff !== undefined ? parsedGlobalOffset + opts.cutoff : undefined,
 	);
 	controller.updateStats();
 	controller.timeline.drawElements();
 }
 
-function LoadCombinedTracksBtn(props: { displayName: ContentNode; url: string }) {
+function LoadCombinedTracksBtn(props: {
+	displayName: ContentNode;
+	url: string;
+	offsetStr?: string;
+}) {
 	const offsetCtx = useContext(OffsetContext);
 	return <button
 		onClick={(e) =>
-			asyncFetchJson(props.url, (content) => doPresetTrackLoad(content, offsetCtx))
+			asyncFetchJson(props.url, (content) =>
+				doPresetTrackLoad(content, {
+					globalOffset: offsetCtx,
+					localOffset: props.offsetStr,
+				}),
+			)
 		}
 	>
 		{props.displayName}
@@ -173,23 +175,41 @@ function TrackSetDisplay(props: TrackDisplayProps) {
 		});
 	}, []);
 	const body = <div style={{ display: "grid", gridTemplateColumns: "2fr 3fr", gap: 4 }}>
-		{phasedTracks?.map(({ offset, label, fileName }, i) => <React.Fragment key={i}>
-			<div style={{ gridRow: i + 1, gridColumn: 1 }}>
-				<Input
-					description="@"
-					defaultValue={offsetMap.get(fileName)?.toString() ?? ""}
-					onChange={(v: string) => setOffsetMap(new Map(offsetMap).set(fileName, v))}
-					width={8}
-					placeholder={offset.toString()}
-				/>
-			</div>
-			<div style={{ gridRow: i + 1, gridColumn: 2 }}>
-				<LoadCombinedTracksBtn
-					displayName={localize(label)}
-					url={PRESET_MARKERS_BASE + fileName}
-				/>
-			</div>
-		</React.Fragment>) ??
+		{phasedTracks?.map(({ offset, label, fileName }, i) => {
+			let offsetStr = offsetMap.get(fileName);
+			if (!offsetStr?.length) {
+				offsetStr = offset.toString();
+			}
+			if (fileName === undefined) {
+				console.error("missing fileName for phase", label, "of", props.fileName);
+			}
+			return <React.Fragment key={i}>
+				<div style={{ gridRow: i + 1, gridColumn: 1 }}>
+					<Input
+						description="@"
+						defaultValue={offsetMap.get(fileName)?.toString() ?? ""}
+						onChange={(v: string) => {
+							const newMap = new Map(offsetMap);
+							if (v === undefined) {
+								newMap.delete(fileName);
+							} else {
+								newMap.set(fileName, v);
+							}
+							setOffsetMap(newMap);
+						}}
+						width={8}
+						placeholder={offset.toString()}
+					/>
+				</div>
+				<div style={{ gridRow: i + 1, gridColumn: 2 }}>
+					<LoadCombinedTracksBtn
+						displayName={localize(label)}
+						url={PRESET_MARKERS_BASE + fileName}
+						offsetStr={offsetStr}
+					/>
+				</div>
+			</React.Fragment>;
+		}) ??
 			localize({
 				en: "loading phases...",
 			})}
@@ -222,19 +242,38 @@ function TrackSetDisplay(props: TrackDisplayProps) {
 						<button
 							onClick={(e) => {
 								e.stopPropagation(); // Don't trigger the expandable
+								// Cut off markers that would end after a subsequent phase begins.
+								const cutoffs = new Map<string, number>();
+								phasedTracks?.forEach((track, i) => {
+									let acc = undefined;
+									for (let j = i + 1; j < phasedTracks.length; j++) {
+										const laterOfs = offsetMap.get(phasedTracks[j].fileName);
+										// Do not apply cutoffs when using the default offset.
+										if (laterOfs) {
+											const parsedOfs = parseTime(laterOfs);
+											if (acc === undefined || parsedOfs < acc) {
+												acc = parsedOfs;
+											}
+										}
+									}
+									if (acc !== undefined) {
+										cutoffs.set(track.fileName, acc);
+									}
+								});
 								// Ideally we would rewrite asyncFetchJson to be more promise-y and we
 								// can then await all the tracks being loaded together
 								phasedTracks?.forEach((track) =>
 									asyncFetchJson(
 										PRESET_MARKERS_BASE + track.fileName, // do not include txt extension here
-										// TODO apply action cutoff for next phase
-										(content) =>
-											doPresetTrackLoad(
-												content,
+										(content) => {
+											doPresetTrackLoad(content, {
 												globalOffset,
-												offsetMap.get(track.fileName) ??
+												localOffset:
+													offsetMap.get(track.fileName) ??
 													track.offset.toString(),
-											),
+												cutoff: cutoffs.get(track.fileName),
+											});
+										},
 									),
 								);
 							}}
@@ -313,7 +352,7 @@ function TrackCollection(props: {
 									flexDirection: "row",
 									flexWrap: "wrap",
 									gap: 4,
-									alignItems: "baseline",
+									alignItems: "center",
 								}}
 							>
 								{localize({
@@ -376,12 +415,6 @@ function TrackCollection(props: {
 
 export function TimelineMarkers() {
 	const [offsetStr, setOffsetStr] = useState("");
-	// TODO update these tooltips
-	const offsetHelpEn =
-		"When specified, all imported and preset tracks will start from the specified timestamp." +
-		" Use this to combine markers for multi-phase fights with varying kill times.";
-	const offsetHelpZh: string =
-		"不为空时，下方所有导入的时间轴文件和预设都将从这个时间点开始。可以用此功能自行组合不同P的时间轴文件。";
 	const parsedTime = parseTime(offsetStr);
 	const offsetInput = <Input
 		defaultValue={offsetStr}
@@ -399,7 +432,25 @@ export function TimelineMarkers() {
 				</span>
 				<Help
 					topic={"trackLoadOffset"}
-					content={localize({ en: offsetHelpEn, zh: offsetHelpZh })}
+					content={localize({
+						en: <div>
+							<p>
+								When specified, all imported and preset tracks will start from the
+								specified timestamp. Use this to combine markers for multi-phase
+								fights with varying kill times.
+							</p>
+							<p>
+								Loading preset tracks that already have phase timestamps will add
+								this start value on top of the phase-specific timing.
+							</p>
+						</div>,
+						zh: <div>
+							<p>
+								不为空时，下方所有导入的时间轴文件和预设都将从这个时间点开始。可以用此功能自行组合不同P的时间轴文件。
+							</p>
+							<p>导入已有P开始时间的预设时，会加上此设置的时间戳。</p>
+						</div>,
+					})}
 				/>
 				:
 			</>
@@ -408,35 +459,41 @@ export function TimelineMarkers() {
 		onChange={setOffsetStr}
 	/>;
 
-	const actionsSection = <>
-		<button
-			onClick={() => {
-				controller.timeline.deleteAllMarkers();
-				controller.updateStats();
-			}}
-		>
-			{localize({ en: "clear all markers", zh: "清空当前" })}
-		</button>
-		<button
-			onClick={() => {
-				const count = controller.timeline.sortAndRemoveDuplicateMarkers();
-				if (count > 0) {
-					alert("removed " + count + " duplicate markers");
-				} else {
-					alert("no duplicate markers found");
-				}
-				controller.timeline.updateTimelineMarkers();
-			}}
-		>
-			{localize({ en: "remove duplicates", zh: "删除重复标记" })}
-		</button>
-		<span>
+	const actionsSection = <div
+		style={{ display: "flex", flexDirection: "row", gap: 5, alignItems: "baseline" }}
+	>
+		<div>
+			<button
+				onClick={() => {
+					controller.timeline.deleteAllMarkers();
+					controller.updateStats();
+				}}
+			>
+				{localize({ en: "clear all markers", zh: "清空当前" })}
+			</button>
+		</div>
+		<div>
+			<button
+				onClick={() => {
+					const count = controller.timeline.sortAndRemoveDuplicateMarkers();
+					if (count > 0) {
+						alert("removed " + count + " duplicate markers");
+					} else {
+						alert("no duplicate markers found");
+					}
+					controller.timeline.updateTimelineMarkers();
+				}}
+			>
+				{localize({ en: "remove duplicates", zh: "删除重复标记" })}
+			</button>
+		</div>
+		<div>
 			{localize({
-				en: ", click to delete single markers",
-				zh: "，可点击删除单个标记",
+				en: "click a marker in the timeline to delete it",
+				zh: "点击时间轴上的标记即可删除",
 			})}
-		</span>
-	</>;
+		</div>
+	</div>;
 	// TODO: load/save buttons, custom marker/buff input
 	return <Columns contentHeight={TIMELINE_COLUMNS_HEIGHT}>
 		{[
@@ -458,7 +515,7 @@ export function TimelineMarkers() {
 						defaultShow
 					/>
 					<p>
-						<b>Archive</b>
+						<b>{localize({ en: "Archive", zh: "档案" })}</b>
 					</p>
 					{Array.from(
 						ARCHIVE_TRACKS.entries().map(([header, trackList], i) => <div key={i}>
