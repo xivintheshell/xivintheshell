@@ -33,7 +33,7 @@ import {
 	LocalizedContent,
 	localizeLanguage,
 } from "./Localization";
-import { getThemeField, MarkerColor, ColorThemeContext } from "./ColorTheme";
+import { getCurrentThemeColors, getThemeField, MarkerColor, ColorThemeContext } from "./ColorTheme";
 import { Buff, buffInfos } from "../Game/Buffs";
 import { BuffType } from "../Game/Common";
 import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
@@ -67,6 +67,17 @@ export type MarkerTrackSet = {
 	// phase (e.g. a skipped enrage cast) will be cut off.
 	phasedTracks: PhasedTrack[];
 };
+
+function Hsep(props: { marginTop: number }) {
+	const theme = getCurrentThemeColors();
+	return <hr
+		style={{
+			marginTop: props.marginTop,
+			border: "none",
+			borderTop: ("1px solid " + theme.bgHighContrast) as string,
+		}}
+	/>;
+}
 
 type TimelineMarkersState = {
 	nextMarkerType: MarkerType;
@@ -413,6 +424,268 @@ function TrackCollection(props: {
 	/>;
 }
 
+export function CustomMarkerWidget() {
+	const [nextMarkerType, setNextMarkerType] = useState(MarkerType.Info);
+	const [nextMarkerColor, setNextMarkerColor] = useState(MarkerColor.Blue);
+	const [nextMarkerTime, setNextMarkerTime] = useState("0");
+	const [nextMarkerDuration, setNextMarkerDuration] = useState("1");
+	const [nextMarkerTrack, setNextMarkerTrack] = useState("0");
+	const [nextMarkerDescription, setNextMarkerDescription] = useState("");
+	const [nextMarkerShowText, setNextMarkerShowText] = useState(false);
+	const [nextMarkerBuff, setNextMarkerBuff] = useState(BuffType.TechnicalFinish);
+	const inlineDiv = { display: "inline-block", marginRight: "1em", marginBottom: 6 };
+
+	// DANGER!! CONTROLLER STATE HACK
+	useEffect(() => {
+		setEditingMarkerValues = (marker: MarkerElem) => {
+			setNextMarkerType(marker.markerType);
+			setNextMarkerTime(marker.time.toString());
+			setNextMarkerDuration(marker.duration.toString());
+			if (marker.markerType === MarkerType.Info) {
+				setNextMarkerColor(marker.color);
+				setNextMarkerTime(marker.time.toString());
+				setNextMarkerDuration(marker.duration.toString());
+				setNextMarkerTrack(marker.track.toString());
+				setNextMarkerDescription(marker.description);
+				setNextMarkerShowText(marker.showText);
+			} else if (marker.markerType === MarkerType.Buff) {
+				setNextMarkerTrack(marker.track.toString());
+				setNextMarkerBuff(marker.description as BuffType);
+			}
+		};
+	}, []);
+
+	const colorOption = (markerColor: MarkerColor, displayName: ContentNode) => <option
+		key={markerColor}
+		value={markerColor}
+	>
+		{displayName}
+	</option>;
+
+	const infoOnlySection = <div>
+		<Input
+			defaultValue={nextMarkerDescription}
+			description={localize({ en: "Description: ", zh: "描述：" })}
+			width={40}
+			onChange={setNextMarkerDescription}
+		/>
+		<Input
+			defaultValue={nextMarkerTrack}
+			description={localize({ en: "Track: ", zh: "轨道序号：" })}
+			width={4}
+			style={inlineDiv}
+			onChange={setNextMarkerTrack}
+		/>
+		<div style={{ display: "inline-block", marginTop: "4px" }}>
+			<span>{localize({ en: "Color: ", zh: "颜色：" })}</span>
+			<select
+				style={{ display: "inline-block", outline: "none" }}
+				value={nextMarkerColor}
+				onChange={(e) => {
+					if (e.target) {
+						setNextMarkerColor(e.target.value as MarkerColor);
+					}
+				}}
+			>
+				{[
+					colorOption(MarkerColor.Red, localize({ en: "red", zh: "红" })),
+					colorOption(MarkerColor.Orange, localize({ en: "orange", zh: "橙" })),
+					colorOption(MarkerColor.Yellow, localize({ en: "yellow", zh: "黄" })),
+					colorOption(MarkerColor.Green, localize({ en: "green", zh: "绿" })),
+					colorOption(MarkerColor.Cyan, localize({ en: "cyan", zh: "青" })),
+					colorOption(MarkerColor.Blue, localize({ en: "blue", zh: "蓝" })),
+					colorOption(MarkerColor.Purple, localize({ en: "purple", zh: "紫" })),
+					colorOption(MarkerColor.Pink, localize({ en: "pink", zh: "粉" })), // lol forgot abt this earlier
+				]}
+			</select>
+			<div
+				style={{
+					background: nextMarkerColor,
+					marginLeft: "4px",
+					display: "inline-block",
+					verticalAlign: "middle",
+					height: "1em",
+					width: "4em",
+				}}
+			/>
+		</div>
+		<div style={{ display: "inline-block", marginTop: "4px", marginLeft: "10px" }}>
+			<input
+				type="checkbox"
+				style={{ position: "relative", top: 3 }}
+				checked={nextMarkerShowText}
+				onChange={(e) => {
+					if (e.target) {
+						setNextMarkerShowText(e.target.checked);
+					}
+				}}
+			/>
+			<span style={{ marginLeft: 4 }}>
+				{localize({ en: "show text", zh: "显示文字描述" })}
+			</span>
+		</div>
+	</div>;
+
+	const onEnterBuffEdit = (buffType: BuffType) => {
+		const buff = new Buff(buffType);
+		setNextMarkerDuration(buff.info.duration.toString());
+	};
+
+	const buffCollection = buffInfos.map((info) => <option key={info.name} value={info.name}>
+		{localizeBuffType(info.name)}
+	</option>);
+
+	const buffOnlySection = <div>
+		<span>{localize({ en: "Buff: ", zh: "团辅：" })}</span>
+		<select
+			value={nextMarkerBuff}
+			onChange={(evt) => {
+				if (evt.target) {
+					const buffType = evt.target.value as BuffType;
+					setNextMarkerBuff(buffType);
+					onEnterBuffEdit(buffType);
+				}
+			}}
+		>
+			{buffCollection}
+		</select>
+
+		<div style={{ marginTop: 5 }}>
+			<Input
+				defaultValue={nextMarkerTrack}
+				description={localize({ en: "Track: ", zh: "轨道序号：" })}
+				width={4}
+				style={inlineDiv}
+				onChange={setNextMarkerTrack}
+			/>
+		</div>
+	</div>;
+	return <div>
+		<p>
+			<b>{localize({ en: "Add buffs/markers", zh: "添加buff和标记" })}</b>
+		</p>
+		<form>
+			<span>{localize({ en: "Type: ", zh: "类型：" })}</span>
+			<select
+				value={nextMarkerType}
+				onChange={(evt) => {
+					if (evt.target) {
+						const markerType = evt.target.value as MarkerType;
+						setNextMarkerType(markerType);
+						if (markerType === MarkerType.Buff) {
+							onEnterBuffEdit(nextMarkerBuff);
+						}
+					}
+				}}
+			>
+				<option value={MarkerType.Info}>{localize({ en: "Info", zh: "备注信息" })}</option>
+				<option value={MarkerType.Untargetable}>
+					{localize({ en: "Untargetable", zh: "不可选中" })}
+				</option>
+				<option value={MarkerType.Buff}>{localize({ en: "Buff", zh: "团辅" })}</option>
+			</select>
+			<span> </span>
+			<Input
+				defaultValue={nextMarkerTime}
+				description={localize({ en: "Time: ", zh: "时间：" })}
+				width={8}
+				style={inlineDiv}
+				onChange={setNextMarkerTime}
+			/>
+
+			<Input
+				defaultValue={nextMarkerDuration}
+				description={localize({ en: "Duration: ", zh: "持续时长：" })}
+				width={8}
+				style={inlineDiv}
+				onChange={setNextMarkerDuration}
+			/>
+
+			{nextMarkerType === MarkerType.Info ? infoOnlySection : undefined}
+			{nextMarkerType === MarkerType.Buff ? buffOnlySection : undefined}
+			<button
+				type={"submit"}
+				style={{ display: "block", marginTop: "0.5em" }}
+				onClick={(e) => {
+					const marker: MarkerElem = {
+						type: ElemType.Marker,
+						markerType: nextMarkerType,
+						time: parseTime(nextMarkerTime),
+						duration: parseFloat(nextMarkerDuration),
+						color: nextMarkerColor,
+						track: parseInt(nextMarkerTrack),
+						description: nextMarkerDescription,
+						showText: nextMarkerShowText,
+					};
+					let err: ContentNode | undefined = undefined;
+					if (nextMarkerType === MarkerType.Untargetable) {
+						marker.color = MarkerColor.Grey;
+						marker.track = UntargetableMarkerTrack;
+						marker.description = "";
+						marker.showText = true;
+					}
+					if (nextMarkerType === MarkerType.Buff) {
+						const buff = new Buff(nextMarkerBuff);
+						const duration = parseFloat(nextMarkerDuration);
+						if (!isNaN(duration) && duration > buff.info.duration) {
+							err = localize({
+								en: `this buff can't last longer than ${buff.info.duration}s`,
+								zh: `此团辅持续时间不能超过${buff.info.duration}秒`,
+							});
+						}
+						marker.color = buff.info.color;
+						marker.description = buff.name;
+						marker.duration = duration;
+						marker.showText = true;
+					}
+					if (isNaN(marker.duration) || isNaN(marker.time) || isNaN(marker.track)) {
+						err = localize({ en: "some input(s) are invalid", zh: "部分输入格式不对" });
+					}
+					if (err) {
+						window.alert(err);
+						e.preventDefault();
+						return;
+					}
+					controller.timeline.addMarker(marker);
+					controller.updateStats();
+					if (nextMarkerType === MarkerType.Untargetable) {
+						// Some abilities check whether the boss was hit to determine gauge state.
+						updateInvalidStatus();
+					}
+					e.preventDefault();
+				}}
+			>
+				{localize({ en: "add marker", zh: "添加标记" })}
+			</button>
+		</form>
+	</div>;
+}
+
+export function MarkerLoadSaveWidget() {
+	return <div>
+		<p>
+			<b>{localize({ en: "Load marker tracks from file", zh: "从文件导入标记" })}</b>{" "}
+			<Help
+				topic={"load tracks"}
+				content={localize({
+					en: "when loading additional markers, current markers will not be deleted",
+					zh: "载入新的标记时，时间轴上的已有标记不会被删除",
+				})}
+			/>
+		</p>
+		TODO!
+		<p style={{ marginTop: 16 }}>
+			<b>
+				{localize({
+					en: "Save marker tracks to file",
+					zh: "保存标记到文件",
+				})}
+			</b>
+		</p>
+		TODO!
+	</div>;
+}
+
 export function TimelineMarkers() {
 	const [offsetStr, setOffsetStr] = useState("");
 	const parsedTime = parseTime(offsetStr);
@@ -528,9 +801,10 @@ export function TimelineMarkers() {
 				defaultSize: 50,
 				content: <>
 					{actionsSection}
-					<p>
-						<b>{localize({ en: "Add buffs/markers", zh: "添加buff和标记" })}</b>
-					</p>
+					<Hsep marginTop={15} />
+					<CustomMarkerWidget />
+					<Hsep marginTop={15} />
+					<MarkerLoadSaveWidget />
 				</>,
 			},
 		]}
@@ -1000,7 +1274,12 @@ export class OldTimelineMarkers extends React.Component {
 								<b>{localize({ en: "Presets", zh: "预设文件" })}</b>
 							</p>
 							<p style={{ marginTop: 16 }}>
-								<b>{localize({ en: "Load from file", zh: "从文件导入" })}</b>{" "}
+								<b>
+									{localize({
+										en: "Load marker tracks from file",
+										zh: "从文件导入标记",
+									})}
+								</b>{" "}
 								<Help
 									topic={"load tracks"}
 									content={localize({
