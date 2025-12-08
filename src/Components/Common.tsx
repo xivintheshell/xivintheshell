@@ -12,6 +12,8 @@ export type ContentNode = React.JSX.Element | string;
 
 export type ValueChangeEvent = React.ChangeEvent<{ value: string }>;
 
+export const IS_FIREFOX = navigator.userAgent.indexOf("Firefox") >= 0;
+
 const MAX_BUFF_COVERS_COUNT = 3;
 export const TimelineDimensions = {
 	rulerHeight: 30,
@@ -403,7 +405,6 @@ export function Tabs(props: {
 		);
 	}
 
-	const isFirefox = navigator.userAgent.indexOf("Firefox") >= 0;
 	return <div
 		style={{
 			...{
@@ -419,7 +420,7 @@ export function Tabs(props: {
 				display: selectedIndex === undefined ? "none" : "block",
 				height: props.height - TABS_TITLE_HEIGHT,
 				boxSizing: "border-box",
-				padding: `10px ${isFirefox ? 15 : 5}px`,
+				padding: `10px ${IS_FIREFOX ? 15 : 5}px`,
 				overflowY: props.scrollable ? "scroll" : "hidden",
 			}}
 		>

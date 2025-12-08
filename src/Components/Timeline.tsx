@@ -3,7 +3,7 @@ import { FaLockOpen, FaLock } from "react-icons/fa6";
 import { IconContext } from "react-icons";
 import { controller } from "../Controller/Controller";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
-import { Help, Slider, Tabs, TABS_TITLE_HEIGHT } from "./Common";
+import { IS_FIREFOX, Help, Slider, Tabs, TABS_TITLE_HEIGHT } from "./Common";
 import { TimelineMarkers } from "./TimelineMarkers";
 import { TimelineEditor } from "./TimelineEditor";
 import { TimelineCanvas } from "./TimelineCanvas";
@@ -103,6 +103,7 @@ function TimelineMain() {
 	/>;
 	const colorContext = useContext(ColorThemeContext);
 	const bg = getThemeField(colorContext, "bgMediumContrast");
+	const firefoxScrollSpacer = IS_FIREFOX ? <div style={{ height: 8 }} /> : undefined;
 	return <div style={{ position: "relative" }}>
 		{canvas}
 		<div
@@ -164,6 +165,7 @@ function TimelineMain() {
 					pointerEvents: "none",
 				}}
 			/>
+			{firefoxScrollSpacer}
 		</div>
 	</div>;
 }
