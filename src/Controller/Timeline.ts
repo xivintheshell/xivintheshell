@@ -207,15 +207,15 @@ export class Timeline {
 		);
 	}
 
-	getAllMarkers() {
+	getAllMarkers(): MarkerElem[] {
 		return this.#allMarkers;
 	}
 
-	getUntargetableMarkers() {
+	getUntargetableMarkers(): MarkerElem[] {
 		return this.#untargetableMarkers;
 	}
 
-	getBuffMarkers() {
+	getBuffMarkers(): MarkerElem[] {
 		return this.#buffMarkers;
 	}
 

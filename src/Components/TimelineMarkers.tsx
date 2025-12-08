@@ -107,7 +107,8 @@ const asyncFetchJson = function (url: string, callback: (content: any) => void) 
 
 const OffsetContext = createContext("");
 
-function doPresetTrackLoad(
+// exported to expose to test files
+export function doPresetTrackLoad(
 	content: MarkerTracksCombined,
 	opts?: {
 		globalOffset?: string;
@@ -244,7 +245,7 @@ function TrackSetDisplay(props: TrackDisplayProps) {
 						display: "inline-flex",
 						flexDirection: "row",
 						gap: 4,
-						alignItems: "center",
+						alignItems: "baseline",
 						marginBottom: 4,
 					}}
 				>
@@ -363,7 +364,7 @@ function TrackCollection(props: {
 									flexDirection: "row",
 									flexWrap: "wrap",
 									gap: 4,
-									alignItems: "center",
+									alignItems: "baseline",
 								}}
 							>
 								{localize({
@@ -733,7 +734,7 @@ export function TimelineMarkers() {
 	/>;
 
 	const actionsSection = <div
-		style={{ display: "flex", flexDirection: "row", gap: 5, alignItems: "baseline" }}
+		style={{ display: "flex", flexDirection: "row", gap: 5, alignItems: "center" }}
 	>
 		<div>
 			<button
