@@ -34,7 +34,13 @@ import {
 	LocalizedContent,
 	localizeLanguage,
 } from "./Localization";
-import { getCurrentThemeColors, getThemeField, MarkerColor, ColorThemeContext } from "./ColorTheme";
+import {
+	getCurrentThemeColors,
+	getThemeField,
+	MarkerColor,
+	ColorThemeContext,
+	getThemeColors,
+} from "./ColorTheme";
 import { Buff, buffInfos } from "../Game/Buffs";
 import { BuffType } from "../Game/Common";
 import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
@@ -695,6 +701,60 @@ export function CustomMarkerWidget() {
 }
 
 export function MarkerLoadSaveWidget() {
+	const offset = parseInt(useContext(OffsetContext));
+	const parsedOffset = isNaN(offset) ? 0 : offset;
+	const colors = getThemeColors(useContext(ColorThemeContext));
+	const [loadTrackDest, setLoadTrackDest] = useState("0");
+	const individualTrackInput = <input
+		style={{
+			color: colors.text,
+			backgroundColor: "transparent",
+			outline: "none",
+			border: "none",
+			borderBottom: "1px solid " + colors.text,
+		}}
+		size={2}
+		type={"text"}
+		value={loadTrackDest}
+		onChange={(e) => setLoadTrackDest(e.target.value)}
+	/>;
+	const individualTrackLabel = localize({
+		en: <span>Load into individual track {individualTrackInput}: </span>,
+		zh: <span>载入第{individualTrackInput}轨：</span>,
+	});
+	const loadTracksSection = <>
+		<LoadJsonFromFileOrUrl
+			allowLoadFromUrl={false}
+			defaultLoadUrl={""}
+			label={localize({ en: "Load multiple tracks combined: ", zh: "载入多轨文件：" })}
+			onLoadFn={(content: any) => {
+				controller.timeline.loadCombinedTracksPreset(content, parsedOffset);
+				controller.updateStats();
+				controller.timeline.drawElements();
+			}}
+		/>
+		<div className={"paragraph"}>
+			<LoadJsonFromFileOrUrl
+				allowLoadFromUrl={false}
+				label={individualTrackLabel}
+				onLoadFn={(content: any) => {
+					const track = parseInt(loadTrackDest);
+					if (isNaN(track)) {
+						window.alert("invalid track destination");
+						return;
+					}
+					controller.timeline.loadIndividualTrackPreset(content, track, parsedOffset);
+					controller.updateStats();
+					controller.timeline.drawElements();
+				}}
+			/>
+		</div>
+	</>;
+
+	// save section:
+	// always show "all tracks combined"
+	// have lazy dropdown for others? may need extra validation
+
 	return <div>
 		<p>
 			<b>{localize({ en: "Load marker tracks from file", zh: "从文件导入标记" })}</b>{" "}
@@ -706,7 +766,7 @@ export function MarkerLoadSaveWidget() {
 				})}
 			/>
 		</p>
-		TODO!
+		{loadTracksSection}
 		<p style={{ marginTop: 16 }}>
 			<b>
 				{localize({
@@ -766,7 +826,13 @@ export function TimelineMarkers() {
 	/>;
 
 	const actionsSection = <div
-		style={{ display: "flex", flexDirection: "row", gap: 5, alignItems: "center" }}
+		style={{
+			display: "grid",
+			gridTemplateColumns: "max-content max-content",
+			columnGap: 2,
+			rowGap: 5,
+			alignItems: "center",
+		}}
 	>
 		<div>
 			<button
@@ -793,7 +859,7 @@ export function TimelineMarkers() {
 				{localize({ en: "remove duplicates", zh: "删除重复标记" })}
 			</button>
 		</div>
-		<div>
+		<div style={{ gridColumn: "1 / 3" }}>
 			{localize({
 				en: "click a marker in the timeline to delete it",
 				zh: "点击时间轴上的标记即可删除",
@@ -830,15 +896,15 @@ export function TimelineMarkers() {
 				</>,
 			},
 			{
-				defaultSize: 50,
+				defaultSize: 30,
 				content: <>
 					{actionsSection}
-					<Hsep marginTop={15} />
+					<Hsep marginTop={5} />
 					<CustomMarkerWidget />
 				</>,
 			},
 			{
-				defaultSize: 20,
+				defaultSize: 45,
 				content: <>
 					<MarkerLoadSaveWidget />
 				</>,
