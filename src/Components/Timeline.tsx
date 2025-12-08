@@ -103,7 +103,7 @@ function TimelineMain() {
 	/>;
 	const colorContext = useContext(ColorThemeContext);
 	const bg = getThemeField(colorContext, "bgMediumContrast");
-	const firefoxScrollSpacer = IS_FIREFOX ? <div style={{ height: 8 }} /> : undefined;
+	const firefoxScrollSpacer = IS_FIREFOX ? <div style={{ height: 8 }} tabIndex={-1}/> : undefined;
 	return <div style={{ position: "relative" }}>
 		{canvas}
 		<div
