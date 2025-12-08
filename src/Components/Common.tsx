@@ -581,6 +581,7 @@ export function RadioSet(props: {
 	uniqueName: string;
 	onChange: (newValue: string) => void;
 	options: Array<[string, ContentNode]>;
+	containerStyle?: CSSProperties;
 }) {
 	const defaultValue = getCachedValue(`radio: ${props.uniqueName}`) ?? props.options[0][0];
 	const [selected, setSelected] = useState(defaultValue);
@@ -608,7 +609,7 @@ export function RadioSet(props: {
 			{content}
 		</label>
 	</div>);
-	return <div>{radioOptions}</div>;
+	return <div style={props.containerStyle}>{radioOptions}</div>;
 }
 
 export function Checkbox(props: {

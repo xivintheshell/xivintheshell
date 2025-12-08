@@ -16,6 +16,7 @@ import {
 	Input,
 	LoadJsonFromFileOrUrl,
 	parseTime,
+	RadioSet,
 	SaveToFile,
 } from "./Common";
 import { controller } from "../Controller/Controller";
@@ -38,7 +39,7 @@ import { Buff, buffInfos } from "../Game/Buffs";
 import { BuffType } from "../Game/Common";
 import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
 import { updateInvalidStatus } from "./TimelineEditor";
-import { FileType } from "../Controller/Common";
+import { FileType, getCachedValue } from "../Controller/Common";
 import {
 	ARCHIVE_TRACKS,
 	displayFightKind,
@@ -436,8 +437,8 @@ export function CustomMarkerWidget() {
 	const [nextMarkerBuff, setNextMarkerBuff] = useState(BuffType.TechnicalFinish);
 	const inlineDiv = { display: "inline-block", marginRight: "1em", marginBottom: 6 };
 
-	// DANGER!! CONTROLLER STATE HACK
 	useEffect(() => {
+		// DANGER!! CONTROLLER STATE HACK
 		setEditingMarkerValues = (marker: MarkerElem) => {
 			setNextMarkerType(marker.markerType);
 			setNextMarkerTime(marker.time.toString());
@@ -454,6 +455,13 @@ export function CustomMarkerWidget() {
 				setNextMarkerBuff(marker.description as BuffType);
 			}
 		};
+		const cachedMarkerType = getCachedValue(`radio: markerType`);
+		if (cachedMarkerType !== null) {
+			setNextMarkerType(cachedMarkerType as MarkerType);
+			if (cachedMarkerType === MarkerType.Buff) {
+				onEnterBuffEdit(nextMarkerBuff);
+			}
+		}
 	}, []);
 
 	const colorOption = (markerColor: MarkerColor, displayName: ContentNode) => <option
@@ -566,25 +574,49 @@ export function CustomMarkerWidget() {
 			<b>{localize({ en: "Add buffs/markers", zh: "添加buff和标记" })}</b>
 		</p>
 		<form>
-			<span>{localize({ en: "Type: ", zh: "类型：" })}</span>
-			<select
-				value={nextMarkerType}
-				onChange={(evt) => {
-					if (evt.target) {
-						const markerType = evt.target.value as MarkerType;
-						setNextMarkerType(markerType);
+			<fieldset
+				style={{
+					display: "flex",
+					alignItems: "baseline",
+					paddingTop: 0,
+					paddingLeft: 0,
+					paddingBottom: 0,
+					marginLeft: 0,
+					marginBottom: 10,
+					border: 0,
+				}}
+			>
+				<legend
+					style={{
+						float: "left",
+						marginRight: "0.5rem",
+						position: "relative",
+						top: "1px",
+					}}
+				>
+					{localize({ en: "Type: ", zh: "类型：" })}
+				</legend>
+				<RadioSet
+					containerStyle={{
+						display: "flex",
+						flexDirection: "row",
+						gap: "0.8rem",
+					}}
+					uniqueName="markerType"
+					onChange={(markerType: string) => {
+						setNextMarkerType(markerType as MarkerType);
 						if (markerType === MarkerType.Buff) {
 							onEnterBuffEdit(nextMarkerBuff);
 						}
-					}
-				}}
-			>
-				<option value={MarkerType.Info}>{localize({ en: "Info", zh: "备注信息" })}</option>
-				<option value={MarkerType.Untargetable}>
-					{localize({ en: "Untargetable", zh: "不可选中" })}
-				</option>
-				<option value={MarkerType.Buff}>{localize({ en: "Buff", zh: "团辅" })}</option>
-			</select>
+					}}
+					/* TODO emphasize label of selected type */
+					options={[
+						[MarkerType.Info, localize({ en: "Info", zh: "备注信息" })],
+						[MarkerType.Buff, localize({ en: "Buff", zh: "团辅" })],
+						[MarkerType.Untargetable, localize({ en: "Untargetable", zh: "不可选中" })],
+					]}
+				/>
+			</fieldset>
 			<span> </span>
 			<Input
 				defaultValue={nextMarkerTime}
@@ -768,11 +800,10 @@ export function TimelineMarkers() {
 			})}
 		</div>
 	</div>;
-	// TODO: load/save buttons, custom marker/buff input
 	return <Columns contentHeight={TIMELINE_COLUMNS_HEIGHT}>
 		{[
 			{
-				defaultSize: 50,
+				defaultSize: 35,
 				content: <>
 					<p>
 						<b>{localize({ en: "Presets", zh: "预设文件" })}</b>
@@ -804,7 +835,11 @@ export function TimelineMarkers() {
 					{actionsSection}
 					<Hsep marginTop={15} />
 					<CustomMarkerWidget />
-					<Hsep marginTop={15} />
+				</>,
+			},
+			{
+				defaultSize: 20,
+				content: <>
 					<MarkerLoadSaveWidget />
 				</>,
 			},
