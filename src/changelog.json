@@ -1,5 +1,11 @@
 [
 	{
+		"date": "12/7/25",
+		"changes": [
+			"Adjusted the appearance of scroll bars in Firefox."
+		]
+	},
+	{
 		"date": "11/15/25",
 		"changes": [
 			"Consumables like Pilgrim's Potions and Super-Ethers in FFLogs imports now display as unknown skills instead of Tinctures."

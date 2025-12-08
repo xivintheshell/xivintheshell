@@ -282,7 +282,7 @@ export default class Main extends React.Component<{ command?: string }> {
 				@supports not selector(::-webkit-scrollbar) {
 					.visibleScrollbar {
 						scrollbar-color: ${colors.bgHighContrast} ${colors.bgLowContrast};
-						scrollbar-width: thin;
+						scrollbar-width: auto;
 					}
 					.invisibleScrollbar {
 						scrollbar-width: none;
