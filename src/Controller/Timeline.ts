@@ -3,7 +3,6 @@ import { controller } from "./Controller";
 import { BuffType, Debug, SkillUnavailableReason, Warning } from "../Game/Common";
 import { ActionNode } from "./Record";
 import { FileType, getCachedValue, removeCachedValue, setCachedValue } from "./Common";
-import { updateMarkers_TimelineMarkerPresets } from "../Components/TimelineMarkers";
 import { updateSkillSequencePresetsView } from "../Components/SkillSequencePresets";
 import { refreshTimelineEditor, updateInvalidStatus } from "../Components/TimelineEditor";
 import { Potency } from "../Game/Potency";
@@ -553,16 +552,12 @@ export class Timeline {
 		this.updateTimelineMarkers();
 	}
 
+	getTrackIndices(): number[] {
+		return Array.from(new Set(this.#allMarkers.map((marker) => marker.track))).sort();
+	}
+
 	updateTimelineMarkers() {
 		updateTimelineView();
-		const M = new Map<number, MarkerElem[]>();
-		this.#allMarkers.forEach((marker) => {
-			let trackBin = M.get(marker.track);
-			if (trackBin === undefined) trackBin = [];
-			trackBin.push(marker);
-			M.set(marker.track, trackBin);
-		});
-		updateMarkers_TimelineMarkerPresets(M);
 	}
 
 	onClickTimelineAction(index: number, bShift: boolean) {

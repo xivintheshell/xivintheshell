@@ -58,11 +58,11 @@ const FRU_P1_ENRAGE: TestMarker = {
 };
 
 it("loads fru p1 without cutoff", () => {
-	doPresetTrackLoad(loadTrackToJSON("fru_p1.txt"));
+	doPresetTrackLoad(loadTrackToJSON("fru_p1.txt"), () => {});
 	checkMatchingMarker(FRU_P1_ENRAGE);
 });
 
 it("loads fru p1 with enrage cutoff", () => {
-	doPresetTrackLoad(loadTrackToJSON("fru_p1.txt"), { cutoff: 150 });
+	doPresetTrackLoad(loadTrackToJSON("fru_p1.txt"), () => {}, { cutoff: 150 });
 	checkMissingMarker(FRU_P1_ENRAGE);
 });

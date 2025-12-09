@@ -1,5 +1,12 @@
 [
 	{
+		"date": "12/8/25",
+		"changes": [
+			"[BETA] Adjusted the layout of marker presets and input."
+		]
+
+	},
+	{
 		"date": "12/7/25",
 		"changes": [
 			"Adjusted the appearance of scroll bars in Firefox."
