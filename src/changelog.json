@@ -1,10 +1,12 @@
 [
 	{
-		"date": "12/8/25",
+		"date": "12/10/25",
 		"changes": [
-			"[BETA] Adjusted the layout of marker presets and input."
+			"Adjusted the layout of marker presets and input."
+		],
+		"changes_zh": [
+			"调整了添加标记和预设文件的界面布局。"
 		]
-
 	},
 	{
 		"date": "12/7/25",
