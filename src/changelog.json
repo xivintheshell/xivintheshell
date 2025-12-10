@@ -1,5 +1,14 @@
 [
 	{
+		"date": "12/10/25",
+		"changes": [
+			"Adjusted the layout of marker presets and input."
+		],
+		"changes_zh": [
+			"调整了添加标记和预设文件的界面布局。"
+		]
+	},
+	{
 		"date": "12/7/25",
 		"changes": [
 			"Adjusted the appearance of scroll bars in Firefox."
