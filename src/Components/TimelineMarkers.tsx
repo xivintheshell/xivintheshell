@@ -52,6 +52,8 @@ export let setEditingMarkerValues = (marker: MarkerElem) => {};
 
 const PRESET_MARKERS_BASE = "/presets/markers/";
 
+const ROW_GAP_PX = 5;
+
 type PhasedTrack = {
 	offset: number;
 	label: LocalizedContent;
@@ -65,11 +67,12 @@ export type MarkerTrackSet = {
 	phasedTracks: PhasedTrack[];
 };
 
-function Hsep(props: { marginTop: number }) {
+function Hsep(props: { marginTop: number; marginBottom: number }) {
 	const theme = getCurrentThemeColors();
 	return <hr
 		style={{
 			marginTop: props.marginTop,
+			marginBottom: props.marginBottom,
 			border: "none",
 			borderTop: ("1px solid " + theme.bgHighContrast) as string,
 		}}
@@ -167,6 +170,9 @@ function TrackDisplay(props: TrackDisplayProps) {
 }
 
 function TrackSetDisplay(props: TrackDisplayProps) {
+	const globalOffset = useContext(OffsetContext);
+	const { setTrackIndices } = useContext(TrackIndexContext);
+	const colors = getThemeColors(useContext(ColorThemeContext));
 	const [offsetMap, setOffsetMap] = useState(new Map<string, string>());
 	const [phasedTracks, setPhasedTracks] = useState<PhasedTrack[] | undefined>(undefined);
 	useEffect(() => {
@@ -180,7 +186,7 @@ function TrackSetDisplay(props: TrackDisplayProps) {
 			}
 		});
 	}, []);
-	const body = <div style={{ display: "grid", gridTemplateColumns: "2fr 3fr", gap: 4 }}>
+	const body = <div style={{ display: "grid", gridTemplateColumns: "2fr 3fr", gap: ROW_GAP_PX }}>
 		{phasedTracks?.map(({ offset, label, fileName }, i) => {
 			let offsetStr = offsetMap.get(fileName);
 			if (!offsetStr?.length) {
@@ -218,18 +224,17 @@ function TrackSetDisplay(props: TrackDisplayProps) {
 		}) ??
 			localize({
 				en: "loading phases...",
+				zh: "正在载入阶段",
 			})}
 	</div>;
-	const globalOffset = useContext(OffsetContext);
-	const { setTrackIndices } = useContext(TrackIndexContext);
 	return <div
 		style={{
 			display: "flex",
 			flexDirection: "column",
-			paddingBlock: 8,
-			paddingInline: 4,
-			marginBlockEnd: 10,
-			border: "1px dashed",
+			marginBlock: ROW_GAP_PX,
+			marginLeft: 5,
+			paddingLeft: 10,
+			borderLeft: "1px solid " + colors.bgHighContrast,
 			minWidth: 240,
 		}}
 	>
@@ -240,12 +245,13 @@ function TrackSetDisplay(props: TrackDisplayProps) {
 					style={{
 						display: "inline-flex",
 						flexDirection: "row",
-						gap: 4,
+						gap: ROW_GAP_PX,
 						alignItems: "baseline",
 						marginBottom: 4,
 					}}
 				>
 					<div>{localize(metaToTitleText(props.meta, props.showAuthors))}</div>
+					<span tabIndex={-1}> </span>
 					<div>
 						<button
 							onClick={(e) => {
@@ -286,7 +292,7 @@ function TrackSetDisplay(props: TrackDisplayProps) {
 								);
 							}}
 						>
-							{localize({ en: "Load all phases" })}
+							{localize({ en: "Load all phases", zh: "载入整场战斗" })}
 						</button>
 					</div>
 				</div>
@@ -342,7 +348,7 @@ function TrackCollection(props: {
 		style={{
 			display: "flex",
 			flexDirection: "column",
-			marginTop: 4,
+			gap: ROW_GAP_PX,
 			paddingInlineStart: 6,
 			marginInlineStart: 10,
 		}}
@@ -359,7 +365,7 @@ function TrackCollection(props: {
 									display: "flex",
 									flexDirection: "row",
 									flexWrap: "wrap",
-									gap: 4,
+									gap: ROW_GAP_PX,
 									alignItems: "baseline",
 								}}
 							>
@@ -392,13 +398,7 @@ function TrackCollection(props: {
 									showAuthors={!group.commonAuthors}
 								/>)}
 							</div>
-							<div
-								style={{
-									width: "60%",
-									paddingInlineStart: 10,
-									marginInlineEnd: 10,
-								}}
-							>
+							<div>
 								{group.phased.map((label, j) => <TrackSetDisplay
 									key={j}
 									meta={TRACK_META_MAP.get(label)!}
@@ -415,6 +415,7 @@ function TrackCollection(props: {
 	return <Expandable
 		title={`trackPresets-${props.label.en}`}
 		titleNode={localize(props.label)}
+		titleBodyGap={ROW_GAP_PX}
 		defaultShow={props.defaultShow}
 		autoIndent={false}
 		content={body}
@@ -820,8 +821,8 @@ export function TimelineMarkers() {
 					}}
 				>
 					{localize({
-						en: "Load tracks starting at timestamp ",
-						zh: "载入文件到此时间点 ",
+						en: "Load tracks with time offset ",
+						zh: "载入文件时间偏移 ",
 					})}
 				</span>
 				<Help
@@ -840,7 +841,7 @@ export function TimelineMarkers() {
 						</div>,
 						zh: <div>
 							<p>
-								不为空时，下方所有导入的时间轴文件和预设都将从这个时间点开始。可以用此功能自行组合不同P的时间轴文件。
+								不为空时，下方所有导入的时间轴文件和预设都将带此时间偏移。可以用此功能自行组合不同P的时间轴文件。
 							</p>
 							<p>导入已有P开始时间的预设时，会加上此设置的时间戳。</p>
 						</div>,
@@ -853,48 +854,53 @@ export function TimelineMarkers() {
 		onChange={setOffsetStr}
 	/>;
 
-	const actionsSection = <div
-		style={{
-			display: "grid",
-			gridTemplateColumns: "max-content max-content",
-			columnGap: 2,
-			rowGap: 5,
-			alignItems: "center",
-		}}
-	>
-		<div>
-			<button
-				onClick={() => {
-					controller.timeline.deleteAllMarkers();
-					controller.updateStats();
-					setTrackIndices([]);
-				}}
-			>
-				{localize({ en: "clear all markers", zh: "清空当前" })}
-			</button>
+	const actionsSection = <>
+		<p>
+			<b>{localize({ en: "Remove buffs/markers", zh: "删除buff和标记" })}</b>
+		</p>
+		<div
+			style={{
+				display: "grid",
+				gridTemplateColumns: "max-content max-content",
+				columnGap: 2,
+				rowGap: ROW_GAP_PX,
+				alignItems: "center",
+			}}
+		>
+			<div>
+				<button
+					onClick={() => {
+						controller.timeline.deleteAllMarkers();
+						controller.updateStats();
+						setTrackIndices([]);
+					}}
+				>
+					{localize({ en: "clear all markers", zh: "清空当前" })}
+				</button>
+			</div>
+			<div>
+				<button
+					onClick={() => {
+						const count = controller.timeline.sortAndRemoveDuplicateMarkers();
+						if (count > 0) {
+							alert("removed " + count + " duplicate markers");
+						} else {
+							alert("no duplicate markers found");
+						}
+						controller.timeline.updateTimelineMarkers();
+					}}
+				>
+					{localize({ en: "remove duplicates", zh: "删除重复标记" })}
+				</button>
+			</div>
+			<div style={{ gridColumn: "1 / 3" }}>
+				{localize({
+					en: "click a marker in the timeline to delete it",
+					zh: "点击时间轴上的标记即可删除",
+				})}
+			</div>
 		</div>
-		<div>
-			<button
-				onClick={() => {
-					const count = controller.timeline.sortAndRemoveDuplicateMarkers();
-					if (count > 0) {
-						alert("removed " + count + " duplicate markers");
-					} else {
-						alert("no duplicate markers found");
-					}
-					controller.timeline.updateTimelineMarkers();
-				}}
-			>
-				{localize({ en: "remove duplicates", zh: "删除重复标记" })}
-			</button>
-		</div>
-		<div style={{ gridColumn: "1 / 3" }}>
-			{localize({
-				en: "click a marker in the timeline to delete it",
-				zh: "点击时间轴上的标记即可删除",
-			})}
-		</div>
-	</div>;
+	</>;
 	return <Columns contentHeight={TIMELINE_COLUMNS_HEIGHT}>
 		{[
 			{
@@ -907,7 +913,7 @@ export function TimelineMarkers() {
 					<OffsetContext.Provider value={offsetStr}>
 						<TrackIndexContext.Provider value={{ trackIndices, setTrackIndices }}>
 							<TrackCollection
-								label={{ en: "Current content" }}
+								label={{ en: "Current content", zh: "当前版本" }}
 								trackList={RECENT_CONTENT_TRACKS}
 								defaultShow
 							/>
@@ -917,7 +923,7 @@ export function TimelineMarkers() {
 								defaultShow
 							/>
 							<p>
-								<b>{localize({ en: "Archive", zh: "档案" })}</b>
+								<b>{localize({ en: "Archive", zh: "归档" })}</b>
 							</p>
 							{Array.from(
 								ARCHIVE_TRACKS.entries().map(([header, trackList], i) => <div
@@ -934,7 +940,7 @@ export function TimelineMarkers() {
 				defaultSize: 30,
 				content: <>
 					{actionsSection}
-					<Hsep marginTop={5} />
+					<Hsep marginTop={15} marginBottom={15} />
 					<TrackIndexContext.Provider value={{ trackIndices, setTrackIndices }}>
 						<CustomMarkerWidget />
 					</TrackIndexContext.Provider>

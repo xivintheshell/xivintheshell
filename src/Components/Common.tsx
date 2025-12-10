@@ -649,6 +649,7 @@ type ExpandableProps = {
 	autoIndent?: boolean;
 	noMargin?: boolean;
 	titleNode?: ReactNode;
+	titleBodyGap?: number;
 	defaultShow?: boolean;
 	content?: ReactNode;
 	onExpand?: () => void;
@@ -683,7 +684,13 @@ export function Expandable(props: ExpandableProps) {
 			}
 			onClickFn={onClick}
 		/>
-		<div style={{ position: "relative", display: show ? "block" : "none" }}>
+		<div
+			style={{
+				position: "relative",
+				display: show ? "block" : "none",
+				marginTop: props.titleBodyGap,
+			}}
+		>
 			<div style={indentDivStyle}>{props.content}</div>
 		</div>
 	</div>;

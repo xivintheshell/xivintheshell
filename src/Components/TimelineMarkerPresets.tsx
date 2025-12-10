@@ -16,13 +16,13 @@ export function displayFightKind(k: FightKind) {
 		}
 	} else if (lang === "zh") {
 		if (k === "savage") {
-			return "savage"; // TODO
+			return "零式";
 		} else if (k === "extreme") {
 			return "极神";
 		} else if (k === "ultimate") {
 			return "绝本";
 		} else {
-			return k; // TODO
+			return "四人本";
 		}
 	}
 	return k;
@@ -56,6 +56,7 @@ function mm(
 			typeof name === "string"
 				? {
 						en: name,
+						zh: name,
 					}
 				: name,
 		fightKind,
