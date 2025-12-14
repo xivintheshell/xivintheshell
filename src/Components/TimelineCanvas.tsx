@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useContext, CSSProperties } from "react";
+import React, { useEffect, useRef, useContext, CSSProperties, useState } from "react";
 import {
 	MoveNodes,
 	SetActiveTimelineSlot,
@@ -1780,10 +1780,10 @@ function drawLowUpdate(params: {
 	ctx: CanvasRenderingContext2D;
 	viewInfo: ViewInfo;
 	testInteraction: InteractionHandler;
-}) {
+}): number {
 	const { ctx, viewInfo, testInteraction } = params;
 	const timelineOrigin = -viewInfo.visibleLeft + TimelineDimensions.leftBufferWidth;
-	drawMarkerTracks({
+	const markerTrackHeight = drawMarkerTracks({
 		ctx,
 		viewInfo,
 		originX: timelineOrigin,
@@ -1798,6 +1798,7 @@ function drawLowUpdate(params: {
 			TimelineDimensions.renderSlotHeight() * viewInfo.renderingProps.slots.length,
 		testInteraction,
 	});
+	return markerTrackHeight;
 }
 
 function drawInteractive(params: {
@@ -1970,6 +1971,8 @@ export function TimelineCanvas(props: {
 		tip?: string[] | ((info: MouseInteractionInfo) => string[]);
 		images?: any[];
 	}>({});
+	// Initialization doesn't matter; this is updated on the first draw call.
+	const [markerTrackHeight, setMarkerTrackHeight] = useState<number>(0);
 
 	// Track hitboxes for interactable objects on the canvas.
 	// These are reset when a simulation update occurs. In the future, we can prune these more
@@ -2031,7 +2034,7 @@ export function TimelineCanvas(props: {
 	const clearCtx = (ctx: CanvasRenderingContext2D) => {
 		const left = -props.visibleLeft - TimelineDimensions.leftBufferWidth;
 		const w = props.visibleWidth - left;
-		ctx.clearRect(left, 0, w, c_maxTimelineHeight);
+		ctx.clearRect(left, 0, w, c_maxTimelineHeight + markerTrackHeight);
 	};
 	const getDrawState = () => {
 		const tip = activeHoverDraw.current.tip;
@@ -2388,11 +2391,15 @@ export function TimelineCanvas(props: {
 				...getDrawState(),
 				testInteraction: makeTestInteraction("interactive"),
 			});
-			drawLowUpdate({
-				ctx: lowUpdateCtx,
-				viewInfo,
-				testInteraction: makeTestInteraction("lowUpdate"),
-			});
+			// TODO: This call is NOT triggered when "clear markers" is pressed, so there may still
+			// be some buggy behavior. This should fix most rendering issues though.
+			setMarkerTrackHeight(
+				drawLowUpdate({
+					ctx: lowUpdateCtx,
+					viewInfo,
+					testInteraction: makeTestInteraction("lowUpdate"),
+				}),
+			);
 			[liveCtx, interactiveCtx, lowUpdateCtx].forEach((ctx) => ctx.scale(1 / dpr, 1 / dpr));
 		}
 	};
