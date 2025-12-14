@@ -1,5 +1,11 @@
 [
 	{
+		"date": "12/14/25",
+		"changes": [
+			"Fixed a bug where the graphical timeline was not properly cleared when fight markers were loaded."
+		]
+	},
+	{
 		"date": "12/10/25",
 		"changes": [
 			"Adjusted the layout of marker presets and input."
