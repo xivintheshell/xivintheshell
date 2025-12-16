@@ -56,6 +56,7 @@ makeRDMResource("MAGICKED_SWORDPLAY", 3, {
 	timeout: 30,
 	warnOnTimeout: true,
 });
+makeRDMResource("MANAFICATION", 1, { timeout: 30 });
 makeRDMResource("PREFULGENCE_READY", 1, {
 	timeout: 30,
 	warnOnTimeout: true,
@@ -380,7 +381,6 @@ const makeAbility_RDM = (
 		validateAttempt?: StatePredicate<RDMState>;
 		onConfirm?: EffectFn<RDMState>;
 		onApplication?: EffectFn<RDMState>;
-		requiresCombat?: boolean;
 	},
 ): Ability<RDMState> =>
 	makeAbility("RDM", name, unlockLevel, cdName, {
@@ -948,13 +948,14 @@ makeResourceAbility("RDM", "EMBOLDEN", 58, "cd_EMBOLDEN", {
 	},
 });
 
-makeAbility_RDM("MANAFICATION", 60, "cd_MANAFICATION", {
+makeResourceAbility("RDM", "MANAFICATION", 60, "cd_MANAFICATION", {
 	replaceIf: [
 		{
 			newSkill: "PREFULGENCE",
 			condition: (state) => state.hasResourceAvailable("PREFULGENCE_READY"),
 		},
 	],
+	rscType: "MANAFICATION",
 	requiresCombat: true,
 	applicationDelay: 0,
 	cooldown: 110,
