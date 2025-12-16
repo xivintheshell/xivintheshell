@@ -480,7 +480,7 @@ makeWeaponskill_GNB("FATED_CIRCLE", 72, {
 
 makeAbility_GNB("BLOODFEST", 76, "cd_BLOODFEST", {
 	applicationDelay: 0,
-	cooldown: 120,
+	cooldown: 60,
 	maxCharges: 1,
 	onConfirm: (state) => {
 		const maxCarts = state.hasTraitUnlocked("CARTRIDGE_CHARGE_II") ? 3 : 2;
