@@ -235,7 +235,7 @@ export const RDM_STATUSES = ensureRecord<ResourceData>()({
 	GRAND_IMPACT_READY: { name: "Grand Impact Ready", label: { zh: "显贵冲击预备" } }, // [0, 1]
 	MAGICK_BARRIER: { name: "Magick Barrier", label: { zh: "抗死" } }, // [0, 1]
 	MAGICKED_SWORDPLAY: { name: "Magicked Swordplay", label: { zh: "魔法剑术" }, maximumStacks: 3 }, // [0, 3]
-	MANAFICATION: { name: "Manafication", label: { zh: "魔元化" } }, // [0, 1] TODO7.4 update image for stackless version
+	MANAFICATION: { name: "Manafication", label: { zh: "魔元化" } }, // [0, 1]
 	PREFULGENCE_READY: { name: "Prefulgence Ready", label: { zh: "光芒四射预备" } }, // [0, 1]
 	THORNED_FLOURISH: { name: "Thorned Flourish", label: { zh: "荆棘环绕预备" } }, // [0, 1]
 	VERFIRE_READY: { name: "Verfire Ready", label: { zh: "赤火炎预备" } }, // [0, 1]

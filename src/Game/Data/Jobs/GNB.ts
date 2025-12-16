@@ -107,7 +107,7 @@ export const GNB_STATUSES = ensureRecord<ResourceData>()({
 	SUPERBOLIDE: { name: "Superbolide", label: { zh: "超火流星" } }, // [0, 1]
 	BRUTAL_SHELL: { name: "Brutal Shell", label: { zh: "残暴弹" } }, // [0, 1]
 
-	BLOODFEST: { name: "Bloodfest", label: { zh: "血壤" } }, // TODO7.4 retrieve image from xivapi
+	BLOODFEST: { name: "Bloodfest", label: { zh: "血壤" } },
 });
 
 export const GNB_TRACKERS = ensureRecord<ResourceData>()({

@@ -578,8 +578,10 @@ makeWeaponskill_BRD("APEX_ARROW", 80, {
 });
 makeWeaponskill_BRD("BLAST_ARROW", 86, {
 	startOnHotbar: false,
-	// TODO7.4 check pre-ranged mastery potency?
-	potency: 700,
+	potency: [
+		["NEVER", 600],
+		["RANGED_MASTERY", 700],
+	],
 	falloff: 0.5,
 	applicationDelay: 1.65,
 	validateAttempt: (state) => state.hasResourceAvailable("BLAST_ARROW_READY"),
