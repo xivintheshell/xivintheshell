@@ -547,9 +547,8 @@ makeWeaponskill_BRD("APEX_ARROW", 80, {
 	potency: (state) => {
 		const soulVoice = state.resources.get("SOUL_VOICE");
 		const minRequirement = 20;
-		// TODO7.4 check with live for potencies before ranged mastery
-		const minPotency = state.hasTraitUnlocked("RANGED_MASTERY") ? 140 : 120;
-		const maxPotency = state.hasTraitUnlocked("RANGED_MASTERY") ? 700 : 520;
+		const minPotency = state.hasTraitUnlocked("RANGED_MASTERY") ? 140 : 100;
+		const maxPotency = state.hasTraitUnlocked("RANGED_MASTERY") ? 700 : 500;
 		const soulVoiceBonus =
 			(1.0 * (soulVoice.availableAmount() - minRequirement)) /
 			(soulVoice.maxValue - minRequirement);

@@ -55,7 +55,6 @@ export type RDMResourceColors = {
 	blackMana: string;
 	manaStack: string;
 	emboldenBuff: string;
-	manaficBuff: string;
 	accelBuff: string;
 };
 
@@ -406,7 +405,6 @@ const DARK_THEME_COLORS: ThemeColors = {
 		blackMana: "#2a4bf5", // blueish
 		manaStack: "#cb8046", // astral soul
 		emboldenBuff: "#de0202", // bright red but a little less saturated
-		manaficBuff: "#c169c2", // lavender
 		accelBuff: "#f0d1e8", // very light pink
 	},
 	dnc: {
@@ -660,7 +658,6 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		blackMana: "#467aeb", // blue
 		manaStack: "#9926c8", // astral soul
 		emboldenBuff: "#c91310", // dark red
-		manaficBuff: "#530954", // dark purple
 		accelBuff: "#c973b4", // lighter purple
 	},
 	dnc: {
@@ -852,7 +849,6 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.AUTO_CDH, colors.resources.cdhTag],
 		[PotencyModifierType.STARRY, colors.pct.starryBuff],
 		[PotencyModifierType.EMBOLDEN_M, colors.rdm.emboldenBuff],
-		[PotencyModifierType.MANAFIC, colors.rdm.manaficBuff],
 		[PotencyModifierType.ACCELERATION, colors.rdm.accelBuff],
 		[PotencyModifierType.STANDARD_SINGLE, colors.dnc.jete],
 		[PotencyModifierType.STANDARD_DOUBLE, colors.dnc.jete],

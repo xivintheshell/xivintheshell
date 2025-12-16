@@ -81,7 +81,6 @@ export function makeSkillReadyStatus(): SkillReadyStatus {
 export enum BuffType {
 	LeyLines = "Ley Lines",
 	Hyperphantasia = "Hyperphantasia",
-	Manafication = "Manafication",
 	Acceleration = "Acceleration",
 	Fuka = "Fuka",
 	Fugetsu = "Fugetsu",

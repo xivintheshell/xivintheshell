@@ -14,7 +14,6 @@ export const enum PotencyModifierType {
 	ENO,
 	STARRY,
 	EMBOLDEN_M,
-	MANAFIC,
 	ACCELERATION,
 	POT,
 	COMBO,
