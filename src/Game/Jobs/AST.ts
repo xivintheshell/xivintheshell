@@ -57,7 +57,7 @@ makeASTResource("SYNASTRY", 1, { timeout: 20 });
 makeASTResource("DIVINATION", 1, { timeout: 20 });
 makeASTResource("DIVINING", 1, { timeout: 30, warnOnTimeout: true });
 makeASTResource("COLLECTIVE_UNCONSCIOUS", 1, { timeout: 18 });
-makeASTResource("COLLECTIVE_UNCONSCIOUS_MIT", 1, { timeout: 5 });
+makeASTResource("COLLECTIVE_UNCONSCIOUS_MIT", 1, { timeout: 10 });
 makeASTResource("WHEEL_OF_FORTUNE", 1, { timeout: 15 });
 makeASTResource("OPPOSITION", 1, { timeout: 15 });
 makeASTResource("EARTHLY_DOMINANCE", 1, { timeout: 10 });

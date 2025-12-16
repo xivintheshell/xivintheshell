@@ -613,7 +613,7 @@ makeSGESpell("EUKRASIAN_DOSIS_III", 82, {
 			node,
 			effectName: "EUKRASIAN_DOSIS_III",
 			skillName: "EUKRASIAN_DOSIS_III",
-			tickPotency: 80,
+			tickPotency: 85,
 			speedStat: "sps",
 		});
 		state.tryConsumeResource("EUKRASIA");

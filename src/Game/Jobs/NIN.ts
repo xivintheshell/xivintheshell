@@ -669,7 +669,7 @@ const NINJUTSU_POTENCY_LIST: Array<
 		],
 		undefined,
 	],
-	["GOKA_MEKKYAKU", 76, 0.76, 600, 0],
+	["GOKA_MEKKYAKU", 76, 0.76, 850, 0],
 	["HYOSHO_RANRYU", 76, 0.62, 1300, undefined],
 ];
 

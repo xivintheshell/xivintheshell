@@ -474,7 +474,8 @@ makeResourceAbility_MCH("REASSEMBLE", 10, "cd_REASSEMBLE", {
 	maxCharges: 2, // charges reduced as needed in constructor by trait
 });
 
-const TOOL_POTENCY = 620;
+// TODO7.4 check potency before Marksman's Mastery II
+const TOOL_POTENCY = 660;
 
 makeWeaponskill_MCH("DRILL", 58, {
 	potency: TOOL_POTENCY,
