@@ -18,8 +18,16 @@ import {
 	Weaponskill,
 } from "../Skills";
 import { GameState } from "../GameState";
-import { makeResource, CoolDown, Event, Resource } from "../Resources";
+import {
+	getResourceInfo,
+	makeResource,
+	CoolDown,
+	Event,
+	Resource,
+	ResourceInfo,
+} from "../Resources";
 import { GameConfig } from "../GameConfig";
+import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
 import { GNBStatusPropsGenerator } from "../../Components/Jobs/GNB";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
@@ -64,7 +72,7 @@ makeGNBResource("READY_TO_REIGN", 1, { timeout: 30, warnOnTimeout: true });
 makeGNBResource("READY_TO_RIP", 1, { timeout: 10, warnOnTimeout: true });
 makeGNBResource("READY_TO_TEAR", 1, { timeout: 10, warnOnTimeout: true });
 
-makeGNBResource("SONIC_BREAK_DOT", 1, { timeout: 30 });
+makeGNBResource("SONIC_BREAK_DOT", 1, { timeout: 15 });
 makeGNBResource("SUPERBOLIDE", 1, { timeout: 10 });
 makeGNBResource("BRUTAL_SHELL", 1, { timeout: 30 });
 
@@ -72,6 +80,7 @@ makeGNBResource("GNB_COMBO_TRACKER", 2, { timeout: 30 });
 makeGNBResource("GNB_AOE_COMBO_TRACKER", 1, { timeout: 30 });
 makeGNBResource("GNB_GNASHING_COMBO_TRACKER", 2, { timeout: 30 });
 makeGNBResource("GNB_REIGN_COMBO_TRACKER", 2, { timeout: 30 });
+makeGNBResource("BLOODFEST", 1, { timeout: 30 });
 
 // === JOB GAUGE AND STATE ===
 const BASIC_COMBO_SKILLS: ActionKey[] = ["KEEN_EDGE", "BRUTAL_SHELL", "SOLID_BARREL"];
@@ -93,7 +102,6 @@ export class GNBState extends GameState {
 		);
 
 		this.cooldowns.set(new CoolDown("cd_DOUBLE_DOWN", this.config.adjustedSksGCD(60), 1, 1));
-		this.cooldowns.set(new CoolDown("cd_GNASHING_FANG", this.config.adjustedSksGCD(30), 1, 1));
 
 		const powderGaugeMax = this.hasTraitUnlocked("CARTRIDGE_CHARGE_II") ? 3 : 2;
 		this.resources.set(new Resource("POWDER_GAUGE", powderGaugeMax, 0, true));
@@ -442,8 +450,8 @@ makeWeaponskill_GNB("DEMON_SLAUGHTER", 40, {
 
 makeWeaponskill_GNB("BURST_STRIKE", 30, {
 	potency: [
-		["NEVER", 400],
-		["MELEE_MASTERY_II_TANK", 460],
+		["NEVER", 360],
+		["MELEE_MASTERY_II_TANK", 420],
 	],
 	applicationDelay: 0.71,
 	validateAttempt: (state) => state.hasResourceAvailable("POWDER_GAUGE"),
@@ -476,6 +484,38 @@ makeAbility_GNB("BLOODFEST", 76, "cd_BLOODFEST", {
 	maxCharges: 1,
 	onConfirm: (state) => {
 		const maxCarts = state.hasTraitUnlocked("CARTRIDGE_CHARGE_II") ? 3 : 2;
+		// Override the maximum cartridge cap, and set a timer to reset it back to 2/3 after buff expiry.
+		// Technically this doesn't cover the case of BF being clicked off, but who cares.
+		state.gainStatus("BLOODFEST");
+		state.resources.set(
+			new Resource(
+				"POWDER_GAUGE",
+				maxCarts * 2,
+				state.resources.get("POWDER_GAUGE").availableAmount(),
+			),
+		);
+		state.addEvent(
+			new Event(
+				"restore bloodfest max stacks",
+				(getResourceInfo("GNB", "BLOODFEST") as ResourceInfo).maxTimeout,
+				() => {
+					if (state.resources.get("POWDER_GAUGE").availableAmount() > maxCarts) {
+						controller.reportWarning({ kind: "overcap", rsc: "POWDER_GAUGE" });
+					}
+					state.resources.set(
+						new Resource(
+							"POWDER_GAUGE",
+							maxCarts,
+							Math.min(
+								state.resources.get("POWDER_GAUGE").availableAmount(),
+								maxCarts,
+							),
+						),
+					);
+				},
+			),
+		);
+		// Actually gain cartridges.
 		state.gainCartridge(maxCarts);
 		if (state.hasTraitUnlocked("ENHANCED_BLOODFEST")) {
 			state.refreshBuff("READY_TO_REIGN", 0);
@@ -494,7 +534,7 @@ makeAbility_GNB("NO_MERCY", 2, "cd_NO_MERCY", {
 });
 
 makeWeaponskill_GNB("SONIC_BREAK", 54, {
-	potency: 300,
+	potency: 340,
 	applicationDelay: 0.62,
 	validateAttempt: (state) => state.hasResourceAvailable("READY_TO_BREAK"),
 	onConfirm: (state, node) => {
@@ -505,7 +545,7 @@ makeWeaponskill_GNB("SONIC_BREAK", 54, {
 			modifiers.push(Modifiers.NoMercy);
 		}
 
-		const tickPotency = 60;
+		const tickPotency = 120;
 
 		state.addDoTPotencies({
 			node,
@@ -523,8 +563,8 @@ makeWeaponskill_GNB("SONIC_BREAK", 54, {
 makeWeaponskill_GNB("GNASHING_FANG", 60, {
 	replaceIf: [savageClawCondition, wickedTalonCondition],
 	potency: [
-		["NEVER", 380],
-		["MELEE_MASTERY_II_TANK", 500],
+		["NEVER", 330],
+		["MELEE_MASTERY_II_TANK", 440],
 	],
 	applicationDelay: 0.62,
 	recastTime: (state) => state.config.adjustedSksGCD(),
@@ -540,7 +580,7 @@ makeWeaponskill_GNB("GNASHING_FANG", 60, {
 	secondaryCooldown: {
 		cdName: "cd_GNASHING_FANG",
 		cooldown: 30,
-		maxCharges: 1,
+		maxCharges: 2,
 	},
 });
 
@@ -548,8 +588,8 @@ makeWeaponskill_GNB("SAVAGE_CLAW", 60, {
 	startOnHotbar: false,
 	replaceIf: [gnashingFangCondition, wickedTalonCondition],
 	potency: [
-		["NEVER", 460],
-		["MELEE_MASTERY_II_TANK", 560],
+		["NEVER", 410],
+		["MELEE_MASTERY_II_TANK", 500],
 	],
 	applicationDelay: 0.62,
 	validateAttempt: (state) => state.hasResourceExactly("GNB_GNASHING_COMBO_TRACKER", 1),
@@ -563,8 +603,8 @@ makeWeaponskill_GNB("WICKED_TALON", 60, {
 	startOnHotbar: false,
 	replaceIf: [gnashingFangCondition, savageClawCondition],
 	potency: [
-		["NEVER", 540],
-		["MELEE_MASTERY_II_TANK", 620],
+		["NEVER", 490],
+		["MELEE_MASTERY_II_TANK", 560],
 	],
 	applicationDelay: 1.16,
 	validateAttempt: (state) => state.hasResourceExactly("GNB_GNASHING_COMBO_TRACKER", 2),
@@ -579,11 +619,11 @@ makeWeaponskill_GNB("DOUBLE_DOWN", 90, {
 	falloff: 0.15,
 	applicationDelay: 0.72,
 	recastTime: (state) => state.config.adjustedSksGCD(),
-	validateAttempt: (state) => state.hasResourceAvailable("POWDER_GAUGE"),
+	validateAttempt: (state) => state.hasResourceAvailable("POWDER_GAUGE", 2),
 	onConfirm: (state) => {
-		state.tryConsumeResource("POWDER_GAUGE");
+		state.resources.get("POWDER_GAUGE").consume(2);
 	},
-	highlightIf: (state) => state.hasResourceAvailable("POWDER_GAUGE"),
+	highlightIf: (state) => state.hasResourceAvailable("POWDER_GAUGE", 2),
 	secondaryCooldown: {
 		cdName: "cd_DOUBLE_DOWN",
 		cooldown: 60,
@@ -593,7 +633,7 @@ makeWeaponskill_GNB("DOUBLE_DOWN", 90, {
 
 makeWeaponskill_GNB("REIGN_OF_BEASTS", 100, {
 	replaceIf: [nobleBloodCondition, lionHeartCondition],
-	potency: 1000,
+	potency: 800,
 	falloff: 0.6,
 	applicationDelay: 1.16,
 	validateAttempt: (state) => state.hasResourceAvailable("READY_TO_REIGN"),
@@ -606,7 +646,7 @@ makeWeaponskill_GNB("REIGN_OF_BEASTS", 100, {
 makeWeaponskill_GNB("NOBLE_BLOOD", 100, {
 	startOnHotbar: false,
 	replaceIf: [reignOfBeastsCondition, lionHeartCondition],
-	potency: 1100,
+	potency: 900,
 	falloff: 0.6,
 	applicationDelay: 1.65,
 	validateAttempt: (state) => state.hasResourceExactly("GNB_REIGN_COMBO_TRACKER", 1),
@@ -616,7 +656,7 @@ makeWeaponskill_GNB("NOBLE_BLOOD", 100, {
 makeWeaponskill_GNB("LION_HEART", 100, {
 	startOnHotbar: false,
 	replaceIf: [reignOfBeastsCondition, nobleBloodCondition],
-	potency: 1200,
+	potency: 1000,
 	falloff: 0.6,
 	applicationDelay: 1.79,
 	validateAttempt: (state) => state.hasResourceExactly("GNB_REIGN_COMBO_TRACKER", 2),
@@ -640,7 +680,10 @@ makeAbility_GNB("CONTINUATION", 70, "cd_CONTINUATION", {
 makeAbility_GNB("HYPERVELOCITY", 86, "cd_HYPERVELOCITY", {
 	startOnHotbar: false,
 	applicationDelay: 0.76,
-	potency: 200,
+	potency: [
+		["NEVER", 140],
+		["MELEE_MASTERY_II_TANK", 180],
+	],
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable("READY_TO_BLAST"),
 	highlightIf: (state) => state.hasResourceAvailable("READY_TO_BLAST"),
@@ -665,7 +708,10 @@ makeAbility_GNB("FATED_BRAND", 96, "cd_FATED_BRAND", {
 makeAbility_GNB("JUGULAR_RIP", 70, "cd_JUGULAR_RIP", {
 	startOnHotbar: false,
 	applicationDelay: 0.8,
-	potency: 240,
+	potency: [
+		["NEVER", 180],
+		["MELEE_MASTERY_II_TANK", 220],
+	],
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable("READY_TO_RIP"),
 	highlightIf: (state) => state.hasResourceAvailable("READY_TO_RIP"),
@@ -677,7 +723,10 @@ makeAbility_GNB("JUGULAR_RIP", 70, "cd_JUGULAR_RIP", {
 makeAbility_GNB("ABDOMEN_TEAR", 70, "cd_ABDOMEN_TEAR", {
 	startOnHotbar: false,
 	applicationDelay: 0.76,
-	potency: 280,
+	potency: [
+		["NEVER", 220],
+		["MELEE_MASTERY_II_TANK", 260],
+	],
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable("READY_TO_TEAR"),
 	highlightIf: (state) => state.hasResourceAvailable("READY_TO_TEAR"),
@@ -689,7 +738,10 @@ makeAbility_GNB("ABDOMEN_TEAR", 70, "cd_ABDOMEN_TEAR", {
 makeAbility_GNB("EYE_GOUGE", 70, "cd_EYE_GOUGE", {
 	startOnHotbar: false,
 	applicationDelay: 0.98,
-	potency: 320,
+	potency: [
+		["NEVER", 260],
+		["MELEE_MASTERY_II_TANK", 300],
+	],
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable("READY_TO_GOUGE"),
 	highlightIf: (state) => state.hasResourceAvailable("READY_TO_GOUGE"),

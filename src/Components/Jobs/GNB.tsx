@@ -50,6 +50,7 @@ export class GNBStatusPropsGenerator extends StatusPropsGenerator<GNBState> {
 				? aoeCombo.pendingChange?.timeTillEvent
 				: undefined;
 
+		const cartMultiplier = resources.get("BLOODFEST").available(1) ? 2 : 1;
 		const infos: ResourceDisplayProps[] = [
 			{
 				kind: "bar",
@@ -72,7 +73,8 @@ export class GNBStatusPropsGenerator extends StatusPropsGenerator<GNBState> {
 				name: localize({ en: "Powder Gauge", zh: "晶壤" }),
 				color: colors.rdm.manaStack,
 				currentStacks: powderGaugeStacks,
-				maxStacks: this.state.hasTraitUnlocked("CARTRIDGE_CHARGE_II") ? 3 : 2,
+				maxStacks:
+					(this.state.hasTraitUnlocked("CARTRIDGE_CHARGE_II") ? 3 : 2) * cartMultiplier,
 			} as ResourceCounterProps,
 		];
 
