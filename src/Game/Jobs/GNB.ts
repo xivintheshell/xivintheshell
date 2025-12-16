@@ -450,7 +450,7 @@ makeWeaponskill_GNB("DEMON_SLAUGHTER", 40, {
 
 makeWeaponskill_GNB("BURST_STRIKE", 30, {
 	potency: [
-		["NEVER", 360],
+		["NEVER", 340],
 		["MELEE_MASTERY_II_TANK", 420],
 	],
 	applicationDelay: 0.71,
@@ -615,7 +615,7 @@ makeWeaponskill_GNB("WICKED_TALON", 60, {
 });
 
 makeWeaponskill_GNB("DOUBLE_DOWN", 90, {
-	potency: 1200,
+	potency: 1000,
 	falloff: 0.15,
 	applicationDelay: 0.72,
 	recastTime: (state) => state.config.adjustedSksGCD(),

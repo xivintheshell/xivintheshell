@@ -52,7 +52,7 @@ export const GNB_ACTIONS = ensureRecord<ActionData>()({
 
 export const GNB_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_NO_MERCY: { name: "cd_NoMercy" }, // 60 sec
-	cd_BLOODFEST: { name: "cd_Bloodfest" }, // 120 sec
+	cd_BLOODFEST: { name: "cd_Bloodfest" }, // 60 sec
 	cd_CAMOUFLAGE: { name: "cd_Camouflage" }, // 90 sec
 	cd_ROYAL_GUARD: { name: "cd_RoyalGuard" }, // 2 sec
 	cd_RELEASE_ROYAL_GUARD: { name: "cd_ReleaseRoyalGuard" }, // 1 sec
