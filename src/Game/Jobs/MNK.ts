@@ -1020,7 +1020,11 @@ makeMNKResourceAbility("BROTHERHOOD", 70, "cd_BROTHERHOOD", {
 				(getResourceInfo("MNK", "BROTHERHOOD") as ResourceInfo).maxTimeout,
 				() =>
 					state.resources.set(
-						new Resource("CHAKRA", 5, state.resources.get("CHAKRA").availableAmount()),
+						new Resource(
+							"CHAKRA",
+							5,
+							Math.min(state.resources.get("CHAKRA").availableAmount(), 5),
+						),
 					),
 			),
 		);

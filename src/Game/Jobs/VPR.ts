@@ -699,7 +699,7 @@ makeVPRWeaponskill("REAWAKEN", 90, {
 	replaceIf: REAWAKEN_REPLACEMENTS,
 	applicationDelay: 0.625,
 	potency: 750,
-	falloff: 0.65,
+	falloff: 0.8,
 	baseRecastTime: 2.2,
 	highlightIf: (state) =>
 		state.hasResourceAvailable("SERPENT_OFFERINGS", 50) ||
@@ -733,7 +733,7 @@ makeVPRWeaponskill("OUROBOROS", 96, {
 	replaceIf: REAWAKEN_REPLACEMENTS,
 	applicationDelay: 2.313,
 	potency: 1150,
-	falloff: 0.65,
+	falloff: 0.8,
 	baseRecastTime: 3,
 	highlightIf: (state) => state.hasResourceExactly("ANGUINE_TRIBUTE", 1),
 	onConfirm: (state) => state.cancelReawaken(),
@@ -766,7 +766,7 @@ makeVPRWeaponskill("VICEWINDER", 65, {
 makeVPRWeaponskill("UNCOILED_FURY", 82, {
 	applicationDelay: 0.804,
 	potency: 680,
-	falloff: 0.6,
+	falloff: 0.75,
 	baseRecastTime: 3.5,
 	highlightIf: (state) => state.hasResourceAvailable("RATTLING_COIL"),
 	validateAttempt: (state) => state.hasResourceAvailable("RATTLING_COIL"),
@@ -782,7 +782,7 @@ makeVPRWeaponskill("UNCOILED_FURY", 82, {
 makeVPRWeaponskill("STEEL_MAW", 25, {
 	replaceIf: STEEL_MAW_REPLACEMENTS,
 	applicationDelay: 1.091,
-	potency: 100,
+	potency: 120,
 	falloff: 0,
 	jobPotencyModifiers: (state) =>
 		state.hasResourceAvailable("HONED_STEEL") ? [Modifiers.HonedAoE] : [],
@@ -794,7 +794,7 @@ makeVPRWeaponskill("STEEL_MAW", 25, {
 makeVPRWeaponskill("REAVING_MAW", 35, {
 	replaceIf: REAVING_MAW_REPLACEMENTS,
 	applicationDelay: 0.908,
-	potency: 100,
+	potency: 120,
 	falloff: 0,
 	jobPotencyModifiers: (state) =>
 		state.hasResourceAvailable("HONED_REAVERS") ? [Modifiers.HonedAoE] : [],
@@ -807,7 +807,7 @@ makeVPRWeaponskill("HUNTERS_BITE", 40, {
 	startOnHotbar: false,
 	replaceIf: STEEL_MAW_REPLACEMENTS,
 	applicationDelay: 1.134,
-	potency: 130,
+	potency: 180,
 	falloff: 0,
 	highlightIf: (state) => true,
 	extendedStatus: "HUNTERS_INSTINCT",
@@ -817,7 +817,7 @@ makeVPRWeaponskill("SWIFTSKINS_BITE", 45, {
 	startOnHotbar: false,
 	replaceIf: REAVING_MAW_REPLACEMENTS,
 	applicationDelay: 1.445,
-	potency: 130,
+	potency: 180,
 	falloff: 0,
 	highlightIf: (state) => true,
 	extendedStatus: "SWIFTSCALED",
@@ -827,7 +827,7 @@ makeVPRWeaponskill("JAGGED_MAW", 50, {
 	startOnHotbar: false,
 	replaceIf: STEEL_MAW_REPLACEMENTS,
 	applicationDelay: 1.127,
-	potency: 140,
+	potency: 180,
 	falloff: 0,
 	jobPotencyModifiers: (state) =>
 		state.hasResourceAvailable("GRIMSKINS_VENOM") ? [Modifiers.VenomAoE] : [],
@@ -845,7 +845,7 @@ makeVPRWeaponskill("BLOODIED_MAW", 50, {
 	startOnHotbar: false,
 	replaceIf: REAVING_MAW_REPLACEMENTS,
 	applicationDelay: 0.866,
-	potency: 140,
+	potency: 180,
 	falloff: 0,
 	jobPotencyModifiers: (state) =>
 		state.hasResourceAvailable("GRIMHUNTERS_VENOM") ? [Modifiers.VenomAoE] : [],
@@ -871,7 +871,7 @@ makeVPRWeaponskill("HUNTERS_DEN", 70, {
 		},
 	],
 	applicationDelay: 0.569,
-	potency: 280,
+	potency: 300,
 	falloff: 0,
 	baseRecastTime: 3,
 	highlightIf: (state) => state.hasResourceAvailable("HUNTERS_DEN_READY"),
@@ -903,7 +903,7 @@ makeVPRWeaponskill("SWIFTSKINS_DEN", 70, {
 		},
 	],
 	applicationDelay: 0.999,
-	potency: 280,
+	potency: 300,
 	falloff: 0,
 	baseRecastTime: 3,
 	highlightIf: (state) => state.hasResourceAvailable("SWIFTSKINS_DEN_READY"),
@@ -926,7 +926,7 @@ makeVPRWeaponskill("SWIFTSKINS_DEN", 70, {
 
 makeVPRWeaponskill("VICEPIT", 70, {
 	applicationDelay: 0.827,
-	potency: 220,
+	potency: 250,
 	secondaryCooldown: {
 		cdName: "cd_VICEWINDER",
 		cooldown: 40,
@@ -996,7 +996,7 @@ makeVPRAbility("LAST_LASH", 60, "cd_SERPENTS_TAIL", {
 	replaceIf: SERPENTS_TAIL_REPLACEMENTS,
 	applicationDelay: 1.226,
 	cooldown: 1,
-	potency: 100,
+	potency: 120,
 	falloff: 0,
 	highlightIf: (state) => true,
 	onConfirm: (state) => state.tryConsumeResource("LAST_LASH_READY"),
@@ -1084,7 +1084,7 @@ const fangsAndBloods: Array<
 		"fang",
 		1.04,
 		120,
-		0.6,
+		0.75,
 		"UNCOILED_OGCD_READY",
 		"POISED_FOR_TWINFANG",
 		Modifiers.Poised,
@@ -1096,7 +1096,7 @@ const fangsAndBloods: Array<
 		"blood",
 		0.977,
 		120,
-		0.6,
+		0.75,
 		"UNCOILED_OGCD_READY",
 		"POISED_FOR_TWINBLOOD",
 		Modifiers.Poised,
@@ -1159,7 +1159,7 @@ generations.forEach(([name, applicationDelay, replaceIf], i) => {
 		startOnHotbar: false,
 		applicationDelay,
 		potency: 420,
-		falloff: 0.65,
+		falloff: 0.8,
 		baseRecastTime: 2,
 		combo: {
 			resource: "REAWAKEN_COMBO",
@@ -1187,7 +1187,7 @@ legacies.forEach(([name, applicationDelay]) => {
 		applicationDelay,
 		cooldown: 1,
 		potency: 320,
-		falloff: 0.65,
+		falloff: 0.8,
 		highlightIf: (state) => true,
 		onConfirm: (state) => state.tryConsumeResource("LEGACY_READY", true),
 	});

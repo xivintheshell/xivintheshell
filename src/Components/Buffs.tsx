@@ -27,7 +27,6 @@ buffIcons.set(BuffType.StarryMuse, "Buffs/PCT/Starry Muse.png");
 buffIcons.set(BuffType.TechnicalFinish, "Buffs/DNC/Technical Finish.png");
 buffIcons.set(BuffType.WanderersMinuet, "Buffs/BRD/Wanderer's Minuet.png");
 
-buffIcons.set(BuffType.Manafication, "PartyBuffs/manafication.png");
 buffIcons.set(BuffType.Acceleration, "Buffs/RDM/Acceleration.png");
 
 buffIcons.set(BuffType.Fuka, "Buffs/SAM/Fuka.png");

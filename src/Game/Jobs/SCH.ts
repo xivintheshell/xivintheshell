@@ -535,7 +535,7 @@ makeSCHSpell("BIOLYSIS", 72, {
 			node,
 			effectName: "BIOLYSIS",
 			skillName: "BIOLYSIS",
-			tickPotency: state.hasTraitUnlocked("TACTICIANS_MASTERY") ? 80 : 70,
+			tickPotency: state.hasTraitUnlocked("TACTICIANS_MASTERY") ? 85 : 70,
 			speedStat: "sps",
 			// TODO chain should not snapshot since it's a debuff
 			modifiers: state.maybeChainModifier(),
@@ -991,6 +991,7 @@ makeSCHAbility("EXPEDIENT", 90, "cd_EXPEDIENT", {
 
 // For HoT calculation purposes, treat the max duration of seraphism as 24.96s.
 makeSCHResourceAbility("SERAPHISM", 100, "cd_SERAPHISM", {
+	requiresCombat: true,
 	rscType: "SERAPHISM",
 	applicationDelay: 0,
 	cooldown: 180,

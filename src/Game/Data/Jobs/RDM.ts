@@ -235,7 +235,7 @@ export const RDM_STATUSES = ensureRecord<ResourceData>()({
 	GRAND_IMPACT_READY: { name: "Grand Impact Ready", label: { zh: "显贵冲击预备" } }, // [0, 1]
 	MAGICK_BARRIER: { name: "Magick Barrier", label: { zh: "抗死" } }, // [0, 1]
 	MAGICKED_SWORDPLAY: { name: "Magicked Swordplay", label: { zh: "魔法剑术" }, maximumStacks: 3 }, // [0, 3]
-	MANAFICATION: { name: "Manafication", label: { zh: "魔元化" }, maximumStacks: 6 }, // [0, 6]
+	MANAFICATION: { name: "Manafication", label: { zh: "魔元化" } }, // [0, 1]
 	PREFULGENCE_READY: { name: "Prefulgence Ready", label: { zh: "光芒四射预备" } }, // [0, 1]
 	THORNED_FLOURISH: { name: "Thorned Flourish", label: { zh: "荆棘环绕预备" } }, // [0, 1]
 	VERFIRE_READY: { name: "Verfire Ready", label: { zh: "赤火炎预备" } }, // [0, 1]
@@ -255,15 +255,13 @@ export const RDM_TRACKERS = ensureRecord<ResourceData>()({
 export const RDM_TRAITS = ensureRecord<TraitData>()({
 	ENHANCED_DISPLACEMENT: { name: "Enhanced Displacement", level: 72 },
 	RED_MAGIC_MASTERY: { name: "Red Magic Mastery", level: 74 },
-	ENHANCED_MANAFICATION: { name: "Enhanced Manafication", level: 78 },
 	RED_MAGIC_MASTERY_II: { name: "Red Magic Mastery II", level: 82 },
 	RED_MAGIC_MASTERY_III: { name: "Red Magic Mastery III", level: 84 },
 	ENHANCED_ACCELERATION: { name: "Enhanced Acceleration", level: 88 },
-	ENHANCED_MANAFICATION_II: { name: "Enhanced Manafication II", level: 90 },
 	ENHANCED_EMBOLDEN: { name: "Enhanced Embolden", level: 92 },
 	ENCHANTED_BLADE_MASTERY: { name: "Enchanted Blade Mastery", level: 94 },
 	ENHANCED_ACCELERATION_II: { name: "Enhanced Acceleration II", level: 96 },
-	ENHANCED_MANAFICATION_III: { name: "Enhanced Manafication III", level: 100 },
+	ENHANCED_MANAFICATION: { name: "Enhanced Manafication", level: 100 },
 });
 
 export type RDMActions = typeof RDM_ACTIONS;

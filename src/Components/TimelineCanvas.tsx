@@ -687,7 +687,6 @@ function drawSkills(params: {
 		[BuffType.Hyperphantasia, { color: colors.timeline.llCover, showImage: false }],
 		[BuffType.StarryMuse, { color: colors.timeline.buffCover, showImage: true }],
 		[BuffType.Embolden, { color: colors.rdm.emboldenBuff, showImage: true }],
-		[BuffType.Manafication, { color: colors.rdm.manaficBuff, showImage: true }],
 		[BuffType.Acceleration, { color: colors.rdm.accelBuff, showImage: true }],
 		[BuffType.TechnicalFinish, { color: colors.dnc.esprit, showImage: true }],
 		[BuffType.Devilment, { color: colors.dnc.feathers, showImage: true }],

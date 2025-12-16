@@ -474,7 +474,10 @@ makeResourceAbility_MCH("REASSEMBLE", 10, "cd_REASSEMBLE", {
 	maxCharges: 2, // charges reduced as needed in constructor by trait
 });
 
-const TOOL_POTENCY = 620;
+const TOOL_POTENCY: Array<[TraitKey, number]> = [
+	["NEVER", 620],
+	["MARKSMANS_MASTERY_II", 660],
+];
 
 makeWeaponskill_MCH("DRILL", 58, {
 	potency: TOOL_POTENCY,

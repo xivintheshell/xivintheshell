@@ -545,7 +545,7 @@ makeGCD_DNC("SABER_DANCE", 76, {
 	],
 	potency: [
 		["NEVER", 500],
-		["DYNAMIC_DANCER", 520],
+		["DYNAMIC_DANCER", 540],
 	],
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	falloff: 0.6,
@@ -568,7 +568,7 @@ makeGCD_DNC("DANCE_OF_THE_DAWN", 100, {
 	},
 });
 makeGCD_DNC("LAST_DANCE", 92, {
-	potency: 520,
+	potency: 540,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	falloff: 0.6,
 	applicationDelay: 1.26,
@@ -699,7 +699,7 @@ makeAbility_DNC("FAN_DANCE_III", 66, "cd_FAN_DANCE_III", {
 makeAbility_DNC("FAN_DANCE_IV", 86, "cd_FAN_DANCE_IV", {
 	potency: [
 		["NEVER", 300],
-		["DYNAMIC_DANCER", 420],
+		["DYNAMIC_DANCER", 460],
 	],
 	falloff: 0.6,
 	cooldown: 1,

@@ -21,7 +21,7 @@ import {
 	Weaponskill,
 } from "../Skills";
 import { GameState } from "../GameState";
-import { makeResource, CoolDown, Resource } from "../Resources";
+import { makeResource, CoolDown } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
 import { ActionKey, CooldownKey, TraitKey } from "../Data";
@@ -56,10 +56,7 @@ makeRDMResource("MAGICKED_SWORDPLAY", 3, {
 	timeout: 30,
 	warnOnTimeout: true,
 });
-makeRDMResource("MANAFICATION", 6, {
-	timeout: 30,
-	warnOnTimeout: true,
-});
+makeRDMResource("MANAFICATION", 1, { timeout: 30 });
 makeRDMResource("PREFULGENCE_READY", 1, {
 	timeout: 30,
 	warnOnTimeout: true,
@@ -91,23 +88,13 @@ export class RDMState extends GameState {
 		super(config);
 		const swiftcastCooldown = this.hasTraitUnlocked("ENHANCED_SWIFTCAST") ? 40 : 60;
 		const c6Cooldown = this.hasTraitUnlocked("RED_MAGIC_MASTERY") ? 35 : 45;
-		const mfCooldown = this.hasTraitUnlocked("ENHANCED_MANAFICATION") ? 110 : 120;
 		[
 			new CoolDown("cd_SWIFTCAST", swiftcastCooldown, 1, 1),
 			new CoolDown("cd_CONTRE_SIXTE", c6Cooldown, 1, 1),
-			new CoolDown("cd_MANAFICATION", mfCooldown, 1, 1),
 		].forEach((cd) => this.cooldowns.set(cd));
 
 		const accelStacks = this.hasTraitUnlocked("ENHANCED_ACCELERATION") ? 2 : 1;
 		this.cooldowns.set(new CoolDown("cd_ACCELERATION", 55, accelStacks, accelStacks));
-
-		const mfStacks = this.hasTraitUnlocked("ENHANCED_MANAFICATION_II")
-			? 6
-			: this.hasTraitUnlocked("ENHANCED_MANAFICATION")
-				? 5
-				: 4;
-		this.resources.set(new Resource("MANAFICATION", mfStacks, 0));
-
 		this.registerRecurringEvents();
 	}
 
@@ -118,9 +105,6 @@ export class RDMState extends GameState {
 	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
 		if (this.hasResourceAvailable("EMBOLDEN") && skill.aspect !== Aspect.Physical) {
 			node.addBuff(BuffType.Embolden);
-		}
-		if (this.hasResourceAvailable("MANAFICATION") && skill.cdName === "cd_GCD") {
-			node.addBuff(BuffType.Manafication);
 		}
 		if (skill.name === "IMPACT" && this.hasResourceAvailable("ACCELERATION")) {
 			node.addBuff(BuffType.Acceleration);
@@ -272,18 +256,6 @@ export class RDMState extends GameState {
 		this.setComboState("RDM_FINISHER_COUNTER", counters[1]);
 		this.setComboState("RDM_AOE_COUNTER", counters[2]);
 	}
-
-	processManafic() {
-		// all GCDs (even vercure/raise) consume manafic stacks
-		// if we successfully consuemd all stacks, then become prefulgence ready
-		if (
-			this.tryConsumeResource("MANAFICATION") &&
-			!this.hasResourceAvailable("MANAFICATION") &&
-			this.hasTraitUnlocked("ENHANCED_MANAFICATION_III")
-		) {
-			this.gainStatus("PREFULGENCE_READY");
-		}
-	}
 }
 
 // === SKILLS ===
@@ -315,7 +287,6 @@ const makeSpell_RDM = (
 	},
 ): Spell<RDMState> => {
 	const onConfirm: EffectFn<RDMState> = combineEffects(
-		(state) => state.processManafic(),
 		// onConfirm must be checked before acceleration is consume
 		// to make sure procs are properly gained
 		params.onConfirm,
@@ -333,9 +304,6 @@ const makeSpell_RDM = (
 			const mods: PotencyModifier[] = [];
 			if (state.hasResourceAvailable("EMBOLDEN")) {
 				mods.push(Modifiers.EmboldenMagic);
-			}
-			if (state.hasResourceAvailable("MANAFICATION")) {
-				mods.push(Modifiers.Manafication);
 			}
 			if (params.jobPotencyModifiers) {
 				mods.push(...params.jobPotencyModifiers(state));
@@ -376,7 +344,6 @@ const makeMeleeGCD = (
 	// Un-enchanted melee hits are not magic damage
 	const isPhysical = !name.toString().startsWith("ENCHANTED");
 	const onConfirm: EffectFn<RDMState> = combineEffects(
-		(state) => state.processManafic(),
 		(state) => state.processComboStatus(name),
 		params.onConfirm,
 	);
@@ -389,9 +356,6 @@ const makeMeleeGCD = (
 			if (!isPhysical) {
 				if (state.hasResourceAvailable("EMBOLDEN")) {
 					mods.push(Modifiers.EmboldenMagic);
-				}
-				if (state.hasResourceAvailable("MANAFICATION")) {
-					mods.push(Modifiers.Manafication);
 				}
 			}
 			return mods;
@@ -996,8 +960,11 @@ makeResourceAbility("RDM", "MANAFICATION", 60, "cd_MANAFICATION", {
 	applicationDelay: 0,
 	cooldown: 110,
 	onApplication: (state) => {
+		if (state.hasTraitUnlocked("ENHANCED_MANAFICATION")) {
+			state.gainStatus("PREFULGENCE_READY");
+		}
 		state.gainStatus("MAGICKED_SWORDPLAY", 3);
-		// Manification resets combos
+		// Manafication resets combos
 		if (
 			state.hasResourceAvailable("RDM_MELEE_COUNTER") ||
 			state.hasResourceAvailable("RDM_FINISHER_COUNTER") ||
@@ -1089,7 +1056,7 @@ makeAbility_RDM("VICE_OF_THORNS", 92, "cd_VICE_OF_THORNS", {
 	startOnHotbar: false,
 	falloff: 0.55,
 	applicationDelay: 0.8,
-	potency: 900,
+	potency: 950,
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable("THORNED_FLOURISH"),
 	onConfirm: (state) => state.tryConsumeResource("THORNED_FLOURISH"),

@@ -14,7 +14,6 @@ export const enum PotencyModifierType {
 	ENO,
 	STARRY,
 	EMBOLDEN_M,
-	MANAFIC,
 	ACCELERATION,
 	POT,
 	COMBO,
@@ -188,18 +187,13 @@ export const Modifiers = {
 		// The RDM self-buff component of Embolden is magic damage only
 		kind: "multiplier",
 		source: PotencyModifierType.EMBOLDEN_M,
-		potencyFactor: 1.05,
+		potencyFactor: 1.1,
 	} as PotencyMultiplier,
 	AccelerationImpact: {
 		kind: "adder",
 		source: PotencyModifierType.ACCELERATION,
 		additiveAmount: 50,
 	} as PotencyAdder,
-	Manafication: {
-		kind: "multiplier",
-		source: PotencyModifierType.MANAFIC,
-		potencyFactor: 1.05,
-	} as PotencyMultiplier,
 	SingleStandardFinish: {
 		kind: "multiplier",
 		source: PotencyModifierType.STANDARD_SINGLE,
@@ -617,7 +611,7 @@ export const Modifiers = {
 	VenomAoE: {
 		kind: "adder",
 		source: PotencyModifierType.VENOM,
-		additiveAmount: 20,
+		additiveAmount: 40,
 	} as PotencyAdder,
 	VenomOGCDST: {
 		kind: "adder",

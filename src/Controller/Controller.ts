@@ -1845,12 +1845,15 @@ class Controller {
 		if (downtimeWindows.length > 0) {
 			meta.push("downtime_windows = (" + downtimeWindows.join(" ") + ")");
 		}
+		const headers = ["time", "skill_name", "job_class", "skill_conditional", "targets"];
+		// At Amarantine's request, we additionally emit 2 empty columns for compatibility with
+		// sleeposim's targeting logic.
+		headers.push("players_to_buff", "overriding_skill_conditional_for_other_players");
+		buffRows.forEach((row) => row.push("", ""));
+		actionRows.forEach((row) => row.push("", ""));
 		return {
 			meta,
-			body: [["time", "skill_name", "job_class", "skill_conditional", "targets"]].concat(
-				buffRows as any[][],
-				actionRows as any[][],
-			),
+			body: [headers].concat(buffRows as any[][], actionRows as any[][]),
 		};
 	}
 

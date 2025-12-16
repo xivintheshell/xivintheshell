@@ -163,7 +163,7 @@ it(
 			},
 			{
 				skillName: "ENCHANTED_REDOUBLEMENT",
-				displayedModifiers: [PotencyModifierType.MANAFIC],
+				displayedModifiers: [],
 				hitCount: 1,
 			},
 			{

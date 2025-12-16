@@ -45,9 +45,9 @@ const makeWHMResource = (
 };
 
 // Gauge resources
-makeWHMResource("LILLIES", 3);
+makeWHMResource("LILLIES", 3, { default: 3 });
 makeWHMResource("LILY_TIMER", 1);
-makeWHMResource("BLOOD_LILY", 3, { warnOnOvercap: true });
+makeWHMResource("BLOOD_LILY", 3, { default: 3, warnOnOvercap: true });
 
 // Statuses
 makeWHMResource("FREECURE", 1, { timeout: 15 });
@@ -367,7 +367,7 @@ makeWHMSpell("GLARE_III", 82, {
 	baseCastTime: 1.5,
 	potency: [
 		["NEVER", 310],
-		["WHITE_MAGIC_MASTERY", 340],
+		["WHITE_MAGIC_MASTERY", 350],
 	],
 	manaCost: 400,
 });
@@ -443,7 +443,7 @@ makeWHMSpell("AFFLATUS_MISERY", 74, {
 	applicationDelay: 0.58,
 	potency: [
 		["NEVER", 1240],
-		["WHITE_MAGIC_MASTERY", 1360],
+		["WHITE_MAGIC_MASTERY", 1400],
 	],
 	falloff: 0.5,
 	manaCost: 0,

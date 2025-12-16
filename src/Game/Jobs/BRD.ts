@@ -547,8 +547,8 @@ makeWeaponskill_BRD("APEX_ARROW", 80, {
 	potency: (state) => {
 		const soulVoice = state.resources.get("SOUL_VOICE");
 		const minRequirement = 20;
-		const minPotency = state.hasTraitUnlocked("RANGED_MASTERY") ? 120 : 100;
-		const maxPotency = state.hasTraitUnlocked("RANGED_MASTERY") ? 600 : 500;
+		const minPotency = state.hasTraitUnlocked("RANGED_MASTERY") ? 140 : 100;
+		const maxPotency = state.hasTraitUnlocked("RANGED_MASTERY") ? 700 : 500;
 		const soulVoiceBonus =
 			(1.0 * (soulVoice.availableAmount() - minRequirement)) /
 			(soulVoice.maxValue - minRequirement);
@@ -578,7 +578,10 @@ makeWeaponskill_BRD("APEX_ARROW", 80, {
 });
 makeWeaponskill_BRD("BLAST_ARROW", 86, {
 	startOnHotbar: false,
-	potency: 600,
+	potency: [
+		["NEVER", 600],
+		["RANGED_MASTERY", 700],
+	],
 	falloff: 0.5,
 	applicationDelay: 1.65,
 	validateAttempt: (state) => state.hasResourceAvailable("BLAST_ARROW_READY"),
@@ -737,7 +740,7 @@ makeWeaponskill_BRD("RADIANT_ENCORE", 100, {
 	startOnHotbar: false,
 	potency: (state) => {
 		const radiantCoda = state.resources.get("RADIANT_CODA").availableAmount();
-		return radiantCoda === 3 ? 1000 : radiantCoda === 2 ? 700 : 600;
+		return radiantCoda === 3 ? 1100 : radiantCoda === 2 ? 800 : 700;
 	},
 	falloff: 0.5,
 	applicationDelay: 1.96,

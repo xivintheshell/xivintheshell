@@ -1,5 +1,15 @@
 [
 	{
+		"date": "12/16/25",
+		"changes": [
+			"Updated for patch 7.4."
+		],
+		"changes_zh": [
+			"更新至7.4版本。"
+		],
+		"level": "major"
+	},
+	{
 		"date": "12/14/25",
 		"changes": [
 			"Fixed a bug where the graphical timeline did not render properly when fight markers were loaded and all timeline slots were filled."
