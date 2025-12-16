@@ -810,7 +810,16 @@ export class Potency {
 		return amt;
 	}
 
-	getPartyBuffs() {
+	getPartyBuffs(displayTime: number) {
+		// Ground targeted dots don't capture buffs on snapshot.
+		if (
+			this.sourceSkill === "SALTED_EARTH" ||
+			this.sourceSkill === "SLIPSTREAM" ||
+			this.sourceSkill === "DOTON"
+		) {
+			return displayTime ? [...controller.game.getPartyBuffs(displayTime).keys()] : [];
+		}
+
 		return this.snapshotTime
 			? [...controller.game.getPartyBuffs(this.snapshotTime).keys()]
 			: [];
