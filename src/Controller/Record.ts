@@ -271,12 +271,14 @@ export class ActionNode {
 	}
 
 	hasPartyBuff(): boolean {
-		const snapshotTime = this.#potency?.snapshotTime;
+		const anyPotency = this.getAnyPotency();
+		const snapshotTime = anyPotency?.snapshotTime;
 		return snapshotTime !== undefined && controller.game.getPartyBuffs(snapshotTime).size > 0;
 	}
 
 	getPartyBuffs(): BuffType[] {
-		const snapshotTime = this.#potency?.snapshotTime;
+		const anyPotency = this.getAnyPotency();
+		const snapshotTime = anyPotency?.snapshotTime;
 		return snapshotTime ? [...controller.game.getPartyBuffs(snapshotTime).keys()] : [];
 	}
 
@@ -399,6 +401,19 @@ export class ActionNode {
 	anyHealingPotencies(): boolean {
 		return this.#healingPotency !== undefined || this.#hotPotencies.size > 0;
 	}
+
+	getAnyPotency(): Potency | undefined {
+		let pot;
+		if (this.#potency)
+			pot = this.#potency;
+
+		this.#dotPotencies.forEach((pArr) => {
+			pot = pArr[0];
+		});
+
+		return pot;
+	}
+
 	getInitialPotency(): Potency | undefined {
 		return this.#potency;
 	}
