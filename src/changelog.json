@@ -2,7 +2,9 @@
 	{
 		"date": "12/19/25",
 		"changes": [
-			"[RDM] Fixed log imports with Enchanted melee combo actions under the effect of Manafication."
+			"[RDM] Fixed log imports with Enchanted melee combo actions under the effect of Manafication.",
+			"[BRD] Fixed a bug where importing a log would crash the site.",
+			"[BRD] Fixed a bug where auto-attacks appeared as an action in log import."
 		]
 	},
 	{

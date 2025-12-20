@@ -102,6 +102,7 @@ const FFLOGS_JOB_MAP = new Map<string, ShellJob>([
 
 const FILTERED_ACTION_IDS = new Set([
 	7, // auto-attack
+	8, // auto-attack
 	33218, // quadruple technical finish (for some reason different from hitting the button?)
 	34682, // star prism heal component
 ]);
