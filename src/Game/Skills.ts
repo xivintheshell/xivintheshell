@@ -246,6 +246,10 @@ export const skillIdMap = new Map<number, ActionKey>();
 // to hardcode the skill ID initialization here instead of in setSkill below.
 skillIdMap.set(SCH_ACTIONS.ENERGY_DRAIN.id, "ENERGY_DRAIN");
 skillIdMap.set(SCH_ACTIONS.PHYSICK.id, "PHYSICK");
+// As of patch 7.4, RDM melee combo actions used under Manafication also have different IDs.
+skillIdMap.set(45960, "ENCHANTED_RIPOSTE");
+skillIdMap.set(45961, "ENCHANTED_ZWERCHHAU");
+skillIdMap.set(45962, "ENCHANTED_REDOUBLEMENT");
 
 const seenUnknownNames = new Set<string>();
 const normalizedSkillNameMap = new Map<string, ActionKey>();

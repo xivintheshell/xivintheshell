@@ -1,5 +1,11 @@
 [
 	{
+		"date": "12/19/25",
+		"changes": [
+			"[RDM] Fixed log imports with Enchanted melee combo actions under the effect of Manafication."
+		]
+	},
+	{
 		"date": "12/16/25",
 		"changes": [
 			"Updated for patch 7.4."
