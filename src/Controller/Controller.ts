@@ -713,6 +713,12 @@ class Controller {
 		elemType: ElemType.DamageMark | ElemType.HealingMark | ElemType.AggroMark,
 		csvLog: PotencyLogCsv[],
 	) {
+		if (p === undefined) {
+			// This error case occurs when actions with DoT effects are improperly imported with
+			// the incorrect job. We return early here rather than raising an NPE so the site
+			// remains usable.
+			return;
+		}
 		p.resolve(this.game.getDisplayTime());
 		this.#lastDamageApplicationTime = this.game.time;
 
