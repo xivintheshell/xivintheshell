@@ -88,6 +88,8 @@ function* applyImportedActions(
 		...oldConfig,
 		procMode: ProcMode.Always,
 		job: state.job,
+		initialResourceOverrides:
+			state.job === oldConfig.job ? oldConfig.initialResourceOverrides : [],
 	};
 	for (const [field, value] of Object.entries(state.inferredConfig ?? {})) {
 		if (typeof value === "number") {

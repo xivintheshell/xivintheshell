@@ -95,6 +95,7 @@ const FFLOGS_JOB_MAP = new Map<string, ShellJob>([
 	["Machinist", "MCH"],
 	["Dancer", "DNC"],
 	["BlackMage", "BLM"],
+	["Summoner", "SMN"],
 	["RedMage", "RDM"],
 	["Pictomancer", "PCT"],
 	["BlueMage", "BLU"],
