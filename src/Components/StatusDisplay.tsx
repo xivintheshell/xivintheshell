@@ -418,7 +418,7 @@ Object.keys(ROLE_RESOURCES).forEach((buff) => {
 Object.keys(PHANTOM_STATUSES).forEach((buff) => {
 	const iconName = RESOURCES[buff as ResourceKey].name;
 	buffIcons.set(buff, `Buffs/Phantom/${iconName}.png`);
-	const maxStacks = RESOURCES[buff].maximumStacks ?? 1;
+	const maxStacks = RESOURCES[buff as ResourceKey].maximumStacks ?? 1;
 	for (let i = 2; i <= maxStacks; i++) {
 		buffIcons.set(buff + i, `Buffs/Phantom/${iconName + i}.png`);
 	}
@@ -1050,7 +1050,9 @@ export class StatusPropsGenerator<T extends GameState> {
 
 		// Include all phantom buffs here.
 		roleBuffViewProps.push(
-			...Object.keys(PHANTOM_STATUSES).map((rscType) => this.makeCommonTimer(rscType)),
+			...Object.keys(PHANTOM_STATUSES).map((rscType) =>
+				this.makeCommonTimer(rscType as ResourceKey),
+			),
 		);
 
 		// All jobs should include Tincture and Sprint
