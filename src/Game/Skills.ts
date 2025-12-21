@@ -9,6 +9,7 @@ import { SCH_ACTIONS } from "./Data/Jobs/SCH";
 import { LimitBreakActionKey } from "./Data/Shared/LimitBreak";
 import { hasUnlockedTrait } from "../utilities";
 import { Data } from "./Data/Data";
+import { SMN_ACTIONS } from "./Data/Jobs/SMN";
 
 // all gapclosers have the same animation lock
 // from: https://nga.178.com/read.php?tid=21233094&rand=761
@@ -246,6 +247,8 @@ export const skillIdMap = new Map<number, ActionKey>();
 // to hardcode the skill ID initialization here instead of in setSkill below.
 skillIdMap.set(SCH_ACTIONS.ENERGY_DRAIN.id, "ENERGY_DRAIN");
 skillIdMap.set(SCH_ACTIONS.PHYSICK.id, "PHYSICK");
+// SMN Mountain Buster gets clobbered by BLU Mountain Buster.
+skillIdMap.set(SMN_ACTIONS.MOUNTAIN_BUSTER.id, "MOUNTAIN_BUSTER");
 // As of patch 7.4, RDM melee combo actions used under Manafication also have different IDs.
 skillIdMap.set(45960, "ENCHANTED_RIPOSTE");
 skillIdMap.set(45961, "ENCHANTED_ZWERCHHAU");

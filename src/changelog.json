@@ -1,5 +1,12 @@
 [
 	{
+		"date": "12/21/25",
+		"changes": [
+			"Fixed a bug where importing from FFLogs while resource overrides were active for a different job would crash the site.",
+			"[SMN] Fixed a bug where SMN logs could not be imported."
+		]
+	},
+	{
 		"date": "12/19/25",
 		"changes": [
 			"[RDM] Fixed log imports with Enchanted melee combo actions under the effect of Manafication.",
