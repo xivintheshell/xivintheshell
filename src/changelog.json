@@ -1,5 +1,11 @@
 [
 	{
+		"date": "12/22/25",
+		"changes": [
+			"[WAR] Fixed Inner Release being unusable before combat."
+		]
+	},
+	{
 		"date": "12/21/25",
 		"changes": [
 			"Fixed a bug where importing from FFLogs while resource overrides were active for a different job would crash the site.",
