@@ -475,7 +475,6 @@ makeWeaponskill_WAR("DECIMATE", 60, {
 
 makeAbility_WAR("INNER_RELEASE", 70, "cd_INNER_RELEASE", {
 	applicationDelay: 0,
-	requiresCombat: true,
 	cooldown: 60,
 	maxCharges: 1,
 	onConfirm: (state) => {
