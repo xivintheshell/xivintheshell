@@ -130,11 +130,12 @@ function TimelineActionElement(props: {
 	}
 	let name = localize({ en: "(other)", zh: "（其它）" });
 	if (props.node.info.type === ActionType.Skill) {
+		const targetCount = props.node.targetList.length;
 		const targetStr =
-			props.node.info.targetCount > 1
+			targetCount > 1
 				? localize({
-						en: ` (${props.node.info.targetCount} targets)`,
-						zh: `（${props.node.info.targetCount}个目标）`,
+						en: ` (${targetCount} targets)`,
+						zh: `（${targetCount}个目标）`,
 					})
 				: "";
 		name = props.node.info.skillName

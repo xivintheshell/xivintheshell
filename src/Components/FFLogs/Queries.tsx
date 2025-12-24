@@ -498,7 +498,7 @@ export async function queryPlayerEvents(
 			type: ActionType.Skill,
 			skillName: key,
 			// TODO set these fields properly
-			targetCount: 1,
+			targetList: [1],
 			healTargetCount: undefined,
 		} as SkillNodeInfo;
 	});

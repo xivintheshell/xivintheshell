@@ -280,7 +280,8 @@ export class SMNState extends GameState {
 		this.addEvent(
 			new Event(petSkill + " pet snapshot", summonDelay, () => {
 				const potency = this.makePetPotency(
-					node.targetCount,
+					// TODO:TARGET fix
+					node.targetList.length,
 					petSkill,
 					sourceTime,
 					basePotency,

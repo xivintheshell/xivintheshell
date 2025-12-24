@@ -144,7 +144,13 @@ export const applySkill = (skillName: ActionKey) => applySkillMultiTarget(skillN
 
 export const applySkillMultiTarget = (skillName: ActionKey, targetCount: number) => {
 	// Perform the specified skill as soon as possible
-	controller.requestUseSkill({ skillName, targetCount });
+	// TODO:TARGET fix test harness
+	controller.requestUseSkill({
+		skillName,
+		targetList: Array(targetCount)
+			.fill(0)
+			.map((_, i) => i + 1),
+	});
 };
 
 export type ShortDamageEntry = {

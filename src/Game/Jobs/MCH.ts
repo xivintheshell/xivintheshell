@@ -774,7 +774,8 @@ robotSummons.forEach((params) => {
 						description: "",
 						basePotency,
 						snapshotTime: undefined,
-						targetCount: node.targetCount,
+						// TODO:TARGET fix
+						targetCount: node.targetList.length,
 					}),
 					"QUEEN",
 				);
@@ -796,7 +797,8 @@ robotSummons.forEach((params) => {
 					description: "",
 					basePotency,
 					snapshotTime: undefined,
-					targetCount: node.targetCount,
+					// TODO:TARGET fix
+					targetCount: node.targetList.length,
 				}),
 				"QUEEN",
 			);
@@ -811,7 +813,8 @@ robotSummons.forEach((params) => {
 						description: "",
 						basePotency: state.calculateQueenPotency(390, 780),
 						snapshotTime: undefined,
-						targetCount: node.targetCount,
+						// TODO:TARGET fix
+						targetCount: node.targetList.length,
 					}),
 					"QUEEN",
 				);

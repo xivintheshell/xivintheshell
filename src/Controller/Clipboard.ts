@@ -58,7 +58,8 @@ function serializeToClipboard(mode: ClipboardMode): string {
 			rows.push(
 				[
 					status.skillUseTimes[i + start].toFixed(3),
-					node.targetCount,
+					// TODO:TARGET serialize actual target numbers instead
+					node.targetList.length,
 					node.toLocalizedString(),
 				].join("\t"),
 			),
@@ -159,7 +160,15 @@ function parseTextNode(text: string, targetCount: number = 1): ActionNode | unde
 	// (small penalty of a few more map lookups)
 	const key: ActionKey | undefined =
 		getNormalizedSkillName(text) ?? zhSkillNameMap.get(text) ?? jaSkillNameMap.get(text);
-	return key !== undefined ? skillNode(key, targetCount) : undefined;
+	// TODO:TARGET find a way to serialize/parse target list
+	return key !== undefined
+		? skillNode(
+				key,
+				Array(targetCount)
+					.fill(0)
+					.map((_, i) => i + 1),
+			)
+		: undefined;
 }
 
 function parsePasted(text: string): ActionNode[] | undefined {
@@ -217,9 +226,9 @@ function parsePasted(text: string): ActionNode[] | undefined {
 					if (buffer.length === 0) {
 						// no-op
 					} else if (buffer === "IntPot") {
-						nodes.push(skillNode("TINCTURE", 1));
+						nodes.push(skillNode("TINCTURE"));
 					} else if (buffer === "Swift" || buffer === "Swiftcast") {
-						nodes.push(skillNode("SWIFTCAST", 1));
+						nodes.push(skillNode("SWIFTCAST"));
 					} else {
 						const emoteMapLookup = discordEmoteSkillMap
 							.get(controller.gameConfig.job)!
