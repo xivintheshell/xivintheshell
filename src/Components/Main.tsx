@@ -146,19 +146,11 @@ export default class Main extends React.Component<{ command?: string }> {
 			// Change the favicon
 			// https://stackoverflow.com/a/260877
 			const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
-			if (link) {
-				if (isBetaSite) {
-					link.href = "/favicons/beta.ico";
-				} else if (job in JOBS) {
-					link.href = "/favicons/" + job.toString().toLocaleLowerCase() + ".ico";
-				} else {
-					link.href = process.env.PUBLIC_URL + "/favicon.ico";
-				}
-			}
+			link.href = "/favicons/beta.ico";
 			// Change the title
 			const title = document.getElementById("pageTitle") as HTMLTitleElement;
 			if (title) {
-				title.text = `${betaPrefix}XIV in the Shell (${job})`;
+				title.text = `[BETA] Occult Crescent in the Shell`;
 			}
 		};
 
@@ -408,7 +400,7 @@ export default class Main extends React.Component<{ command?: string }> {
 							</div>
 							<div>
 								<h3 style={{ marginTop: 0, marginBottom: 6 }}>
-									{betaPrefix}XIV in the Shell
+									[BETA] Occult Crescent in the Shell
 								</h3>
 								{localize({
 									en: <div style={{ marginBottom: 16 }}>
@@ -480,78 +472,57 @@ export default class Main extends React.Component<{ command?: string }> {
 								) : undefined}
 
 								{/* Beta site warning */}
-								{isBetaSite && <PSA color={colors.warning}>
-									{localize({
-										en: <div style={{ marginBottom: "10px" }}>
-											<span>
+								{
+									<PSA color={colors.warning}>
+										<div style={{ marginBottom: "10px" }}>
+											<div style={{ marginBottom: "10px" }}>
 												<b style={{ color: colors.warning }}>
-													You're currently using the BETA version of XIV
-													in the Shell.
-												</b>
-											</span>
-											<ul>
-												<li style={liStyle}>
-													Things may break in unexpected ways at any time.
-													Use at your own peril, and make sure to export
-													in-progress files frequently.
-												</li>
-												<li style={liStyle}>
-													Application data is not shared with the main
-													site. Anything you do here stays here. Files
-													created on the BETA site may not work on the
-													main site, but files made on the main site
-													should be importable here (if they are not,
-													please report this as a bug).
-												</li>
-												<li style={liStyle}>
-													If the page becomes un-loadable, please contact
-													us and tell us what your last actions on the
-													site were, and we can help you debug what went
-													wrong. You can also try resetting your browser's
-													localStorage data for beta.xivintheshell.com.
-												</li>
-												<li style={liStyle}>
-													To report an issue, you can contact us on
-													Discord in The Balance (
-													<a href={HELP_CHANNEL_URL}>
-														#xiv_in_the_shell_support
-													</a>
-													), or file an issue on{" "}
-													<a href="https://github.com/xivintheshell/xivintheshell/issues">
-														our GitHub
-													</a>
-													.
-												</li>
-											</ul>
-										</div>,
-										zh: <div style={{ marginBottom: "10px" }}>
-											<span>
-												<b style={{ color: colors.warning }}>
-													您正在使用《XIV in the Shell》的测试版（BETA）。
-												</b>
-											</span>
-											<ul>
-												<li style={liStyle}>
-													此排轴器随时可能会意外崩溃。请自行承担使用风险、注意经常导出编辑中的文件。
-												</li>
-												<li style={liStyle}>
-													BETA版与主排轴器网站不共享应用程序数据。在BETA网站上创建的文件不一定能在主网站上导入，但主网站上创建的文件应该能在这里导入（如果不能导入，请报告为bug）。
-												</li>
-												<li style={liStyle}>
-													如果遇到网站无法加载的情况，请反馈给我们，并告诉我们出问题前您最后进行的操作，我们可以帮您排查问题。也可以自己尝试重置beta.xivintheshell.com的localStorage数据。
-												</li>
-												<li style={liStyle}>
-													如果想联系我们给反馈，可请不打冰三攻略组的黑魔们或鱼卡转达，或加miyehn的QQ（870340705，加时请注明来意），或直接到
-													<a href="https://github.com/xivintheshell/xivintheshell/issues">
-														GitHub
-													</a>
-													仓库提issue。
-												</li>
-											</ul>
-										</div>,
-									})}
-								</PSA>}
-								{isBetaSite && <div style={{ margin: "10px" }}></div>}
+													You're currently using the BETA -- Occult
+													Crescent version of XIV in the Shell.
+												</b>{" "}
+												Occult Crescent actions may eventually be added to
+												the main site (
+												<a href="xivintheshell.com">xivintheshell.com</a>),
+												but files created on this version of the site may or
+												may not remain usable.
+											</div>
+											<div style={{ marginBottom: "10px" }}>
+												The following phantom jobs are currently supported:
+												Monk, Samurai, Oracle, and Dancer. There are
+												currently no plans to actively update this version
+												of the site or add more jobs, but bug reports and
+												additional data are welcome (@shanzhe in The Balance
+												or a field op Discord of your choice).
+											</div>
+											<div style={{ marginBottom: "10px" }}>
+												This site is meant primarily as a tool for
+												visualizing cooldown usage, and may contain
+												inaccuracies, including:
+												<ul>
+													<li>
+														Lack of calculation for phantom action
+														potencies (math is complicated)
+													</li>
+													<li>
+														Job damage and trait buffs are not applied
+														to phantom actions
+													</li>
+													<li>Rounding errors in haste effects</li>
+													<li>
+														Incorrect application delays on most phantom
+														actions
+													</li>
+												</ul>
+											</div>
+											<div style={{ marginBottom: "10px" }}>
+												If you need to do precise math with phantom
+												potencies, consider exporting the damage log to a
+												CSV and processing the output in a spreadsheet.
+											</div>
+										</div>
+									</PSA>
+								}
+								{<div style={{ margin: "10px" }}></div>}
 
 								<IntroSection job={this.state.job} />
 

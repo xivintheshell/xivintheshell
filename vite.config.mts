@@ -6,7 +6,7 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
 	server: {
-		port: 3000,
+		port: 3001,
 		// Resolve ts and tsx files first in the import order, since the transpiler
 		// looks for every single possible extension when resolving imports.
 		// This has a VERY significant performance impact on dev server load time.
