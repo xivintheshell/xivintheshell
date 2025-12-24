@@ -762,7 +762,8 @@ function drawSkills(params: {
 		const x = timelineOriginX + StaticFn.positionFromTimeAndScale(skill.displayTime, scale);
 		const y = skill.isGCD ? skillsTopY + TimelineDimensions.skillButtonHeight / 2 : skillsTopY;
 		// if there were multiple targets, draw the number of targets above the ability icon
-		const targetCount = skill.node.targetCount;
+		// TODO find a way to distinguish between ST abilities hitting different targets (e.g. double dotting)
+		const targetCount = skill.node.targetList.length;
 		if (targetCount > 1) {
 			targetCounts.push({
 				count: targetCount,

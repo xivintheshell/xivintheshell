@@ -774,7 +774,8 @@ makeASTAbility("EARTHLY_STAR", 62, "cd_EARTHLY_STAR", {
 							basePotency: GIANT_DOMINANCE_POTENCY,
 							snapshotTime: state.getDisplayTime(),
 							description: "",
-							targetCount: node.targetCount,
+							// TODO:TARGET fix
+							targetCount: node.targetList.length,
 							falloff: 0,
 						});
 						if (state.hasResourceAvailable("TINCTURE")) {

@@ -171,7 +171,7 @@ describe("individual skill interactions", () => {
 					controller.requestUseSkill(
 						{
 							skillName: "BLIZZARD_IV",
-							targetCount: 1,
+							targetList: [1],
 						},
 						true,
 					),
@@ -197,7 +197,7 @@ describe("individual skill interactions", () => {
 					controller.requestUseSkill(
 						{
 							skillName: "FIRE_IV",
-							targetCount: 1,
+							targetList: [1],
 						},
 						true,
 					),
@@ -396,7 +396,7 @@ describe("timeline slot manipulation", () => {
 					controller.requestUseSkill(
 						{
 							skillName: "DRILL",
-							targetCount: 1,
+							targetList: [1],
 						},
 						true,
 					);
@@ -425,7 +425,7 @@ describe("bulk skill and config interactions", () => {
 		undoRedoTest([
 			{
 				action: () =>
-					controller.requestUseSkill({ skillName: "BLIZZARD_IV", targetCount: 1 }, true),
+					controller.requestUseSkill({ skillName: "BLIZZARD_IV", targetList: [1] }, true),
 				line: [...SLOT_0_INIT_ACTIONS, skillNode("BLIZZARD_IV").serialized()],
 			},
 			{
@@ -609,20 +609,26 @@ describe("copy and paste", () => {
 		undoRedoTest([
 			{
 				action: () => {
-					controller.requestUseSkill({ skillName: "HIGH_FIRE_II", targetCount: 2 }, true);
-					controller.requestUseSkill({ skillName: "FLARE", targetCount: 3 }, true);
 					controller.requestUseSkill(
-						{ skillName: "HIGH_BLIZZARD_II", targetCount: 4 },
+						{ skillName: "HIGH_FIRE_II", targetList: [1, 2] },
 						true,
 					);
-					controller.requestUseSkill({ skillName: "FREEZE", targetCount: 5 }, true);
+					controller.requestUseSkill({ skillName: "FLARE", targetList: [1, 2, 3] }, true);
+					controller.requestUseSkill(
+						{ skillName: "HIGH_BLIZZARD_II", targetList: [1, 2, 3, 4] },
+						true,
+					);
+					controller.requestUseSkill(
+						{ skillName: "FREEZE", targetList: [1, 2, 3, 4, 5] },
+						true,
+					);
 				},
 				line: [
 					...SLOT_0_INIT_ACTIONS,
-					skillNode("HIGH_FIRE_II", 2).serialized(),
-					skillNode("FLARE", 3).serialized(),
-					skillNode("HIGH_BLIZZARD_II", 4).serialized(),
-					skillNode("FREEZE", 5).serialized(),
+					skillNode("HIGH_FIRE_II", [1, 2]).serialized(),
+					skillNode("FLARE", [1, 2, 3]).serialized(),
+					skillNode("HIGH_BLIZZARD_II", [1, 2, 3, 4]).serialized(),
+					skillNode("FREEZE", [1, 2, 3, 4, 5]).serialized(),
 				],
 			},
 			{
@@ -638,12 +644,12 @@ describe("copy and paste", () => {
 				},
 				line: [
 					...SLOT_0_INIT_ACTIONS,
-					skillNode("HIGH_FIRE_II", 2).serialized(),
-					skillNode("FLARE", 3).serialized(),
-					skillNode("HIGH_BLIZZARD_II", 4).serialized(),
-					skillNode("FREEZE", 5).serialized(),
-					skillNode("HIGH_FIRE_II", 2).serialized(),
-					skillNode("FLARE", 3).serialized(),
+					skillNode("HIGH_FIRE_II", [1, 2]).serialized(),
+					skillNode("FLARE", [1, 2, 3]).serialized(),
+					skillNode("HIGH_BLIZZARD_II", [1, 2, 3, 4]).serialized(),
+					skillNode("FREEZE", [1, 2, 3, 4, 5]).serialized(),
+					skillNode("HIGH_FIRE_II", [1, 2]).serialized(),
+					skillNode("FLARE", [1, 2, 3]).serialized(),
 				],
 			},
 		]),
@@ -746,8 +752,8 @@ describe("copy and paste", () => {
 				},
 				line: [
 					...SLOT_0_INIT_ACTIONS,
-					skillNode("FREEZE", 3).serialized(),
-					skillNode("HIGH_FIRE_II", 4).serialized(),
+					skillNode("FREEZE", [1, 2, 3]).serialized(),
+					skillNode("HIGH_FIRE_II", [1, 2, 3, 4]).serialized(),
 				],
 			},
 		]),
