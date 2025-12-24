@@ -80,7 +80,8 @@ function expandDoTNode(node: ActionNode, dotName: ResourceKey, lastNode?: Action
 		potencyWithoutPot: 0,
 		potPotency: 0,
 		partyBuffPotency: 0,
-		targetCount: node.targetCount,
+		// TODO:TARGET dispaly separate dot tables for each target
+		targetCount: node.targetList.length,
 		mainHitFalloff: mainPotency?.falloff ?? 0,
 	};
 
@@ -174,7 +175,7 @@ function expandNode(node: ActionNode): ExpandedNode {
 		if (!mainPotency) {
 			// do nothing if the used ability does no damage
 		} else {
-			res.targetCount = node.targetCount;
+			res.targetCount = node.targetList.length;
 			res.falloff = mainPotency.falloff ?? 1;
 			if (AFUISkills.has(skillName)) {
 				// for AF/UI skills, display the first modifier that's not enochian or pot
@@ -202,7 +203,10 @@ function expandNode(node: ActionNode): ExpandedNode {
 			} else if (isDoTNode(node)) {
 				// dot modifiers are handled separately
 				res.basePotency = mainPotency.base;
-				node.info.targetCount = mainPotency.targetCount;
+				// TODO:TARGET fix this
+				node.info.targetList = Array(mainPotency.targetCount)
+					.fill(0)
+					.map((_, i) => i + 1);
 			} else {
 				// for non-BLM jobs, display all non-pot modifiers on all damaging skills
 				res.basePotency = mainPotency.base;
@@ -242,7 +246,7 @@ function expandAndMatch(table: DamageStatsMainTableEntry[], node: ActionNode) {
 			node.info.type === ActionType.Skill &&
 			node.info.skillName === table[i].skillName &&
 			tagsAreEqual(expanded.displayedModifiers, table[i].displayedModifiers) &&
-			node.targetCount === table[i].targetCount
+			node.targetList.length === table[i].targetCount
 		) {
 			res.mainTableIndex = i;
 			return res;

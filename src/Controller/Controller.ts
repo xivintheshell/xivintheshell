@@ -147,7 +147,7 @@ class Controller {
 		action: string;
 		isGCD: number;
 		castTime: number;
-		targetCount?: number;
+		targetList?: number[];
 		isDamaging: boolean; // used to track if the skill is damaging for combat sim export
 	}[] = [];
 	#dotTickTimes: Map<ResourceKey | string, number[]> = new Map();
@@ -1087,7 +1087,7 @@ class Controller {
 
 	#useSkill(
 		skillName: ActionKey,
-		targetCount: number,
+		targetList: number[],
 		overrideTickMode: TickMode = this.tickMode,
 		maxReplayTime: number = -1,
 		addInvalidNodes: boolean = true,
@@ -1107,7 +1107,7 @@ class Controller {
 		skillName = getConditionalReplacement(skillName, this.game);
 		status = this.game.getSkillAvailabilityStatus(skillName);
 
-		const node = skillNode(skillName, targetCount);
+		const node = skillNode(skillName, targetList);
 		let actionIndex: number;
 
 		if (status.status.ready()) {
@@ -1187,7 +1187,7 @@ class Controller {
 				action: ACTIONS[skillName].name,
 				isGCD: isGCD ? 1 : 0,
 				castTime: status.instantCast ? 0 : status.castTime,
-				targetCount: node.targetCount,
+				targetList: node.targetList,
 				isDamaging: node.anyPotencies(),
 			});
 		}
@@ -1417,7 +1417,7 @@ class Controller {
 				}
 				const status = this.#useSkill(
 					skillName,
-					itr.info.targetCount,
+					itr.info.targetList,
 					TickMode.Manual,
 					maxReplayTime,
 				);
@@ -1474,8 +1474,8 @@ class Controller {
 					});
 				}
 			} else if (itr.info.type === ActionType.Unknown) {
-				const { skillName, targetCount } = itr.info;
-				const node = unknownSkillNode(skillName, targetCount);
+				const { skillName, targetList } = itr.info;
+				const node = unknownSkillNode(skillName, targetList);
 				this.record.addActionNode(node);
 				const reason = makeSkillReadyStatus();
 				reason.addUnavailableReason(SkillUnavailableReason.UnknownSkill);
@@ -1507,7 +1507,7 @@ class Controller {
 						action: skillName,
 						isGCD: 0,
 						castTime: 0,
-						targetCount: node.targetCount,
+						targetList: node.targetList,
 						isDamaging: false,
 					});
 				}
@@ -1740,13 +1740,13 @@ class Controller {
 			.filter((row) => !row.action.includes("Toggle buff"))
 			.map((row) => {
 				let targetCell = "";
-				if (row.isDamaging && row.targetCount !== undefined) {
+				if (row.isDamaging && row.targetList !== undefined) {
 					targetCell = '"';
-					for (let i = 0; i < row.targetCount; i++) {
+					for (let i = 0; i < row.targetList.length; i++) {
 						if (i !== 0) {
 							targetCell += ", ";
 						}
-						targetCell += "Boss" + i.toString();
+						targetCell += "Boss" + row.targetList[i].toString();
 					}
 					targetCell += '"';
 				}
@@ -2013,7 +2013,7 @@ class Controller {
 	}
 
 	requestUseSkill(
-		props: { skillName: ActionKey; targetCount: number },
+		props: { skillName: ActionKey; targetList: number[] },
 		canUndo: boolean = false,
 	) {
 		this.#bTakingUserInput = true;
@@ -2024,7 +2024,7 @@ class Controller {
 				// Append the skill to the timeline.
 				const status = this.#useSkill(
 					props.skillName,
-					props.targetCount,
+					props.targetList,
 					this.tickMode,
 					-1,
 					false,
@@ -2044,7 +2044,7 @@ class Controller {
 				const insertIdx = this.record.selectionStartIndex;
 				if (insertIdx !== undefined) {
 					// TODO this needs validity checking
-					const node = skillNode(props.skillName, props.targetCount);
+					const node = skillNode(props.skillName, props.targetList);
 					this.insertRecordNode(node, insertIdx);
 					if (canUndo) {
 						this.undoStack.push(new AddNode(node, insertIdx));

@@ -955,7 +955,8 @@ export class GameState {
 				basePotency: potencyNumber,
 				snapshotTime: undefined,
 				description: "",
-				targetCount: node.targetCount,
+				// TODO:TARGET fix this
+				targetCount: node.targetList.length,
 				falloff: skill.falloff,
 			});
 			node.addPotency(potency);
@@ -1144,7 +1145,8 @@ export class GameState {
 				basePotency: potencyNumber,
 				snapshotTime: this.getDisplayTime(),
 				description: "",
-				targetCount: node.targetCount,
+				// TODO:TARGET fix this
+				targetCount: node.targetList.length,
 				falloff: skill.falloff,
 			});
 		}
@@ -1299,7 +1301,8 @@ export class GameState {
 				basePotency: potencyNumber,
 				snapshotTime: undefined,
 				description: "",
-				targetCount: node.targetCount,
+				// TODO:TARGET fix this
+				targetCount: node.targetList.length,
 				falloff: skill.falloff,
 			});
 			node.addPotency(potency);
@@ -1620,7 +1623,9 @@ export class GameState {
 			Math.ceil(effectDuration / (props.tickFrequency ?? 3)) + (isGroundTargeted ? 1 : 0);
 
 		const tickDescriptor = kind === "damage" ? "DoT" : "HoT";
-		const targetCount = kind === "damage" ? props.node.targetCount : props.node.healTargetCount;
+		// TODO:TARGET fix this
+		const targetCount =
+			kind === "damage" ? props.node.targetList.length : props.node.healTargetCount;
 
 		for (let i = 0; i < effectTicks; i++) {
 			const overtimePotency = new Potency({
@@ -1823,7 +1828,7 @@ export class GameState {
 		// If there is no falloff field specified, then reset the node's targetCount to 1,
 		// ignoring whatever input the user gave
 		if (skill.falloff === undefined) {
-			node.setTargetCount(1);
+			node.forceOneTarget();
 		}
 		if (skill.aoeHeal) {
 			node.setHealTargetCount(this.resources.get("PARTY_SIZE").availableAmount());
@@ -1843,7 +1848,7 @@ export class GameState {
 	useInvalidSkill(skillName: ActionKey, node: ActionNode) {
 		const skill = this.skillsList.get(skillName);
 		if (skill.falloff === undefined) {
-			node.setTargetCount(1);
+			node.forceOneTarget();
 		}
 		if (skill.aoeHeal) {
 			node.setHealTargetCount(this.resources.get("PARTY_SIZE").availableAmount());
