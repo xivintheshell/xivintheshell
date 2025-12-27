@@ -787,6 +787,7 @@ makeASTAbility("EARTHLY_STAR", 62, "cd_EARTHLY_STAR", {
 						if (state.hasResourceAvailable("DIVINATION")) {
 							modifiers.push(Modifiers.Divination);
 						}
+						modifiers.push(Modifiers.AstPet);
 						potency.modifiers = modifiers;
 						node.addPotency(potency);
 						const healingPotency = new Potency({
@@ -826,9 +827,13 @@ makeASTAbility("STELLAR_DETONATION", 62, "cd_STELLAR_DETONATION", {
 	healingPotency: (state) =>
 		state.hasResourceAvailable("GIANT_DOMINANCE") ? GIANT_DOMINANCE_HEAL_POTENCY : 762,
 	aoeHeal: true,
-	onConfirm: (state) =>
-		state.tryConsumeResource("EARTHLY_DOMINANCE") &&
-		state.tryConsumeResource("GIANT_DOMINANCE"),
+	validateAttempt: (state) =>
+		state.hasResourceAvailable("EARTHLY_DOMINANCE") ||
+		state.hasResourceAvailable("GIANT_DOMINANCE"),
+	onConfirm: (state) => {
+		state.tryConsumeResource("EARTHLY_DOMINANCE");
+		state.tryConsumeResource("GIANT_DOMINANCE");
+	},
 });
 
 makeASTResourceAbility("DIVINATION", 50, "cd_DIVINATION", {
