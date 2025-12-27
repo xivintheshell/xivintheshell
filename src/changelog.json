@@ -1,5 +1,12 @@
 [
 	{
+		"date": "12/26/25",
+		"changes": [
+			"[AST] Fixed a bug where Stellar Detonation could be repeatedly cast.",
+			"[AST] Fixed a bug where automatically-detonated Earthly Star did not receive a pet potency modifier."
+		]
+	},
+	{
 		"date": "12/22/25",
 		"changes": [
 			"[WAR] Fixed Inner Release being unusable before combat."
