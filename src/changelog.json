@@ -1,5 +1,12 @@
 [
 	{
+		"date": "12/29/25",
+		"changes": [
+			"[SAM] Added missing application delay values for Hissatsu: Shinten, Kyuten, Gyoten, Yaten, Senei, and Guren.",
+			"Updated export to Ama's combat sim to use Grade 4 Gemdraughts for potions."
+		]
+	},
+	{
 		"date": "12/26/25",
 		"changes": [
 			"[AST] Fixed a bug where Stellar Detonation could be repeatedly cast.",
