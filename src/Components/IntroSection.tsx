@@ -16,6 +16,8 @@ export const BLOG_URL = "https://blog.xivintheshell.com";
 export const HELP_CHANNEL_URL =
 	"https://discord.com/channels/277897135515762698/1307922201726685236";
 
+export const HELP_QQ_GROUP = "913451994";
+
 const BALANCE_URL = "https://discord.gg/thebalanceffxiv";
 
 // needs to be a function to evaluate localization
@@ -139,13 +141,18 @@ const getAcknowledgements = () => <>
 			<a target={"_blank"} href={HELP_CHANNEL_URL} rel="noreferrer">
 				this channel in The Balance
 			</a>{" "}
-			(requires the "Misc. Support" role). In case of sending a bug report, attaching the
-			fight record (download "fight.txt" from the bottom or name it anything else) would be
-			very helpful.
+			(requires the "Misc. Support" role), or join QQ group {HELP_QQ_GROUP} where you can use
+			Chinese. In case of sending a bug report, attaching the fight record (download
+			"fight.txt" from the bottom or name it anything else) would be very helpful.
 		</div>,
 		zh: <div className={"paragraph"}>
 			<span>
-				如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我们，可请不打冰三攻略组的黑魔们或鱼卡转达，或加miyehn的QQ（870340705，加时请注明来意）。
+				如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我们，反馈QQ群号:{" "}
+				{HELP_QQ_GROUP}。也可到 Discord The Balance 服务器的
+				<a target={"_blank"} href={HELP_CHANNEL_URL} rel="noreferrer">
+					此频道
+				</a>
+				用英文反馈（需要有 "Misc. Support" role 才能看到此频道）。
 			</span>
 			<span>
 				如果是反馈bug，最好把能够复现bug的战斗记录文件（从下方下载的fight.txt）一起发过来。
