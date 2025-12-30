@@ -2,11 +2,14 @@
 	{
 		"date": "12/30/25",
 		"changes": [
-			"Changed font specification to improve display on computers with Chinese browser/OS."
+			"Changed font specification to improve display on computers with Chinese browser/OS.",
+			"Updated the site to automatically use Chinese if your browser is set to use it. Manually using the language selector overrides this."
 		],
 		"changes_zh": [
 			"页面字体调整，以适配中文浏览器/操作系统。"
-		]
+			"添加了中文的职业名字。",
+			"网页现在会根据系统语言自动切换至中文，也可以通过语言选择器手动更改（手动设置将覆盖自动识别结果）."
+		],
 	},
 	{
 		"date": "12/29/25",
