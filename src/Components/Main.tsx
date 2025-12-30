@@ -10,7 +10,7 @@ import { HELP_CHANNEL_URL, IntroSection } from "./IntroSection";
 import { getLastChangeDate } from "./Changelog";
 import { localize, localizeDate, SelectLanguage } from "./Localization";
 import { SocialLinks } from "./SocialLinks";
-import { Expandable, Tabs } from "./Common";
+import { DEFAULT_FONTS, Expandable, Tabs } from "./Common";
 import {
 	getCachedColorTheme,
 	getThemeColors,
@@ -203,7 +203,7 @@ export default class Main extends React.Component<{ command?: string }> {
 		const containerStyle: CSSProperties = {
 			height: "100%",
 			accentColor: colors.accent,
-			fontFamily: "monospace",
+			fontFamily: DEFAULT_FONTS,
 			fontSize: 13,
 			color: colors.text,
 			backgroundColor: colors.background,

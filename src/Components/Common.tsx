@@ -14,6 +14,8 @@ export type ValueChangeEvent = React.ChangeEvent<{ value: string }>;
 
 export const IS_FIREFOX = navigator.userAgent.indexOf("Firefox") >= 0;
 
+export const DEFAULT_FONTS = "Consolas, 微软雅黑, sans-serif";
+
 const MAX_BUFF_COVERS_COUNT = 3;
 export const TimelineDimensions = {
 	rulerHeight: 30,

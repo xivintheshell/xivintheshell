@@ -1,5 +1,14 @@
 [
 	{
+		"date": "12/30/25",
+		"changes": [
+			"Changed font specification to improve display on computers with Chinese browser/OS."
+		],
+		"changes_zh": [
+			"页面字体调整，以适配中文浏览器/操作系统。"
+		]
+	},
+	{
 		"date": "12/29/25",
 		"changes": [
 			"[SAM] Added missing application delay values for Hissatsu: Shinten, Kyuten, Gyoten, Yaten, Senei, and Guren.",
@@ -8,7 +17,7 @@
 		],
 		"changes_zh": [
 			"在“关于”里添加了反馈QQ群号。",
-			"其它功能更新（见英文版changelog）"
+			"其它功能更新（见英文版changelog）。"
 		]
 	},
 	{
