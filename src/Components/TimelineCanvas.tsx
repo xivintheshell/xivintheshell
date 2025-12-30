@@ -25,7 +25,7 @@ import {
 	HistoricalCursorElem,
 	WarningMarkElem,
 } from "../Controller/Timeline";
-import { StaticFn, TimelineDimensions, TimelineDrawOptions } from "./Common";
+import { DEFAULT_FONTS, StaticFn, TimelineDimensions, TimelineDrawOptions } from "./Common";
 import { BuffType } from "../Game/Common";
 import { getSkillIconImage } from "./Skills";
 import { buffIconImages } from "./Buffs";
@@ -142,7 +142,7 @@ function drawTip(params: {
 	const imageDimensions = 24;
 	const horizontalPadding = 8;
 	const verticalPadding = 4;
-	ctx.font = "12px monospace";
+	ctx.font = "12px " + DEFAULT_FONTS;
 
 	let maxLineWidth = -1;
 	lines.forEach((l) => {
@@ -240,7 +240,7 @@ function drawMarkers(params: {
 	// markers
 	ctx.lineCap = "round";
 	ctx.lineWidth = 4;
-	ctx.font = "11px monospace";
+	ctx.font = "11px " + DEFAULT_FONTS;
 	ctx.textAlign = "left";
 	trackBins.forEach((elems, track) => {
 		let top = markerTracksBottomY - (track + 1) * TimelineDimensions.trackHeight;
@@ -439,7 +439,7 @@ function drawWarningMarks(params: MarkerDrawParams<WarningMarkElem>) {
 	const { ctx, viewInfo, timelineOriginX, timelineOriginY, elems, testInteraction } = params;
 	const colors = viewInfo.colors;
 	const scale = viewInfo.renderingProps.scale;
-	ctx.font = "bold 10px monospace";
+	ctx.font = "bold 10px " + DEFAULT_FONTS;
 	elems.forEach((mark) => {
 		const x = timelineOriginX + StaticFn.positionFromTimeAndScale(mark.displayTime, scale);
 		const sideLength = 12;
@@ -857,7 +857,7 @@ function drawSkills(params: {
 	});
 
 	// target counts
-	ctx.font = "13px monospace";
+	ctx.font = "13px " + DEFAULT_FONTS;
 	ctx.fillStyle = colors.text;
 	ctx.textAlign = "center";
 	targetCounts.forEach((c) => {
@@ -1175,7 +1175,7 @@ export function drawRuler(params: {
 	ctx.strokeStyle = colors.text;
 	ctx.textBaseline = "alphabetic";
 
-	ctx.font = "13px monospace";
+	ctx.font = "13px " + DEFAULT_FONTS;
 	ctx.textAlign = "center";
 	ctx.fillStyle = colors.text;
 	const cullThreshold = 50;
@@ -1467,7 +1467,7 @@ export function drawTimelines(params: {
 		// delete btn
 		if (renderingProps.slots.length > 1 && slot === renderingProps.activeSlotIndex) {
 			ctx.fillStyle = colors.emphasis;
-			ctx.font = "bold 14px monospace";
+			ctx.font = "bold 14px " + DEFAULT_FONTS;
 			ctx.textAlign = "center";
 			ctx.fillText("×", handle.x + handle.w / 2, handle.y + handle.h - 4);
 			const deleteBtn: Rect = {
@@ -1658,7 +1658,7 @@ function drawAddSlotButton(params: {
 		ctx.strokeStyle = colors.bgHighContrast;
 		ctx.lineWidth = 1;
 		ctx.strokeRect(handle.x, handle.y, handle.w, handle.h);
-		ctx.font = "13px monospace";
+		ctx.font = "13px " + DEFAULT_FONTS;
 		ctx.fillStyle = colors.text;
 		ctx.textAlign = "center";
 		ctx.fillText(
@@ -1690,7 +1690,7 @@ function drawAddSlotButton(params: {
 		ctx.strokeStyle = colors.bgHighContrast;
 		ctx.lineWidth = 1;
 		ctx.strokeRect(cloneHandle.x, cloneHandle.y, cloneHandle.w, cloneHandle.h);
-		ctx.font = "13px monospace";
+		ctx.font = "13px " + DEFAULT_FONTS;
 		ctx.fillStyle = colors.text;
 		ctx.textAlign = "center";
 		ctx.fillText(
