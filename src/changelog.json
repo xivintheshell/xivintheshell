@@ -3,7 +3,12 @@
 		"date": "12/29/25",
 		"changes": [
 			"[SAM] Added missing application delay values for Hissatsu: Shinten, Kyuten, Gyoten, Yaten, Senei, and Guren.",
-			"Updated export to Ama's combat sim to use Grade 4 Gemdraughts for potions."
+			"Updated export to Ama's combat sim to use Grade 4 Gemdraughts for potions.",
+			"Added support QQ group to Introductions section."
+		],
+		"changes_zh": [
+			"在“关于”里添加了反馈QQ群号。",
+			"其它功能更新（见英文版changelog）"
 		]
 	},
 	{
