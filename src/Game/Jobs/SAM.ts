@@ -884,6 +884,7 @@ makeAbility_SAM("IKISHOTEN", 68, "cd_IKISHOTEN", {
 
 makeAbility_SAM("HISSATSU_SHINTEN", 52, "cd_SHINTEN", {
 	cooldown: 1,
+	applicationDelay: 0.62,
 	potency: 250,
 	validateAttempt: (state) => state.resources.get("KENKI").available(25),
 	onConfirm: (state) => state.resources.get("KENKI").consume(25),
@@ -892,6 +893,7 @@ makeAbility_SAM("HISSATSU_SHINTEN", 52, "cd_SHINTEN", {
 
 makeAbility_SAM("HISSATSU_KYUTEN", 62, "cd_KYUTEN", {
 	cooldown: 1,
+	applicationDelay: 0.62,
 	potency: 100,
 	falloff: 0,
 	validateAttempt: (state) => state.resources.get("KENKI").available(25),
@@ -901,6 +903,7 @@ makeAbility_SAM("HISSATSU_KYUTEN", 62, "cd_KYUTEN", {
 
 makeAbility_SAM("HISSATSU_GYOTEN", 54, "cd_GYOTEN", {
 	cooldown: 5,
+	applicationDelay: 0.49,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	potency: 100,
 	validateAttempt: (state) => state.resources.get("KENKI").available(10),
@@ -910,6 +913,7 @@ makeAbility_SAM("HISSATSU_GYOTEN", 54, "cd_GYOTEN", {
 
 makeAbility_SAM("HISSATSU_YATEN", 56, "cd_YATEN", {
 	cooldown: 10,
+	applicationDelay: 0.45,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	potency: 100,
 	validateAttempt: (state) => state.resources.get("KENKI").available(10),
@@ -922,6 +926,7 @@ makeAbility_SAM("HISSATSU_YATEN", 56, "cd_YATEN", {
 
 makeAbility_SAM("HISSATSU_SENEI", 72, "cd_SENEI_GUREN", {
 	cooldown: 60,
+	applicationDelay: 0.67,
 	potency: 800,
 	validateAttempt: (state) => state.resources.get("KENKI").available(25),
 	onConfirm: (state) => state.resources.get("KENKI").consume(25),
@@ -931,6 +936,7 @@ makeAbility_SAM("HISSATSU_SENEI", 72, "cd_SENEI_GUREN", {
 // cooldown set by trait in constructor
 makeAbility_SAM("HISSATSU_GUREN", 70, "cd_SENEI_GUREN", {
 	cooldown: 60,
+	applicationDelay: 0.62,
 	potency: 400,
 	falloff: 0,
 	validateAttempt: (state) => state.resources.get("KENKI").available(25),
