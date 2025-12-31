@@ -1,5 +1,13 @@
 [
 	{
+		"date": "12/31/25",
+		"changes": [
+			"Fixed a visual bug where deleting a marker did not set the correct marker type in the marker creation menu.",
+			"[SCH] Fixed a bug where Sacred Soil incorrectly had a 30-second duration.",
+			"[SCH] Fixed a bug where Expedient did not grant buffs."
+		]
+	},
+	{
 		"date": "12/30/25",
 		"changes": [
 			"Changed font specification to improve display on computers with Chinese browser/OS.",

@@ -55,7 +55,7 @@ makeSCHResource("WHISPERING_DAWN", 1, { timeout: 21 });
 makeSCHResource("ANGELS_WHISPER", 1, { timeout: 21 });
 makeSCHResource("FEY_ILLUMINATION", 1, { timeout: 20 });
 makeSCHResource("SERAPHIC_ILLUMINATION", 1, { timeout: 20 });
-makeSCHResource("SACRED_SOIL_ZONE", 1, { timeout: 30 });
+makeSCHResource("SACRED_SOIL_ZONE", 1, { timeout: 15 });
 makeSCHResource("SACRED_SOIL_MIT", 1, { timeout: 4.96 });
 makeSCHResource("EMERGENCY_TACTICS", 1, { timeout: 15 });
 makeSCHResource("DISSIPATION", 1, { timeout: 30 });
@@ -987,6 +987,10 @@ makeSCHResourceAbility("PROTRACTION", 86, "cd_PROTRACTION", {
 makeSCHAbility("EXPEDIENT", 90, "cd_EXPEDIENT", {
 	applicationDelay: 0,
 	cooldown: 120,
+	onConfirm: (state) => {
+		state.gainStatus("EXPEDIENCE");
+		state.gainStatus("DESPERATE_MEASURES");
+	},
 });
 
 // For HoT calculation purposes, treat the max duration of seraphism as 24.96s.
