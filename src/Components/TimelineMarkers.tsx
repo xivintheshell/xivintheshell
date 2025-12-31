@@ -601,6 +601,7 @@ export function CustomMarkerWidget() {
 						gap: "0.8rem",
 					}}
 					uniqueName="markerType"
+					selected={nextMarkerType}
 					onChange={(markerType: string) => {
 						setNextMarkerType(markerType as MarkerType);
 						if (markerType === MarkerType.Buff) {

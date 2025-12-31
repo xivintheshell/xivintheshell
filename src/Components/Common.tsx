@@ -583,10 +583,20 @@ export function RadioSet(props: {
 	uniqueName: string;
 	onChange: (newValue: string) => void;
 	options: Array<[string, ContentNode]>;
+	selected?: string;
 	containerStyle?: CSSProperties;
 }) {
-	const defaultValue = getCachedValue(`radio: ${props.uniqueName}`) ?? props.options[0][0];
+	const defaultValue =
+		getCachedValue(`radio: ${props.uniqueName}`) ?? props.selected ?? props.options[0][0];
 	const [selected, setSelected] = useState(defaultValue);
+	// Optionally allow the parent component to control the selected value directly.
+	useEffect(() => {
+		if (props.selected !== undefined) {
+			setSelected(props.selected);
+			setCachedValue(`radio: ${props.uniqueName}`, props.selected);
+			props.onChange(props.selected);
+		}
+	}, [props.selected]);
 	const radioStyle: CSSProperties = {
 		position: "relative",
 		top: 3,
@@ -599,7 +609,7 @@ export function RadioSet(props: {
 			name={props.uniqueName}
 			value={key}
 			checked={selected === key}
-			onChange={(e) => {
+			onChange={() => {
 				setSelected(key);
 				setCachedValue(`radio: ${props.uniqueName}`, key);
 				// onchange is only emitted when a radio box is checked
