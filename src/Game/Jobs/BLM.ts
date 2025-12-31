@@ -121,7 +121,6 @@ export class BLMState extends GameState {
 	}
 
 	override jobSpecificRegisterRecurringEvents() {
-		// also polyglot
 		const recurringPolyglotGain = (rsc: Resource) => {
 			if (this.hasEnochian()) {
 				rsc.gain(1);
@@ -133,7 +132,14 @@ export class BLMState extends GameState {
 				fnOnRsc: recurringPolyglotGain,
 			});
 		};
-		recurringPolyglotGain(this.resources.get("POLYGLOT"));
+		// Cannot call recurringPolyglotGain directly here, since if AF/UI are set as overrides
+		// then it will immediately register an additional polyglot stack when the timer begins.
+		this.resources.addResourceEvent({
+			rscType: "POLYGLOT",
+			name: "gain polyglot if currently has enochian",
+			delay: 30,
+			fnOnRsc: recurringPolyglotGain,
+		});
 	}
 
 	override jobSpecificAddSpeedBuffCovers(node: ActionNode, skill: Skill<GameState>): void {

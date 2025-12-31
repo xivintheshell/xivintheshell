@@ -163,7 +163,7 @@ https://github.com/ReactTooltip/react-tooltip/blob/master/src/components/Tooltip
   padding-right: 1.5rem;
   transition: all 50ms cubic-bezier(0.45, 1.005, 0, 1.005);
 
-  font-family: Consolas, 微软雅黑, sans-serif;
+  font-family: monospace, Consolas, 微软雅黑, sans-serif;
   font-size: 13px;
 
   &[data-starting-style],

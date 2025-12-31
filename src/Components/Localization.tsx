@@ -404,8 +404,12 @@ export function localizeModifierTag(modifierType: PotencyModifierType): string {
 	return localize(modifierTags.get(modifierType) ?? { en: "unknown" }) as string;
 }
 
+// This locale takes effect on a user's first visit to the site, or if they have no saved language
+// preference.
+const DEFAULT_LOCALE = navigator.language === "zh-CN" || navigator.language === "zh" ? "zh" : "en";
+
 // TODO convert this into a context
-export let getCurrentLanguage: () => Language = () => "en";
+export let getCurrentLanguage: () => Language = () => DEFAULT_LOCALE;
 
 function LanguageOption(props: { lang: Language; setCurrentLanguage: (lang: Language) => void }) {
 	let text = "English";
@@ -428,8 +432,11 @@ function LanguageOption(props: { lang: Language; setCurrentLanguage: (lang: Lang
 }
 
 export function SelectLanguage() {
-	const savedLang = getCachedValue("language");
-	const startLang = savedLang === "zh" || savedLang === "ja" ? savedLang : "en";
+	const savedLang = getCachedValue("language") as Language | null;
+	const startLang: Language =
+		savedLang !== null && (["zh", "ja", "en"] as Language[]).includes(savedLang)
+			? savedLang
+			: DEFAULT_LOCALE;
 	const [lang, setLang] = useState<Language>(startLang);
 	const setCurrentLanguage = (lang: Language) => {
 		setLang(lang);
@@ -438,7 +445,7 @@ export function SelectLanguage() {
 	useEffect(() => {
 		getCurrentLanguage = () => lang;
 		return () => {
-			getCurrentLanguage = () => "en";
+			getCurrentLanguage = () => lang;
 		};
 	});
 	useEffect(() => {

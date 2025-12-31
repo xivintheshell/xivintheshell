@@ -70,6 +70,7 @@ export interface Job {
 	limitBreak?: LimitBreak3ActionKey; // Enforce actually specifying an LB3 action
 	limitBreakBuff?: TankLimitBreak3ResourceKey; // Only Tank LBs have a buff at the moment, so limit it to those
 	mainStat: "strength" | "dexterity" | "intelligence" | "mind";
+	zh: string; // Localized CN name
 }
 
 // jobs are in the order they appear in the job guide
@@ -81,6 +82,7 @@ export const TANKS = ensureRecord<Job>()({
 		limitBreak: "LAST_BASTION",
 		limitBreakBuff: "LAST_BASTION",
 		mainStat: "strength",
+		zh: "骑士",
 	},
 	WAR: {
 		role: "TANK",
@@ -88,6 +90,7 @@ export const TANKS = ensureRecord<Job>()({
 		limitBreak: "LAND_WAKER",
 		limitBreakBuff: "LAND_WAKER",
 		mainStat: "strength",
+		zh: "战士",
 	},
 	DRK: {
 		role: "TANK",
@@ -96,6 +99,7 @@ export const TANKS = ensureRecord<Job>()({
 		limitBreak: "DARK_FORCE",
 		limitBreakBuff: "DARK_FORCE",
 		mainStat: "strength",
+		zh: "暗黑骑士",
 	},
 	GNB: {
 		role: "TANK",
@@ -103,6 +107,7 @@ export const TANKS = ensureRecord<Job>()({
 		limitBreak: "GUNMETAL_SOUL",
 		limitBreakBuff: "GUNMETAL_SOUL",
 		mainStat: "strength",
+		zh: "绝枪战士",
 	},
 });
 export type Tanks = typeof TANKS;
@@ -115,6 +120,7 @@ export const HEALERS = ensureRecord<Job>()({
 		usesMp: true,
 		limitBreak: "PULSE_OF_LIFE",
 		mainStat: "mind",
+		zh: "白魔法师",
 	},
 	SCH: {
 		role: "HEALER",
@@ -122,6 +128,7 @@ export const HEALERS = ensureRecord<Job>()({
 		usesMp: true,
 		limitBreak: "ANGEL_FEATHERS",
 		mainStat: "mind",
+		zh: "学者",
 	},
 	AST: {
 		role: "HEALER",
@@ -129,6 +136,7 @@ export const HEALERS = ensureRecord<Job>()({
 		usesMp: true,
 		limitBreak: "ASTRAL_STASIS",
 		mainStat: "mind",
+		zh: "占星术士",
 	},
 	SGE: {
 		role: "HEALER",
@@ -136,6 +144,7 @@ export const HEALERS = ensureRecord<Job>()({
 		usesMp: true,
 		limitBreak: "TECHNE_MAKRE",
 		mainStat: "mind",
+		zh: "贤者",
 	},
 });
 export type Healers = typeof HEALERS;
@@ -147,36 +156,42 @@ export const MELEE = ensureRecord<Job>()({
 		implementationLevel: "LIVE",
 		limitBreak: "FINAL_HEAVEN",
 		mainStat: "strength",
+		zh: "武僧",
 	},
 	DRG: {
 		role: "MELEE",
 		implementationLevel: "LIVE",
 		limitBreak: "DRAGONSONG_DIVE",
 		mainStat: "strength",
+		zh: "龙骑士",
 	},
 	NIN: {
 		role: "MELEE",
 		implementationLevel: "LIVE",
 		limitBreak: "CHIMATSURI",
 		mainStat: "dexterity",
+		zh: "忍者",
 	},
 	SAM: {
 		role: "MELEE",
 		implementationLevel: "LIVE",
 		limitBreak: "DOOM_OF_THE_LIVING",
 		mainStat: "strength",
+		zh: "武士",
 	},
 	RPR: {
 		role: "MELEE",
 		implementationLevel: "LIVE",
 		limitBreak: "THE_END",
 		mainStat: "strength",
+		zh: "钐镰客",
 	},
 	VPR: {
 		role: "MELEE",
 		implementationLevel: "LIVE",
 		limitBreak: "WORLD_SWALLOWER",
 		mainStat: "dexterity",
+		zh: "蝰蛇剑士",
 	},
 });
 export type Melee = typeof MELEE;
@@ -188,18 +203,21 @@ export const RANGED = ensureRecord<Job>()({
 		implementationLevel: "LIVE",
 		limitBreak: "SAGITTARIUS_ARROW",
 		mainStat: "dexterity",
+		zh: "吟游诗人",
 	},
 	MCH: {
 		role: "RANGED",
 		implementationLevel: "LIVE",
 		limitBreak: "SATELLITE_BEAM",
 		mainStat: "dexterity",
+		zh: "机工士",
 	},
 	DNC: {
 		role: "RANGED",
 		implementationLevel: "LIVE",
 		limitBreak: "CRIMSON_LOTUS",
 		mainStat: "dexterity",
+		zh: "舞者",
 	},
 });
 export type Ranged = typeof RANGED;
@@ -212,6 +230,7 @@ export const CASTERS = ensureRecord<Job>()({
 		usesMp: true,
 		limitBreak: "METEOR",
 		mainStat: "intelligence",
+		zh: "黑魔法师",
 	},
 	SMN: {
 		role: "CASTER",
@@ -219,6 +238,7 @@ export const CASTERS = ensureRecord<Job>()({
 		usesMp: true,
 		limitBreak: "TERAFLARE",
 		mainStat: "intelligence",
+		zh: "召唤师",
 	},
 	RDM: {
 		role: "CASTER",
@@ -226,6 +246,7 @@ export const CASTERS = ensureRecord<Job>()({
 		usesMp: true,
 		limitBreak: "VERMILLION_SCOURGE",
 		mainStat: "intelligence",
+		zh: "赤魔法师",
 	},
 	PCT: {
 		role: "CASTER",
@@ -233,6 +254,7 @@ export const CASTERS = ensureRecord<Job>()({
 		usesMp: true,
 		limitBreak: "CHROMATIC_FANTASY",
 		mainStat: "intelligence",
+		zh: "绘灵法师",
 	},
 });
 export const LIMITED = ensureRecord<Job>()({
@@ -241,6 +263,7 @@ export const LIMITED = ensureRecord<Job>()({
 		implementationLevel: "TESTING",
 		usesMp: true,
 		mainStat: "intelligence",
+		zh: "青魔法师",
 	},
 });
 export type Casters = typeof CASTERS;
@@ -262,6 +285,7 @@ export const JOBS = {
 			implementationLevel: "UNIMPLEMENTED",
 			usesMp: false,
 			mainStat: "strength",
+			zh: "未知",
 		},
 	}),
 };

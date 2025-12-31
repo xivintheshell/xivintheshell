@@ -1188,15 +1188,16 @@ export function Config() {
 		>
 			{ALL_JOBS.filter((job) => JOBS[job].implementationLevel !== "UNIMPLEMENTED").map(
 				(job) => {
+					const jobStr = localize({ en: job, zh: JOBS[job].zh });
 					const impl = JOBS[job].implementationLevel as ImplementationKey;
 					if (impl !== "LIVE") {
 						return <option key={job} value={job}>
-							{job +
+							{jobStr +
 								` (${localize(IMPLEMENTATION_LEVELS[impl].label ?? { en: "" })})`}
 						</option>;
 					} else {
 						return <option key={job} value={job}>
-							{job}
+							{jobStr}
 						</option>;
 					}
 				},
