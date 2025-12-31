@@ -432,8 +432,11 @@ function LanguageOption(props: { lang: Language; setCurrentLanguage: (lang: Lang
 }
 
 export function SelectLanguage() {
-	const savedLang = getCachedValue("language");
-	const startLang = savedLang === "zh" || savedLang === "ja" ? savedLang : DEFAULT_LOCALE;
+	const savedLang = getCachedValue("language") as Language | null;
+	const startLang: Language =
+		savedLang !== null && (["zh", "ja", "en"] as Language[]).includes(savedLang)
+			? savedLang
+			: DEFAULT_LOCALE;
 	const [lang, setLang] = useState<Language>(startLang);
 	const setCurrentLanguage = (lang: Language) => {
 		setLang(lang);
