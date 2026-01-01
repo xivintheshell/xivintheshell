@@ -22,7 +22,7 @@
         /* apple */
         local("Menlo"), local("Monaco"),
         /* linux hopefully */
-        local("DejaVu Sans Mono"), local("Liberation Mono"), local("Ubunto Mono"),
+        local("DejaVu Sans Mono"), local("Liberation Mono"), local("Ubuntu Mono"),
         /* Chinese characters */
         local("微软雅黑");
 }
