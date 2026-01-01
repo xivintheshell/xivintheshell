@@ -14,6 +14,18 @@
     font-family: "Goldman Bold";
     src: url("https://xivintheshell.github.io/resources/fonts/Goldman/Goldman-Bold.ttf");
 }
+@font-face {
+    font-family: "XIVShell Defaults";
+    src:
+        /* windows */
+        local("Consolas"), local("Cascadia Mono"),
+        /* apple */
+        local("Menlo"), local("Monaco"),
+        /* linux hopefully */
+        local("DejaVu Sans Mono"), local("Liberation Mono"), local("Ubunto Mono"),
+        /* Chinese characters */
+        local("微软雅黑");
+}
 
 /*======== sections ========*/
 
@@ -162,8 +174,7 @@ https://github.com/ReactTooltip/react-tooltip/blob/master/src/components/Tooltip
   padding-left: 1.5rem;
   padding-right: 1.5rem;
   transition: all 50ms cubic-bezier(0.45, 1.005, 0, 1.005);
-
-  font-family: monospace, Consolas, 微软雅黑, sans-serif;
+  font-family: "XIVShell Defaults", sans-serif;
   font-size: 13px;
 
   &[data-starting-style],

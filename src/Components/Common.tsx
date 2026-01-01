@@ -14,13 +14,7 @@ export type ValueChangeEvent = React.ChangeEvent<{ value: string }>;
 
 export const IS_FIREFOX = navigator.userAgent.indexOf("Firefox") >= 0;
 
-export const DEFAULT_FONTS =
-	// glad I don't do frontend stuff for work..
-	"Consolas, Cascadia Mono, " + // windows
-	"Menlo, Monaco, " + // apple devices
-	"DejaVu Sans Mono, Liberation Mono, Ubuntu Mono, " + // according to chatgpt linux should have at least one of these
-	"微软雅黑," + // apple devices' Chinese display when using sans-serif is already good; good luck linux
-	"sans-serif"; // this is still better than what Chinese computers see when "monospace"
+export const DEFAULT_FONTS = "XIVShell Defaults, sans-serif";
 
 const MAX_BUFF_COVERS_COUNT = 3;
 export const TimelineDimensions = {
