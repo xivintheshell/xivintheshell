@@ -917,6 +917,7 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.VENOM, colors.vpr.vprComboTimer],
 		[PotencyModifierType.POISED, colors.vpr.vprComboTimer],
 		[PotencyModifierType.CHAIN_STRAT, colors.sch.chain],
+		[PotencyModifierType.NO_CDH, colors.timeline.untargetableDamageMark],
 	]);
 	console.assert(
 		modifierColors.has(modifierType),

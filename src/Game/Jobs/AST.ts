@@ -239,9 +239,8 @@ const makeASTSpell = (
 		jobHealingPotencyModifiers,
 		// Do not apply cards as a potency modifier on the AST's self, since they always should
 		// be used on an ally DPS instead.
-		jobPotencyModifiers: params.potency
-			? (state) => (state.hasResourceAvailable("DIVINATION") ? [Modifiers.Divination] : [])
-			: undefined,
+		jobPotencyModifiers: (state) =>
+			state.hasResourceAvailable("DIVINATION") ? [Modifiers.Divination] : [],
 		castTime: (state) =>
 			Math.max(
 				0,
@@ -279,18 +278,16 @@ const makeASTAbility = (
 					return modifiers;
 				}
 			: undefined,
-		jobPotencyModifiers: params.potency
-			? (state) => {
-					const modifiers: PotencyModifier[] = [];
-					if (state.hasResourceAvailable("DIVINATION")) {
-						modifiers.push(Modifiers.Divination);
-					}
-					if (name === "STELLAR_DETONATION") {
-						modifiers.push(Modifiers.AstPet);
-					}
-					return modifiers;
-				}
-			: undefined,
+		jobPotencyModifiers: (state) => {
+			const modifiers: PotencyModifier[] = [];
+			if (state.hasResourceAvailable("DIVINATION")) {
+				modifiers.push(Modifiers.Divination);
+			}
+			if (name === "STELLAR_DETONATION") {
+				modifiers.push(Modifiers.AstPet);
+			}
+			return modifiers;
+		},
 	});
 };
 

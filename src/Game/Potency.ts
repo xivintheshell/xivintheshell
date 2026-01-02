@@ -786,6 +786,23 @@ export class Potency {
 			);
 		if (isAutoCDH) amt *= this.#calculateAutoCDHModifier(totalCritBonus, totalDhBonus);
 		else if (isAutoCrit) amt *= this.#calculateAutoCritModifier(totalCritBonus, totalDhBonus);
+		else if (noCDH) {
+			// If an ability cannot CDH, calculate its potency as
+			// (potency with no crit/DH chance) / (potency if it could crit/DH normally)
+			// Do not consider crit/DH bonuses from party buffs here, as their effects are already
+			// accounted for as a multiplier on other potencies.
+			amt =
+				(base * totalDamageFactor) /
+				XIVMath.calculateDamage(
+					this.config.level,
+					this.config.criticalHit,
+					this.config.directHit,
+					this.config.determination,
+					totalDamageFactor,
+					0,
+					0,
+				);
+		}
 		if (props.includeSplash) {
 			const splashScalar = 1 + (1 - (this.falloff ?? 1)) * (this.targetCount - 1);
 			amt *= splashScalar;

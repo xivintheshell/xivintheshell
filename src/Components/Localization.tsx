@@ -306,6 +306,7 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.VENOM, { en: "venom" }],
 	[PotencyModifierType.POISED, { en: "poised" }],
 	[PotencyModifierType.CHAIN_STRAT, { en: "chain stratagem", zh: "连环计" }],
+	[PotencyModifierType.NO_CDH, { en: "no crit/direct hit", zh: "必不直暴" }],
 ]);
 export function localizeModifierName(modifierType: PotencyModifierType): string {
 	console.assert(
@@ -395,6 +396,7 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.VENOM, { en: "VENOM" }],
 	[PotencyModifierType.POISED, { en: "POISED" }],
 	[PotencyModifierType.CHAIN_STRAT, { en: "CHAIN", zh: "连环计" }],
+	[PotencyModifierType.NO_CDH, { en: "NO CDH", zh: "必不直暴" }],
 ]);
 export function localizeModifierTag(modifierType: PotencyModifierType): string {
 	console.assert(
