@@ -1,5 +1,12 @@
 [
 	{
+		"date": "1/2/25",
+		"changes": [
+			"[MCH] Adjusted the potency of Wildfire to reflect its inability to CDH.",
+			"[SCH][AST] Fixed a bug where DoT effects with no on-hit potency did not receive the player's own Chain Stratagem or Divination buffs."
+		]
+	},
+	{
 		"date": "12/31/25",
 		"changes": [
 			"Fixed a visual bug where deleting a marker did not set the correct marker type in the marker creation menu.",

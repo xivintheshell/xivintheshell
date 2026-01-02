@@ -940,10 +940,16 @@ export class GameState {
 
 		// See if the initial potency was already created
 		let potency: Potency | undefined = node.getInitialPotency();
+		const appliesDoT = this.dotSkills.includes(skill.name);
 		// If it was not, and this action is supposed to do damage, go ahead and add it now
 		// If the skill draws aggro without dealing damage (such as Summon Bahamut), then
 		// create a potency object so a damage mark can be drawn if we're not already in combat.
-		if (!potency && (potencyNumber > 0 || (skill.drawsAggro && !this.isInCombat()))) {
+		// If the skill applies a DoT with no initial damage, also create a placeholder potency
+		// to ensure buffs snapshot properly.
+		if (
+			!potency &&
+			(potencyNumber > 0 || (skill.drawsAggro && !this.isInCombat()) || appliesDoT)
+		) {
 			// refresh autos for skills with potency here
 			this.refreshAutoBasedOnSkill(skill, capturedCastTime, true);
 
@@ -1005,7 +1011,7 @@ export class GameState {
 				this.resources.get("MANA").consume(manaCost);
 			}
 
-			const doesDamage = potencyNumber > 0;
+			const doesDamage = potencyNumber > 0 || appliesDoT;
 			// Skills that draw aggro (Provoke, Summon Bahamut) should generate a snapshot time
 			// but no modifiers.
 			if (potency) {
@@ -1135,7 +1141,8 @@ export class GameState {
 		// potency
 		const potencyNumber = skill.potencyFn(this);
 		let potency: Potency | undefined = undefined;
-		if (potencyNumber > 0 || skill.drawsAggro) {
+		const appliesDoT = this.dotSkills.includes(skill.name);
+		if (potencyNumber > 0 || skill.drawsAggro || appliesDoT) {
 			potency = new Potency({
 				config: this.config,
 				sourceTime: this.getDisplayTime(),
@@ -1148,7 +1155,7 @@ export class GameState {
 				falloff: skill.falloff,
 			});
 		}
-		if (potency && potencyNumber > 0) {
+		if (potency && (potencyNumber > 0 || appliesDoT)) {
 			const mods: PotencyModifier[] = [];
 			if (this.hasResourceAvailable("TINCTURE")) {
 				mods.push(Modifiers.Tincture);
@@ -1206,7 +1213,7 @@ export class GameState {
 			node.addHealingPotency(healingPotency);
 		}
 
-		if (potencyNumber > 0 && !node.hasBuff(BuffType.Tincture)) {
+		if ((potencyNumber > 0 || appliesDoT) && !node.hasBuff(BuffType.Tincture)) {
 			// tincture
 			if (this.hasResourceAvailable("TINCTURE")) {
 				node.addBuff(BuffType.Tincture);

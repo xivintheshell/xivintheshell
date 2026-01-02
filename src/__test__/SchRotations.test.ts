@@ -1,4 +1,5 @@
 import {
+	damageData,
 	rotationTestSetup,
 	rotationTestTeardown,
 	testDamageFromTimeline,
@@ -11,6 +12,7 @@ import { controller } from "../Controller/Controller";
 import { SCHActionKey } from "../Game/Data/Jobs/SCH";
 import { SCHState } from "../Game/Jobs/SCH";
 import { ProcMode } from "../Game/Common";
+import { PotencyModifierType } from "../Game/Potency";
 
 beforeEach(rotationTestSetup);
 
@@ -181,5 +183,42 @@ it(
 			applied: 20,
 			pending: 0,
 		},
+	}),
+);
+
+it(
+	"snapshots chain strat on dots",
+	testWithConfig({}, () => {
+		applySkill("CHAIN_STRATAGEM");
+		controller.step(10);
+		applySkill("BIOLYSIS");
+		applySkill("BANEFUL_IMPACTION");
+		controller.step(40);
+		// DoT modifiers are not displayed in the main table.
+		compareDamageTables([
+			{
+				skillName: "CHAIN_STRATAGEM",
+				displayedModifiers: [],
+				hitCount: 1,
+			},
+			{
+				skillName: "BIOLYSIS",
+				displayedModifiers: [],
+				hitCount: 1,
+			},
+			{
+				skillName: "BANEFUL_IMPACTION",
+				displayedModifiers: [],
+				hitCount: 1,
+			},
+		]);
+
+		const dotTables = damageData.dotTables;
+		expect(dotTables.get("BIOLYSIS")!.tableRows[0].displayedModifiers).toEqual([
+			PotencyModifierType.CHAIN_STRAT,
+		]);
+		expect(dotTables.get("BANEFUL_IMPACTION")!.tableRows[0].displayedModifiers).toEqual([
+			PotencyModifierType.CHAIN_STRAT,
+		]);
 	}),
 );

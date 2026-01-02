@@ -173,7 +173,7 @@ function PotencyDisplay(props: {
 	});
 	if (props.targetCount && props.falloff !== undefined && props.targetCount > 1) {
 		const falloffMultiplier = 1 + (1 - props.falloff) * (props.targetCount - 1);
-		potencyExplanation = `[ ${potencyExplanation} ] x ${falloffMultiplier}(${props.targetCount}${localize({ en: " targets", zh: "个目标" })})`;
+		potencyExplanation = `[ ${potencyExplanation} ] × ${falloffMultiplier}(${props.targetCount}${localize({ en: " targets", zh: "个目标" })})`;
 		potency *= falloffMultiplier;
 	}
 	return <span style={{ textDecoration: props.includeInStats ? "none" : "line-through" }}>
@@ -723,7 +723,11 @@ export class DamageStatistics extends React.Component {
 
 		////////////////////// dot Table ////////////////////////
 
-		const makedotRow = function (props: { row: DamageStatsDoTTableEntry; key: number }) {
+		const makedotRow = function (props: {
+			name: string;
+			row: DamageStatsDoTTableEntry;
+			key: number;
+		}) {
 			// tags
 			const tags: React.ReactNode[] = [];
 			tags.push(props.row.displayedModifiers.map((tag, i) => <BuffTag key={i} buff={tag} />));
@@ -742,7 +746,7 @@ export class DamageStatistics extends React.Component {
 				basePotency={props.row.mainPotencyHit ? props.row.baseMainPotency : 0}
 				includeInStats={true}
 				explainUntargetable={!props.row.mainPotencyHit}
-				helpTopic={"thunderTable-main-" + props.key}
+				helpTopic={props.name + "Table-main-" + props.key}
 				calc={props.row.initialHitCalculationModifiers}
 				targetCount={props.row.targetCount}
 				falloff={props.row.mainHitFalloff}
@@ -750,7 +754,7 @@ export class DamageStatistics extends React.Component {
 			const dotPotencyNode = <PotencyDisplay
 				basePotency={props.row.baseDotPotency}
 				includeInStats={true}
-				helpTopic={"thunderTable-dot-" + props.key}
+				helpTopic={props.name + "Table-dot-" + props.key}
 				calc={props.row.tickCalculationModifiers}
 				targetCount={props.row.targetCount}
 				falloff={0}
@@ -824,6 +828,7 @@ export class DamageStatistics extends React.Component {
 			for (let i = 0; i < dotTrackingData.tableRows.length; i++) {
 				dotTableRows.push(
 					makedotRow({
+						name: dotName,
 						row: dotTrackingData.tableRows[i],
 						key: i,
 					}),

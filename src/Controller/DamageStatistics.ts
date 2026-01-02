@@ -1,4 +1,5 @@
 // making another file just so I don't keep clustering Controller.ts
+
 import { controller as ctl } from "./Controller";
 import { ActionNode, ActionType } from "./Record";
 import { BuffType } from "../Game/Common";
@@ -98,6 +99,11 @@ function expandDoTNode(node: ActionNode, dotName: ResourceKey, lastNode?: Action
 			mod.source !== PotencyModifierType.POSITIONAL,
 	);
 
+	// Hard-code NO_CDH for MCH's Wildfire, since it's not registered as a DoT
+	if (dotName === "WILDFIRE") {
+		entry.displayedModifiers.push(PotencyModifierType.NO_CDH);
+	}
+
 	for (let i = 0; i < entry.initialHitCalculationModifiers.length; i++) {
 		const source = entry.initialHitCalculationModifiers[i].source;
 		// DoTs should show if they are cast under BLM's Enochian, SAM's Fugetsu, or GNB's No Mercy
@@ -115,7 +121,10 @@ function expandDoTNode(node: ActionNode, dotName: ResourceKey, lastNode?: Action
 				PotencyModifierType.WHISTLE,
 				PotencyModifierType.BRISTLE,
 				PotencyModifierType.TINGLEA,
-				PotencyModifierType.TINGLEA,
+				PotencyModifierType.TINGLEB,
+				// Don't add cards, since we assume the AST is not carding themselves
+				PotencyModifierType.DIVINATION,
+				PotencyModifierType.CHAIN_STRAT,
 			].includes(source)
 		) {
 			entry.displayedModifiers.push(source);
@@ -208,7 +217,7 @@ function expandNode(node: ActionNode): ExpandedNode {
 				res.basePotency = mainPotency.base;
 				for (const modifier of mainPotency.modifiers) {
 					const tag = modifier.source;
-					if (tag !== PotencyModifierType.POT && tag !== PotencyModifierType.NO_CDH) {
+					if (tag !== PotencyModifierType.POT) {
 						res.displayedModifiers.push(tag);
 						res.calculationModifiers.push(modifier);
 					}
