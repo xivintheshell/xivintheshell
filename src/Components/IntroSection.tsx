@@ -109,7 +109,7 @@ const getAcknowledgements = () => <>
 				战士：<b>misterperson</b>
 			</li>
 			<li>
-				绝抢战士、龙骑士、骑士：<b>Sterling</b>
+				绝枪战士、龙骑士、骑士：<b>Sterling</b>
 			</li>
 			<li>
 				青魔：<b>小铅笔</b>
