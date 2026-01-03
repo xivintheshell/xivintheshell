@@ -664,7 +664,9 @@ makeDRKAbility("LIVING_SHADOW", 80, "cd_LIVING_SHADOW", {
 	],
 	cooldown: 120,
 	onConfirm: (state, node) => {
-		state.gainStatus("SCORN");
+		if (state.hasTraitUnlocked("ENHANCED_LIVING_SHADOW_III")) {
+			state.gainStatus("SCORN");
+		}
 		state.resources.get("ESTEEM_TRACKER").gain(ESTEEM_ACTION_COUNT);
 		// Per The Balance's DRK advanced guide: https://www.thebalanceffxiv.com/jobs/tanks/dark-knight/advanced-guide/
 		//

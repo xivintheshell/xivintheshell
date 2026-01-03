@@ -3,7 +3,8 @@
 		"date": "1/2/25",
 		"changes": [
 			"[MCH] Adjusted the potency of Wildfire to reflect its inability to CDH.",
-			"[SCH][AST] Fixed a bug where DoT effects with no on-hit potency did not receive the player's own Chain Stratagem or Divination buffs."
+			"[SCH][AST] Fixed a bug where DoT effects with no on-hit potency did not receive the player's own Chain Stratagem or Divination buffs.",
+			"[DRK] Fixed a bug where Living Shadow granted Scorn below level 100."
 		]
 	},
 	{
