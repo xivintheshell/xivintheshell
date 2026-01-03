@@ -76,7 +76,7 @@ export async function initiateFflogsAuth() {
 	window.location.href = `${AUTH_ENDPOINT}?${params.toString()}`;
 }
 
-function clearPKCEAuthState() {
+export function clearPKCEAuthState() {
 	window.localStorage.removeItem(LOCALSTORAGE_PKCE_VERIFIER);
 	window.localStorage.removeItem(LOCALSTORAGE_PKCE_STATE_BLOB);
 }

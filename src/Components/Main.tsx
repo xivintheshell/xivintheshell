@@ -29,6 +29,7 @@ import {
 	isBetaSite,
 } from "../Controller/Common";
 import { JOBS, ShellJob } from "../Game/Data/Jobs";
+import { clearPKCEAuthState } from "./FFLogs/Auth";
 
 export let setJob = (job: ShellJob) => {};
 export let setRealTime = (inRealTime: boolean) => {};
@@ -56,6 +57,10 @@ function handleUrlCommands(command?: string) {
 		// Used by FFLogs authorization flow; don't do anything.
 		// The dialog component will automatically open itself by reading the URL parameters.
 		console.log("FFLogs authorization triggered.");
+	} else if (command === "resetFFLogsAuth") {
+		console.log("Reset FFLogs PKCE authorization state and session token.");
+		window.sessionStorage.clearItem("fflogsAuthToken");
+		clearPKCEAuthState();
 	} else if (command !== undefined) {
 		console.log("unrecognized command '" + command + "'");
 	}
