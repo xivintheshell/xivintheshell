@@ -59,7 +59,7 @@ function handleUrlCommands(command?: string) {
 		console.log("FFLogs authorization triggered.");
 	} else if (command === "resetFFLogsAuth") {
 		console.log("Reset FFLogs PKCE authorization state and session token.");
-		window.sessionStorage.clearItem("fflogsAuthToken");
+		window.sessionStorage.removeItem("fflogsAuthToken");
 		clearPKCEAuthState();
 	} else if (command !== undefined) {
 		console.log("unrecognized command '" + command + "'");
