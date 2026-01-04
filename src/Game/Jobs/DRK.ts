@@ -705,8 +705,7 @@ makeDRKAbility("LIVING_SHADOW", 80, "cd_LIVING_SHADOW", {
 					description: "",
 					basePotency,
 					snapshotTime: undefined,
-					// TODO:TARGET fix
-					targetCount: node.targetList.length,
+					targetList: node.targetList,
 					falloff,
 				}),
 				"ESTEEM_TRACKER",

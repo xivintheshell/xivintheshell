@@ -698,7 +698,10 @@ export type InitialPotencyProps = {
 	basePotency: number;
 	snapshotTime?: number;
 	description: string;
-	targetCount: number;
+	// Damage abilities should specify targetList, a 1-indexed list of enemies hit by the ability.
+	// Heal abilities should specify healTargetCount instead.
+	targetList?: number[];
+	healTargetCount?: number;
 	falloff?: number;
 };
 
@@ -709,7 +712,8 @@ export class Potency {
 	aspect: Aspect;
 	description: string;
 	base: number;
-	targetCount: number;
+	#targetList?: number[];
+	#targetCount: number;
 	falloff?: number;
 	snapshotTime?: number;
 	applicationTime?: number;
@@ -723,8 +727,33 @@ export class Potency {
 		this.base = props.basePotency;
 		this.snapshotTime = props.snapshotTime;
 		this.description = props.description;
-		this.targetCount = props.targetCount;
+		if (props.targetList !== undefined && props.healTargetCount !== undefined) {
+			throw new Error("targetList and healTargetCount cannot both be specified.");
+		}
+		if (props.targetList === undefined && props.healTargetCount === undefined) {
+			throw new Error("At least one of targetList or healTargetCount must be specified.");
+		}
+		this.#targetList = props.targetList;
+		this.#targetCount = props.healTargetCount ?? this.#targetList?.length ?? 0;
 		this.falloff = props.falloff;
+	}
+
+	get targetList(): number[] {
+		return this.#targetList ?? [];
+	}
+
+	get targetCount(): number {
+		return this.#targetCount;
+	}
+
+	get healTargetCount(): number {
+		console.assert(this.#targetList === undefined);
+		return this.#targetCount;
+	}
+
+	set healTargetCount(n: number) {
+		console.assert(this.#targetList === undefined);
+		this.#targetCount = n;
 	}
 
 	getAmount(props: {

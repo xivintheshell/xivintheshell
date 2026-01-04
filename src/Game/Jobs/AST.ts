@@ -774,8 +774,7 @@ makeASTAbility("EARTHLY_STAR", 62, "cd_EARTHLY_STAR", {
 							basePotency: GIANT_DOMINANCE_POTENCY,
 							snapshotTime: state.getDisplayTime(),
 							description: "",
-							// TODO:TARGET fix
-							targetCount: node.targetList.length,
+							targetList: node.targetList,
 							falloff: 0,
 						});
 						if (state.hasResourceAvailable("TINCTURE")) {
@@ -796,7 +795,7 @@ makeASTAbility("EARTHLY_STAR", 62, "cd_EARTHLY_STAR", {
 							basePotency: GIANT_DOMINANCE_HEAL_POTENCY,
 							snapshotTime: state.getDisplayTime(),
 							description: "",
-							targetCount: node.healTargetCount,
+							healTargetCount: node.healTargetCount,
 							falloff: 0,
 						});
 						if (state.hasResourceAvailable("THE_ARROW")) {
