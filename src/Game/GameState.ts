@@ -961,8 +961,7 @@ export class GameState {
 				basePotency: potencyNumber,
 				snapshotTime: undefined,
 				description: "",
-				// TODO:TARGET fix this
-				targetCount: node.targetList.length,
+				targetList: node.targetList,
 				falloff: skill.falloff,
 			});
 			node.addPotency(potency);
@@ -982,7 +981,7 @@ export class GameState {
 				basePotency: healingPotencyNumber,
 				snapshotTime: undefined,
 				description: "",
-				targetCount: node.healTargetCount,
+				healTargetCount: node.healTargetCount,
 				falloff: 0, // Heals do not have AoE falloff
 			});
 			node.addHealingPotency(healingPotency);
@@ -1152,8 +1151,7 @@ export class GameState {
 				basePotency: potencyNumber,
 				snapshotTime: this.getDisplayTime(),
 				description: "",
-				// TODO:TARGET fix this
-				targetCount: node.targetList.length,
+				targetList: node.targetList,
 				falloff: skill.falloff,
 			});
 		}
@@ -1203,7 +1201,7 @@ export class GameState {
 				basePotency: healingPotencyNumber,
 				snapshotTime: this.getDisplayTime(),
 				description: "",
-				targetCount: node.healTargetCount,
+				healTargetCount: node.healTargetCount,
 				falloff: 0, // Heals do not have AoE falloff
 			});
 			const mods: PotencyModifier[] = [];
@@ -1308,8 +1306,7 @@ export class GameState {
 				basePotency: potencyNumber,
 				snapshotTime: undefined,
 				description: "",
-				// TODO:TARGET fix this
-				targetCount: node.targetList.length,
+				targetList: node.targetList,
 				falloff: skill.falloff,
 			});
 			node.addPotency(potency);
@@ -1326,7 +1323,7 @@ export class GameState {
 				basePotency: healingPotencyNumber,
 				snapshotTime: undefined,
 				description: "",
-				targetCount: node.healTargetCount,
+				healTargetCount: node.healTargetCount,
 				falloff: 0, // Heals do not have AoE falloff
 			});
 			node.addHealingPotency(healingPotency);
@@ -1630,9 +1627,6 @@ export class GameState {
 			Math.ceil(effectDuration / (props.tickFrequency ?? 3)) + (isGroundTargeted ? 1 : 0);
 
 		const tickDescriptor = kind === "damage" ? "DoT" : "HoT";
-		// TODO:TARGET fix this
-		const targetCount =
-			kind === "damage" ? props.node.targetList.length : props.node.healTargetCount;
 
 		for (let i = 0; i < effectTicks; i++) {
 			const overtimePotency = new Potency({
@@ -1650,7 +1644,8 @@ export class GameState {
 					` ${tickDescriptor} ` +
 					(i + 1) +
 					`/${effectTicks}`,
-				targetCount,
+				targetList: kind === "damage" ? props.node.targetList : undefined,
+				healTargetCount: kind === "healing" ? props.node.healTargetCount : undefined,
 				falloff: 0, // assume all overtime effects have no falloff
 			});
 			overtimePotency.modifiers = mods;
