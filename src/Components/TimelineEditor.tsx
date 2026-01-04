@@ -130,14 +130,20 @@ function TimelineActionElement(props: {
 	}
 	let name = localize({ en: "(other)", zh: "（其它）" });
 	if (props.node.info.type === ActionType.Skill) {
-		const targetCount = props.node.targetList.length;
-		const targetStr =
-			targetCount > 1
-				? localize({
-						en: ` (${targetCount} targets)`,
-						zh: `（${targetCount}个目标）`,
-					})
-				: "";
+		const targetList = props.node.targetList;
+		const targetCount = targetList.length;
+		let targetStr = "";
+		if (targetCount > 1) {
+			targetStr = localize({
+				en: ` (${targetCount} targets)`,
+				zh: `（${targetCount}个目标）`,
+			}).toString();
+		} else if (targetCount === 1 && targetList[0] !== 1) {
+			targetStr = localize({
+				en: ` (Boss ${targetList[0]})`,
+				zh: ` （Boss ${targetList[0]}）`,
+			}).toString();
+		}
 		name = props.node.info.skillName
 			? localizeSkillName(props.node.info.skillName) + targetStr
 			: localize({ en: "(unknown skill)", zh: "未知技能" });

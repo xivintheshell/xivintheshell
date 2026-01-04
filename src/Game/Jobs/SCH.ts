@@ -241,7 +241,7 @@ export class SCHState extends GameState {
 	}
 
 	makePetPotency(
-		targetCount: number,
+		healTargetCount: number,
 		petSkill: SCHActionKey,
 		sourceTime: number,
 		basePotency: number,
@@ -254,7 +254,7 @@ export class SCHState extends GameState {
 			basePotency,
 			snapshotTime: this.getDisplayTime(),
 			description: "",
-			targetCount,
+			healTargetCount,
 			falloff: undefined,
 		});
 		const mods = [Modifiers.SchPet];

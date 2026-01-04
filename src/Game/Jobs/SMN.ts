@@ -210,7 +210,7 @@ export class SMNState extends GameState {
 	}
 
 	makePetPotency(
-		targetCount: number,
+		targetList: number[],
 		petSkill: SMNActionKey,
 		sourceTime: number,
 		basePotency: number,
@@ -224,7 +224,7 @@ export class SMNState extends GameState {
 			basePotency,
 			snapshotTime: this.getDisplayTime(),
 			description: "",
-			targetCount,
+			targetList,
 			falloff,
 		});
 		const mods = [Modifiers.SmnPet];
@@ -260,7 +260,7 @@ export class SMNState extends GameState {
 		// assume a fixed delay between demi autos, which is close enough to reality
 		for (let i = 0; i < 4; i++) {
 			node.addDoTPotency(
-				this.makePetPotency(1, autoName, this.getDisplayTime(), basePotency),
+				this.makePetPotency(node.targetList, autoName, this.getDisplayTime(), basePotency),
 				"DEMI_AUTO",
 			);
 		}
@@ -280,8 +280,7 @@ export class SMNState extends GameState {
 		this.addEvent(
 			new Event(petSkill + " pet snapshot", summonDelay, () => {
 				const potency = this.makePetPotency(
-					// TODO:TARGET fix
-					node.targetList.length,
+					node.targetList,
 					petSkill,
 					sourceTime,
 					basePotency,

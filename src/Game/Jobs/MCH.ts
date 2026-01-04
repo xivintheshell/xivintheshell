@@ -624,7 +624,7 @@ makeAbility_MCH("WILDFIRE", 45, "cd_WILDFIRE", {
 			basePotency: 0, // We'll determine how much potency this deals when it expires
 			snapshotTime: state.getDisplayTime(),
 			description: "wildfire",
-			targetCount: 1,
+			targetList: node.targetList,
 		});
 		wildFirePotency.modifiers = [Modifiers.NoCDH]; // Wildfire can neither crit nor direct hit
 		if (state.hasResourceAvailable("TINCTURE")) {
@@ -774,8 +774,7 @@ robotSummons.forEach((params) => {
 						description: "",
 						basePotency,
 						snapshotTime: undefined,
-						// TODO:TARGET fix
-						targetCount: node.targetList.length,
+						targetList: node.targetList,
 					}),
 					"QUEEN",
 				);
@@ -797,8 +796,7 @@ robotSummons.forEach((params) => {
 					description: "",
 					basePotency,
 					snapshotTime: undefined,
-					// TODO:TARGET fix
-					targetCount: node.targetList.length,
+					targetList: node.targetList,
 				}),
 				"QUEEN",
 			);
@@ -813,8 +811,7 @@ robotSummons.forEach((params) => {
 						description: "",
 						basePotency: state.calculateQueenPotency(390, 780),
 						snapshotTime: undefined,
-						// TODO:TARGET fix
-						targetCount: node.targetList.length,
+						targetList: node.targetList,
 					}),
 					"QUEEN",
 				);
