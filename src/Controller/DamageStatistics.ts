@@ -1,5 +1,3 @@
-// making another file just so I don't keep clustering Controller.ts
-
 import { controller as ctl } from "./Controller";
 import { ActionNode, ActionType } from "./Record";
 import { BuffType } from "../Game/Common";
@@ -45,7 +43,7 @@ type ExpandedNode = {
 	basePotency: number;
 	calculationModifiers: PotencyModifier[];
 	falloff: number;
-	targetCount: number;
+	targetList: number[];
 };
 
 export const bossIsUntargetable = (displayTime: number) => {
@@ -62,7 +60,7 @@ function isDoTNode(node: ActionNode) {
 	return node.info.type === ActionType.Skill && ctl.game.dotSkills.includes(node.info.skillName);
 }
 
-function expandDoTNode(node: ActionNode, dotName: ResourceKey, lastNode?: ActionNode) {
+function expandDoTNode(node: ActionNode, dotName: ResourceKey) {
 	console.assert(isDoTNode(node), `${node.getNameForMessage()} is not registered as a dot skill`);
 	const mainPotency = node.getInitialPotency();
 	const entry: DamageStatsDoTTableEntry = {
@@ -81,8 +79,6 @@ function expandDoTNode(node: ActionNode, dotName: ResourceKey, lastNode?: Action
 		potencyWithoutPot: 0,
 		potPotency: 0,
 		partyBuffPotency: 0,
-		// TODO:TARGET dispaly separate dot tables for each target
-		targetCount: node.targetList.length,
 		mainHitFalloff: mainPotency?.falloff ?? 0,
 	};
 
@@ -132,6 +128,7 @@ function expandDoTNode(node: ActionNode, dotName: ResourceKey, lastNode?: Action
 		}
 	}
 
+	// TODO:TARGET apply potencies to each target
 	node.getDotPotencies(dotName).forEach((p, i) => {
 		if (p.hasResolved()) {
 			entry.totalNumTicks++;
@@ -176,7 +173,7 @@ function expandNode(node: ActionNode): ExpandedNode {
 		displayedModifiers: [],
 		calculationModifiers: [],
 		falloff: 1,
-		targetCount: 1,
+		targetList: [1],
 	};
 	if (node.info.type === ActionType.Skill) {
 		const skillName = node.info.skillName;
@@ -184,7 +181,7 @@ function expandNode(node: ActionNode): ExpandedNode {
 		if (!mainPotency) {
 			// do nothing if the used ability does no damage
 		} else {
-			res.targetCount = node.targetList.length;
+			res.targetList = node.targetList;
 			res.falloff = mainPotency.falloff ?? 1;
 			if (AFUISkills.has(skillName)) {
 				// for AF/UI skills, display the first modifier that's not enochian or pot
@@ -212,10 +209,7 @@ function expandNode(node: ActionNode): ExpandedNode {
 			} else if (isDoTNode(node)) {
 				// dot modifiers are handled separately
 				res.basePotency = mainPotency.base;
-				// TODO:TARGET fix this
-				node.info.targetList = Array(mainPotency.targetCount)
-					.fill(0)
-					.map((_, i) => i + 1);
+				node.info.targetList = mainPotency.targetList;
 			} else {
 				// for non-BLM jobs, display all non-pot modifiers on all damaging skills
 				res.basePotency = mainPotency.base;
@@ -385,7 +379,7 @@ export function calculateDamageStats(props: {
 		totalPartyBuffPotency: 0,
 	};
 
-	const dotTables: Map<ResourceKey, DamageStatsDoTTrackingData> = new Map();
+	const dotTables: Map<ResourceKey, Map<number, DamageStatsDoTTrackingData>> = new Map();
 
 	const skillPotencies: Map<ActionKey, number> = new Map();
 
@@ -436,7 +430,7 @@ export function calculateDamageStats(props: {
 						potCount: 0,
 						partyBuffPotency: 0,
 						falloff: q.expandedNode.falloff,
-						targetCount: q.expandedNode.targetCount,
+						targetCount: q.expandedNode.targetList.length,
 					});
 					q.mainTableIndex = mainTable.length - 1;
 				}
@@ -502,10 +496,20 @@ export function calculateDamageStats(props: {
 				// If the on-hit potency has not been resolved (as is the case if we just
 				// cast higanbana and the ability has not yet hit), don't add an entry yet
 				node.getAllDotPotencies().forEach((potenciesArr, rscType) => {
-					let dotTrackingData = dotTables.get(rscType);
+					let targetDotData = dotTables.get(rscType);
+					if (!targetDotData) {
+						targetDotData = new Map<number, DamageStatsDoTTrackingData>();
+						dotTables.set(rscType, targetDotData);
+					}
 					const excludeStandardTicks = ctl.game.excludedDoTs.includes(rscType);
-					if (!dotTrackingData) {
-						dotTrackingData = {
+					const targetList = [
+						...new Set(potenciesArr.flatMap((p) => p.targetList)),
+					].sort();
+					targetList.forEach((targetNumber) => {
+						if (targetDotData.has(targetNumber)) {
+							return;
+						}
+						const dotTrackingData: DamageStatsDoTTrackingData = {
 							tableRows: [],
 							summary: {
 								cumulativeGap: 0,
@@ -527,19 +531,20 @@ export function calculateDamageStats(props: {
 							},
 							lastDoT: undefined,
 						};
-						dotTables.set(rscType, dotTrackingData);
-					}
+						targetDotData.set(targetNumber, dotTrackingData);
 
-					const dotTableEntry = expandDoTNode(node, rscType, dotTrackingData.lastDoT);
-					dotTrackingData.tableRows.push(dotTableEntry);
-					dotTrackingData.lastDoT = node;
-					dotTrackingData.summary.cumulativeGap += dotTableEntry.gap;
-					dotTrackingData.summary.cumulativeOverride += dotTableEntry.override;
-					dotTrackingData.summary.totalTicks += dotTableEntry.numHitTicks;
-					dotTrackingData.summary.totalPotencyWithoutPot +=
-						dotTableEntry.potencyWithoutPot;
-					dotTrackingData.summary.totalPotPotency += dotTableEntry.potPotency;
-					dotTrackingData.summary.totalPartyBuffPotency += dotTableEntry.partyBuffPotency;
+						const dotTableEntry = expandDoTNode(node, rscType);
+						dotTrackingData.tableRows.push(dotTableEntry);
+						dotTrackingData.lastDoT = node;
+						dotTrackingData.summary.cumulativeGap += dotTableEntry.gap;
+						dotTrackingData.summary.cumulativeOverride += dotTableEntry.override;
+						dotTrackingData.summary.totalTicks += dotTableEntry.numHitTicks;
+						dotTrackingData.summary.totalPotencyWithoutPot +=
+							dotTableEntry.potencyWithoutPot;
+						dotTrackingData.summary.totalPotPotency += dotTableEntry.potPotency;
+						dotTrackingData.summary.totalPartyBuffPotency +=
+							dotTableEntry.partyBuffPotency;
+					});
 				});
 			}
 		}
@@ -550,31 +555,36 @@ export function calculateDamageStats(props: {
 		ctl.record.iterateAll(processNodeFn);
 	}
 
-	dotTables.forEach((dotTrackingData, dotName) => {
-		if (dotTrackingData.lastDoT) {
-			// last dot so far
+	dotTables.forEach((table, dotName) => {
+		table.forEach((dotTrackingData, targetNumber) => {
+			if (dotTrackingData.lastDoT) {
+				// last dot so far
 
-			const applicationTime = dotTrackingData.lastDoT.applicationTime;
-			console.assert(
-				applicationTime !== undefined,
-				`DoT node for ${dotName} was not resolved`,
-			);
+				const applicationTime = dotTrackingData.lastDoT.applicationTime;
+				console.assert(
+					applicationTime !== undefined,
+					`DoT node for ${dotName} was not resolved`,
+				);
 
-			const lastDotDropTime =
-				(applicationTime as number) + ctl.game.getStatusDuration(dotName);
-			const gap = getTargetableDurationBetween(lastDotDropTime, ctl.game.getDisplayTime());
+				const lastDotDropTime =
+					(applicationTime as number) + ctl.game.getStatusDuration(dotName);
+				const gap = getTargetableDurationBetween(
+					lastDotDropTime,
+					ctl.game.getDisplayTime(),
+				);
 
-			const timeSinceLastDoTDropped = ctl.game.getDisplayTime() - lastDotDropTime;
-			if (timeSinceLastDoTDropped > 0) {
-				dotTrackingData.summary.cumulativeGap += gap;
-				dotTrackingData.summary.timeSinceLastDoTDropped = timeSinceLastDoTDropped;
+				const timeSinceLastDoTDropped = ctl.game.getDisplayTime() - lastDotDropTime;
+				if (timeSinceLastDoTDropped > 0) {
+					dotTrackingData.summary.cumulativeGap += gap;
+					dotTrackingData.summary.timeSinceLastDoTDropped = timeSinceLastDoTDropped;
+				}
+			} else {
+				// no Thunder was used so far
+				const gap = getTargetableDurationBetween(0, Math.max(0, ctl.game.getDisplayTime()));
+				dotTrackingData.summary.cumulativeGap = gap;
+				dotTrackingData.summary.timeSinceLastDoTDropped = gap;
 			}
-		} else {
-			// no Thunder was used so far
-			const gap = getTargetableDurationBetween(0, Math.max(0, ctl.game.getDisplayTime()));
-			dotTrackingData.summary.cumulativeGap = gap;
-			dotTrackingData.summary.timeSinceLastDoTDropped = gap;
-		}
+		});
 	});
 
 	mainTable.sort((a, b) => {
@@ -592,7 +602,7 @@ export function calculateDamageStats(props: {
 			}
 			return pb - pa;
 		} else if (a.targetCount !== b.targetCount) {
-			return b.targetCount - a.targetCount;
+			return a.targetCount - b.targetCount;
 		} else if (a.displayedModifiers.length !== b.displayedModifiers.length) {
 			return b.displayedModifiers.length - a.displayedModifiers.length;
 		} else {

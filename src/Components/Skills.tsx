@@ -667,6 +667,7 @@ export function SkillsWindow() {
 		color: colors.text,
 	};
 
+	// TODO:TARGET localize
 	const targetCountHelp = <Help
 		topic="targetCount"
 		content={localize({
@@ -675,6 +676,21 @@ export function SkillsWindow() {
 					The number of targets hit by the next ability. Damage fall-off is automatically
 					computed. If the number of targets set is more than the number of enemies the
 					ability can hit, then the additional targets are ignored.
+				</span>
+				<br />
+				<br />
+				<span>
+					An <span style={{ color: colors.timeline.aggroMark }}>orange</span> star
+					indicates which enemy is the primary target, and a{" "}
+					<span style={{ color: colors.accent }}>purple</span> checkmark indicates which
+					enemies are also hit by the attack. Modifying the "# of targets" field will
+					automatically change these boxes, and vice versa.
+				</span>
+				<span>
+					Exactly one primary target must be selected at all times. Clicking an
+					un-selected enemy turns it into the primary target. When multiple enemies are
+					selected, clicking on the primary target will demote it to a secondary target,
+					and clicking on a secondary target will un-target it.
 				</span>
 				<br />
 				<br />
@@ -738,6 +754,7 @@ export function SkillsWindow() {
 					}}
 					selected={targetSelected}
 					primary={primaryTarget}
+					primaryOnly={false}
 					onSelectedChange={setTargetSelected}
 					onPrimaryChange={setPrimaryTarget}
 				/>

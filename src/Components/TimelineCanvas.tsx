@@ -674,6 +674,7 @@ function drawSkills(params: {
 	const scale = renderingProps.scale;
 
 	const targetCounts: Array<{ count: number; x: number; y: number }> = [];
+	const otherTargets: Array<{ target: number; x: number; y: number }> = [];
 	const greyLockBars: Rect[] = [];
 	const purpleLockBars: Rect[] = [];
 	const gcdBars: Rect[] = [];
@@ -761,14 +762,22 @@ function drawSkills(params: {
 		const skill = e as SkillElem;
 		const x = timelineOriginX + StaticFn.positionFromTimeAndScale(skill.displayTime, scale);
 		const y = skill.isGCD ? skillsTopY + TimelineDimensions.skillButtonHeight / 2 : skillsTopY;
-		// if there were multiple targets, draw the number of targets above the ability icon
-		// TODO find a way to distinguish between ST abilities hitting different targets (e.g. double dotting)
-		const targetCount = skill.node.targetList.length;
-		if (targetCount > 1) {
+		const targetList = skill.node.targetList;
+		if (targetList.length > 1) {
+			// If there were multiple targets, draw the number of targets above the ability icon.
 			targetCounts.push({
-				count: targetCount,
+				count: targetList.length,
 				x: x + TimelineDimensions.skillButtonHeight / 2,
 				y: y - 5,
+			});
+		} else if (targetList.length === 1 && targetList[0] !== 1) {
+			// If there was a single target but that single target was not Boss 1, identify
+			// which target was hit.
+			otherTargets.push({
+				target: targetList[0],
+				x: x + TimelineDimensions.skillButtonHeight / 2,
+				// Slightly smaller offset than multiple target indicator.
+				y: y - 3,
 			});
 		}
 		// offset the bar under skill button icon so it's completely invisible before the button
@@ -857,13 +866,20 @@ function drawSkills(params: {
 		if (img) skillIcons.push({ elem: e, x: x, y: y });
 	});
 
-	// target counts
+	// target counts + alternate targets
 	ctx.font = "13px " + DEFAULT_FONTS;
 	ctx.fillStyle = colors.text;
 	ctx.textAlign = "center";
 	targetCounts.forEach((c) => {
-		ctx.fillText("x" + c.count.toString(), c.x, c.y);
+		ctx.fillText("×" + c.count.toString(), c.x, c.y);
 	});
+	ctx.font = "26px " + DEFAULT_FONTS;
+	otherTargets.forEach((c) => {
+		// Unicode "CIRCLED DIGIT" characters begin from 1 with 2460, and go up to 20.
+		// Because the target number must be in [1, 16], we can safely generate the ID here.
+		ctx.fillText(String.fromCharCode(0x2460 + c.target - 1), c.x, c.y);
+	});
+	ctx.font = "13px " + DEFAULT_FONTS;
 
 	const rectWithBgInteract = (r: Rect) => {
 		ctx.rect(r.x, r.y, r.w, r.h);

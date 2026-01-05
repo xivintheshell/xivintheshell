@@ -23,17 +23,22 @@ it(
 		dotTables: new Map([
 			[
 				"COMBUST_III",
-				{
-					summary: {
-						totalTicks: 11,
-						maxTicks: 11,
-						dotCoverageTimeFraction: 0.9724,
-						cumulativeGap: 0.987,
-						cumulativeOverride: 5.333,
-						totalPotencyWithoutPot: 780.01,
-						totalPotPotency: 62.4,
-					},
-				},
+				new Map([
+					[
+						1,
+						{
+							summary: {
+								totalTicks: 11,
+								maxTicks: 11,
+								dotCoverageTimeFraction: 0.9724,
+								cumulativeGap: 0.987,
+								cumulativeOverride: 5.333,
+								totalPotencyWithoutPot: 780.01,
+								totalPotPotency: 62.4,
+							},
+						},
+					],
+				]),
 			],
 		]),
 	}),

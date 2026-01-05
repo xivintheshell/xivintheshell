@@ -23,17 +23,22 @@ it(
 		dotTables: new Map([
 			[
 				"DIA",
-				{
-					summary: {
-						totalTicks: 21,
-						maxTicks: 21,
-						dotCoverageTimeFraction: 0.9779,
-						cumulativeGap: 1.457,
-						cumulativeOverride: 4.733,
-						totalPotencyWithoutPot: 2063.21,
-						totalPotPotency: 137.59,
-					},
-				},
+				new Map([
+					[
+						1,
+						{
+							summary: {
+								totalTicks: 21,
+								maxTicks: 21,
+								dotCoverageTimeFraction: 0.9779,
+								cumulativeGap: 1.457,
+								cumulativeOverride: 4.733,
+								totalPotencyWithoutPot: 2063.21,
+								totalPotPotency: 137.59,
+							},
+						},
+					],
+				]),
 			],
 		]),
 	}),
