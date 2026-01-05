@@ -1,7 +1,12 @@
 import React, { CSSProperties, useState, useEffect } from "react";
 import { Checkbox, FileFormat, Help, Input, SaveToFile } from "./Common";
 import { PotencyModifier, PotencyModifierType } from "../Game/Potency";
-import { getThemeColors, getModifierTagColor, ColorThemeContext } from "./ColorTheme";
+import {
+	getCurrentThemeColors,
+	getThemeColors,
+	getModifierTagColor,
+	ColorThemeContext,
+} from "./ColorTheme";
 import {
 	localize,
 	localizeModifierName,
@@ -53,7 +58,6 @@ export type DamageStatsDoTTableEntry = {
 	potencyWithoutPot: number;
 	potPotency: number;
 	partyBuffPotency: number;
-	targetCount: number;
 	mainHitFalloff: number;
 };
 
@@ -107,7 +111,7 @@ export type DamageStatisticsData = {
 		totalPotPotency: number;
 		totalPartyBuffPotency: number;
 	};
-	dotTables: Map<ResourceKey, DamageStatsDoTTrackingData>;
+	dotTables: Map<ResourceKey, Map<number, DamageStatsDoTTrackingData>>;
 	mode: DamageStatisticsMode;
 };
 
@@ -249,6 +253,265 @@ function DamageStatsSettings() {
 
 const rowGap = "0.375em 0.75em";
 
+const cell = function (widthPercentage: number): CSSProperties {
+	return {
+		verticalAlign: "middle",
+		boxSizing: "border-box",
+		display: "inline-block",
+		width: widthPercentage + "%",
+		padding: rowGap,
+	};
+};
+
+function DoTTableRow(props: {
+	name: ResourceKey;
+	targetNumber: number;
+	row: DamageStatsDoTTableEntry;
+}) {
+	const colors = getCurrentThemeColors();
+	const tags = props.row.displayedModifiers.map((tag, i) => <BuffTag key={i} buff={tag} />);
+
+	const gapStr = props.row.gap.toFixed(3);
+	const gapNode = props.row.gap > 0 ? <span>{gapStr}</span> : <span />;
+
+	const overrideStr = props.row.override.toFixed(3);
+	const overrideNode = props.row.override > 0 ? <span>{overrideStr}</span> : <span />;
+
+	// potency
+	// targetCount is always 1 because we generate a separate table for each target.
+	// This assumes dots have no falloff, which is currently true for all dots in the game.
+	const mainPotencyNode = <PotencyDisplay
+		basePotency={props.row.mainPotencyHit ? props.row.baseMainPotency : 0}
+		includeInStats={true}
+		explainUntargetable={!props.row.mainPotencyHit}
+		helpTopic={props.name + "Table-main-" + props.targetNumber}
+		calc={props.row.initialHitCalculationModifiers}
+		targetCount={1}
+		falloff={props.row.mainHitFalloff}
+	/>;
+	const dotPotencyNode = <PotencyDisplay
+		basePotency={props.row.baseDotPotency}
+		includeInStats={true}
+		helpTopic={props.name + "Table-dot-" + props.targetNumber}
+		calc={props.row.tickCalculationModifiers}
+		targetCount={1}
+		falloff={0}
+	/>;
+
+	// num ticks node
+	const unhitTicks = props.row.totalNumTicks - props.row.numHitTicks;
+	const numTicksNode = <span>
+		{props.row.numHitTicks}
+		{unhitTicks > 0 ? (
+			<span style={{ color: colors.timeline.untargetableDamageMark + "af" }}>
+				{" "}
+				+{unhitTicks}{" "}
+				<Help
+					topic={props.name + "Table-numUntargetableTicks-" + props.targetNumber}
+					content={localize({
+						en: "tick(s) when untargetable",
+						zh: "Boss上天期间跳DoT次数",
+					})}
+				/>
+			</span>
+		) : undefined}
+	</span>;
+
+	// total potency
+	const totalPotencyNode = <span>
+		{props.row.potencyWithoutPot.toFixed(2)}
+		{props.row.potPotency > 0 ? (
+			<span
+				style={{
+					color: colors.timeline.potCover,
+				}}
+			>
+				{" "}
+				+{props.row.potPotency.toFixed(2)}({localize({ en: "pot", zh: "爆发药" })})
+			</span>
+		) : undefined}
+		{props.row.partyBuffPotency > 0 ? (
+			<span style={{ color: colors.accent }}>
+				{" "}
+				+{props.row.partyBuffPotency.toFixed(2)}({localize({ en: "party", zh: "团辅" })})
+			</span>
+		) : undefined}
+	</span>;
+
+	return <div
+		style={{
+			textAlign: "left",
+			position: "relative",
+			borderTop: "1px solid " + colors.bgMediumContrast,
+		}}
+	>
+		<div style={cell(8)}>{props.row.castTime.toFixed(3)}</div>
+		<div style={cell(8)}>{props.row.applicationTime.toFixed(3)}</div>
+		<div style={cell(12)}>{tags}</div>
+		<div style={cell(10)}>{gapNode}</div>
+		<div style={cell(10)}>{overrideNode}</div>
+		<div style={cell(10)}>{mainPotencyNode}</div>
+		<div style={cell(10)}>{dotPotencyNode}</div>
+		<div style={cell(8)}>{numTicksNode}</div>
+		<div style={cell(24)}>{totalPotencyNode}</div>
+	</div>;
+}
+
+function DoTTable(props: {
+	summary: DamageStatsDoTTableSummary;
+	tableRows: DamageStatsDoTTableEntry[];
+	dotHeaderSuffix: string;
+	dotName: ResourceKey;
+	headerCellStyle: CSSProperties;
+	targetNumber: number;
+	tinctureBuffPercentage: number;
+}) {
+	const dotTableSummary = props.summary;
+	const headerCellStyle = props.headerCellStyle;
+	const dotHeaderStr =
+		localizeResourceType(props.dotName) +
+		"\u2192 Boss " +
+		props.targetNumber +
+		" " +
+		props.dotHeaderSuffix;
+	const colors = getCurrentThemeColors();
+	const dotTableRows = props.tableRows.map((row, i) => <DoTTableRow
+		name={props.dotName}
+		targetNumber={props.targetNumber}
+		row={row}
+		key={i}
+	/>);
+	return <div
+		style={{
+			position: "relative",
+			margin: "0 auto",
+			marginBottom: 40,
+			maxWidth: 960,
+		}}
+	>
+		<div style={{ ...cell(100), ...{ textAlign: "center", marginBottom: 10 } }}>
+			<b style={{ color: colors.text }}>{dotHeaderStr}</b>
+		</div>
+		<div style={{ outline: "1px solid " + colors.bgMediumContrast }}>
+			<div>
+				<div style={{ display: "inline-block", width: "8%" }}>
+					<span style={headerCellStyle}>
+						<b>{localize({ en: "cast time", zh: "施放时间" })}</b>
+					</span>
+				</div>
+				<div style={{ display: "inline-block", width: "8%" }}>
+					<span style={headerCellStyle}>
+						<b>{localize({ en: "application time", zh: "结算时间" })}</b>
+					</span>
+				</div>
+				<div style={{ display: "inline-block", width: "12%" }}>
+					<span style={headerCellStyle} />
+				</div>
+				<div style={{ display: "inline-block", width: "10%" }}>
+					<span style={headerCellStyle}>
+						<b>{localize({ en: "gap", zh: "DoT间隙" })} </b>
+						<Help
+							topic={"dot-gap-title"}
+							content={localize({
+								en: <div>
+									<div className={"paragraph"}>
+										DoT coverage time gap since pull or previous application
+									</div>
+									<div className={"paragraph"}>
+										The last row also includes gap at the beginning and end of
+										the fight
+									</div>
+								</div>,
+								zh: <div>
+									雷DoT覆盖间隙，最后一行也包括战斗开始和结束时没有雷DoT的时间
+								</div>,
+							})}
+						/>
+					</span>
+				</div>
+				<div style={{ display: "inline-block", width: "10%" }}>
+					<span style={headerCellStyle}>
+						<b>{localize({ en: "override", zh: "DoT覆盖" })} </b>
+						<Help
+							topic={"dot-override-title"}
+							content={localize({
+								en: <div>Overridden DoT time from previous application</div>,
+								zh: <div>提前覆盖雷DoT时长</div>,
+							})}
+						/>
+					</span>
+				</div>
+				<div style={{ display: "inline-block", width: "10%" }}>
+					<span style={headerCellStyle}>
+						<b>{localize({ en: "initial", zh: "初始威力" })}</b>
+					</span>
+				</div>
+				<div style={{ display: "inline-block", width: "10%" }}>
+					<span style={headerCellStyle}>
+						<b>{localize({ en: "DoT", zh: "DoT威力" })}</b>
+					</span>
+				</div>
+				<div style={{ display: "inline-block", width: "8%" }}>
+					<span style={headerCellStyle}>
+						<b>{localize({ en: "ticks", zh: "跳DoT次数" })}</b>
+					</span>
+				</div>
+				<div style={{ display: "inline-block", width: "24%" }}>
+					<span style={headerCellStyle}>
+						<b>{localize({ en: "total", zh: "总威力" })}</b>
+					</span>
+				</div>
+			</div>
+			{dotTableRows}
+			<div
+				style={{
+					textAlign: "left",
+					position: "relative",
+					borderTop: "1px solid " + colors.bgMediumContrast,
+				}}
+			>
+				<div style={cell(28)} />
+				<div style={cell(10)}>{dotTableSummary.cumulativeGap.toFixed(3)}</div>
+				<div style={cell(10)}>{dotTableSummary.cumulativeOverride.toFixed(3)}</div>
+				<div style={cell(20)} />
+				<div style={cell(8)}>
+					{
+						/* The total tick denominator isn't terribly useful for DoTs that aren't maintained full-time */
+						controller.game.fullTimeDoTs.includes(props.dotName) ? (
+							<>
+								{dotTableSummary.totalTicks}/{dotTableSummary.maxTicks}
+							</>
+						) : (
+							<>{dotTableSummary.totalTicks}</>
+						)
+					}
+				</div>
+				<div style={cell(24)}>
+					{dotTableSummary.totalPotencyWithoutPot.toFixed(2)}
+					{dotTableSummary.totalPotPotency > 0 ? (
+						<span style={{ color: colors.timeline.potCover }}>
+							{" "}
+							+{dotTableSummary.totalPotPotency.toFixed(2)}
+							{localize({
+								en: "(pot +" + props.tinctureBuffPercentage + "%)",
+								zh: "(爆发药 +" + props.tinctureBuffPercentage + "%)",
+							})}
+						</span>
+					) : undefined}
+
+					{dotTableSummary.totalPartyBuffPotency > 0 ? (
+						<span style={{ color: colors.accent }}>
+							{" "}
+							+{dotTableSummary.totalPartyBuffPotency.toFixed(2)}(
+							{localize({ en: "party", zh: "团辅" })})
+						</span>
+					) : undefined}
+				</div>
+			</div>
+		</div>
+	</div>;
+}
+
 export class DamageStatistics extends React.Component {
 	selected: SelectedStatisticsData = {
 		totalDuration: 0,
@@ -383,7 +646,9 @@ export class DamageStatistics extends React.Component {
 				let totalTicks = 0;
 				let maxTicks = 0;
 				dotGroup.groupedEffects.forEach((dot) => {
-					const dotTable = this.data.dotTables.get(dot.effectName);
+					// Only report uptime for Boss 1.
+					// TODO:TARGET Report uptime coverage for different bosses.
+					const dotTable = this.data.dotTables.get(dot.effectName)?.get(1);
 					if (!dotTable) {
 						return;
 					}
@@ -395,7 +660,7 @@ export class DamageStatistics extends React.Component {
 				dotStr += (uptime * 100).toFixed(2) + "%";
 				dotStr +=
 					lparen +
-					localize({ en: "ticks", zh: "跳雷次数" }) +
+					localize({ en: "ticks", zh: "跳DoT次数" }) +
 					colon +
 					totalTicks +
 					"/" +
@@ -494,16 +759,6 @@ export class DamageStatistics extends React.Component {
 		</div>;
 
 		///////////////////////// Main table //////////////////////////
-
-		const cell = function (widthPercentage: number): CSSProperties {
-			return {
-				verticalAlign: "middle",
-				boxSizing: "border-box",
-				display: "inline-block",
-				width: widthPercentage + "%",
-				padding: rowGap,
-			};
-		};
 
 		const isDoTProp = function (skillName: ActionKey) {
 			return controller.game.dotSkills.includes(skillName);
@@ -721,125 +976,6 @@ export class DamageStatistics extends React.Component {
 			);
 		}
 
-		////////////////////// dot Table ////////////////////////
-
-		const makedotRow = function (props: {
-			name: string;
-			row: DamageStatsDoTTableEntry;
-			key: number;
-		}) {
-			// tags
-			const tags: React.ReactNode[] = [];
-			tags.push(props.row.displayedModifiers.map((tag, i) => <BuffTag key={i} buff={tag} />));
-
-			// gap
-			const gapStr = props.row.gap.toFixed(3);
-			const gapNode = props.row.gap > 0 ? <span>{gapStr}</span> : <span />;
-
-			// override
-			const overrideStr = props.row.override.toFixed(3);
-			const overrideNode = props.row.override > 0 ? <span>{overrideStr}</span> : <span />;
-
-			// potency
-			// assume dots have no falloff
-			const mainPotencyNode = <PotencyDisplay
-				basePotency={props.row.mainPotencyHit ? props.row.baseMainPotency : 0}
-				includeInStats={true}
-				explainUntargetable={!props.row.mainPotencyHit}
-				helpTopic={props.name + "Table-main-" + props.key}
-				calc={props.row.initialHitCalculationModifiers}
-				targetCount={props.row.targetCount}
-				falloff={props.row.mainHitFalloff}
-			/>;
-			const dotPotencyNode = <PotencyDisplay
-				basePotency={props.row.baseDotPotency}
-				includeInStats={true}
-				helpTopic={props.name + "Table-dot-" + props.key}
-				calc={props.row.tickCalculationModifiers}
-				targetCount={props.row.targetCount}
-				falloff={0}
-			/>;
-
-			// num ticks node
-			const unhitTicks = props.row.totalNumTicks - props.row.numHitTicks;
-			const numTicksNode = <span>
-				{props.row.numHitTicks}
-				{unhitTicks > 0 ? (
-					<span style={{ color: colors.timeline.untargetableDamageMark + "af" }}>
-						{" "}
-						+{unhitTicks}{" "}
-						<Help
-							topic={"thunderTable-numUntargetableTicks-" + props.key}
-							content={localize({
-								en: "tick(s) when untargetable",
-								zh: "Boss上天期间跳DoT次数",
-							})}
-						/>
-					</span>
-				) : undefined}
-			</span>;
-
-			// total potency
-			const totalPotencyNode = <span>
-				{props.row.potencyWithoutPot.toFixed(2)}
-				{props.row.potPotency > 0 ? (
-					<span
-						style={{
-							color: colors.timeline.potCover,
-						}}
-					>
-						{" "}
-						+{props.row.potPotency.toFixed(2)}({localize({ en: "pot", zh: "爆发药" })})
-					</span>
-				) : undefined}
-				{props.row.partyBuffPotency > 0 ? (
-					<span style={{ color: colors.accent }}>
-						{" "}
-						+{props.row.partyBuffPotency.toFixed(2)}(
-						{localize({ en: "party", zh: "团辅" })})
-					</span>
-				) : undefined}
-			</span>;
-
-			return <div
-				key={props.key}
-				style={{
-					textAlign: "left",
-					position: "relative",
-					borderTop: "1px solid " + colors.bgMediumContrast,
-				}}
-			>
-				<div style={cell(8)}>{props.row.castTime.toFixed(3)}</div>
-				<div style={cell(8)}>{props.row.applicationTime.toFixed(3)}</div>
-				<div style={cell(12)}>{tags}</div>
-				<div style={cell(10)}>{gapNode}</div>
-				<div style={cell(10)}>{overrideNode}</div>
-				<div style={cell(10)}>{mainPotencyNode}</div>
-				<div style={cell(10)}>{dotPotencyNode}</div>
-				<div style={cell(8)}>{numTicksNode}</div>
-				<div style={cell(24)}>{totalPotencyNode}</div>
-			</div>;
-		};
-
-		const allDotTableRows: { dotName: ResourceKey; tableRows: React.ReactNode[] }[] = [];
-		this.data.dotTables.forEach((dotTrackingData, dotName) => {
-			const dotTableRows = [];
-
-			for (let i = 0; i < dotTrackingData.tableRows.length; i++) {
-				dotTableRows.push(
-					makedotRow({
-						name: dotName,
-						row: dotTrackingData.tableRows[i],
-						key: i,
-					}),
-				);
-			}
-
-			allDotTableRows.push({ dotName, tableRows: dotTableRows });
-		});
-
-		//////////////////////////////////////////////////////////
-
 		const headerCellStyle: CSSProperties = {
 			display: "inline-block",
 			padding: rowGap,
@@ -949,146 +1085,30 @@ export class DamageStatistics extends React.Component {
 			</div>
 		</div>;
 
-		const dotTables = allDotTableRows.map((dotTable) => {
-			const dotTableRows = dotTable.tableRows;
-			const dotTableSummary = this.data.dotTables.get(dotTable.dotName)?.summary;
-			if (dotTableSummary === undefined) {
-				return <></>;
-			} // Will never happen, but fixes nullish checks below
-			const dotHeaderStr = localizeResourceType(dotTable.dotName) + dotHeaderSuffix;
-			return <div
-				key={`dot-table-${dotTable.dotName}`}
-				style={{
-					position: "relative",
-					margin: "0 auto",
-					marginBottom: 40,
-					maxWidth: 960,
-				}}
-			>
-				<div style={{ ...cell(100), ...{ textAlign: "center", marginBottom: 10 } }}>
-					<b style={{ color: titleColor }}>{dotHeaderStr}</b>
-				</div>
-				<div style={{ outline: "1px solid " + colors.bgMediumContrast }}>
-					<div>
-						<div style={{ display: "inline-block", width: "8%" }}>
-							<span style={headerCellStyle}>
-								<b>{localize({ en: "cast time", zh: "施放时间" })}</b>
-							</span>
-						</div>
-						<div style={{ display: "inline-block", width: "8%" }}>
-							<span style={headerCellStyle}>
-								<b>{localize({ en: "application time", zh: "结算时间" })}</b>
-							</span>
-						</div>
-						<div style={{ display: "inline-block", width: "12%" }}>
-							<span style={headerCellStyle} />
-						</div>
-						<div style={{ display: "inline-block", width: "10%" }}>
-							<span style={headerCellStyle}>
-								<b>{localize({ en: "gap", zh: "DoT间隙" })} </b>
-								<Help
-									topic={"dot-gap-title"}
-									content={localize({
-										en: <div>
-											<div className={"paragraph"}>
-												DoT coverage time gap since pull or previous
-												application
-											</div>
-											<div className={"paragraph"}>
-												The last row also includes gap at the beginning and
-												end of the fight
-											</div>
-										</div>,
-										zh: <div>
-											雷DoT覆盖间隙，最后一行也包括战斗开始和结束时没有雷DoT的时间
-										</div>,
-									})}
-								/>
-							</span>
-						</div>
-						<div style={{ display: "inline-block", width: "10%" }}>
-							<span style={headerCellStyle}>
-								<b>{localize({ en: "override", zh: "DoT覆盖" })} </b>
-								<Help
-									topic={"dot-override-title"}
-									content={localize({
-										en: <div>
-											Overridden DoT time from previous application
-										</div>,
-										zh: <div>提前覆盖雷DoT时长</div>,
-									})}
-								/>
-							</span>
-						</div>
-						<div style={{ display: "inline-block", width: "10%" }}>
-							<span style={headerCellStyle}>
-								<b>{localize({ en: "initial", zh: "初始威力" })}</b>
-							</span>
-						</div>
-						<div style={{ display: "inline-block", width: "10%" }}>
-							<span style={headerCellStyle}>
-								<b>{localize({ en: "DoT", zh: "DoT威力" })}</b>
-							</span>
-						</div>
-						<div style={{ display: "inline-block", width: "8%" }}>
-							<span style={headerCellStyle}>
-								<b>{localize({ en: "ticks", zh: "跳DoT次数" })}</b>
-							</span>
-						</div>
-						<div style={{ display: "inline-block", width: "24%" }}>
-							<span style={headerCellStyle}>
-								<b>{localize({ en: "total", zh: "总威力" })}</b>
-							</span>
-						</div>
-					</div>
-					{dotTableRows}
-					<div
-						style={{
-							textAlign: "left",
-							position: "relative",
-							borderTop: "1px solid " + colors.bgMediumContrast,
-						}}
-					>
-						<div style={cell(28)} />
-						<div style={cell(10)}>{dotTableSummary.cumulativeGap.toFixed(3)}</div>
-						<div style={cell(10)}>{dotTableSummary.cumulativeOverride.toFixed(3)}</div>
-						<div style={cell(20)} />
-						<div style={cell(8)}>
-							{
-								/* The total tick denominator isn't terribly useful for DoTs that aren't maintained full-time */
-								controller.game.fullTimeDoTs.includes(dotTable.dotName) ? (
-									<>
-										{dotTableSummary.totalTicks}/{dotTableSummary.maxTicks}
-									</>
-								) : (
-									<>{dotTableSummary.totalTicks}</>
-								)
-							}
-						</div>
-						<div style={cell(24)}>
-							{dotTableSummary.totalPotencyWithoutPot.toFixed(2)}
-							{dotTableSummary.totalPotPotency > 0 ? (
-								<span style={{ color: colors.timeline.potCover }}>
-									{" "}
-									+{dotTableSummary.totalPotPotency.toFixed(2)}
-									{localize({
-										en: "(pot +" + this.data.tinctureBuffPercentage + "%)",
-										zh: "(爆发药 +" + this.data.tinctureBuffPercentage + "%)",
-									})}
-								</span>
-							) : undefined}
-
-							{dotTableSummary.totalPartyBuffPotency > 0 ? (
-								<span style={{ color: colors.accent }}>
-									{" "}
-									+{dotTableSummary.totalPartyBuffPotency.toFixed(2)}(
-									{localize({ en: "party", zh: "团辅" })})
-								</span>
-							) : undefined}
-						</div>
-					</div>
-				</div>
-			</div>;
+		const dotTables: React.ReactNode[] = [];
+		let key = 0;
+		this.data.dotTables.forEach((table, dotName) => {
+			table.forEach((dotTrackingData, targetNumber) => {
+				const dotTableSummary = this.data.dotTables
+					.get(dotName)
+					?.get(targetNumber)?.summary;
+				if (dotTableSummary === undefined) {
+					// Should never happen, but fixes null checks below
+					return;
+				}
+				dotTables.push(
+					<DoTTable
+						summary={dotTableSummary}
+						tableRows={dotTrackingData.tableRows}
+						dotHeaderSuffix={dotHeaderSuffix}
+						dotName={dotName}
+						headerCellStyle={headerCellStyle}
+						targetNumber={targetNumber}
+						tinctureBuffPercentage={this.data.tinctureBuffPercentage}
+						key={key++}
+					/>,
+				);
+			});
 		});
 		return <div>
 			{summary}

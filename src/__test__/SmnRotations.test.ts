@@ -128,7 +128,7 @@ it(
 		controller.requestToggleBuff("SLIPSTREAM");
 		controller.step(15);
 		const dotTables = damageData.dotTables;
-		expect(dotTables.get("SLIPSTREAM")!["tableRows"][0]["totalNumTicks"]).toEqual(1);
+		expect(dotTables.get("SLIPSTREAM")!.get(1)!.tableRows[0].totalNumTicks).toEqual(1);
 	}),
 );
 
