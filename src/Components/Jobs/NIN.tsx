@@ -22,7 +22,7 @@ const NIN_BUFFS: NINResourceKey[] = (Object.keys(NIN_STATUSES) as NINResourceKey
 
 export class NINStatusPropsGenerator extends StatusPropsGenerator<NINState> {
 	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
-		return [...NIN_DEBUFFS.map((rscType) => this.makeCommonTimer(rscType, false))];
+		return [...NIN_DEBUFFS.flatMap((rscType) => this.makeTargetedTimers(rscType))];
 	}
 
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {

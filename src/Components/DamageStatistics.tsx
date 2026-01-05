@@ -368,12 +368,8 @@ function DoTTable(props: {
 }) {
 	const dotTableSummary = props.summary;
 	const headerCellStyle = props.headerCellStyle;
-	const dotHeaderStr =
-		localizeResourceType(props.dotName) +
-		"\u2192 Boss " +
-		props.targetNumber +
-		" " +
-		props.dotHeaderSuffix;
+	// right arrow
+	const dotHeaderStr = `${localizeResourceType(props.dotName)} \u2192 Boss ${props.targetNumber} ${props.dotHeaderSuffix}`;
 	const colors = getCurrentThemeColors();
 	const dotTableRows = props.tableRows.map((row, i) => <DoTTableRow
 		name={props.dotName}
@@ -411,7 +407,7 @@ function DoTTable(props: {
 					<span style={headerCellStyle}>
 						<b>{localize({ en: "gap", zh: "DoT间隙" })} </b>
 						<Help
-							topic={"dot-gap-title"}
+							topic={`dot-gap-title-${props.dotName}-${props.targetNumber}`}
 							content={localize({
 								en: <div>
 									<div className={"paragraph"}>
@@ -433,7 +429,7 @@ function DoTTable(props: {
 					<span style={headerCellStyle}>
 						<b>{localize({ en: "override", zh: "DoT覆盖" })} </b>
 						<Help
-							topic={"dot-override-title"}
+							topic={`dot-override-title-${props.dotName}-${props.targetNumber}`}
 							content={localize({
 								en: <div>Overridden DoT time from previous application</div>,
 								zh: <div>提前覆盖雷DoT时长</div>,
@@ -637,36 +633,53 @@ export class DamageStatistics extends React.Component {
 		const dotUptime = controller.game.overTimeEffectGroups
 			.filter((group) => group.reportName && !group.isHealing)
 			.map((dotGroup) => {
-				let dotStr =
-					dotGroup.reportName +
-					(localize({ en: " uptime", zh: "覆盖率" }) as string) +
-					colon;
-
-				let uptime = 0;
-				let totalTicks = 0;
-				let maxTicks = 0;
+				const summaries = new Map<
+					number,
+					{ uptime: number; totalTicks: number; maxTicks: number }
+				>();
 				dotGroup.groupedEffects.forEach((dot) => {
-					// Only report uptime for Boss 1.
-					// TODO:TARGET Report uptime coverage for different bosses.
-					const dotTable = this.data.dotTables.get(dot.effectName)?.get(1);
-					if (!dotTable) {
+					const tables = this.data.dotTables.get(dot.effectName);
+					if (!tables) {
 						return;
 					}
-					uptime += dotTable.summary.dotCoverageTimeFraction;
-					totalTicks += dotTable.summary.totalTicks;
-					maxTicks = Math.max(maxTicks, dotTable.summary.maxTicks); // Practically speaking, they should all come out with the same maxTicks
+					tables.forEach((dotTable, targetNumber) => {
+						if (!summaries.has(targetNumber)) {
+							summaries.set(targetNumber, { uptime: 0, totalTicks: 0, maxTicks: 0 });
+						}
+						const summary = summaries.get(targetNumber)!;
+						summary.uptime += dotTable.summary.dotCoverageTimeFraction;
+						summary.totalTicks += dotTable.summary.totalTicks;
+						// Practically speaking, they should all come out with the same maxTicks
+						summary.maxTicks = Math.max(summary.maxTicks, dotTable.summary.maxTicks);
+					});
 				});
 
-				dotStr += (uptime * 100).toFixed(2) + "%";
-				dotStr +=
-					lparen +
-					localize({ en: "ticks", zh: "跳DoT次数" }) +
-					colon +
-					totalTicks +
-					"/" +
-					maxTicks +
-					rparen;
-				return <div key={`dot-uptime-${dotGroup.reportName}`}>{dotStr}</div>;
+				const summaryDivs: React.ReactNode[] = [];
+				summaries.forEach((summary, targetNumber) => {
+					let dotStr =
+						dotGroup.reportName +
+						(localize({
+							en: ` uptime (Boss ${targetNumber})`,
+							zh: "覆盖率（Boss ${targetNumber}）",
+						}) as string) +
+						colon;
+					const { uptime, totalTicks, maxTicks } = summary;
+					dotStr += (uptime * 100).toFixed(2) + "%";
+					dotStr +=
+						lparen +
+						localize({ en: "ticks", zh: "跳DoT次数" }) +
+						colon +
+						totalTicks +
+						"/" +
+						maxTicks +
+						rparen;
+					summaryDivs.push(
+						<div key={`dot-uptime-${dotGroup.reportName}-${targetNumber}`}>
+							{dotStr}
+						</div>,
+					);
+				});
+				return summaryDivs;
 			});
 
 		let selected: React.ReactNode | undefined = undefined;
@@ -1085,7 +1098,8 @@ export class DamageStatistics extends React.Component {
 			</div>
 		</div>;
 
-		const dotTables: React.ReactNode[] = [];
+		const dotTables: { targetNumber: number; dotName: ResourceKey; node: React.ReactNode }[] =
+			[];
 		let key = 0;
 		this.data.dotTables.forEach((table, dotName) => {
 			table.forEach((dotTrackingData, targetNumber) => {
@@ -1096,8 +1110,10 @@ export class DamageStatistics extends React.Component {
 					// Should never happen, but fixes null checks below
 					return;
 				}
-				dotTables.push(
-					<DoTTable
+				dotTables.push({
+					targetNumber,
+					dotName,
+					node: <DoTTable
 						summary={dotTableSummary}
 						tableRows={dotTrackingData.tableRows}
 						dotHeaderSuffix={dotHeaderSuffix}
@@ -1107,14 +1123,22 @@ export class DamageStatistics extends React.Component {
 						tinctureBuffPercentage={this.data.tinctureBuffPercentage}
 						key={key++}
 					/>,
-				);
+				});
 			});
+		});
+		// Sort by target number, then by dot name.
+		dotTables.sort((a, b) => {
+			const tnDiff = a.targetNumber - b.targetNumber;
+			if (tnDiff === 0) {
+				return a.dotName.localeCompare(b.dotName);
+			}
+			return tnDiff;
 		});
 		return <div>
 			{summary}
 			<div>
 				{mainTable}
-				{dotTables}
+				{dotTables.map((d) => d.node)}
 			</div>
 		</div>;
 	}

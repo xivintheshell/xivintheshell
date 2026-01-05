@@ -60,7 +60,7 @@ function isDoTNode(node: ActionNode) {
 	return node.info.type === ActionType.Skill && ctl.game.dotSkills.includes(node.info.skillName);
 }
 
-function expandDoTNode(node: ActionNode, dotName: ResourceKey) {
+function expandDoTNode(node: ActionNode, dotName: ResourceKey, targetNumber: number) {
 	console.assert(isDoTNode(node), `${node.getNameForMessage()} is not registered as a dot skill`);
 	const mainPotency = node.getInitialPotency();
 	const entry: DamageStatsDoTTableEntry = {
@@ -82,8 +82,8 @@ function expandDoTNode(node: ActionNode, dotName: ResourceKey) {
 		mainHitFalloff: mainPotency?.falloff ?? 0,
 	};
 
-	entry.gap = node.getOverTimeGap(dotName, "damage");
-	entry.override = node.getOverTimeOverrideAmount(dotName, "damage");
+	entry.gap = node.getOverTimeGap(dotName, "damage", targetNumber);
+	entry.override = node.getOverTimeOverrideAmount(dotName, "damage", targetNumber);
 	entry.baseMainPotency = mainPotency?.base ?? 0;
 	entry.initialHitCalculationModifiers = mainPotency?.modifiers ?? [];
 	entry.mainPotencyHit = node.hitBoss(bossIsUntargetable);
@@ -128,7 +128,6 @@ function expandDoTNode(node: ActionNode, dotName: ResourceKey) {
 		}
 	}
 
-	// TODO:TARGET apply potencies to each target
 	node.getDotPotencies(dotName).forEach((p, i) => {
 		if (p.hasResolved()) {
 			entry.totalNumTicks++;
@@ -524,6 +523,7 @@ export function calculateDamageStats(props: {
 								dotCoverageTimeFraction: ctl.getDotCoverageTimeFraction(
 									ctl.game.getDisplayTime(),
 									rscType,
+									targetNumber,
 								),
 								totalPotencyWithoutPot: 0,
 								totalPotPotency: 0,
@@ -533,7 +533,7 @@ export function calculateDamageStats(props: {
 						};
 						targetDotData.set(targetNumber, dotTrackingData);
 
-						const dotTableEntry = expandDoTNode(node, rscType);
+						const dotTableEntry = expandDoTNode(node, rscType, targetNumber);
 						dotTrackingData.tableRows.push(dotTableEntry);
 						dotTrackingData.lastDoT = node;
 						dotTrackingData.summary.cumulativeGap += dotTableEntry.gap;
