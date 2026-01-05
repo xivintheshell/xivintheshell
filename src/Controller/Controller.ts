@@ -1791,7 +1791,7 @@ class Controller {
 				let targetCell = "";
 				if (row.isDamaging && row.targetList !== undefined) {
 					targetCell = '"';
-					targetCell += row.targetList.map((n) => `Boss {n}`).join(", ");
+					targetCell += row.targetList.map((n) => `Boss${n}`).join(", ");
 					targetCell += '"';
 				}
 				let conditional = "";
