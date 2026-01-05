@@ -353,7 +353,7 @@ export default class Main extends React.Component<{ command?: string }> {
 					position: absolute;
 					font-size: 22px;
 					top: -7px;
-					left: -4px;
+					left: -3px;
 					visibility: visible;
 				}
 				input[type="range"] {

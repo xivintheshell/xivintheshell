@@ -1,5 +1,11 @@
 [
 	{
+		"date": "1/20/26",
+		"changes": [
+			"[BETA] Added the ability to change the target(s) of an ability below the skill hotbar. See target count help tooltip for details."
+		]
+	},
+	{
 		"date": "1/19/26",
 		"changes": [
 			"Added a user manual. You can find it at xivintheshell.com/manual, in the intro section, or in the links at the top right of the page."

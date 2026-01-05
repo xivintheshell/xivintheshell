@@ -144,7 +144,6 @@ export const applySkill = (skillName: ActionKey) => applySkillMultiTarget(skillN
 
 export const applySkillMultiTarget = (skillName: ActionKey, targetCount: number) => {
 	// Perform the specified skill as soon as possible
-	// TODO:TARGET fix test harness
 	controller.requestUseSkill({
 		skillName,
 		targetList: Array(targetCount)
@@ -192,6 +191,7 @@ export const compareDamageTables = (expectedDamageEntries: Array<ShortDamageEntr
 	actualDamageEntries.sort(damageEntryComparator);
 	expectedDamageEntries = expectedDamageEntries.map((entry) => ({
 		...entry,
+		// NOTE: self-targeted abilities should have a targetCount of 0
 		targetCount: entry.targetCount ?? 1,
 	}));
 	expectedDamageEntries.sort(damageEntryComparator);

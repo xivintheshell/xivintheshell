@@ -88,6 +88,7 @@ import { XIVMath } from "../Game/XIVMath";
 import { TANK_JOBS, MELEE_JOBS, RANGED_JOBS, ShellJob } from "../Game/Data/Jobs";
 import { ActionKey, ACTIONS, ResourceKey, RESOURCES } from "../Game/Data";
 import { getGameState } from "../Game/Jobs";
+import { getSkill } from "../Game/Skills";
 import { localizeSkillName } from "../Components/Localization";
 
 // Ensure role actions are imported after job-specific ones to protect hotbar ordering
@@ -1106,6 +1107,7 @@ class Controller {
 		}
 		skillName = getConditionalReplacement(skillName, this.game);
 		status = this.game.getSkillAvailabilityStatus(skillName);
+		targetList = this.filterTargetList(targetList, skillName);
 
 		const node = skillNode(skillName, targetList);
 		let actionIndex: number;
@@ -2012,6 +2014,18 @@ class Controller {
 		this.insertRecordNodes([node], insertIdx);
 	}
 
+	filterTargetList(targetList: number[], skillName: ActionKey): number[] {
+		// Until we get more intelligent targeting logic, non-damaging abilities
+		// that do not apply dots should not have a target selected.
+		if (
+			getSkill(controller.game.job, skillName)?.potencyFn(controller.game) === 0 &&
+			!controller.game.dotSkills.includes(skillName)
+		) {
+			return [];
+		}
+		return targetList;
+	}
+
 	requestUseSkill(
 		props: { skillName: ActionKey; targetList: number[] },
 		canUndo: boolean = false,
@@ -2043,8 +2057,9 @@ class Controller {
 				// Insert the skill to the middle of the timeline by modifying the record.
 				const insertIdx = this.record.selectionStartIndex;
 				if (insertIdx !== undefined) {
+					const targetList = this.filterTargetList(props.targetList, props.skillName);
 					// TODO this needs validity checking
-					const node = skillNode(props.skillName, props.targetList);
+					const node = skillNode(props.skillName, targetList);
 					this.insertRecordNode(node, insertIdx);
 					if (canUndo) {
 						this.undoStack.push(new AddNode(node, insertIdx));
