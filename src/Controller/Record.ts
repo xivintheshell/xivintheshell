@@ -164,10 +164,13 @@ export class ActionNode {
 	#hotPotencies: Map<ResourceKey, Potency[]>;
 	// TODO split into different properties for dots/hots?
 	applicationTime?: number;
-	#dotOverrideAmount: Map<ResourceKey, number>;
-	#dotTimeGap: Map<ResourceKey, number>;
-	#hotOverrideAmount: Map<ResourceKey, number>;
-	#hotTimeGap: Map<ResourceKey, number>;
+	// maps of DoT/HoT name -> target number -> # of seconds
+	// effects that don't support target selection use 1 as the default placeholder,
+	// but we keep these consistent for code reuse
+	#dotOverrideAmount: Map<ResourceKey, Map<number, number>>;
+	#dotTimeGap: Map<ResourceKey, Map<number, number>>;
+	#hotOverrideAmount: Map<ResourceKey, Map<number, number>>;
+	#hotTimeGap: Map<ResourceKey, Map<number, number>>;
 	info: NodeInfo;
 	// Older versions of xivintheshell attached waitDuration fields to every action
 	// this field is only populated during deserialization.
@@ -392,14 +395,26 @@ export class ActionNode {
 		}
 	}
 
-	removeUnresolvedOvertimePotencies(kind: PotencyKind) {
+	removeUnresolvedOvertimePotencies(kind: PotencyKind, targetNumber?: number) {
 		const potencyMap = kind === "damage" ? this.#dotPotencies : this.#hotPotencies;
 		potencyMap.forEach((pArr) => {
-			const unresolvedIndex = pArr.findIndex((p) => !p.hasResolved());
-			if (unresolvedIndex < 0) {
-				return;
-			}
-			pArr.splice(unresolvedIndex);
+			pArr.forEach((p, i) => {
+				// If the potency has not yet resolved, this means it was a future DoT tick
+				// that potentially should be overwritten.
+				// However, if the previous potency corresponds to an AoE DoT, we must ensure
+				// all targets no longer have the debuff active before we can remove the potency.
+				if (!p.hasResolved()) {
+					if (targetNumber) {
+						p.tryRemoveTarget(targetNumber);
+					}
+					// If targetNumber was unspecified, then forcibly remove all remaining ticks.
+					// not sure if it's safe to mutate the array during iteration like this,
+					// but whatever
+					if (targetNumber === undefined || p.targetList.length === 0) {
+						pArr.splice(i);
+					}
+				}
+			});
 		});
 	}
 
@@ -477,48 +492,91 @@ export class ActionNode {
 		pArr.push(p);
 	}
 
-	setOverTimeGap(effectName: ResourceKey, amount: number, kind: PotencyKind) {
+	setOverTimeGap(
+		effectName: ResourceKey,
+		amount: number,
+		kind: PotencyKind,
+		targetNumber?: number,
+	) {
 		this.setOverTimeMappedAmount(
 			effectName,
 			amount,
+			kind,
 			kind === "damage" ? this.#dotTimeGap : this.#hotTimeGap,
+			targetNumber,
 		);
 	}
 
-	getOverTimeGap(effectName: ResourceKey, kind: PotencyKind): number {
+	getOverTimeGap(effectName: ResourceKey, kind: PotencyKind, targetNumber?: number): number {
 		return this.getOverTimeMappedAmount(
 			effectName,
+			kind,
 			kind === "damage" ? this.#dotTimeGap : this.#hotTimeGap,
+			targetNumber,
 		);
 	}
 
-	setOverTimeOverrideAmount(effectName: ResourceKey, amount: number, kind: PotencyKind) {
+	setOverTimeOverrideAmount(
+		effectName: ResourceKey,
+		amount: number,
+		kind: PotencyKind,
+		targetNumber?: number,
+	) {
 		this.setOverTimeMappedAmount(
 			effectName,
 			amount,
+			kind,
 			kind === "damage" ? this.#dotOverrideAmount : this.#hotOverrideAmount,
+			targetNumber,
 		);
 	}
 
-	getOverTimeOverrideAmount(effectName: ResourceKey, kind: PotencyKind): number {
+	getOverTimeOverrideAmount(
+		effectName: ResourceKey,
+		kind: PotencyKind,
+		targetNumber?: number,
+	): number {
 		return this.getOverTimeMappedAmount(
 			effectName,
+			kind,
 			kind === "damage" ? this.#dotOverrideAmount : this.#hotOverrideAmount,
+			targetNumber,
 		);
 	}
 
 	private setOverTimeMappedAmount(
 		effectName: ResourceKey,
 		amount: number,
-		map: Map<ResourceKey, number>,
+		kind: PotencyKind,
+		map: Map<ResourceKey, Map<number, number>>,
+		targetNumber?: number,
 	) {
-		map.set(effectName, amount);
+		if (!map.has(effectName)) {
+			map.set(effectName, new Map());
+		}
+		if (targetNumber !== undefined) {
+			map.get(effectName)!.set(targetNumber, amount);
+		} else {
+			const targets = this.getOverTimePotencies(effectName, kind)[0].targetList;
+			targets?.forEach((target) => map.get(effectName)!.set(target, amount));
+		}
 	}
 	private getOverTimeMappedAmount(
 		effectName: ResourceKey,
-		map: Map<ResourceKey, number>,
+		kind: PotencyKind,
+		map: Map<ResourceKey, Map<number, number>>,
+		targetNumber?: number,
 	): number {
-		return map.get(effectName) ?? 0;
+		if (!map.has(effectName)) {
+			map.set(effectName, new Map());
+		}
+		if (targetNumber !== undefined) {
+			return map.get(effectName)!.get(targetNumber) ?? 0;
+		} else {
+			// Just return whatever the first potency is. I'm too lazy to add proper bounds checks.
+			const target = this.getOverTimePotencies(effectName, kind)[0].targetList[0] ?? 1;
+			return map.get(effectName)!.get(target) ?? 0;
+		}
 	}
 }
 

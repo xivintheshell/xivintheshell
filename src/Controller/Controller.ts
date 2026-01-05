@@ -153,8 +153,8 @@ class Controller {
 	}[] = [];
 	#dotTickTimes: Map<ResourceKey | string, number[]> = new Map();
 	#hotTickTimes: Map<ResourceKey | string, number[]> = new Map();
-	#dotCoverageTimes: Map<ResourceKey, Array<OvertimeEffectCoverage>> = new Map();
-	#hotCoverageTimes: Map<ResourceKey, Array<OvertimeEffectCoverage>> = new Map();
+	#dotCoverageTimes: Map<ResourceKey, Map<number, Array<OvertimeEffectCoverage>>> = new Map();
+	#hotCoverageTimes: Map<ResourceKey, Map<number, Array<OvertimeEffectCoverage>>> = new Map();
 
 	savedHistoricalGame: GameState;
 	savedHistoricalRecord: Record;
@@ -607,25 +607,47 @@ class Controller {
 		return cnt;
 	}
 
-	getDotCoverageTimeFraction(untilDisplayTime: number, dot: ResourceKey): number {
-		return this.getOverTimeCoverageTimeFraction(untilDisplayTime, dot, this.#dotCoverageTimes);
+	getDotCoverageTimeFraction(
+		untilDisplayTime: number,
+		dot: ResourceKey,
+		targetNumber: number,
+	): number {
+		return this.getOverTimeCoverageTimeFraction(
+			untilDisplayTime,
+			dot,
+			this.#dotCoverageTimes,
+			targetNumber,
+		);
 	}
-	getHotCoverageTimeFraction(untilDisplayTime: number, dot: ResourceKey): number {
-		return this.getOverTimeCoverageTimeFraction(untilDisplayTime, dot, this.#hotCoverageTimes);
+	getHotCoverageTimeFraction(
+		untilDisplayTime: number,
+		dot: ResourceKey,
+		targetNumber: number,
+	): number {
+		return this.getOverTimeCoverageTimeFraction(
+			untilDisplayTime,
+			dot,
+			this.#hotCoverageTimes,
+			targetNumber,
+		);
 	}
 	private getOverTimeCoverageTimeFraction(
 		untilDisplayTime: number,
 		effect: ResourceKey,
-		coverageTimes: Map<ResourceKey, Array<OvertimeEffectCoverage>>,
+		coverageTimes: Map<ResourceKey, Map<number, Array<OvertimeEffectCoverage>>>,
+		targetNumber: number,
 	): number {
 		if (untilDisplayTime <= Debug.epsilon) return 0;
 		const effectCoverages = coverageTimes.get(effect);
 		if (!effectCoverages) {
 			return 0;
 		}
+		if (!effectCoverages.has(targetNumber)) {
+			effectCoverages.set(targetNumber, []);
+		}
 
 		let coveredTime = 0;
-		effectCoverages.forEach((section) => {
+		effectCoverages.get(targetNumber)!.forEach((section) => {
 			if (section.tStartDisplay <= untilDisplayTime) {
 				const startTime = Math.max(0, section.tStartDisplay);
 				let endTime =
@@ -847,51 +869,76 @@ class Controller {
 		}
 	}
 
-	reportDotStart(displayTime: number, dot: ResourceKey) {
-		this.reportOverTimeStart(displayTime, dot, "damage");
+	reportDotStart(displayTime: number, dot: ResourceKey, targetList: number[]) {
+		this.reportOverTimeStart(displayTime, dot, "damage", targetList);
 	}
 	reportHotStart(displayTime: number, hot: ResourceKey) {
-		this.reportOverTimeStart(displayTime, hot, "healing");
+		// Treat HoTs as occurring on target 1 for simplicity.
+		this.reportOverTimeStart(displayTime, hot, "healing", [1]);
 	}
-	reportOverTimeStart(displayTime: number, effect: ResourceKey, kind: PotencyKind) {
+	reportOverTimeStart(
+		displayTime: number,
+		effect: ResourceKey,
+		kind: PotencyKind,
+		targetList: number[],
+	) {
+		// NOTE: a lot of HoT logic calls this method directly, but we don't currently set targetList
+		// for those effects, so this may be broken if we ever need to integrate HoT uptime reporting.
 		if (!this.#bInSandbox) {
 			const coverageTimes =
 				kind === "damage" ? this.#dotCoverageTimes : this.#hotCoverageTimes;
 			let effectCoverages = coverageTimes.get(effect);
 			if (!effectCoverages) {
-				effectCoverages = [];
+				effectCoverages = new Map();
 				coverageTimes.set(effect, effectCoverages);
 			}
-			const len = effectCoverages.length;
-			console.assert(len === 0 || effectCoverages[len - 1].tEndDisplay !== undefined);
-			effectCoverages.push({
-				tStartDisplay: displayTime,
-				tEndDisplay: undefined,
+			targetList.forEach((targetNumber) => {
+				let targetEffectCoverage = effectCoverages.get(targetNumber);
+				if (!targetEffectCoverage) {
+					targetEffectCoverage = [];
+					effectCoverages.set(targetNumber, targetEffectCoverage);
+				}
+				const len = targetEffectCoverage.length;
+				console.assert(
+					len === 0 || targetEffectCoverage[len - 1].tEndDisplay !== undefined,
+				);
+				targetEffectCoverage.push({
+					tStartDisplay: displayTime,
+					tEndDisplay: undefined,
+				});
 			});
 		}
 	}
 
-	reportDotDrop(displayTime: number, dot: ResourceKey) {
-		this.reportOverTimeDrop(displayTime, dot, "damage");
+	reportDotDrop(displayTime: number, dot: ResourceKey, targetList: number[]) {
+		this.reportOverTimeDrop(displayTime, dot, "damage", targetList);
 	}
 	reportHotDrop(displayTime: number, hot: ResourceKey) {
-		this.reportOverTimeDrop(displayTime, hot, "healing");
+		// Treat HoTs as occurring on target 1 for simplicity.
+		this.reportOverTimeDrop(displayTime, hot, "healing", [1]);
 	}
-	reportOverTimeDrop(displayTime: number, effect: ResourceKey, kind: PotencyKind) {
+	reportOverTimeDrop(
+		displayTime: number,
+		effect: ResourceKey,
+		kind: PotencyKind,
+		targetList: number[],
+	) {
 		if (!this.#bInSandbox) {
 			const coverageTimes =
 				kind === "damage" ? this.#dotCoverageTimes : this.#hotCoverageTimes;
-			const effectCoverages = coverageTimes.get(effect);
-			console.assert(
-				effectCoverages,
-				`Reported dropping ${effect} when no coverage was detected`,
-			);
-			if (!effectCoverages) {
-				return;
-			}
-			const len = effectCoverages.length;
-			console.assert(len > 0 && effectCoverages[len - 1].tEndDisplay === undefined);
-			effectCoverages[len - 1].tEndDisplay = displayTime;
+			targetList.forEach((targetNumber) => {
+				const effectCoverages = coverageTimes.get(effect)?.get(targetNumber);
+				console.assert(
+					effectCoverages,
+					`Reported dropping ${effect} on target ${targetNumber} when no coverage was detected`,
+				);
+				if (!effectCoverages) {
+					return;
+				}
+				const len = effectCoverages.length;
+				console.assert(len > 0 && effectCoverages[len - 1].tEndDisplay === undefined);
+				effectCoverages[len - 1].tEndDisplay = displayTime;
+			});
 		}
 	}
 
@@ -1723,7 +1770,7 @@ class Controller {
 				buffName,
 				buff.info.job,
 				getBuffModifiers(),
-				isDebuff ? "Boss0" : "",
+				isDebuff ? "Boss1" : "",
 			];
 		});
 		// sim currently doesn't track mp ticks or mp costs, or any other manner of validation
@@ -1744,12 +1791,7 @@ class Controller {
 				let targetCell = "";
 				if (row.isDamaging && row.targetList !== undefined) {
 					targetCell = '"';
-					for (let i = 0; i < row.targetList.length; i++) {
-						if (i !== 0) {
-							targetCell += ", ";
-						}
-						targetCell += "Boss" + row.targetList[i].toString();
-					}
+					targetCell += row.targetList.map((n) => `Boss {n}`).join(", ");
 					targetCell += '"';
 				}
 				let conditional = "";
@@ -2071,6 +2113,7 @@ class Controller {
 	}
 
 	requestToggleBuff(buffName: ResourceKey, canUndo: boolean = false) {
+		// TODO:TARGET support toggling debuffs on specific enemies
 		const success = this.game.requestToggleBuff(buffName);
 		if (!success) return false;
 

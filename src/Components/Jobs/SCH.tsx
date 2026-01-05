@@ -29,7 +29,7 @@ const SCH_BUFFS: SCHResourceKey[] = (Object.keys(SCH_STATUSES) as SCHResourceKey
 
 export class SCHStatusPropsGenerator extends StatusPropsGenerator<SCHState> {
 	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
-		return [...SCH_DEBUFFS.map((rscType) => this.makeCommonTimer(rscType))];
+		return [...SCH_DEBUFFS.flatMap((rscType) => this.makeTargetedTimers(rscType))];
 	}
 
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {

@@ -25,7 +25,7 @@ const BARD_BUFFS: BRDResourceKey[] = (Object.keys(BRD_STATUSES) as BRDResourceKe
 
 export class BRDStatusPropsGenerator extends StatusPropsGenerator<BRDState> {
 	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
-		return [...BARD_DEBUFFS.map((rscType) => this.makeCommonTimer(rscType, false))];
+		return [...BARD_DEBUFFS.flatMap((rscType) => this.makeTargetedTimers(rscType))];
 	}
 
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {

@@ -742,6 +742,19 @@ export class Potency {
 		return this.#targetList ?? [];
 	}
 
+	tryRemoveTarget(targetNumber: number) {
+		// Attempt to remove a target from the targetList.
+		// Used by DoT tracking logic when a DoT is overridden for some, but not all targets
+		// affected by this application.
+		// Returns true if the target was removed.
+		const idx = this.#targetList?.indexOf(targetNumber) ?? -1;
+		if (idx > -1) {
+			this.#targetList!.splice(idx, 1);
+			return true;
+		}
+		return false;
+	}
+
 	get targetCount(): number {
 		return this.#targetCount;
 	}
