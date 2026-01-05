@@ -27,6 +27,9 @@ export interface ResourceData {
 
 	mayBeToggled?: boolean; // set to true to allow the resource to be toggled via the UI
 	mayNotBeCanceled?: boolean; // set to true to prevent the resource from being clicked off
+	// Set to true if this is internally tracked through DebuffState instead of ResourceState.
+	// All DoT debuffs will use DebuffState, regardless of this flag.
+	specialDebuff?: true;
 }
 
 export interface TraitData {

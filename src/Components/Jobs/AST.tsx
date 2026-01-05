@@ -22,7 +22,7 @@ const AST_BUFFS: ASTResourceKey[] = (Object.keys(AST_STATUSES) as ASTResourceKey
 
 export class ASTStatusPropsGenerator extends StatusPropsGenerator<ASTState> {
 	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
-		return [...AST_DEBUFFS.map((rscType) => this.makeCommonTimer(rscType))];
+		return [...AST_DEBUFFS.flatMap((rscType) => this.makeTargetedTimers(rscType))];
 	}
 
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {

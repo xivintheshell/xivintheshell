@@ -24,7 +24,7 @@ const PLD_BUFFS: PLDResourceKey[] = (Object.keys(PLD_STATUSES) as PLDResourceKey
 
 export class PLDStatusPropsGenerator extends StatusPropsGenerator<PLDState> {
 	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
-		return [...PLD_DEBUFFS.map((rscType) => this.makeCommonTimer(rscType, false))];
+		return [...PLD_DEBUFFS.flatMap((rscType) => this.makeTargetedTimers(rscType))];
 	}
 
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
