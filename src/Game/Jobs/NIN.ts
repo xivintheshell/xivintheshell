@@ -753,6 +753,7 @@ makeWeaponskill("NIN", "DOTON_CHI", 70, {
 	startOnHotbar: false,
 	recastTime: 1.5,
 	replaceIf: CHI_REPLACEMENTS,
+	falloff: 0,
 	validateAttempt: DOTON_TCJ_CONDITION,
 	jobPotencyModifiers: (state) => {
 		const mods: PotencyModifier[] = [];

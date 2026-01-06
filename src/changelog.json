@@ -1,5 +1,12 @@
 [
 	{
+		"date": "1/5/25",
+		"changes": [
+			"[NIN] Fixed a bug where using Doton under the effect of Ten Chi Jin did not apply AoE damage.",
+			"New developer blog post (English only): https://blog.xivintheshell.com/posts/the-night-before-heavyweight/"
+		]
+	},
+	{
 		"date": "1/2/25",
 		"changes": [
 			"[MCH] Adjusted the potency of Wildfire to reflect its inability to CDH.",
