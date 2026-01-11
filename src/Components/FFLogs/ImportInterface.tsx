@@ -956,61 +956,65 @@ export function FflogsImportFlow() {
 	};
 	const trColor = (i: number) =>
 		i % 2 === 1 ? colors.timelineEditor.bgAlternateRow : "transparent";
-	const importProgressTable = importProgress?.deltas.length && <>
-		<hr />
-		<div>
-			{localize({
-				en:
-					"Some simulated actions had timestamps in XIV in the Shell different from the recorded values in FFLogs. " +
-					"Minor differences are normal, but if you see a very large discrepancy, " +
-					"this means there's either a bug in XIV in the Shell, or the configured spell speed/skill speed/fps was incorrect.",
-				zh:
-					"由XIV in the Shell计算出的部分技能/操作的时间与它们在logs中记录的时间不一致。" +
-					"有微小的时间差是正常现象，但如果时间差较大，可能是因为XIV in the Shell有bug，或者属性设置界面的咏速/技速/帧率不准确。",
-			})}
-		</div>
-		<table style={tableStyle}>
-			<thead>
-				<tr style={TR_STYLE}>
-					<th style={{ ...thStyle, ...ACTION_TD_STYLE, width: "35%" }}>
-						{localize({ en: "skill", zh: "技能" })}
-					</th>
-					<th style={{ ...thStyle, ...TIMESTAMP_TD_STYLE }}>
-						{localize({ en: "log time", zh: "日志时间" })}
-					</th>
-					<th style={{ ...thStyle, ...TIMESTAMP_TD_STYLE }}>
-						{localize({ en: "shell time", zh: "模拟器时间" })}
-					</th>
-					<th style={{ ...thStyle, ...TIMESTAMP_TD_STYLE }}>
-						{localize({ en: "difference", zh: "差别" })}
-					</th>
-				</tr>
-			</thead>
-			<tbody>
-				{importProgress.deltas.map((info, i) => <tr
-					key={i}
-					style={{ ...TR_STYLE, background: trColor(i) }}
-				>
-					<td style={{ ...ACTION_TD_STYLE, width: "35%" }}>
-						{localizeSkillName(info.skill)}
-					</td>
-					<td style={TIMESTAMP_TD_STYLE}>{StaticFn.displayTime(info.logTime, 3)}</td>
-					<td style={TIMESTAMP_TD_STYLE}>{StaticFn.displayTime(info.simTime, 3)}</td>
-					<td style={TIMESTAMP_TD_STYLE}>
-						{StaticFn.displayTime(info.logTime - info.simTime, 3)}
-					</td>
-				</tr>)}
-			</tbody>
-		</table>
-		{importProgress.spilledDeltas ? (
-			<span>
+	const importProgressTable = importProgress?.deltas.length ? (
+		<>
+			<hr />
+			<div>
 				{localize({
-					en: `...and ${importProgress.spilledDeltas} more`,
-					zh: `还有另外${importProgress.spilledDeltas}个`,
+					en:
+						"Some simulated actions had timestamps in XIV in the Shell different from the recorded values in FFLogs. " +
+						"Minor differences are normal, but if you see a very large discrepancy, " +
+						"this means there's either a bug in XIV in the Shell, or the configured spell speed/skill speed/fps was incorrect.",
+					zh:
+						"由XIV in the Shell计算出的部分技能/操作的时间与它们在logs中记录的时间不一致。" +
+						"有微小的时间差是正常现象，但如果时间差较大，可能是因为XIV in the Shell有bug，或者属性设置界面的咏速/技速/帧率不准确。",
 				})}
-			</span>
-		) : undefined}
-	</>;
+			</div>
+			<table style={tableStyle}>
+				<thead>
+					<tr style={TR_STYLE}>
+						<th style={{ ...thStyle, ...ACTION_TD_STYLE, width: "35%" }}>
+							{localize({ en: "skill", zh: "技能" })}
+						</th>
+						<th style={{ ...thStyle, ...TIMESTAMP_TD_STYLE }}>
+							{localize({ en: "log time", zh: "日志时间" })}
+						</th>
+						<th style={{ ...thStyle, ...TIMESTAMP_TD_STYLE }}>
+							{localize({ en: "shell time", zh: "模拟器时间" })}
+						</th>
+						<th style={{ ...thStyle, ...TIMESTAMP_TD_STYLE }}>
+							{localize({ en: "difference", zh: "差别" })}
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					{importProgress.deltas.map((info, i) => <tr
+						key={i}
+						style={{ ...TR_STYLE, background: trColor(i) }}
+					>
+						<td style={{ ...ACTION_TD_STYLE, width: "35%" }}>
+							{localizeSkillName(info.skill)}
+						</td>
+						<td style={TIMESTAMP_TD_STYLE}>{StaticFn.displayTime(info.logTime, 3)}</td>
+						<td style={TIMESTAMP_TD_STYLE}>{StaticFn.displayTime(info.simTime, 3)}</td>
+						<td style={TIMESTAMP_TD_STYLE}>
+							{StaticFn.displayTime(info.logTime - info.simTime, 3)}
+						</td>
+					</tr>)}
+				</tbody>
+			</table>
+			{importProgress.spilledDeltas ? (
+				<span>
+					{localize({
+						en: `...and ${importProgress.spilledDeltas} more`,
+						zh: `还有另外${importProgress.spilledDeltas}个`,
+					})}
+				</span>
+			) : undefined}
+		</>
+	) : (
+		<></>
+	);
 	const processingSpinner = <div className="importPage">
 		<div>
 			{localize({
