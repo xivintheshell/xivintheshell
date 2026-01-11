@@ -4,6 +4,7 @@
 		"changes": [
 			"[SCH] Fixed a bug where using Adloquium, Succor, or Concitation under the effect of Recitation consumed MP.",
 			"[BLU] Enabled FFLogs import.",
+			"Fixed a bug where importing an FFLogs report link with a fight ID would sometimes not pick the specified fight.",
 			"Removed marker presets for M5S-M8S from current content. These can still be found in the \"archive\" section of marker presets."
 		]
 	},

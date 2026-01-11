@@ -27,7 +27,8 @@ export interface ParsedLogQueryParams {
 }
 
 export function parseLogURL(urlString: string): ParsedLogQueryParams {
-	const url = URL.parse(urlString)!;
+	// Clicking a fight from the FFLogs web UI adds the ID as a hash instead of a search param.
+	const url = URL.parse(urlString.replace("#", "?"))!;
 	if (url === null) {
 		return {
 			apiBaseUrl: "",
