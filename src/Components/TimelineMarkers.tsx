@@ -51,6 +51,8 @@ import {
 export let setEditingMarkerValues = (marker: MarkerElem) => {};
 
 const PRESET_MARKERS_BASE = "/presets/markers/";
+export const MAX_TRACK_NUMBER = 20;
+export const MIN_TRACK_NUMBER = 0; // untargetable track (-1) is handled separately
 
 const ROW_GAP_PX = 5;
 
@@ -673,6 +675,15 @@ export function CustomMarkerWidget() {
 					if (isNaN(marker.duration) || isNaN(marker.time) || isNaN(marker.track)) {
 						err = localize({ en: "some input(s) are invalid", zh: "部分输入格式不对" });
 					}
+					if (
+						marker.track !== UntargetableMarkerTrack &&
+						(marker.track < MIN_TRACK_NUMBER || marker.track > MAX_TRACK_NUMBER)
+					) {
+						err = localize({
+							en: `marker track number must be between ${MIN_TRACK_NUMBER} and ${MAX_TRACK_NUMBER}`,
+							zh: `轨道序号必须在${MIN_TRACK_NUMBER}到${MAX_TRACK_NUMBER}之间`,
+						});
+					}
 					if (err) {
 						window.alert(err);
 						e.preventDefault();
@@ -735,8 +746,17 @@ export function MarkerLoadSaveWidget() {
 				label={individualTrackLabel}
 				onLoadFn={(content: any) => {
 					const track = parseInt(loadTrackDest);
-					if (isNaN(track)) {
-						window.alert("invalid track destination");
+					if (
+						isNaN(track) ||
+						(track !== UntargetableMarkerTrack &&
+							(track < MIN_TRACK_NUMBER || track > MAX_TRACK_NUMBER))
+					) {
+						window.alert(
+							localize({
+								en: `marker track number must be between ${MIN_TRACK_NUMBER} and ${MAX_TRACK_NUMBER}`,
+								zh: `轨道序号必须在${MIN_TRACK_NUMBER}到${MAX_TRACK_NUMBER}之间`,
+							}),
+						);
 						return;
 					}
 					controller.timeline.loadIndividualTrackPreset(content, track, parsedOffset);
