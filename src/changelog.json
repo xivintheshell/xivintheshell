@@ -1,5 +1,13 @@
 [
 	{
+		"date": "1/11/25",
+		"changes": [
+			"[SCH] Fixed a bug where using Adloquium, Succor, or Concitation under the effect of Recitation consumed MP.",
+			"[BLU] Enabled FFLogs import.",
+			"Removed marker presets for M5S-M8S from current content. These can still be found in the \"archive\" section of marker presets."
+		]
+	},
+	{
 		"date": "1/5/25",
 		"changes": [
 			"[NIN] Fixed a bug where using Doton under the effect of Ten Chi Jin did not apply AoE damage.",
