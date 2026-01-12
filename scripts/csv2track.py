@@ -55,7 +55,9 @@ def parse_csv(src, dst):
     # }
     tracks = defaultdict(list)  # map track id to track object
     with open(src) as infile:
+        i = 0
         for row in csv.DictReader(infile):
+            i += 1
             track_str = row["Track"]
             if not track_str:
                 continue
@@ -73,9 +75,9 @@ def parse_csv(src, dst):
                 toks = ability.split()
                 ability = " ".join(toks[:-2])
                 cast_duration = float(toks[-2])
-                if cast_duration > 0:
-                    # For some reason, logs usually track durations ending with x.70
-                    # instead of the whole second, which is more accurate.
+                if cast_duration > 0 and track_id != -1:
+                    # For some reason, logs usually report casts as 0.3s too short.
+                    # Add 0.3s to compensate (except for manually-added untargetable durations.)
                     cast_duration += 0.3
             description = row["Override Description"] or ability
             hide = row["Hide Text"] == "y"
@@ -91,6 +93,8 @@ def parse_csv(src, dst):
                 color_hex_str = "#6f6f6f"
                 cast_duration = float(row["Ability"].split()[0])
             else:
+                if not color_str:
+                    raise ValueError(f"missing color in row {i + 1}")
                 color_hex_str = COLOR_MAP[color_str]
             tracks[track_id].append(
                 {
