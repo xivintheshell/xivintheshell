@@ -1,5 +1,11 @@
 [
 	{
+		"date": "1/12/25",
+		"changes": [
+			"Added English-language M9S tracks."
+		]
+	},
+	{
 		"date": "1/11/25",
 		"changes": [
 			"[SCH] Fixed a bug where using Adloquium, Succor, or Concitation under the effect of Recitation consumed MP.",
