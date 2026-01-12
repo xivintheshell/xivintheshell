@@ -586,7 +586,7 @@ makeRPRWeaponskill("SLICE", 1, {
 	potency: [
 		["NEVER", 260],
 		["MELEE_MASTERY_II_RPR", 320],
-		["MELEE_MASTERY_III_RPR", 460],
+		["MELEE_MASTERY_III_RPR", 420],
 	],
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),

@@ -2,7 +2,8 @@
 	{
 		"date": "1/12/25",
 		"changes": [
-			"Added English-language M9S tracks."
+			"Added English-language M9S tracks.",
+			"[RPR] Fixed a bug where Slice had incorrect potency."
 		]
 	},
 	{
