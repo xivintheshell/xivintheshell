@@ -188,15 +188,21 @@ makeResourceAbility(
 	},
 );
 
-[...HEALER_JOBS, ...CASTER_JOBS].forEach((job) => {
+[...HEALER_JOBS, ...CASTER_JOBS, ...LIMITED_JOBS].forEach((job) => {
 	makeResource(job, "SURECAST", 1, { timeout: 6.5 });
 });
-makeResourceAbility([...HEALER_JOBS, ...CASTER_JOBS], "SURECAST", 44, "cd_SURECAST", {
-	rscType: "SURECAST",
-	applicationDelay: 0, // surprisingly instant because arms length is not
-	cooldown: 120,
-	assetPath: "Role/Surecast.png",
-});
+makeResourceAbility(
+	[...HEALER_JOBS, ...CASTER_JOBS, ...LIMITED_JOBS],
+	"SURECAST",
+	44,
+	"cd_SURECAST",
+	{
+		rscType: "SURECAST",
+		applicationDelay: 0, // surprisingly instant because arms length is not
+		cooldown: 120,
+		assetPath: "Role/Surecast.png",
+	},
+);
 
 //#endregion
 
