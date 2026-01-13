@@ -230,10 +230,6 @@ const makeBLUSpell = (
 	const basePotency = params.basePotency ?? Number;
 	const aspect = params.aspect ?? Aspect.Other;
 	const baseCastTime = params.baseCastTime ?? 0;
-	const onConfirm: EffectFn<BLUState> | undefined =
-		baseCastTime > 0
-			? combineEffects((state) => state.tryConsumeResource("SWIFTCAST"), params.onConfirm)
-			: params.onConfirm;
 	const jobPotencyMod: PotencyModifierFn<BLUState> =
 		params.jobPotencyModifiers ?? ((state) => []);
 	return makeSpell("BLU", name, unlockLevel, {
@@ -279,6 +275,7 @@ const makeBLUSpell = (
 		isInstantFn: (state) => state.hasResourceAvailable("SWIFTCAST") || baseCastTime === 0,
 		onConfirm: combineEffects(
 			(state) => state.tryConsumeResource("SURPANAKHAS_FURY"),
+			params.baseCastTime ? (state) => state.tryConsumeResource("SWIFTCAST") : undefined,
 			params.onConfirm,
 		),
 	});
