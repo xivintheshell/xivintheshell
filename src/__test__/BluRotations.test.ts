@@ -31,7 +31,7 @@ it(
 		time: 23.08 + 2,
 		lastDamageApplicationTime: 19.7331 + 2,
 		totalPotency: {
-			applied: 2300,
+			applied: 2740,
 			pending: 0,
 		},
 		gcdSkills: {
@@ -39,7 +39,7 @@ it(
 			pending: 0,
 		},
 		mainTableSummary: {
-			totalPotencyWithoutPot: 2300,
+			totalPotencyWithoutPot: 2740,
 		},
 	}),
 );

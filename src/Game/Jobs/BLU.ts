@@ -305,13 +305,6 @@ const makeBLUAbility = (
 		onApplication?: EffectFn<BLUState>;
 	},
 ): Ability<BLUState> => {
-	const OnConfirm: EffectFn<BLUState> = (state: BLUState, node?: any) => {
-		if (name !== "SURPANAKHA") {
-			if (state.resources.get("SURPANAKHAS_FURY").availableAmount() > 0) {
-				state.tryConsumeResource("SURPANAKHAS_FURY", true);
-			}
-		}
-	};
 	return makeAbility("BLU", name, unlockLevel, cdName, {
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = [];
@@ -322,7 +315,11 @@ const makeBLUAbility = (
 		},
 		validateAttempt: (state) => !isOver(state) && (params.validateAttempt?.(state) ?? true),
 		...params,
-		onConfirm: OnConfirm,
+		onConfirm: combineEffects((state) => {
+			if (name !== "SURPANAKHA") {
+				state.tryConsumeResource("SURPANAKHAS_FURY");
+			}
+		}, params.onConfirm),
 	});
 };
 
