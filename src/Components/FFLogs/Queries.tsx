@@ -128,6 +128,7 @@ const BUFF_IDS = {
 	TENGENTSU: 1003853,
 	THIRD_EYE: 1001232,
 	CREST_OF_TIME_BORROWED: 1002596,
+	COLD_FOG: 1002493,
 };
 
 const POP_MAP = new Map<ActionKey, ActionKey>([
@@ -137,6 +138,7 @@ const POP_MAP = new Map<ActionKey, ActionKey>([
 	["TENGENTSU_POP", "TENGENTSU"],
 	["THIRD_EYE_POP", "THIRD_EYE"],
 	["ARCANE_CREST_POP", "ARCANE_CREST"],
+	["POP_COLD_FOG", "COLD_FOG"],
 ]);
 
 export interface FightInfo {
@@ -452,6 +454,10 @@ export async function queryPlayerEvents(
 			} else if (job === "RPR" && entry.targetID === params.playerID) {
 				if (abilityGameID === BUFF_IDS.CREST_OF_TIME_BORROWED) {
 					popToAdd = "ARCANE_CREST_POP";
+				}
+			} else if (job === "BLU" && entry.targetID === params.playerID) {
+				if (abilityGameID === BUFF_IDS.COLD_FOG) {
+					popToAdd = "POP_COLD_FOG";
 				}
 			}
 			// TODO deal with SGE shields
