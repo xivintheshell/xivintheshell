@@ -1,13 +1,20 @@
 [
 	{
-		"date": "1/12/25",
+		"date": "1/13/26",
+		"changes": [
+			"Added Vamp Stomp floor bat explosion timings to M9S tracks.",
+			"Added English-language M10S tracks."
+		]
+	},
+	{
+		"date": "1/12/26",
 		"changes": [
 			"Added English-language M9S tracks.",
 			"[RPR] Fixed a bug where Slice had incorrect potency."
 		]
 	},
 	{
-		"date": "1/11/25",
+		"date": "1/11/26",
 		"changes": [
 			"[SCH] Fixed a bug where using Adloquium, Succor, or Concitation under the effect of Recitation consumed MP.",
 			"[BLU] Enabled FFLogs import.",
@@ -17,14 +24,14 @@
 		]
 	},
 	{
-		"date": "1/5/25",
+		"date": "1/5/26",
 		"changes": [
 			"[NIN] Fixed a bug where using Doton under the effect of Ten Chi Jin did not apply AoE damage.",
 			"New developer blog post (English only): https://blog.xivintheshell.com/posts/the-night-before-heavyweight/"
 		]
 	},
 	{
-		"date": "1/2/25",
+		"date": "1/2/26",
 		"changes": [
 			"[MCH] Adjusted the potency of Wildfire to reflect its inability to CDH.",
 			"[SCH][AST] Fixed a bug where DoT effects with no on-hit potency did not receive the player's own Chain Stratagem or Divination buffs.",

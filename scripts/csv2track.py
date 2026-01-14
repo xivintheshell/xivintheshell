@@ -6,12 +6,14 @@
 # - Override Description: the description for the event (this script will use the name of the Ability
 #   if this is left unspecified
 # - Hide Text: if "y", then hide the text on the timeline
+# - No Adjust: if non-empty and the row is a "Begin Cast" event, then do not add 0.3s to this event's
+#   duration. Events on the untargetable track never receive a 0.3s adjustment.
 # For untargetability events, add an extra row with the timestamp at which the boss disappears,
 # a track of -1, and the duration of the downtime in the Ability column.
 #
 # This script will add any cast that has a value in the "Track" column to the timeline.
-# "Begin Cast" events are applied with their duration, and "Cast" events are given a 0s
-# duration. The duration "x.xx sec" at the end of ability names is automatically removed.
+# "Begin Cast" events are applied with their duration + 0.3s (to account for an FFLogs limitation),
+# and "Cast" events are given a 0s duration. The duration "x.xx sec" at the end of ability names is automatically removed.
 
 from collections import defaultdict
 import csv
@@ -75,7 +77,7 @@ def parse_csv(src, dst):
                 toks = ability.split()
                 ability = " ".join(toks[:-2])
                 cast_duration = float(toks[-2])
-                if cast_duration > 0 and track_id != -1:
+                if (cast_duration > 0 and track_id != -1) and not ("No Adjust" in row and row["No Adjust"]):
                     # For some reason, logs usually report casts as 0.3s too short.
                     # Add 0.3s to compensate (except for manually-added untargetable durations.)
                     cast_duration += 0.3
