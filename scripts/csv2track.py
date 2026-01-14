@@ -75,7 +75,7 @@ def parse_csv(src, dst):
                 toks = ability.split()
                 ability = " ".join(toks[:-2])
                 cast_duration = float(toks[-2])
-                if cast_duration > 0 and track_id != -1:
+                if (cast_duration > 0 and track_id != -1) and not ("No Adjust" in row and row["No Adjust"]):
                     # For some reason, logs usually report casts as 0.3s too short.
                     # Add 0.3s to compensate (except for manually-added untargetable durations.)
                     cast_duration += 0.3
