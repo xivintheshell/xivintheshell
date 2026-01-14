@@ -972,7 +972,7 @@ export class DamageStatistics extends React.Component {
 					<div>
 						<div style={{ display: "inline-block", width: "8%" }}>
 							<span style={headerCellStyle}>
-								<b>{localize({ en: "cast time", zh: "读条时间" })}</b>
+								<b>{localize({ en: "cast time", zh: "施放时间" })}</b>
 							</span>
 						</div>
 						<div style={{ display: "inline-block", width: "8%" }}>
@@ -1032,7 +1032,7 @@ export class DamageStatistics extends React.Component {
 						</div>
 						<div style={{ display: "inline-block", width: "8%" }}>
 							<span style={headerCellStyle}>
-								<b>{localize({ en: "ticks", zh: "跳雷次数" })}</b>
+								<b>{localize({ en: "ticks", zh: "跳DoT次数" })}</b>
 							</span>
 						</div>
 						<div style={{ display: "inline-block", width: "24%" }}>
