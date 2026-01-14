@@ -1,5 +1,11 @@
 [
 	{
+		"date": "1/14/26",
+		"changes": [
+			"Added English-language M11S tracks."
+		]
+	},
+	{
 		"date": "1/13/26",
 		"changes": [
 			"Added Vamp Stomp floor bat explosion timings to M9S tracks.",
