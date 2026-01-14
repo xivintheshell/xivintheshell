@@ -230,10 +230,6 @@ const makeBLUSpell = (
 	const basePotency = params.basePotency ?? Number;
 	const aspect = params.aspect ?? Aspect.Other;
 	const baseCastTime = params.baseCastTime ?? 0;
-	const onConfirm: EffectFn<BLUState> | undefined =
-		baseCastTime > 0
-			? combineEffects((state) => state.tryConsumeResource("SWIFTCAST"), params.onConfirm)
-			: params.onConfirm;
 	const jobPotencyMod: PotencyModifierFn<BLUState> =
 		params.jobPotencyModifiers ?? ((state) => []);
 	return makeSpell("BLU", name, unlockLevel, {
@@ -277,7 +273,11 @@ const makeBLUSpell = (
 			return mods;
 		},
 		isInstantFn: (state) => state.hasResourceAvailable("SWIFTCAST") || baseCastTime === 0,
-		onConfirm,
+		onConfirm: combineEffects(
+			(state) => state.tryConsumeResource("SURPANAKHAS_FURY"),
+			params.baseCastTime ? (state) => state.tryConsumeResource("SWIFTCAST") : undefined,
+			params.onConfirm,
+		),
 	});
 };
 
@@ -301,19 +301,24 @@ const makeBLUAbility = (
 		onConfirm?: EffectFn<BLUState>;
 		onApplication?: EffectFn<BLUState>;
 	},
-): Ability<BLUState> =>
-	makeAbility("BLU", name, unlockLevel, cdName, {
+): Ability<BLUState> => {
+	return makeAbility("BLU", name, unlockLevel, cdName, {
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = [];
 			if (state.hasResourceAvailable("WAXING_NOCTURNE")) {
 				mods.push(Modifiers.MoonFlute);
 			}
-
 			return mods;
 		},
 		validateAttempt: (state) => !isOver(state) && (params.validateAttempt?.(state) ?? true),
 		...params,
+		onConfirm: combineEffects((state) => {
+			if (name !== "SURPANAKHA") {
+				state.tryConsumeResource("SURPANAKHAS_FURY");
+			}
+		}, params.onConfirm),
 	});
+};
 
 makeBLUSpell("SONIC_BOOM", 1, {
 	basePotency: 210,
@@ -619,6 +624,7 @@ makeBLUSpell("END_PHANTOM_FLURRY", 1, {
 	baseCastTime: 0,
 	manaCost: 0,
 	applicationDelay: 0.5,
+	validateAttempt: (state) => state.hasResourceAvailable("PHANTOM_FLURRY"),
 });
 
 makeBLUSpell("WINGED_REPROBATION", 1, {
@@ -738,7 +744,7 @@ makeBLUAbility("APOKALYPSIS", 1, "cd_BEING_MORTAL", {
 			node,
 			effectName: "APOKALYPSIS",
 			skillName: "APOKALYPSIS",
-			tickPotency: 100,
+			tickPotency: 140,
 			tickFrequency: 1,
 			speedStat: "unscaled",
 			modifiers,
