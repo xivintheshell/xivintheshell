@@ -71,6 +71,7 @@ function mm(
 export const TRACK_META_MAP: Map<string, MarkerTrackMeta> = new Map([
 	["m9s", mm("M9S", "savage", "en", "shanzhe")],
 	["m10s", mm("M10S", "savage", "en", "shanzhe")],
+	["m11s", mm("M11S", "savage", "en", "shanzhe")],
 	["m5s", mm("M5S", "savage", "en", "shanzhe")],
 	["m6s", mm("M6S", "savage", "en", "shanzhe")],
 	["m7s", mm("M7S", "savage", "en", "shanzhe")],
@@ -117,7 +118,14 @@ export const TRACK_META_MAP: Map<string, MarkerTrackMeta> = new Map([
 	["p12s_p2_zh", mm("P12S本体", "savage", "zh", "不打冰3攻略组")],
 ]);
 
-export const RECENT_CONTENT_TRACKS = ["m9s", "m10s", "final_verse_q40", "fru_en_full", "fru_zh"];
+export const RECENT_CONTENT_TRACKS = [
+	"m9s",
+	"m10s",
+	"m11s",
+	"final_verse_q40",
+	"fru_en_full",
+	"fru_zh",
+];
 
 export const LEGACY_ULTIMATE_TRACKS = ["dsr_p2", "dsr_p6", "dsr_p7", "TOP_2023_04_02"];
 
