@@ -608,10 +608,10 @@ function drawPotencyMarks(params: MarkerDrawParams<PotencyMarkElem>) {
 					buffImages.push(buffIconImages.get(BuffType.Tincture));
 				}
 
-				potencyInfo.potency.getPartyBuffs().forEach((desc) => {
+				potencyInfo.potency.getPartyBuffs(mark.displayTime).forEach((desc) => {
 					const buffImage = buffIconImages.get(desc);
 					if (!buffImages.includes(buffImage)) {
-						buffImages.push();
+						buffImages.push(buffImage);
 					}
 				});
 			}
@@ -934,24 +934,23 @@ function drawSkills(params: {
 
 		// 2. potency
 		if (!((node.maybeGetActionKey() ?? "NEVER") in LIMIT_BREAK_ACTIONS)) {
-			if (node.getInitialPotency()) {
-				const potency = node.getPotency({
-					tincturePotencyMultiplier: renderingProps.tincturePotencyMultiplier,
-					includePartyBuffs: true,
-					includeSplash: true,
-					untargetable: bossIsUntargetable,
-				}).applied;
+			const potency = node.getPotency({
+				tincturePotencyMultiplier: renderingProps.tincturePotencyMultiplier,
+				includePartyBuffs: true,
+				includeSplash: true,
+				untargetable: bossIsUntargetable,
+			}).applied;
+			if (potency)
 				lines.push(localize({ en: "potency: ", zh: "威力：" }) + potency.toFixed(2));
-			}
-			if (node.getInitialHealingPotency()) {
-				const healingPotency = node.getHealingPotency({
-					tincturePotencyMultiplier: renderingProps.tincturePotencyMultiplier,
-					includeSplash: true,
-					includePartyBuffs: true,
-					untargetable: bossIsUntargetable,
-				}).applied;
+
+			const healingPotency = node.getHealingPotency({
+				tincturePotencyMultiplier: renderingProps.tincturePotencyMultiplier,
+				includeSplash: true,
+				includePartyBuffs: true,
+				untargetable: bossIsUntargetable,
+			}).applied;
+			if (healingPotency)
 				lines.push(localize({ en: "healing potency: " }) + healingPotency.toFixed(2));
-			}
 		}
 
 		// 3. duration
