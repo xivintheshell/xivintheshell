@@ -1,10 +1,9 @@
-import React from "react";
+import React, { useContext, createContext, useState, useEffect, useCallback } from "react";
+import { ContentNode } from "../Components/Common";
 import { localize } from "../Components/Localization";
 import { getThemeColors, getCachedColorTheme } from "../Components/ColorTheme";
-import { GITHUB_URL, HELP_CHANNEL_URL, BSKY_URL } from "../Components/IntroSection";
-
-const BALANCE_PAGE_URL = "https://www.thebalanceffxiv.com/";
-const ICY_VEINS_URL = "https://www.icy-veins.com/ffxiv/";
+import { IntroEn } from "./Intro";
+import { OverviewEn } from "./Overview";
 
 // Unlike pages within the main webapp, where localization is embedded for each text element,
 // the localized sub-components of the manual are split up to ensure the semantic structure of
@@ -14,20 +13,70 @@ const ICY_VEINS_URL = "https://www.icy-veins.com/ffxiv/";
 
 const colorTheme = getCachedColorTheme();
 
+interface NavItem {
+	id: string;
+	label: ContentNode;
+	indentLevel: number;
+}
+
+const NavContext = createContext<{ items: NavItem[]; addItem: (it: NavItem) => void }>({
+	items: [],
+	addItem: () => {},
+});
+
 function Navbar() {
+	const navCtx = useContext(NavContext);
 	return <nav
 		style={{
 			float: "right",
 			zIndex: 1,
-			marginRight: "1em",
 		}}
 	>
+		<p>Navigation</p>
 		<ul>
 			<li>
-				<a href="#overview">Overview</a>
+				<a href="#top">back to top</a>
 			</li>
+			{navCtx.items.map(({ id, label, indentLevel }) => {
+				return <li key={id}>
+					{Array(indentLevel).map(() => "&nbsp;")}
+					<a href={"#" + id}>{label}</a>
+				</li>;
+			})}
 		</ul>
 	</nav>;
+}
+
+/**
+ * A section labeled with an <h2> HTML element that's automatically added to the navbar.
+ */
+export function NavH2Section(props: {
+	id: string;
+	label: ContentNode;
+	content?: React.ReactElement;
+}) {
+	const navCtx = useContext(NavContext);
+	useEffect(() => navCtx.addItem({ id: props.id, label: props.label, indentLevel: 1 }), []);
+	return <>
+		<h2 id={props.id}>{props.label}</h2>
+		{props.content}
+	</>;
+}
+
+/**
+ * A section labeled with an <h3> HTML element that's automatically added to the navbar.
+ */
+export function NavH3Section(props: {
+	id: string;
+	label: ContentNode;
+	content?: React.ReactElement;
+}) {
+	const navCtx = useContext(NavContext);
+	useEffect(() => navCtx.addItem({ id: props.id, label: props.label, indentLevel: 2 }), []);
+	return <>
+		<h3 id={props.id}>{props.label}</h3>
+		{props.content}
+	</>;
 }
 
 export default function Manual() {
@@ -149,7 +198,19 @@ export default function Manual() {
 			background-color: ${colors.background};
 		}
 	`}</style>;
+
+	const [childHeaders, setChildHeaders] = useState<NavItem[]>([]);
+	const addChild = useCallback(({ id, label, indentLevel }: NavItem) => {
+		setChildHeaders((oldHeaders) => {
+			// Avoid duplicates if strict mode or hot refresh triggers double-mounts
+			if (oldHeaders.find((h) => h.id === id)) {
+				return oldHeaders;
+			}
+			return [...oldHeaders, { id, label, indentLevel }];
+		});
+	}, []);
 	return <div
+		className="visibleScrollbar"
 		style={{
 			position: "fixed",
 			top: 0,
@@ -163,61 +224,43 @@ export default function Manual() {
 			color: colors.text,
 			backgroundColor: colors.background,
 			height: "100%",
+			overflow: "auto",
 		}}
 		tabIndex={-1}
 	>
 		{styleblock}
-		<div id="nav-container">
-			<Navbar />
-		</div>
-		<div
-			style={{
-				marginLeft: "1em",
-				marginRight: "1em",
-				display: "flex",
-				flexDirection: "column",
-			}}
-			tabIndex={-1}
-		>
-			{localize({ en: BodyEn(), zh: BodyZh() })}
-		</div>
+		<NavContext.Provider value={{ items: childHeaders, addItem: addChild }}>
+			<div
+				id="nav-container"
+				style={{
+					position: "sticky",
+					top: "1rem",
+					marginInline: "1rem",
+				}}
+			>
+				<Navbar />
+			</div>
+			<div
+				style={{
+					marginLeft: "1em",
+					marginRight: "1em",
+					paddingRight: "1em",
+					display: "flex",
+					flexDirection: "column",
+				}}
+				tabIndex={-1}
+			>
+				{localize({ en: BodyEn(), zh: BodyZh() })}
+			</div>
+		</NavContext.Provider>
 	</div>;
 }
 
 function BodyEn() {
 	return <>
-		<h1>XIV in the Shell User Manual</h1>
-		<p
-			style={{
-				marginLeft: "2em",
-				marginTop: "-0.2em",
-				marginBottom: "1em",
-			}}
-		>
-			<i>by shanzhe and whoever else he ropes into this</i>
-		</p>
-		<p>
-			Welcome to XIV in the Shell, a rotation planner tool for Final Fantasy XIV! This page
-			walks you through how to make the most of our timeline creation and manipulation
-			features to improve your gameplay. Use the navigation bar on the right to find help for
-			a specific feature.
-		</p>
-		<p>
-			This guide only covers how to use this tool for planning, not how to choose what
-			abilities to use in your rotation. For resources on how to learn and optimize your job,
-			please refer to other sites like <a href={BALANCE_PAGE_URL}>The Balance</a> and{" "}
-			<a href={ICY_VEINS_URL}>Icy Veins</a>.
-		</p>
-		<p>
-			For feedback or questions about this page, please reach out to us on{" "}
-			<a href={GITHUB_URL}>GitHub</a>, <a href={BSKY_URL}>Bluesky</a>, or on Discord through
-			our <a href={HELP_CHANNEL_URL}>support channel in The Balance</a>.
-		</p>
-		<h2 id="overview">Overview</h2>
-		<h3>Why XIV in the Shell?</h3>
-		<h3>Features</h3>
-		<h3>Keyboard Shortcuts</h3>
-		<h3>Quick Technical Details</h3>
+		<h1 id="top">XIV in the Shell User Manual</h1>
+		<IntroEn />
+		<OverviewEn />
 		<h2>Timeline Creation and Editing</h2>
 		<h3>Setup and Configuration</h3>
 		<h3>Adding Skills</h3>
