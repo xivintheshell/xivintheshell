@@ -635,7 +635,7 @@ makeSCHSpell("ADLOQUIUM", 30, {
 	replaceIf: ADLOQUIUM_REPLACEMENTS,
 	applicationDelay: 0.98,
 	baseCastTime: 2,
-	manaCost: ADLO_MP_COST,
+	manaCost: (state) => (state.hasResourceAvailable("RECITATION") ? 0 : ADLO_MP_COST),
 	// TODO treat etact as a healing modifier
 	healingPotency: 300,
 	onConfirm: (state) => {
@@ -643,11 +643,6 @@ makeSCHSpell("ADLOQUIUM", 30, {
 		const etact = state.tryConsumeResource("EMERGENCY_TACTICS");
 		if (!etact) {
 			state.gainStatus("GALVANIZE");
-		}
-		if (state.hasResourceAvailable("RECITATION")) {
-			// Regain the MP spent by Adloquium when used under recitation. This is needed because
-			// you cannot cast Adlo with <900 MP with Recitation active.
-			state.resources.get("MANA").gain(ADLO_MP_COST);
 		}
 		if (
 			(state.tryConsumeResource("RECITATION") ||
@@ -660,9 +655,6 @@ makeSCHSpell("ADLOQUIUM", 30, {
 });
 
 const succorConfirm: EffectFn<SCHState> = (state) => {
-	if (state.tryConsumeResource("RECITATION")) {
-		state.resources.get("MANA").gain(SUCCOR_MP_COST);
-	}
 	if (!state.tryConsumeResource("EMERGENCY_TACTICS")) {
 		state.gainStatus("GALVANIZE");
 	}
@@ -675,7 +667,7 @@ makeSCHSpell("SUCCOR", 35, {
 	},
 	applicationDelay: 1.12,
 	baseCastTime: 2,
-	manaCost: 900,
+	manaCost: (state) => (state.hasResourceAvailable("RECITATION") ? 0 : SUCCOR_MP_COST),
 	healingPotency: 200,
 	onConfirm: succorConfirm,
 });
@@ -688,7 +680,7 @@ makeSCHSpell("CONCITATION", 96, {
 	replaceIf: CONCITATION_REPLACEMENTS,
 	applicationDelay: 1.12,
 	baseCastTime: 2,
-	manaCost: 900,
+	manaCost: (state) => (state.hasResourceAvailable("RECITATION") ? 0 : SUCCOR_MP_COST),
 	healingPotency: 200,
 	onConfirm: succorConfirm,
 });
