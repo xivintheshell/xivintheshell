@@ -1,5 +1,5 @@
 import React, { useContext, createContext, useState, useEffect, useCallback, useRef } from "react";
-import { ContentNode } from "../Components/Common";
+import { ContentNode, DEFAULT_FONTS } from "../Components/Common";
 import { getThemeColors, getCachedColorTheme } from "../Components/ColorTheme";
 import { IntroEn, IntroZh } from "./Intro";
 import { OverviewEn, OverviewZh } from "./Overview";
@@ -252,7 +252,7 @@ export default function Manual(props: { language?: string }) {
 			right: 0,
 			outline: "none",
 			accentColor: colors.accent,
-			fontFamily: "monospace",
+			fontFamily: DEFAULT_FONTS,
 			fontSize: 14,
 			color: colors.text,
 			backgroundColor: colors.background,
