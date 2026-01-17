@@ -15,7 +15,7 @@ import {
 const colorTheme = getCachedColorTheme();
 const Sep = () => <Separator
 	orientation="vertical"
-	style={{ width: "2px", backgroundColor: getThemeColors(colorTheme).text }}
+	style={{ width: "1px", backgroundColor: getThemeColors(colorTheme).text }}
 />;
 
 const AUTHOR_DIV_STYLE: React.CSSProperties = {
