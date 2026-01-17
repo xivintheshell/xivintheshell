@@ -56,7 +56,7 @@ export function IntroEn() {
 			<a href={BSKY_URL}>Bluesky</a>.
 		</p>
 		<p>
-			This manual page can always be found at <a href="/manual">xivintheshell.com/manual</a>
+			This manual page can always be found at <a href="/manual">xivintheshell.com/manual</a>{" "}
 			or <a href="/manual_en">xivintheshell.com/manual_en</a>.
 		</p>
 		<p>
