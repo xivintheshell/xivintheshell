@@ -12,14 +12,13 @@ export function IntroEn() {
 	return <>
 		<p
 			style={{
-				marginLeft: "2em",
 				marginTop: "-0.2em",
 				marginBottom: "1em",
 			}}
 		>
 			<i>by Shanzhe Qi @ Seraph</i> -- last updated 16 January 2026
 		</p>
-		<p>
+		<p className="no-indent">
 			Welcome to <i>XIV in the Shell</i>, a rotation planner tool for <i>Final Fantasy XIV</i>
 			! This page walks you through how to make the most of our timeline creation and
 			manipulation features to improve your gameplay. Use the navigation bar on the right to
@@ -43,7 +42,6 @@ export function IntroEn() {
 			This manual page can always be found at <a href="/manual">xivintheshell.com/manual</a>
 			or <a href="/manual_en">xivintheshell.com/manual_en</a>.
 		</p>
-		<br />
 		<p>
 			FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd. Game ability
 			and status images are © SQUARE ENIX, and used for non-commercial purposes in compliance

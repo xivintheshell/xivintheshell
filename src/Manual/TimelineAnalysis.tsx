@@ -4,7 +4,7 @@ import { Help } from "../Components/Common";
 import { localize } from "../Components/Localization";
 
 export function TimelineAnalysisEn() {
-	const helpAnchor = useRef<HTMLLIElement>(null);
+	const helpAnchor = useRef<HTMLLIElement | null>(null);
 	return <>
 		<NavH2Section id="timeline-analysis" label="Timeline Analysis" />
 		<NavH3Section id="damage-table" label="Potency, PPS, and the Damage Table" />
@@ -53,7 +53,7 @@ export function TimelineAnalysisEn() {
 				DoT ticks that occur during an "Untargetable" marker are automatically excluded from
 				calculations.
 			</li>
-			<li ref={helpAnchor.current}>
+			<li ref={helpAnchor}>
 				<b>Potency table</b> Displays the number of times each ability was cast under
 				different sets of self-applied buffs. Hovering the{" "}
 				<Help
@@ -62,7 +62,7 @@ export function TimelineAnalysisEn() {
 						en: "sample help",
 						zh: "我是一个说明",
 					})}
-					container={helpAnchor.current}
+					container={helpAnchor}
 				/>{" "}
 				tooltip next to a potency value displays the effect of each buff on a skill's
 				potency. When a skill or sequence of skills is selected, these values are updated to
