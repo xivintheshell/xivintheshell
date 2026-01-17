@@ -1290,6 +1290,7 @@ export function Config() {
 				"level",
 				"wd",
 				"main",
+				"piety",
 				"tenacity",
 			];
 			if (
