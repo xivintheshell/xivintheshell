@@ -24,6 +24,10 @@ import {
 	XIVGEAR_URL,
 	XIVRAIDER_URL,
 	AMA_SIM_URL,
+	CN_JOB_GUIDE_URL,
+	CN_WIKI_URL,
+	CN_MATH_WIZARD_URL,
+	CN_GEARING_URL,
 } from "./Links";
 
 export function AdditionalResourcesEn() {
@@ -59,6 +63,41 @@ export function AdditionalResourcesEn() {
 			Other FFXIV community tools: <a href={XIVANALYSIS_URL}>xivanalysis</a> -{" "}
 			<a href={XIVGEAR_URL}>XivGear</a> - <a href={XIVRAIDER_URL}>XIV Raider</a> and{" "}
 			<a href={AMA_SIM_URL}>Ama's Combat Sim</a>
+		</p>
+	</>;
+}
+
+export function AdditionalResourcesZh() {
+	return <>
+		<NavH2Section id="additional-resources" label="附录" />
+		<p>
+			<i>XIV in the Shell</i>: <a href={GITHUB_URL}>GitHub</a> - <a href={BLOG_URL}>Blog</a> -{" "}
+			<a href={BSKY_URL}>Bluesky</a> - <a href={HELP_CHANNEL_URL}>Discord频道</a> -{" "}
+			<a href={TISCHEL_PLUGIN_URL}>Tischel的BLM in the Shell卫月插件</a>
+		</p>
+		<p>
+			相关游戏资源: <a href={CN_JOB_GUIDE_URL}>最终幻想XIV职业指南</a> -{" "}
+			<a href={CN_WIKI_URL}>最终幻想XIV灰机wiki</a> - <a href={XIVAPI_URL}>XIVAPI</a> -{" "}
+			<a href={XIV_ID_URL}>XIV-ID</a>
+		</p>
+		<p>
+			职业玩法: <a href={BALANCE_PAGE_URL}>The Balance</a> -{" "}
+			<a href={ICY_VEINS_URL}>Icy Veins</a> - <a href={FFLOGS_URL}>FFLogs</a>
+		</p>
+		<p>
+			计算公式，游戏机制和其他相关知识: <a href={ALLAGAN_STUDIES_URL}>Allagan Studies</a> -{" "}
+			<a href={CN_MATH_WIZARD_URL}>光之数学家 第三版</a> -{" "}
+			<a href={BATTLE_SYSTEM_DISCUSSION_URL}>The Balance的战斗系统讨论频道</a> -
+			零式速刷备忘录 [<a href={SAVAGE_SPEEDKILL_JP_URL}>日文</a>][
+			<a href={SAVAGE_SPEEDKILL_EN_URL}>英文</a>] -{" "}
+			<a href={GAMES_HAUNTED_URL}>Game's Haunted</a> - 帧率税相关研究 [
+			<a href={FPS_TAX_CN_URL}>中文</a>][
+			<a href={FPS_TAX_EN_URL}>英文</a>]
+		</p>
+		<p>
+			其他社区工具: <a href={XIVANALYSIS_URL}>xivanalysis</a> -{" "}
+			<a href={CN_GEARING_URL}>最终幻想14配装器</a> - <a href={XIVRAIDER_URL}>XIV Raider</a>{" "}
+			和 <a href={AMA_SIM_URL}>Ama的战斗模拟器</a>
 		</p>
 	</>;
 }

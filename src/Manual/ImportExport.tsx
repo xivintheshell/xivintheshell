@@ -206,3 +206,158 @@ export function ImportExportEn() {
 		</p>
 	</>;
 }
+
+export function ImportExportZh() {
+	return <>
+		<NavH2Section id="import-export" label="导入与导出" />
+		<NavH3Section id="exporting-text" label="导出为文本文件" />
+		<p>PLACEHOLDER</p>
+		<p>
+			在"导入/导出"菜单中，点击"txt 格式"链接 <b>(1)</b>
+			，即可将当前时间轴下载为txt文件。该文件可通过“从文件导入战斗”菜单 <b>(2)</b>{" "}
+			重新导入或分享给他人。我们建议你积极导出文件，防止意外导致进度丢失。
+		</p>
+		<NavH3Section id="importing-fflogs" label="从 FFLogs 导入" />
+		<p>可通过"从 FFLogs 导入战斗"菜单，直接将日志报告导入为时间轴。操作步骤如下：</p>
+		<p>PLACEHOLDER</p>
+		<ol>
+			<li>点击授权按钮，允许 XIV in the Shell 代你读取 FFLogs 报告。</li>
+		</ol>
+		<p>PLACEHOLDER</p>
+		<ol start={2}>
+			<li>粘贴FFLogs日志网址。链接可包含完整报告，也可指定特定战斗场次和/或特定玩家编号。</li>
+		</ol>
+		<p>PLACEHOLDER</p>
+		<ol start={1}>
+			<li>若链接未指定单场战斗，从战斗列表中选择所需战斗场次。</li>
+		</ol>
+		<p>PLACEHOLDER</p>
+		<ol start={2}>
+			<li>若链接未指定玩家，在玩家列表中点击目标玩家名字。</li>
+		</ol>
+		<p>PLACEHOLDER</p>
+		<ol start={3}>
+			<li>
+				输入该玩家的战斗属性。受 FFLogs
+				限制，非上传者本人的属性需手动填写或估算。默认将使用该职业最近一条时间轴的数值。
+			</li>
+		</ol>
+		<p>PLACEHOLDER</p>
+		<ol start={4}>
+			<li>
+				点击“确定”，XIV in the Shell
+				会把日志中的技能序列导入当前时间轴，并自动插入必要的等待事件。导入完成后会显示一张对照表，列出时间轴模拟时间与日志记录时间的差异，以及模拟认为未能满足激活条件的技能。关闭对话框后，你可以继续调整属性设置或时间轴，使其完全匹配。
+			</li>
+		</ol>
+		<NavH3Section id="text-copy-paste" label="文本复制/粘贴" />
+		<p>
+			XIV in the Shell 支持用 {bi("ctrl")}+{bi("c")} / {bi("ctrl")}+{bi("v")}{" "}
+			复制与粘贴技能序列，共三种格式可选。
+		</p>
+		<p>
+			<i>示例序列：爆炎，炽炎，绝望</i>
+		</p>
+		<p>PLACEHOLDER</p>
+		<ul>
+			<li>
+				<b>纯文本</b>{" "}
+				由顿号分隔的技能名序列。（中文和英文粘贴的技能序列所用的分隔符不同，此处表述已经修改）
+				<p>
+					<i>例：</i>
+				</p>
+				<p>爆炎、炽炎、绝望</p>
+			</li>
+			<li>
+				<b>制表符分隔列表</b> 由制表符分隔的时间戳、目标数、技能名序列，方便粘贴到表格软件。
+				<p>
+					<i>例：</i>
+				</p>
+				<p>
+					-3.500 1 爆炎
+					<br />
+					0.042 1 炽炎
+					<br />
+					2.500 1 绝望
+				</p>
+			</li>
+			<li>
+				<b>Discord 表情</b> 一组Discord表情序列（仅黑魔 / 画家已验证）。
+				<p>
+					<i>例：</i>
+				</p>
+				<p>:F3: :F4: :Despair:</p>
+			</li>
+		</ul>
+		<p>
+			从时间轴中复制时，使用的格式由页面底部“设置”→“剪贴板复制模式”决定；粘贴到时间轴时，三种格式均可自动识别，不受该设置限制。
+		</p>
+		<NavH3Section id="exporting-images" label="导出图片" />
+		<p>PLACEHOLDER</p>
+		<p>除了系统截图，也可使用站内的“导出为图像”功能将时间轴导出为 PNG。</p>
+		<p>
+			点击"将选择部分导出为 png" <b>(1)</b>{" "}
+			即可保存选中的部分。若未选中任何技能，则导出整个当前时间轴。
+		</p>
+		<p>
+			若想让图片自动换行，可在“每行秒数” <b>(2)</b> 填写非零值，这样每行最多显示指定秒数。
+		</p>
+		<p>
+			取消勾选“包含时间刻度与时间轴标记”可隐藏时间刻度与时间轴标记，其余显示元素遵循“设置”标签中的开关状态。
+		</p>
+		<NavH3Section id="exporting-damage-logs" label="导出伤害日志" />
+		<p>PLACEHOLDER</p>
+		<p>
+			可以在技能统计表上方点击"下载详细伤害结算记录（CSV格式）" <b>(1)</b>{" "}
+			以导出详细的伤害结算记录。其输出包含三列数据：
+		</p>
+		<ul>
+			<li>
+				<b>time</b> 伤害事件发生的时间戳（秒）。
+			</li>
+			<li>
+				<b>damageSource</b> 造成该伤害的技能名称及其施放时间。
+			</li>
+			<li>
+				<b>potency</b> 该伤害事件的威力（包含所有Buff和个人增益等）。
+			</li>
+		</ul>
+		<NavH3Section id="exporting-for-external-tools" label="导出供外部工具使用" />
+		<p>PLACEHOLDER</p>
+		<p>
+			点击"excel / Tischel的插件 CSV 格式" <b>(1)</b> 可生成兼容表格软件或 Tischel 开发的{" "}
+			<a href={TISCHEL_PLUGIN_URL}>BLM in the Shell Plugin</a> 的文件。其输出包含四列数据：
+		</p>
+		<ul>
+			<li>
+				<b>time</b> 技能施放的时间戳（秒）。
+			</li>
+			<li>
+				<b>action</b> 技能名。
+			</li>
+			<li>
+				<b>isGCD</b> 若为1则是GCD 技能，0 则不是。
+			</li>
+			<li>
+				<b>castTime</b> 读条时间（秒），如为瞬发技能则此项为0。
+			</li>
+		</ul>
+		<NavH3Section id="exporting-for-combat-sim" label="导出至Amarantine的战斗模拟器" />
+		<p>PLACEHOLDER</p>
+		<p>
+			<a href={AMA_SIM_URL}>Amarantine的战斗模拟器</a>具备强大的 DPS
+			模拟与击杀时间估算功能。XIV in the Shell
+			可生成与其兼容的时间轴，许多速刷团在规划阶段都会同时使用这两款工具。
+		</p>
+		<p>
+			如需导出适用于 Amarantine的战斗模拟器的 CSV 文件，请点击"Amarantine的战斗模拟器 CSV
+			格式"下载链接 <b>(2)</b>。
+		</p>
+		<p>
+			生成的 CSV 文件头部会附带元数据，包含当前配置的战斗属性，外部团辅时间轴标记，上天时段。
+		</p>
+		<p>
+			注意：若战斗属性最初来自 XivGear 或 etro 导入，则 XIV in the Shell
+			无法直接设置的属性（武器性能、主属性、坚韧）也会一并写入导出文件，供模拟器完整使用。
+		</p>
+	</>;
+}

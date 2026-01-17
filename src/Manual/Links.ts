@@ -6,7 +6,6 @@ export const BALANCE_PAGE_URL = "https://www.thebalanceffxiv.com/";
 export const ICY_VEINS_URL = "https://www.icy-veins.com/ffxiv/";
 export const FFLOGS_URL = "https://www.fflogs.com/";
 export const BLOG_1_URL = "https://blog.xivintheshell.com/posts/what-is-xiv-in-the-shell/";
-export const CN_TUTORIAL_URL = "https://www.bilibili.com/video/BV1SGvZBAEsm/";
 
 export const ETRO_URL = "https://etro.gg/";
 export const XIVGEAR_URL = "https://xivgear.app/";
@@ -43,3 +42,11 @@ export const TRACK_SCRIPT_COLAB_NOTEBOOK_URL =
 export const MARKER_GEN_URL = "https://github.com/leifengsang/XivInTheShellMarkerGen";
 
 export const RANDOM_SEED_WIKI_URL = "https://en.wikipedia.org/wiki/Random_seed";
+
+// Chinese-specific URLs
+export const CN_TUTORIAL_URL = "https://www.bilibili.com/video/BV1SGvZBAEsm/";
+export const CN_JOB_GUIDE_URL =
+	"https://actff1.web.sdo.com/project/20190917jobguid/index.html#/index";
+export const CN_WIKI_URL = "https://ff14.huijiwiki.com/wiki/%E9%A6%96%E9%A1%B5";
+export const CN_MATH_WIZARD_URL = "https://bbs.nga.cn/read.php?tid=19736925";
+export const CN_GEARING_URL = "https://asvel.github.io/ffxiv-gearing/";

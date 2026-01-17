@@ -3,11 +3,11 @@ import { ContentNode } from "../Components/Common";
 import { getThemeColors, getCachedColorTheme } from "../Components/ColorTheme";
 import { IntroEn, IntroZh } from "./Intro";
 import { OverviewEn, OverviewZh } from "./Overview";
-import { TimelineCreationEn } from "./TimelineCreation";
-import { TimelineAnalysisEn } from "./TimelineAnalysis";
-import { FightMarkersEn } from "./FightMarkers";
-import { ImportExportEn } from "./ImportExport";
-import { AdditionalResourcesEn } from "./AdditionalResources";
+import { TimelineCreationEn, TimelineCreationZh } from "./TimelineCreation";
+import { TimelineAnalysisEn, TimelineAnalysisZh } from "./TimelineAnalysis";
+import { FightMarkersEn, FightMarkersZh } from "./FightMarkers";
+import { ImportExportEn, ImportExportZh } from "./ImportExport";
+import { AdditionalResourcesEn, AdditionalResourcesZh } from "./AdditionalResources";
 
 // Unlike pages within the main webapp, where localization is embedded for each text element,
 // the localized sub-components of the manual are split up to ensure the semantic structure of
@@ -28,7 +28,7 @@ const NavContext = createContext<{ items: NavItem[]; addItem: (it: NavItem) => v
 	addItem: () => {},
 });
 
-function Navbar() {
+function Navbar(props: { language: string | undefined }) {
 	const navCtx = useContext(NavContext);
 	return <nav
 		style={{
@@ -37,10 +37,10 @@ function Navbar() {
 			maxWidth: "18%",
 		}}
 	>
-		<p className="no-indent">Navigation</p>
+		<p className="no-indent">{props.language === "zh" ? "网站导航" : "Navigation"}</p>
 		<ul style={{ listStyleType: "none", paddingLeft: "0.8rem", marginTop: "0.3rem" }}>
 			<li style={{ paddingBlockEnd: "0.15rem" }}>
-				<a href="#top">back to top</a>
+				<a href="#top">{props.language === "zh" ? "返回页面顶部" : "back to top"}</a>
 			</li>
 			{navCtx.items.map(({ id, label, indentLevel }) => {
 				return <li
@@ -207,6 +207,29 @@ export default function Manual(props: { language?: string }) {
 	// to focus the element on page load instead.
 	useEffect(() => {
 		scrollContainer.current?.focus();
+		// If the URL contains a hash, scroll to the denoted element.
+		const hash = window.location.hash.slice(1); // Remove the '#' character
+		if (hash && scrollContainer.current) {
+			// Wait for content to render before scrolling
+			const scrollToHash = () => {
+				const targetElement = document.getElementById(hash);
+				if (targetElement && scrollContainer.current) {
+					// Calculate the position relative to the scroll container
+					const containerRect = scrollContainer.current.getBoundingClientRect();
+					const targetRect = targetElement.getBoundingClientRect();
+					const scrollTop = scrollContainer.current.scrollTop;
+					const targetTop = targetRect.top - containerRect.top + scrollTop;
+
+					// Scroll immediately with some offset to account for any sticky headers
+					scrollContainer.current.scrollTo({
+						top: targetTop - 20,
+						behavior: "smooth",
+					});
+				}
+			};
+			// Use a small delay to ensure DOM is ready
+			setTimeout(scrollToHash, 100);
+		}
 	}, []);
 	const [childHeaders, setChildHeaders] = useState<NavItem[]>([]);
 	const addChild = useCallback(({ id, label, indentLevel }: NavItem) => {
@@ -240,7 +263,10 @@ export default function Manual(props: { language?: string }) {
 	>
 		{styleblock}
 		<NavContext.Provider value={{ items: childHeaders, addItem: addChild }}>
-			{/* Hide the navbar on mobile devices (too lazy to properly support) */}
+			{/* Hide the navbar on mobile devices and small windows (too lazy to properly support)
+				TODO: change this with DPI, and on window resize
+				and/or add explicit collapsible button
+			*/}
 			{window.innerWidth > 1024 && <div
 				id="nav-container"
 				style={{
@@ -249,13 +275,14 @@ export default function Manual(props: { language?: string }) {
 					marginInline: "1rem",
 				}}
 			>
-				<Navbar />
+				<Navbar language={props.language} />
 			</div>}
 			<div
 				style={{
 					marginLeft: "1em",
 					marginRight: "1em",
 					paddingRight: "1em",
+					marginBottom: "1em",
 					display: "flex",
 					flexDirection: "column",
 				}}
@@ -285,10 +312,10 @@ function BodyZh() {
 		<h1 id="top">XIV in the Shell 用户手册</h1>
 		<IntroZh />
 		<OverviewZh />
-		<TimelineCreationEn />
-		<TimelineAnalysisEn />
-		<FightMarkersEn />
-		<ImportExportEn />
-		<AdditionalResourcesEn />
+		<TimelineCreationZh />
+		<TimelineAnalysisZh />
+		<FightMarkersZh />
+		<ImportExportZh />
+		<AdditionalResourcesZh />
 	</>;
 }
