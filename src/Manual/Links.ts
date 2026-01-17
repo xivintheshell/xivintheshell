@@ -6,6 +6,7 @@ export const BALANCE_PAGE_URL = "https://www.thebalanceffxiv.com/";
 export const ICY_VEINS_URL = "https://www.icy-veins.com/ffxiv/";
 export const FFLOGS_URL = "https://www.fflogs.com/";
 export const BLOG_1_URL = "https://blog.xivintheshell.com/posts/what-is-xiv-in-the-shell/";
+export const CN_TUTORIAL_URL = "https://www.bilibili.com/video/BV1SGvZBAEsm/";
 
 export const ETRO_URL = "https://etro.gg/";
 export const XIVGEAR_URL = "https://xivgear.app/";

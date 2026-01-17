@@ -1,9 +1,8 @@
 import React, { useContext, createContext, useState, useEffect, useCallback, useRef } from "react";
 import { ContentNode } from "../Components/Common";
-import { localize } from "../Components/Localization";
 import { getThemeColors, getCachedColorTheme } from "../Components/ColorTheme";
-import { IntroEn } from "./Intro";
-import { OverviewEn } from "./Overview";
+import { IntroEn, IntroZh } from "./Intro";
+import { OverviewEn, OverviewZh } from "./Overview";
 import { TimelineCreationEn } from "./TimelineCreation";
 import { TimelineAnalysisEn } from "./TimelineAnalysis";
 import { FightMarkersEn } from "./FightMarkers";
@@ -90,7 +89,7 @@ export function NavH3Section(props: {
 	</>;
 }
 
-export default function Manual() {
+export default function Manual(props: { language?: string }) {
 	const colors = getThemeColors(colorTheme);
 	// TODO properly share with main component when applicable
 	// the scrollbar here is thicker because the page has actual content
@@ -262,7 +261,7 @@ export default function Manual() {
 				}}
 				tabIndex={-1}
 			>
-				{localize({ en: BodyEn(), zh: BodyZh() })}
+				{props.language === "zh" ? BodyZh() : BodyEn()}
 			</div>
 		</NavContext.Provider>
 	</div>;
@@ -283,6 +282,13 @@ function BodyEn() {
 
 function BodyZh() {
 	return <>
-		<p>todo中文</p>
+		<h1 id="top">XIV in the Shell 用户手册</h1>
+		<IntroZh />
+		<OverviewZh />
+		<TimelineCreationEn />
+		<TimelineAnalysisEn />
+		<FightMarkersEn />
+		<ImportExportEn />
+		<AdditionalResourcesEn />
 	</>;
 }
