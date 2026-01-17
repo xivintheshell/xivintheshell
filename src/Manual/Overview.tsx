@@ -1,13 +1,9 @@
 import React from "react";
 import { ButtonIndicator } from "../Components/Common";
 import { NavH3Section, NavH2Section } from "./Manual";
+import { BLOG_1_URL, ETRO_URL, XIVGEAR_URL, AMA_SIM_URL, GITHUB_URL } from "./Links";
 
 const bi = (k: string) => <ButtonIndicator text={k} />;
-
-const BLOG_1_URL = "https://blog.xivintheshell.com/posts/what-is-xiv-in-the-shell/";
-const ETRO_URL = "https://etro.gg/";
-const XIVGEAR_URL = "https://xivgear.app/";
-const AMA_SIM_URL = "https://github.com/Amarantine-xiv/Amas-FF14-Combat-Sim_source";
 
 export function OverviewEn() {
 	return <>
@@ -160,7 +156,63 @@ export function OverviewEn() {
 			</li>
 		</ul>
 		<NavH3Section id="update-policy" label="Update Policy" />
+		<p>
+			<i>XIV in the Shell</i> frequently receives updates to improve user experience and
+			accuracy of its simulations. We make our best effort to ensure our updates do not break
+			saved timelines whenever possible, but cannot always guarantee this, whether due to
+			developer error or in-game changes. Please export your timelines often to reduce the
+			risk of losing work.
+		</p>
+		<p>
+			Potencies and job mechanics in <i>XIV in the Shell</i> reflect those in the latest
+			global server version of FFXIV. We try to make updates available within a few days of
+			each patch release, but may be slower depending on the developers' availability.
+		</p>
 		<NavH3Section id="technical-details" label="Quick Technical Details" />
+		<p>
+			<i>XIV in the Shell</i> is a client-only single page application. All data is stored
+			within your web browser's localStorage module, so clearing your browsing data for{" "}
+			<a href="/">xivintheshell.com</a> will permanently delete all of your saved rotations
+			and markers. This also means that if you lose any data, we (the developers) are unable
+			to recover it for you, because it never leaves the confines of your browser unless you
+			explicitly send us your exported files through some other platform. It is highly
+			unlikely that we will ever maintain a server of any kind, so as to keep
+			development/maintenance costs minimal and reduce the likelihood of site downtime.
+		</p>
+		<p>
+			This site is made in Typescript with Vite + React, and hosted with GitHub Pages. You can
+			find our source code on GitHub at <a href={GITHUB_URL}>{GITHUB_URL}</a>. Contributions,
+			bug reports, and feature requests are welcome!
+		</p>
 		<NavH3Section id="troubleshooting" label="Troubleshooting" />
+		<p>
+			In very rare cases, you may encounter a bug that completely breaks the website, causing
+			it to render nothing but a white screen. If this happens, please raise a bug report with
+			us on GitHub or Discord, and describe the most recent actions you took before the site
+			crashed.
+		</p>
+		<p>
+			If you're unable to communicate with us, you may attempt to fix the issue yourself by
+			visiting one of the following links:
+		</p>
+		<ul>
+			<li>
+				<b>xivintheshell.com?resetResourceOverrides</b> Deletes all resource overrides and
+				clears all actions in your saved timelines.
+			</li>
+			<li>
+				<b>xivintheshell.com?resetAll</b> Deletes all your saved data in{" "}
+				<i>XIV in the Shell</i>.
+			</li>
+			<li>
+				<b>xivintheshell.com?resetFFLogsAuth</b> Resets data related to FFLogs
+				authorization.
+			</li>
+		</ul>
+		<p>
+			If both these steps fail, please clear your browsing data for xivintheshell.com through
+			your web browser's settings. Once again: remember to frequently download and save your
+			timelines, should the worst come to pass!
+		</p>
 	</>;
 }
