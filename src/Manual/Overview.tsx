@@ -7,7 +7,7 @@ const bi = (k: string) => <ButtonIndicator text={k} />;
 
 export function OverviewEn() {
 	return <>
-		<NavH2Section id="overview" label={<>overview</>} />
+		<NavH2Section id="overview" label={<>Overview</>} />
 		<NavH3Section
 			id="what-is-xivintheshell"
 			label={
@@ -20,7 +20,7 @@ export function OverviewEn() {
 			I answered this question in more detail in our <a href={BLOG_1_URL}>first blog post</a>,
 			but I’ve copied the important parts here.
 		</p>
-		<p className="no-indent" style={{ textAlign: "center" }}>
+		<p>
 			<b>
 				<i>XIV in the Shell</i> (<a href="/">https://xivintheshell.com</a>) is a web-based
 				FFXIV rotation planner and job simulator.

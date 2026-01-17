@@ -15,7 +15,7 @@ import {
 const colorTheme = getCachedColorTheme();
 const Sep = () => <Separator
 	orientation="vertical"
-	style={{ width: "1px", backgroundColor: getThemeColors(colorTheme).text }}
+	style={{ width: "2px", backgroundColor: getThemeColors(colorTheme).text }}
 />;
 
 const AUTHOR_DIV_STYLE: React.CSSProperties = {
@@ -73,7 +73,7 @@ export function IntroZh() {
 			<i>作者：Shanzhe Qi @ Seraph</i> <Sep /> <i>翻译：羽卡（由ai帮助）</i> <Sep />{" "}
 			最近更新：2026年1月16号
 		</div>
-		<p className="no-indent">
+		<p>
 			欢迎来到 XIV in the
 			Shell，一个为《最终幻想XIV》设计的循环规划工具！本页面将带你了解如何充分利用我们的时间轴创建与
 			编辑功能，从而帮助你提升游戏体验。在右侧目录中可以快速查找特定功能的说明。你也可以观看由雷锋桑和

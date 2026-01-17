@@ -66,7 +66,7 @@ export function FightMarkersEn() {
 			The "Load all phases" button <b>(2)</b> loads markers for all phases. The default
 			timestamp for the start of a phase is shown next to each field <b>(3)</b>. These should
 			be adjusted to account for different kill or push timings. Clicking the name of a
-			particular phase <b>(5)</b> loads that phase's markers to the timeline; to create a
+			particular phase <b>(4)</b> loads that phase's markers to the timeline; to create a
 			timeline beginning from the start of a particular phase, set its offset to 0 before
 			loading.
 		</p>
@@ -148,6 +148,116 @@ export function FightMarkersEn() {
 			(instructions in Chinese). This script reads a user-provided configuration file with
 			names of enemy cast and damage events, and produces a track file directly from a report
 			ID.
+		</p>
+	</>;
+}
+
+export function FightMarkersZh() {
+	return <>
+		<NavH2Section id="fight-markers" label="时间轴标记" />
+		<NavH3Section id="loading-presets" label="载入预设时间轴标记" />
+		<p>PLACEHOLDER</p>
+		<p>
+			XIV in the Shell
+			提供了当前零式、绝本及其他高难度内容的时间轴标记，由开发者和社区成员维护，精确标注机制判定、不可选中、伤害判定等时刻。
+		</p>
+		<p>
+			点击副本名称 <b>(1)</b> 即可把整套标记加入图形时间轴。若该副本分阶段，点击副本名称{" "}
+			<b>(2)</b> 可展开/收起各阶段详情，在下小节中会详细说明。
+		</p>
+		<p>预设时间轴标记按三类分组：</p>
+		<ul>
+			<li>
+				<b>当前版本</b>{" "}
+				包括最新版本零式与当前大版本绝本。也可能包含当前版本的其他高难度内容，如极神、异闻迷宫、深想战等。
+			</li>
+			<li>
+				<b>过去绝本</b> 旧版本绝本或绝本某阶段。
+			</li>
+			<li>
+				<b>归档</b> 旧版本零式及其他旧副本。
+			</li>
+		</ul>
+		<p>
+			如需从某时刻开始载入标记，可在“载入文件时间偏移” <b>(3)</b>{" "}
+			输入秒数（正数推迟载入时间点，负数提前载入时间点）。该偏移会叠加在阶段偏移之上。
+		</p>
+		<p>
+			“清控当前” <b>(4)</b> 可以一键清空所有标记；“删除重复标记” <b>(5)</b>{" "}
+			可仅删除重复项（同名、同时间、同轨道等），避免重复加载。
+		</p>
+		<NavH3Section id="loading-presets-phases" label="分阶段载入预设" />
+		<p>PLACEHOLDER</p>
+		<p>
+			若副本支持分阶段载入预设，点击副本名称 <b>(1)</b> 展开可以展开/折叠阶段信息。
+		</p>
+		<p>
+			“载入整场战斗” <b>(2)</b> 可以一次性载入整套标记。此处也会列出各阶段默认起始时间{" "}
+			<b>(3)</b>。如果只想从某一阶段开始排轴，把该阶段偏移改为 0，再点击该阶段名称 <b>(5)</b>{" "}
+			即可单独载入。
+		</p>
+		<p>
+			预设中，默认的阶段切换时间以 FFLogs
+			定义为准，即“不可选中”事件结束或BOSS重新可选中的瞬间。对于某份具体的Logs，可在 FFLogs 的
+			Filter Expression 中输入type="targetabilityupdate"
+			进行过滤，自行查询该场战斗的实际阶段切换时间。
+		</p>
+		<p>PLACEHOLDER</p>
+		<p>
+			时间轴预设制作耗时且依赖社区多语言贡献。如果你愿意提交某场战斗的时间轴标记，请随时联系我们！
+		</p>
+		<NavH3Section id="adding-custom-markers" label="添加团队增益与自定义标记" />
+		<p>PLACEHOLDER</p>
+		<p>
+			除了网站内置的时间轴预设，你还可以在“添加Buff和标记”区域 <b>(1)</b>{" "}
+			自行创建标记。标记分为三类：
+		</p>
+		<ul>
+			<li>
+				<b>备注信息</b> 用于展示时间轴上的通用信息，例如敌方读条、Boss
+				行动、机制判定时机等。
+			</li>
+			<li>
+				<b>团辅</b>{" "}
+				代表队友提供的团辅。所有团辅默认使用游戏内的标准持续时间（可根据需要调整，以应对扩散生效或更换舞伴等特殊情况），其提供的威力加成会自动计入伤害统计表。你可以通过图形时间轴中技能图标下方的彩色下划线，或悬停在技能图标上，查看哪些技能快照了团队增益和自身增益。
+			</li>
+			<li>
+				<b>不可选中</b> 表示所有敌人处于无敌状态且无法被选中的时间段。因 Boss
+				不可选中而“打空”的伤害判定，以及在此期间触发的 DoT 伤害，均不会计入总威力。
+			</li>
+		</ul>
+		<p>
+			每条标记都有一个轨道序号 <b>(2)</b>，用于决定其在时间轴上的显示位置。序号 0
+			为最底层轨道，序号越大，显示位置越靠上。
+		</p>
+		<p>
+			点击时间轴上的某个标记 <b>(3)</b>{" "}
+			可将其删除，其属性将同步到“添加Buff和标记”菜单中，方便进一步编辑。
+		</p>
+		<NavH3Section id="exporting-markers" label="导出标记" />
+		<p>PLACEHOLDER</p>
+		<p>
+			在“保存标记到文件”菜单 <b>(1)</b> 中，点击“所有轨道”链接 <b>(2)</b>{" "}
+			可下载包含所有标记的单个文件，随后可通过“载入多轨文件”选项 <b>(3)</b> 导入。
+		</p>
+		<p>
+			点击某个轨道序号对应的链接 <b>(4)</b> 可仅导出该轨道的标记，随后可通过“加载第_轨”选项{" "}
+			<b>(4)</b> 导入。
+		</p>
+		<NavH3Section id="creating-markers-from-logs" label="从Logs生成时间轴标记" />
+		<p>单场战斗可能包含大量事件，手动添加效率较低。此时，推荐使用 FFLogs 报告批量生成标记：</p>
+		<p>
+			XIV in the Shell 开发者提供一个<a href={TRACK_SCRIPT_URL}>Python脚本</a>，可将从 FFLogs
+			导出的 CSV 文件转换为标记轨道文件。详细用法请参见
+			<a href={CREATING_TRACKS_URL}>此页面</a>
+			。如果你无法或不愿在本地运行脚本，也可以通过我们的{" "}
+			<a href={TRACK_SCRIPT_COLAB_NOTEBOOK_URL}>Colab notebook</a> 直接在浏览器中运行。
+		</p>
+		<p>
+			你也可以使用雷锋桑开发的 <a href={MARKER_GEN_URL}>XivInTheShellMarkerGen</a> Python
+			脚本，通过 FFLogs API
+			直接提取标记。该脚本读取用户提供的配置文件（包含敌方读条与伤害事件名称），并根据报告 ID
+			自动生成轨道文件。（现在有gui了，似乎可以改一改这里的描述）
 		</p>
 	</>;
 }
