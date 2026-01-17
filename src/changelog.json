@@ -1,5 +1,11 @@
 [
 	{
+		"date": "1/17/26",
+		"changes": [
+			"Fixed a bug where the piety stat could not be configured."
+		]
+	},
+	{
 		"date": "1/15/26",
 		"changes": [
 			"Added English-language M12S P1 tracks. All Arcadion Heavyweight fights now have tracks. Happy planning!"
