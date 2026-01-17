@@ -19,7 +19,7 @@ export function OverviewEn() {
 			I answered this question in more detail in our <a href={BLOG_1_URL}>first blog post</a>,
 			but I’ve copied the important parts here.
 		</p>
-		<p>
+		<p className="no-indent" style={{ textAlign: "center" }}>
 			<b>
 				<i>XIV in the Shell</i> is a web-based FFXIV rotation planner and job simulator.
 			</b>

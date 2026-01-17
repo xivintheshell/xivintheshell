@@ -1,4 +1,4 @@
-import React, { useContext, createContext, useState, useEffect, useCallback } from "react";
+import React, { useContext, createContext, useState, useEffect, useCallback, useRef } from "react";
 import { ContentNode } from "../Components/Common";
 import { localize } from "../Components/Localization";
 import { getThemeColors, getCachedColorTheme } from "../Components/ColorTheme";
@@ -35,16 +35,22 @@ function Navbar() {
 		style={{
 			float: "right",
 			zIndex: 1,
+			maxWidth: "18%",
 		}}
 	>
-		<p>Navigation</p>
-		<ul>
-			<li>
+		<p className="no-indent">Navigation</p>
+		<ul style={{ listStyleType: "none", paddingLeft: "0.8rem", marginTop: "0.3rem" }}>
+			<li style={{ paddingBlockEnd: "0.15rem" }}>
 				<a href="#top">back to top</a>
 			</li>
 			{navCtx.items.map(({ id, label, indentLevel }) => {
-				return <li key={id}>
-					{Array(indentLevel).map(() => "&nbsp;")}
+				return <li
+					key={id}
+					style={{
+						paddingLeft: indentLevel > 0 ? `${indentLevel * 1.5}em` : undefined,
+						paddingBlock: "0.15rem",
+					}}
+				>
 					<a href={"#" + id}>{label}</a>
 				</li>;
 			})}
@@ -61,7 +67,7 @@ export function NavH2Section(props: {
 	content?: React.ReactElement;
 }) {
 	const navCtx = useContext(NavContext);
-	useEffect(() => navCtx.addItem({ id: props.id, label: props.label, indentLevel: 1 }), []);
+	useEffect(() => navCtx.addItem({ id: props.id, label: props.label, indentLevel: 0 }), []);
 	return <>
 		<h2 id={props.id}>{props.label}</h2>
 		{props.content}
@@ -77,7 +83,7 @@ export function NavH3Section(props: {
 	content?: React.ReactElement;
 }) {
 	const navCtx = useContext(NavContext);
-	useEffect(() => navCtx.addItem({ id: props.id, label: props.label, indentLevel: 2 }), []);
+	useEffect(() => navCtx.addItem({ id: props.id, label: props.label, indentLevel: 1 }), []);
 	return <>
 		<h3 id={props.id}>{props.label}</h3>
 		{props.content}
@@ -86,35 +92,23 @@ export function NavH3Section(props: {
 
 export default function Manual() {
 	const colors = getThemeColors(colorTheme);
-	// TODO properly share with main component
+	// TODO properly share with main component when applicable
+	// the scrollbar here is thicker because the page has actual content
 	const styleblock = <style>{`
 		@supports selector(::-webkit-scrollbar) {
 			.visibleScrollbar::-webkit-scrollbar {
 				appearance: none;
 				background-color: ${colors.bgLowContrast};
 				height: 8px;
-				width: 5px;
+				width: 10px;
 			}
 			.visibleScrollbar::-webkit-scrollbar-thumb {
-				background-color: ${colors.bgHighContrast};
-			}
-			.invisibleScrollbar::-webkit-scrollbar {
-				appearance: none;
-				background-color: clear;
-				height: 8px;
-				width: 5px;
-			}
-			.invisibleScrollbar::-webkit-scrollbar-thumb {
 				background-color: ${colors.bgHighContrast};
 			}
 		}
 		@supports not selector(::-webkit-scrollbar) {
 			.visibleScrollbar {
 				scrollbar-color: ${colors.bgHighContrast} ${colors.bgLowContrast};
-				scrollbar-width: thin;
-			}
-			.invisibleScrollbar {
-				scrollbar-width: none;
 			}
 		}
 		a {
@@ -127,6 +121,10 @@ export default function Manual() {
 		p {
 			margin-block-start: 0.2em;
 			margin-block-end: 0.2em;
+			text-indent: 2em;
+		}
+		.no-indent {
+			text-indent: 0;
 		}
 		p:first-child {
 			margin-block-start: 0px;
@@ -204,6 +202,13 @@ export default function Manual() {
 		}
 	`}</style>;
 
+	const scrollContainer = useRef<HTMLDivElement | null>(null);
+	// Focus the body area on load to ensure pagedown/pageup etc. work immediately.
+	// Not really sure why altering tabIndex and autoFocus are insufficient, so we need
+	// to focus the element on page load instead.
+	useEffect(() => {
+		scrollContainer.current?.focus();
+	}, []);
 	const [childHeaders, setChildHeaders] = useState<NavItem[]>([]);
 	const addChild = useCallback(({ id, label, indentLevel }: NavItem) => {
 		setChildHeaders((oldHeaders) => {
@@ -215,6 +220,7 @@ export default function Manual() {
 		});
 	}, []);
 	return <div
+		ref={scrollContainer}
 		className="visibleScrollbar"
 		style={{
 			position: "fixed",
@@ -235,7 +241,8 @@ export default function Manual() {
 	>
 		{styleblock}
 		<NavContext.Provider value={{ items: childHeaders, addItem: addChild }}>
-			<div
+			{/* Hide the navbar on mobile devices (too lazy to properly support) */}
+			{window.innerWidth > 1024 && <div
 				id="nav-container"
 				style={{
 					position: "sticky",
@@ -244,7 +251,7 @@ export default function Manual() {
 				}}
 			>
 				<Navbar />
-			</div>
+			</div>}
 			<div
 				style={{
 					marginLeft: "1em",

@@ -37,6 +37,7 @@ export function ImportExportEn() {
 		</ol>
 		<p>PLACEHOLDER</p>
 		<ol start={1}>
+			{/* TODO these should be subheadings of the above section */}
 			<li>
 				If the URL did not specify a single fight, click the desired pull from the list of
 				fights.
