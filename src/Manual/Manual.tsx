@@ -4,6 +4,11 @@ import { localize } from "../Components/Localization";
 import { getThemeColors, getCachedColorTheme } from "../Components/ColorTheme";
 import { IntroEn } from "./Intro";
 import { OverviewEn } from "./Overview";
+import { TimelineCreationEn } from "./TimelineCreation";
+import { TimelineAnalysisEn } from "./TimelineAnalysis";
+import { FightMarkersEn } from "./FightMarkers";
+import { ImportExportEn } from "./ImportExport";
+import { AdditionalResourcesEn } from "./AdditionalResources";
 
 // Unlike pages within the main webapp, where localization is embedded for each text element,
 // the localized sub-components of the manual are split up to ensure the semantic structure of
@@ -261,29 +266,11 @@ function BodyEn() {
 		<h1 id="top">XIV in the Shell User Manual</h1>
 		<IntroEn />
 		<OverviewEn />
-		<h2>Timeline Creation and Editing</h2>
-		<h3>Setup and Configuration</h3>
-		<h3>Adding Skills</h3>
-		<h3>Adding Time Delays and Waits</h3>
-		<h3>Rearranging and Deleting Skills</h3>
-		<h3>Skill Sequence Presets</h3>
-		<h3>The Timeline Editor Table</h3>
-		<h2>Timeline Analysis</h2>
-		<h3>Potency and PPS</h3>
-		<h3>The Damage Table</h3>
-		<h3>DoT Applications</h3>
-		<h2>Timeline and Buff Markers</h2>
-		<h3>Loading Preset Fight Markers</h3>
-		<h3>Adding Party Buffs or Custom Markers</h3>
-		<h3>Creating Marker Tracks From Logs</h3>
-		<h2>Import and Export</h2>
-		<h3>Saving to a File</h3>
-		<h3>Importing From FFLogs</h3>
-		<h3>Copy/Paste With Spreadsheets</h3>
-		<h3>Copy/Paste With Discord</h3>
-		<h3>Exporting an Image</h3>
-		<h3>Exporting for Tischel's Dalamud Plugin</h3>
-		<h3>Exporting to Amarantine's Combat Simulator</h3>
+		<TimelineCreationEn />
+		<TimelineAnalysisEn />
+		<FightMarkersEn />
+		<ImportExportEn />
+		<AdditionalResourcesEn />
 	</>;
 }
 

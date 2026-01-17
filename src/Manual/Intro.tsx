@@ -1,9 +1,12 @@
 import React from "react";
-import { GITHUB_URL, HELP_CHANNEL_URL, BSKY_URL } from "../Components/IntroSection";
-
-const BALANCE_PAGE_URL = "https://www.thebalanceffxiv.com/";
-const ICY_VEINS_URL = "https://www.icy-veins.com/ffxiv/";
-const MATERIALS_LICENSE_URL = "https://support.na.square-enix.com/rule.php?id=5382&la=1&tag=authc";
+import {
+	GITHUB_URL,
+	HELP_CHANNEL_URL,
+	BSKY_URL,
+	BALANCE_PAGE_URL,
+	ICY_VEINS_URL,
+	MATERIALS_LICENSE_URL,
+} from "./Links";
 
 export function IntroEn() {
 	return <>
