@@ -1,5 +1,15 @@
 [
 	{
+		"date": "1/19/26",
+		"changes": [
+			"Added a user manual. You can find it at xivintheshell.com/manual, in the intro section, or in the links at the top right of the page."
+		],
+		"changes_zh": [
+			"新增用户手册：可在 xivintheshell.com/manual、简介区域或页面右上角的链接处访问。"
+		],
+		"level": "major"
+	},
+	{
 		"date": "1/17/26",
 		"changes": [
 			"Fixed a bug where the piety stat could not be configured."
