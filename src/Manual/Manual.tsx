@@ -37,7 +37,9 @@ function Navbar(props: { language: string | undefined }) {
 			maxWidth: "18%",
 		}}
 	>
-		<p className="no-indent">{props.language === "zh" ? "网站导航" : "Navigation"}</p>
+		<p className="no-indent" style={{ paddingLeft: "0.8rem" }}>
+			{props.language === "zh" ? "网站导航" : "Navigation"}
+		</p>
 		<ul style={{ listStyleType: "none", paddingLeft: "0.8rem", marginTop: "0.3rem" }}>
 			<li style={{ paddingBlockEnd: "0.15rem" }}>
 				<a href="#top">{props.language === "zh" ? "返回页面顶部" : "back to top"}</a>
@@ -100,7 +102,7 @@ export function Screenshot(props: { id: string | number; name: string; alt?: str
 export default function Manual(props: { language?: string }) {
 	const colors = getThemeColors(colorTheme);
 	// TODO properly share with main component when applicable
-	// the scrollbar here is thicker because the page has actual content
+	// the scrollbar here is thicker than on the main component because the page has actual content
 	const styleblock = <style>{`
 		@supports selector(::-webkit-scrollbar) {
 			.visibleScrollbar::-webkit-scrollbar {
@@ -150,10 +152,17 @@ export default function Manual(props: { language?: string }) {
 			background-color: ${colors.background};
 		}
 		img {
-			width: fit-content;
+			width: 80%;
+			max-width: fit-content;
 			border: 2px dashed ${getThemeColors(colorTheme).bgMediumContrast};
 			align-self: center;
 			margin: 5px;
+		}
+		ul {
+			margin-block: 0;
+		}
+		ol {
+			margin-block: 0;
 		}
 	`}</style>;
 

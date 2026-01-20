@@ -21,46 +21,38 @@ export function ImportExportEn() {
 			Fight plans can be imported directly from FFLogs reports from the "Import fight from
 			FFLogs" menu. This will open a dialog to begin the first step of the log import process.
 		</p>
-		<Screenshot id="15a" name="auth" />
+		{/*<Screenshot id="15a" name="auth" />*/}
 		<ol>
 			<li>
 				Click the button to allow <i>XIV in the Shell</i> to read FFLogs reports on your
 				behalf.
 			</li>
-		</ol>
-		<Screenshot id="15b" name="link" />
-		<ol start={2}>
+			{/*<Screenshot id="15b" name="link" />*/}
 			<li>
 				Paste a log report URL. The link may contain a full report, a specific fight number,
 				and/or a specific player number.
+				<ol type="a">
+					<li>
+						If the URL did not specify a single fight, click the desired pull from the
+						list of fights.
+					</li>
+					<li>
+						After choosing a specific fight and a player was not specified in the URL,
+						click the desired player name from the list of players.
+					</li>
+				</ol>
 			</li>
-		</ol>
-		<Screenshot id="15c" name="fightchoice" />
-		<ol start={1}>
-			{/* TODO these should be subheadings of the above section */}
-			<li>
-				If the URL did not specify a single fight, click the desired pull from the list of
-				fights.
-			</li>
-		</ol>
-		<Screenshot id="15d" name="playerchoice" />
-		<ol start={2}>
-			<li>
-				After choosing a specific fight and a player was not specified in the URL, click the
-				desired player name from the list of players.
-			</li>
-		</ol>
-		<Screenshot id="15e" name="stats" />
-		<ol start={3}>
+			{/*<Screenshot id="15c" name="fightchoice" />*/}
+
+			{/*<Screenshot id="15d" name="playerchoice" />*/}
+			{/*<Screenshot id="15e" name="stats" />*/}
 			<li>
 				Enter the combat stats of the selected player. Due to limitations with FFLogs, all
 				stats for players other than the creator of the log must be entered manually or
 				estimated, and will use the values of the most recently-created timeline for that
 				job by default.
 			</li>
-		</ol>
-		<Screenshot id="15f" name="results" />
-		<ol start={4}>
+			{/*<Screenshot id="15f" name="results" />*/}
 			<li>
 				After pressing "go," <i>XIV in the Shell</i> will import the list of actions from
 				the log to the active timeline slot, automatically inserting "wait" and "delay"
@@ -79,11 +71,10 @@ export function ImportExportEn() {
 		<p>
 			<i>Example sequence: Fire III, Fire IV, Despair</i>
 		</p>
-		<img src="assets/MarkerScreenshots/copypaste.jpg" />
 		<ul>
 			<li>
 				<b>Plain text</b> A comma-separated list of actions names.
-				<p>
+				<p className="no-indent">
 					<i>Example:</i>
 				</p>
 				<p>Fire 3, Fire 4, Despair</p>
@@ -91,21 +82,32 @@ export function ImportExportEn() {
 			<li>
 				<b>Tab-separated lines</b> A tab-separated list of usage timestamps, target counts,
 				and skill names, compatible with external spreadsheet applications.
-				<p>
+				<p className="no-indent">
 					<i>Example:</i>
 				</p>
-				<p>
-					{/* TODO format properly */}
-					-3.500 1 Fire 3
-					<br />
-					0.042 1 Fire 4
-					<br />
-					2.500 1 Despair
-				</p>
+				<table style={{ marginLeft: "1.5rem" }}>
+					<tbody>
+						<tr>
+							<td>-3.500</td>
+							<td>1</td>
+							<td>Fire 3</td>
+						</tr>
+						<tr>
+							<td>0.042</td>
+							<td>1</td>
+							<td>Fire 4</td>
+						</tr>
+						<tr>
+							<td>2.500</td>
+							<td>1</td>
+							<td>despair</td>
+						</tr>
+					</tbody>
+				</table>
 			</li>
 			<li>
 				<b>Discord emotes</b> A sequence of Discord emotes (only verified for BLM and PCT).
-				<p>
+				<p className="no-indent">
 					<i>Example:</i>
 				</p>
 				<p>:F3: :F4: :Despair:</p>
@@ -218,31 +220,25 @@ export function ImportExportZh() {
 		</p>
 		<NavH3Section id="importing-fflogs" label="从 FFLogs 导入" />
 		<p>可通过"从 FFLogs 导入战斗"菜单，直接将日志报告导入为时间轴。操作步骤如下：</p>
-		<Screenshot id="15a" name="auth" />
+		{/*<Screenshot id="15a" name="auth" />*/}
 		<ol>
 			<li>点击授权按钮，允许 XIV in the Shell 代你读取 FFLogs 报告。</li>
-		</ol>
-		<Screenshot id="15b" name="link" />
-		<ol start={2}>
-			<li>粘贴FFLogs日志网址。链接可包含完整报告，也可指定特定战斗场次和/或特定玩家编号。</li>
-		</ol>
-		<Screenshot id="15c" name="fightchoice" />
-		<ol start={1}>
-			<li>若链接未指定单场战斗，从战斗列表中选择所需战斗场次。</li>
-		</ol>
-		<Screenshot id="15d" name="playerchoice" />
-		<ol start={2}>
-			<li>若链接未指定玩家，在玩家列表中点击目标玩家名字。</li>
-		</ol>
-		<Screenshot id="15e" name="stats" />
-		<ol start={3}>
+			{/*<Screenshot id="15b" name="link" />*/}
+			<li>
+				粘贴FFLogs日志网址。链接可包含完整报告，也可指定特定战斗场次和/或特定玩家编号。
+				{/*<Screenshot id="15c" name="fightchoice" />*/}
+				<ol type="a">
+					<li>若链接未指定单场战斗，从战斗列表中选择所需战斗场次。</li>
+					{/*<Screenshot id="15d" name="playerchoice" />*/}
+					<li>若链接未指定玩家，在玩家列表中点击目标玩家名字。</li>
+				</ol>
+			</li>
+			{/*<Screenshot id="15e" name="stats" />*/}
 			<li>
 				输入该玩家的战斗属性。受 FFLogs
 				限制，非上传者本人的属性需手动填写或估算。默认将使用该职业最近一条时间轴的数值。
 			</li>
-		</ol>
-		<Screenshot id="15e" name="results" />
-		<ol start={4}>
+			{/*<Screenshot id="15e" name="results" />*/}
 			<li>
 				点击“确定”，XIV in the Shell
 				会把日志中的技能序列导入当前时间轴，并自动插入必要的等待事件。导入完成后会显示一张对照表，列出时间轴模拟时间与日志记录时间的差异，以及模拟认为未能满足激活条件的技能。关闭对话框后，你可以继续调整属性设置或时间轴，使其完全匹配。
@@ -256,32 +252,43 @@ export function ImportExportZh() {
 		<p>
 			<i>示例序列：爆炎，炽炎，绝望</i>
 		</p>
-		<img src="assets/MarkerScreenshots/copypaste.jpg" />
 		<ul>
 			<li>
 				<b>纯文本</b>{" "}
 				由顿号分隔的技能名序列。（中文和英文粘贴的技能序列所用的分隔符不同，此处表述已经修改）
-				<p>
+				<p className="no-indent">
 					<i>例：</i>
 				</p>
 				<p>爆炎、炽炎、绝望</p>
 			</li>
 			<li>
 				<b>制表符分隔列表</b> 由制表符分隔的时间戳、目标数、技能名序列，方便粘贴到表格软件。
-				<p>
+				<p className="no-indent">
 					<i>例：</i>
 				</p>
-				<p>
-					-3.500 1 爆炎
-					<br />
-					0.042 1 炽炎
-					<br />
-					2.500 1 绝望
-				</p>
+				<table style={{ marginLeft: "1.5rem" }}>
+					<tbody>
+						<tr>
+							<td>-3.500</td>
+							<td>1</td>
+							<td>爆炎</td>
+						</tr>
+						<tr>
+							<td>0.042</td>
+							<td>1</td>
+							<td>炽炎</td>
+						</tr>
+						<tr>
+							<td>2.500</td>
+							<td>1</td>
+							<td>绝望</td>
+						</tr>
+					</tbody>
+				</table>
 			</li>
 			<li>
 				<b>Discord 表情</b> 一组Discord表情序列（仅黑魔 / 画家已验证）。
-				<p>
+				<p className="no-indent">
 					<i>例：</i>
 				</p>
 				<p>:F3: :F4: :Despair:</p>
