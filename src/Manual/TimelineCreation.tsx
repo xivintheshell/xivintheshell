@@ -176,7 +176,7 @@ export function TimelineCreationEn() {
 				not to scale with animation lock time). Mousing over an icon will display a tooltip
 				with its snapshot time, potency, animation lock/cast time, and active damage/haste
 				effects.
-				<ol>
+				<ol type="a">
 					<li>
 						<b>Cast bars</b> A purple bar represents a cast time, during which other
 						abilities cannot be used. The vertical line in the middle of the bar
@@ -211,7 +211,7 @@ export function TimelineCreationEn() {
 				the timing of a natural MP tick, also known as the "actor tick." These ticks occur
 				every three seconds, and timing of the first tick can be adjusted in the
 				configuration panel.
-				<ol>
+				<ol type="a">
 					<li>
 						<b>Lucid Dreaming ticks</b> A light blue triangle represents the timing of a
 						Lucid Dreaming MP tick. These ticks occur every three seconds (independent
@@ -413,7 +413,7 @@ export function TimelineCreationZh() {
 			<li>
 				<b>技能图标</b>{" "}
 				每个图标代表一次技能使用（图标宽度与动画锁时长无关）。鼠标悬停可查看伤害判定时刻、威力、后摇/读条时间、当时生效的伤害增益/加速类Buff。
-				<ol>
+				<ol type="a">
 					<li>
 						<b>读条块（紫）</b>{" "}
 						读条阶段不可插入其他技能。读条块中的竖线即为可滑步判定点。
@@ -441,7 +441,7 @@ export function TimelineCreationZh() {
 			<li>
 				<b>跳蓝点</b> 背景蓝色竖线，用于显示自然回蓝判定点，每 3
 				秒一次。首个跳蓝时间点可在“属性设置”面板中调整。
-				<ol>
+				<ol type="a">
 					<li>
 						<b>醒梦判定点</b>{" "}
 						浅蓝三角。醒梦状态下会每3秒额外回蓝一次，并且其时机与跳蓝点相互独立。首个判定点在每个时间轴中随机生成。（可补充醒梦时间点可以在“属性设置”面板中调整）
