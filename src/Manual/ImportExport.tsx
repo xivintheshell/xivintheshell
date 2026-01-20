@@ -1,6 +1,6 @@
 import React from "react";
 import { ButtonIndicator } from "../Components/Common";
-import { NavH3Section, NavH2Section } from "./Manual";
+import { NavH3Section, NavH2Section, Screenshot } from "./Manual";
 import { TISCHEL_PLUGIN_URL, AMA_SIM_URL } from "./Links";
 
 const bi = (k: string) => <ButtonIndicator text={k} />;
@@ -9,7 +9,7 @@ export function ImportExportEn() {
 	return <>
 		<NavH2Section id="import-export" label="Import and Export" />
 		<NavH3Section id="exporting-text" label="Exporting to a Text File" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="14" name="importexport" />
 		<p>
 			You can download the active timeline as a text file from the "Import/Export" menu, by
 			clicking the "txt format" link <b>(1)</b>. This file can then be shared and imported
@@ -21,21 +21,21 @@ export function ImportExportEn() {
 			Fight plans can be imported directly from FFLogs reports from the "Import fight from
 			FFLogs" menu. This will open a dialog to begin the first step of the log import process.
 		</p>
-		<p>PLACEHOLDER</p>
+		<Screenshot id="15a" name="auth" />
 		<ol>
 			<li>
 				Click the button to allow <i>XIV in the Shell</i> to read FFLogs reports on your
 				behalf.
 			</li>
 		</ol>
-		<p>PLACEHOLDER</p>
+		<Screenshot id="15b" name="link" />
 		<ol start={2}>
 			<li>
 				Paste a log report URL. The link may contain a full report, a specific fight number,
 				and/or a specific player number.
 			</li>
 		</ol>
-		<p>PLACEHOLDER</p>
+		<Screenshot id="15c" name="fightchoice" />
 		<ol start={1}>
 			{/* TODO these should be subheadings of the above section */}
 			<li>
@@ -43,14 +43,14 @@ export function ImportExportEn() {
 				fights.
 			</li>
 		</ol>
-		<p>PLACEHOLDER</p>
+		<Screenshot id="15d" name="playerchoice" />
 		<ol start={2}>
 			<li>
 				After choosing a specific fight and a player was not specified in the URL, click the
 				desired player name from the list of players.
 			</li>
 		</ol>
-		<p>PLACEHOLDER</p>
+		<Screenshot id="15e" name="stats" />
 		<ol start={3}>
 			<li>
 				Enter the combat stats of the selected player. Due to limitations with FFLogs, all
@@ -59,7 +59,7 @@ export function ImportExportEn() {
 				job by default.
 			</li>
 		</ol>
-		<p>PLACEHOLDER</p>
+		<Screenshot id="15f" name="results" />
 		<ol start={4}>
 			<li>
 				After pressing "go," <i>XIV in the Shell</i> will import the list of actions from
@@ -79,7 +79,7 @@ export function ImportExportEn() {
 		<p>
 			<i>Example sequence: Fire III, Fire IV, Despair</i>
 		</p>
-		<p>PLACEHOLDER</p>
+		<img src="assets/MarkerScreenshots/copypaste.jpg" />
 		<ul>
 			<li>
 				<b>Plain text</b> A comma-separated list of actions names.
@@ -118,7 +118,7 @@ export function ImportExportEn() {
 			setting.
 		</p>
 		<NavH3Section id="exporting-images" label="Exporting an Image" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="18b" name="importexport" />
 		<p>
 			Besides using your computer's built-in screenshot functionality, you may also use{" "}
 			<i>XIV in the Shell</i>'s "Image Export" feature to download a timeline as a PNG image.
@@ -139,7 +139,7 @@ export function ImportExportEn() {
 			settings configured in the "Settings" tab.
 		</p>
 		<NavH3Section id="exporting-damage-logs" label="Exporting Damage Logs" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="17" name="damageexport" />
 		<p>
 			You can export a detailed log of all damage events by clicking the "downloaded detailed
 			damage log as CSV file" button <b>(1)</b> above the site's potency summary table. The
@@ -159,7 +159,7 @@ export function ImportExportEn() {
 			</li>
 		</ul>
 		<NavH3Section id="exporting-for-external-tools" label="Exporting for External Tools" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="18b" name="importexport" />
 		<p>
 			Use the "excel / Tischel's plugin csv format" download link <b>(1)</b> to generate a
 			file compatible with external tools, like spreadsheet software or Tischel's{" "}
@@ -185,7 +185,6 @@ export function ImportExportEn() {
 			id="exporting-for-combat-sim"
 			label="Exporting to Amarantine's Combat Simulator"
 		/>
-		<p>PLACEHOLDER</p>
 		<p>
 			<a href={AMA_SIM_URL}>Amarantine's Combat Simulator</a> provides powerful DPS simulation
 			and kill time estimation capabilities. <i>XIV in the Shell</i> can be used to generate
@@ -211,7 +210,7 @@ export function ImportExportZh() {
 	return <>
 		<NavH2Section id="import-export" label="导入与导出" />
 		<NavH3Section id="exporting-text" label="导出为文本文件" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="14" name="importexport" />
 		<p>
 			在"导入/导出"菜单中，点击"txt 格式"链接 <b>(1)</b>
 			，即可将当前时间轴下载为txt文件。该文件可通过“从文件导入战斗”菜单 <b>(2)</b>{" "}
@@ -219,30 +218,30 @@ export function ImportExportZh() {
 		</p>
 		<NavH3Section id="importing-fflogs" label="从 FFLogs 导入" />
 		<p>可通过"从 FFLogs 导入战斗"菜单，直接将日志报告导入为时间轴。操作步骤如下：</p>
-		<p>PLACEHOLDER</p>
+		<Screenshot id="15a" name="auth" />
 		<ol>
 			<li>点击授权按钮，允许 XIV in the Shell 代你读取 FFLogs 报告。</li>
 		</ol>
-		<p>PLACEHOLDER</p>
+		<Screenshot id="15b" name="link" />
 		<ol start={2}>
 			<li>粘贴FFLogs日志网址。链接可包含完整报告，也可指定特定战斗场次和/或特定玩家编号。</li>
 		</ol>
-		<p>PLACEHOLDER</p>
+		<Screenshot id="15c" name="fightchoice" />
 		<ol start={1}>
 			<li>若链接未指定单场战斗，从战斗列表中选择所需战斗场次。</li>
 		</ol>
-		<p>PLACEHOLDER</p>
+		<Screenshot id="15d" name="playerchoice" />
 		<ol start={2}>
 			<li>若链接未指定玩家，在玩家列表中点击目标玩家名字。</li>
 		</ol>
-		<p>PLACEHOLDER</p>
+		<Screenshot id="15e" name="stats" />
 		<ol start={3}>
 			<li>
 				输入该玩家的战斗属性。受 FFLogs
 				限制，非上传者本人的属性需手动填写或估算。默认将使用该职业最近一条时间轴的数值。
 			</li>
 		</ol>
-		<p>PLACEHOLDER</p>
+		<Screenshot id="15e" name="results" />
 		<ol start={4}>
 			<li>
 				点击“确定”，XIV in the Shell
@@ -257,7 +256,7 @@ export function ImportExportZh() {
 		<p>
 			<i>示例序列：爆炎，炽炎，绝望</i>
 		</p>
-		<p>PLACEHOLDER</p>
+		<img src="assets/MarkerScreenshots/copypaste.jpg" />
 		<ul>
 			<li>
 				<b>纯文本</b>{" "}
@@ -292,7 +291,7 @@ export function ImportExportZh() {
 			从时间轴中复制时，使用的格式由页面底部“设置”→“剪贴板复制模式”决定；粘贴到时间轴时，三种格式均可自动识别，不受该设置限制。
 		</p>
 		<NavH3Section id="exporting-images" label="导出图片" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="18b" name="importexport" />
 		<p>除了系统截图，也可使用站内的“导出为图像”功能将时间轴导出为 PNG。</p>
 		<p>
 			点击"将选择部分导出为 png" <b>(1)</b>{" "}
@@ -305,7 +304,7 @@ export function ImportExportZh() {
 			取消勾选“包含时间刻度与时间轴标记”可隐藏时间刻度与时间轴标记，其余显示元素遵循“设置”标签中的开关状态。
 		</p>
 		<NavH3Section id="exporting-damage-logs" label="导出伤害日志" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="17" name="damageexport" />
 		<p>
 			可以在技能统计表上方点击"下载详细伤害结算记录（CSV格式）" <b>(1)</b>{" "}
 			以导出详细的伤害结算记录。其输出包含三列数据：
@@ -322,7 +321,7 @@ export function ImportExportZh() {
 			</li>
 		</ul>
 		<NavH3Section id="exporting-for-external-tools" label="导出供外部工具使用" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="18a" name="importexport" />
 		<p>
 			点击"excel / Tischel的插件 CSV 格式" <b>(1)</b> 可生成兼容表格软件或 Tischel 开发的{" "}
 			<a href={TISCHEL_PLUGIN_URL}>BLM in the Shell Plugin</a> 的文件。其输出包含四列数据：
@@ -342,7 +341,6 @@ export function ImportExportZh() {
 			</li>
 		</ul>
 		<NavH3Section id="exporting-for-combat-sim" label="导出至Amarantine的战斗模拟器" />
-		<p>PLACEHOLDER</p>
 		<p>
 			<a href={AMA_SIM_URL}>Amarantine的战斗模拟器</a>具备强大的 DPS
 			模拟与击杀时间估算功能。XIV in the Shell

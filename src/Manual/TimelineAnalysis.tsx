@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { NavH3Section, NavH2Section } from "./Manual";
+import { NavH3Section, NavH2Section, Screenshot } from "./Manual";
 import { Help } from "../Components/Common";
 
 export function TimelineAnalysisEn() {
@@ -7,7 +7,7 @@ export function TimelineAnalysisEn() {
 	return <>
 		<NavH2Section id="timeline-analysis" label="Timeline Analysis" />
 		<NavH3Section id="damage-table" label="Potency, PPS, and the Damage Table" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="9" name="potency" />
 		<ol>
 			<li>
 				<b>Summary statistics</b> The top section summarizes the total potency, potency per
@@ -73,7 +73,7 @@ export function TimelineAnalysisEn() {
 			</li>
 		</ol>
 		<NavH3Section id="dot-breakdown" label="DoT Breakdown" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="10" name="thunder" />
 		<p>
 			Every used DoT ability has a separate table detailing the timing of its usage. The
 			offset at which DoT effects tick is randomly generated for each timeline.
@@ -117,7 +117,7 @@ export function TimelineAnalysisZh() {
 	return <>
 		<NavH2Section id="timeline-analysis" label="时间轴分析" />
 		<NavH3Section id="damage-table" label="威力、PPS与伤害统计表" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="9" name="potency" />
 		<ol>
 			<li>
 				<b>汇总统计</b> 顶部栏显示当前轴的总威力、每秒（PPS）、GCD 技能数、DoT 覆盖率。
@@ -156,7 +156,7 @@ export function TimelineAnalysisZh() {
 			</li>
 		</ol>
 		<NavH3Section id="dot-breakdown" label="DoT 明细" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="10" name="thunder" />
 		<p>
 			每个被使用的DoT类型都会单独成表，列出其生效时间与伤害详情。DoT
 			判定点在每条时间轴内随机生成。

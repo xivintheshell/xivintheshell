@@ -125,7 +125,7 @@ export class MoveNodes extends TimelineInteraction {
 	constructor(startIndex: number, selectCount: number, offset: number) {
 		super({
 			en: `move ${selectCount} ${maybePluralActions(selectCount)}`,
-			zh: "移动${selectCount}技能",
+			zh: `移动${selectCount}技能`,
 		});
 		this.startIndex = startIndex;
 		this.selectCount = selectCount;

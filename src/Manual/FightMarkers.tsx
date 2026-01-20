@@ -1,5 +1,5 @@
 import React from "react";
-import { NavH3Section, NavH2Section } from "./Manual";
+import { NavH3Section, NavH2Section, Screenshot } from "./Manual";
 import {
 	TRACK_SCRIPT_URL,
 	CREATING_TRACKS_URL,
@@ -11,7 +11,7 @@ export function FightMarkersEn() {
 	return <>
 		<NavH2Section id="fight-markers" label="Fight and Buff Markers" />
 		<NavH3Section id="loading-presets" label="Loading Preset Fight Markers" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="11" name="markers" />
 		<p>
 			<i>XIV in the Shell</i> provides preset timeline markers for on-content savage and
 			ultimate fights, as well as a variety of other high-end content. These tracks are
@@ -57,7 +57,7 @@ export function FightMarkersEn() {
 			id="loading-presets-phases"
 			label="Loading Preset Markers for Fights With Phases"
 		/>
-		<p>PLACEHOLDER</p>
+		<Screenshot id="12" name="phase_load" />
 		<p>
 			If a preset track supports separate phases, click its name <b>(1)</b> to expand/collapse
 			timing information for its phases.
@@ -77,14 +77,14 @@ export function FightMarkersEn() {
 			You can find these timings for a particular FFLogs report with the
 			`type="targetabilityupdate"` filter, as shown below.
 		</p>
-		<p>PLACEHOLDER</p>
+		<img src="assets/ManualScreenshots/targetabilityupdate.png" />
 		<p>
 			Presets take time to create, and the languages in which they are available depend on the
 			work of the community members that create them. If you're interested in submitting
 			markers for a fight, please reach out to us!
 		</p>
 		<NavH3Section id="adding-custom-markers" label="Adding Party Buffs and Custom Markers" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="13a" name="pct_opener" />
 		<p>
 			In addition to the site's built-in presets, you can add your own markers in the "Add
 			buffs/markers" section <b>(1)</b>. Markers are split into three distinct categories:
@@ -119,7 +119,7 @@ export function FightMarkersEn() {
 			properties to the "Add buffs/markers" menu for further editing.
 		</p>
 		<NavH3Section id="exporting-markers" label="Exporting Markers" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="13b" name="pct_opener" />
 		<p>
 			Marker tracks can be exported and shared with other users in the "Save marker tracks to
 			file" menu <b>(1)</b>. Click the "all tracks combined" link <b>(2)</b> to download a
@@ -156,7 +156,7 @@ export function FightMarkersZh() {
 	return <>
 		<NavH2Section id="fight-markers" label="时间轴标记" />
 		<NavH3Section id="loading-presets" label="载入预设时间轴标记" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="11" name="markers" />
 		<p>
 			XIV in the Shell
 			提供了当前零式、绝本及其他高难度内容的时间轴标记，由开发者和社区成员维护，精确标注机制判定、不可选中、伤害判定等时刻。
@@ -187,7 +187,7 @@ export function FightMarkersZh() {
 			可仅删除重复项（同名、同时间、同轨道等），避免重复加载。
 		</p>
 		<NavH3Section id="loading-presets-phases" label="分阶段载入预设" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="12" name="phase_load" />
 		<p>
 			若副本支持分阶段载入预设，点击副本名称 <b>(1)</b> 展开可以展开/折叠阶段信息。
 		</p>
@@ -202,12 +202,12 @@ export function FightMarkersZh() {
 			Filter Expression 中输入type="targetabilityupdate"
 			进行过滤，自行查询该场战斗的实际阶段切换时间。
 		</p>
-		<p>PLACEHOLDER</p>
+		<img src="assets/ManualScreenshots/targetabilityupdate.png" />
 		<p>
 			时间轴预设制作耗时且依赖社区多语言贡献。如果你愿意提交某场战斗的时间轴标记，请随时联系我们！
 		</p>
 		<NavH3Section id="adding-custom-markers" label="添加团队增益与自定义标记" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="13a" name="pct_opener" />
 		<p>
 			除了网站内置的时间轴预设，你还可以在“添加Buff和标记”区域 <b>(1)</b>{" "}
 			自行创建标记。标记分为三类：
@@ -235,7 +235,7 @@ export function FightMarkersZh() {
 			可将其删除，其属性将同步到“添加Buff和标记”菜单中，方便进一步编辑。
 		</p>
 		<NavH3Section id="exporting-markers" label="导出标记" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="13b" name="pct_opener" />
 		<p>
 			在“保存标记到文件”菜单 <b>(1)</b> 中，点击“所有轨道”链接 <b>(2)</b>{" "}
 			可下载包含所有标记的单个文件，随后可通过“载入多轨文件”选项 <b>(3)</b> 导入。

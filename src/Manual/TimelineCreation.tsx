@@ -1,6 +1,6 @@
 import React from "react";
 import { ButtonIndicator } from "../Components/Common";
-import { NavH3Section, NavH2Section } from "./Manual";
+import { NavH3Section, NavH2Section, Screenshot } from "./Manual";
 import { RANDOM_SEED_WIKI_URL } from "./Links";
 
 const bi = (k: string) => <ButtonIndicator text={k} />;
@@ -13,7 +13,7 @@ export function TimelineCreationEn() {
 			The "Config" panel to the right of the skill input area lets you adjust combat
 			statistics and other simulation settings.
 		</p>
-		<p>PLACEHOLDER</p>
+		<Screenshot id={1} name="config" />
 		<ol>
 			<li>
 				<b>Etro/XivGear import</b> Import a gearset from an etro or XivGear link.
@@ -68,7 +68,7 @@ export function TimelineCreationEn() {
 				events occur whenever possible.
 			</li>
 		</ol>
-		<p>PLACEHOLDER</p>
+		<Screenshot id={2} name="resource_overrides" />
 		<ol start={11}>
 			<li>
 				<b>Override initial resources</b> Specify the initial values of job gauges, status
@@ -81,7 +81,7 @@ export function TimelineCreationEn() {
 				changes to the current timeline, and clears its previously-saved actions.
 			</li>
 		</ol>
-		<p>PLACEHOLDER</p>
+		<Screenshot id={3} name="control" />
 		<p>The "Control" panel contains simulation settings.</p>
 		<p>
 			When "real-time auto pause" mode is enabled, using an action will simulate its animation
@@ -93,7 +93,7 @@ export function TimelineCreationEn() {
 			after using an action.
 		</p>
 		<NavH3Section id="adding-skills" label="Adding Skills, Time Delays, and Waits" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id={4} name="hotbar" />
 		<p>
 			Click on a skill's icon in the hotbar <b>(1)</b> to add it. It will be inserted at the
 			location of the cursor in the timeline. If action(s) are currently selected, attempting
@@ -132,7 +132,7 @@ export function TimelineCreationEn() {
 			clicking on them here.
 		</p>
 		<NavH3Section id="positionals" label="Positionals and Auto-Attacks" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id={5} name="positional" />
 		<p>
 			Melee jobs have a pair of "Rear Positional" <b>(1)</b> and "Flank Positional" <b>(2)</b>{" "}
 			buffs. Abilities with bonuses for landing positional hits will receive bonuses when the
@@ -150,7 +150,7 @@ export function TimelineCreationEn() {
 			later date.
 		</p>
 		<NavH3Section id="skill-sequence-presets" label="Skill Sequence Presets" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="6" name="presets" />
 		<p>
 			Below the skill input window is the "skill sequence presets" menu. Here, you can add
 			sequences of multiple skills that can later be added in bulk to the timeline by clicking
@@ -166,7 +166,7 @@ export function TimelineCreationEn() {
 			The graphical timeline displays visual information about skill usages and animation
 			locks.
 		</p>
-		<p>PLACEHOLDER</p>
+		<Screenshot id="7" name="timelines" />
 		<ol>
 			<li>
 				<b>Time ruler</b> Displays timestamp information.
@@ -230,7 +230,7 @@ export function TimelineCreationEn() {
 			options in the "Settings" tab at the bottom of the page.
 		</p>
 		<NavH3Section id="editing-timelines" label="Editing Timelines" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="8a" name="editor" />
 		<p>
 			Click on a skill icon in the graphical timeline <b>(1)</b> or a row in the "Timeline
 			editor" tab <b>(2)</b> to select it. Use {bi("Shift")} + click, or click and drag on the
@@ -262,7 +262,7 @@ export function TimelineCreationEn() {
 			the bottom of the active timeline's handle <b>(7)</b> will delete it.
 		</p>
 		<NavH3Section id="timeline-editor-table" label="The Timeline Editor Table" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="8b" name="editor" />
 		<p>
 			The "Timeline editor" tab at the bottom of the page provides a compact view of the
 			skills used in the active timeline. Any edits made in this table must be confirmed or
@@ -298,7 +298,7 @@ export function TimelineCreationZh() {
 		<NavH2Section id="timeline-creation" label="创建与编辑时间轴" />
 		<NavH3Section id="setup-config" label="设置与配置" />
 		<p>位于技能输入区右侧的“属性设置”面板可调整战斗属性及其他参数。</p>
-		<p>PLACEHOLDER</p>
+		<Screenshot id={1} name="config" />
 		<ol>
 			<li>
 				<b>从Etro / XivGear 导入套装</b> 粘贴 etro 或 XivGear 的配装链接，一键导入装备。
@@ -339,7 +339,7 @@ export function TimelineCreationZh() {
 				随机种子用于决定随机事件（如赤魔的赤飞石预备、舞者的幻扇量谱等）是否发生。随机BUFF获取模式选择RNG以基于随机种子触发，选择Never以全部不触发，选择Always以在满足条件时必定触发。
 			</li>
 		</ol>
-		<p>PLACEHOLDER</p>
+		<Screenshot id={2} name="resource_overrides" />
 		<ol start={11}>
 			<li>
 				<b>指定初始资源</b>{" "}
@@ -350,7 +350,7 @@ export function TimelineCreationZh() {
 				“应用”仅保存配置并作用于当前时间轴；“应用并重置时间轴”会清空当前时间轴已录入的全部技能。
 			</li>
 		</ol>
-		<p>PLACEHOLDER</p>
+		<Screenshot id={3} name="control" />
 		<p>位于技能输入区右侧的“操作设置”面板可调整模拟设置。</p>
 		<p>
 			当开启“实时（带自动暂停）”模式时，使用技能会模拟其真实技能后摇/咏唱时间，直到可继续操作时暂停。可调整“倍速”以加快时间流逝。
@@ -359,7 +359,7 @@ export function TimelineCreationZh() {
 			当开启“手动”模式时，使用技能后立刻跳过动画与读条，快进至下一次可施放技能的时间点，无等待。
 		</p>
 		<NavH3Section id="adding-skills" label="添加技能、等待时间与时间跳转" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="4" name="hotbar" />
 		<p>
 			点击热键栏中的技能图标 <b>(1)</b>{" "}
 			即可插入技能。新技能将在时间轴光标处使用；若已选中技能，则插入至该技能之前。系统会自动在当前条件下的最早可用时间施放技能。
@@ -388,7 +388,7 @@ export function TimelineCreationZh() {
 			图标，即可移除Buff/Debuff。对于地面类技能（如黑魔纹、学者的野战治疗阵、黑骑的腐秽大地等），点击以将该效果临时禁用，再次点击可重新启用。
 		</p>
 		<NavH3Section id="positionals" label="身位与平A" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="5" name="positional" />
 		<p>
 			近战职业拥有“身位加成（后）” <b>(1)</b> 和“身位加成（侧）” <b>(2)</b>{" "}
 			两个开关。对于有身位加成的技能，对应开关激活时即可享受身位加成。点击图标可开关身位加成。开启“真北”后，所有身位加成强制生效，不受上述开关影响。
@@ -398,14 +398,14 @@ export function TimelineCreationZh() {
 			状态，目前仅用于骑士计算忠义量谱，可手动关闭以模拟脱离平A范围。再次使用战技或能力技会自动重新启用平A。平A的威力计算暂不支持，将在后续更新中加入。
 		</p>
 		<NavH3Section id="skill-sequence-presets" label="技能序列预设" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="6" name="presets" />
 		<p>在技能输入窗口下方可找到“技能序列预设”菜单。</p>
 		<p>
 			你可以在这里把多个技能打包成一个预设；以后只需点击该预设，即可一次性将整个预设插入时间轴。对于共用一个按键的技能（如枪刃的子弹连和续剑、画家的红/绿/蓝连击），从预设加载时会自动变成对应的正确技能。
 		</p>
 		<NavH3Section id="timeline-visualization" label="时间轴可视化" />
 		<p>图形时间轴用不同颜色与符号直观展示技能使用及后摇/读条信息。</p>
-		<p>PLACEHOLDER</p>
+		<Screenshot id="7" name="timelines" />
 		<ol>
 			<li>
 				<b>时间标尺</b> 显示绝对时间刻度。
@@ -456,7 +456,7 @@ export function TimelineCreationZh() {
 			如需隐藏以上任一元素，可在页面底部“设置”标签内取消对应勾选。（说起来平A判定点好像隐藏不掉）
 		</p>
 		<NavH3Section id="editing-timelines" label="编辑时间轴" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="8a" name="editor" />
 		<p>
 			单击图形时间轴上的技能图标 <b>(1)</b> 或“时间轴编辑器”表格中的行 <b>(2)</b>{" "}
 			即可选中技能，{bi("Shift")}+单击首尾技能或在时间轴空白处框选可多选技能。按{" "}
@@ -483,7 +483,7 @@ export function TimelineCreationZh() {
 			可删除该时间轴。
 		</p>
 		<NavH3Section id="timeline-editor-table" label="时间轴编辑器表格" />
-		<p>PLACEHOLDER</p>
+		<Screenshot id="8b" name="editor" />
 		<p>
 			页面底部的“时间轴编辑器”标签提供紧凑的表格视图。此处进行的任何改动需点击右侧“应用并保存编辑”或“放弃更改”{" "}
 			<b>(1)</b>{" "}

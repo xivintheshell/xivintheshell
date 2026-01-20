@@ -89,6 +89,14 @@ export function NavH3Section(props: {
 	</>;
 }
 
+const LanguageContext = createContext("en");
+
+export function Screenshot(props: { id: string | number; name: string; alt?: string }) {
+	const lang = useContext(LanguageContext);
+	const path = `${props.id}_${colorTheme === "Dark" ? "D" : "L"}_${lang === "zh" ? "Z" : "E"}_${props.name}.jpg`;
+	return <img src={`assets/ManualScreenshots/${path}`} alt={props.alt} />;
+}
+
 export default function Manual(props: { language?: string }) {
 	const colors = getThemeColors(colorTheme);
 	// TODO properly share with main component when applicable
@@ -128,64 +136,6 @@ export default function Manual(props: { language?: string }) {
 		p:first-child {
 			margin-block-start: 0px;
 		}
-		::selection {
-			background: rgba(147, 112, 219, 0.4);
-		}
-		option, select {
-			color: ${colors.text};
-			background-color: ${colors.background};
-		}
-		button, input[type="submit"], ::-webkit-file-upload-button {
-			color: ${colors.text};
-			background-color: ${colors.bgLowContrast};
-			border: 1px solid ${colors.bgHighContrast};
-		}
-		input[type="radio"] {
-			appearance: none;
-			width: 1em;
-			height: 1em;
-			border: 1px solid ${colors.bgHighContrast};
-			border-radius: 50%;
-			background-clip: content-box;
-			padding: 2px;
-		}
-		input[type="radio"]:checked {
-			background-color: ${colors.accent};
-		}
-		input[type="checkbox"] {
-			appearance: none;
-			width: 1em;
-			height: 1em;
-			border: 1px solid ${colors.bgHighContrast};
-			border-radius: 1px;
-			background-clip: content-box;
-			padding: 2px;
-		}
-		input[type="checkbox"]:checked:after {
-			content: '\\2714';
-			color: ${colors.accent};
-			position: absolute;
-			font-size: 22px;
-			top: -6px;
-			left: -2px;
-		}
-		input[type="range"] {
-			appearance: none;
-			background-color: transparent;
-			border: 1px solid ${colors.bgHighContrast};
-			vertical-align: middle;
-			height: 0.9em;
-			border-radius: 0.45em;
-			overflow: hidden;
-			padding: 0.05em;
-		}
-		input[type="range"]::-webkit-slider-thumb {
-			appearance: none;
-			background-color: ${colors.accent};
-			width: 0.8em;
-			height: 0.8em;
-			border-radius: 0.4em;
-		}
 		.help-tooltip {
 			color: ${colors.text};
 			background-color: ${colors.tipBackground};
@@ -198,6 +148,12 @@ export default function Manual(props: { language?: string }) {
 		}
 		button:disabled {
 			background-color: ${colors.background};
+		}
+		img {
+			width: fit-content;
+			border: 2px dashed ${getThemeColors(colorTheme).bgMediumContrast};
+			align-self: center;
+			margin: 5px;
 		}
 	`}</style>;
 
@@ -277,19 +233,21 @@ export default function Manual(props: { language?: string }) {
 			>
 				<Navbar language={props.language} />
 			</div>}
-			<div
-				style={{
-					marginLeft: "1em",
-					marginRight: "1em",
-					paddingRight: "1em",
-					marginBottom: "1em",
-					display: "flex",
-					flexDirection: "column",
-				}}
-				tabIndex={-1}
-			>
-				{props.language === "zh" ? BodyZh() : BodyEn()}
-			</div>
+			<LanguageContext.Provider value={props.language ?? "en"}>
+				<div
+					style={{
+						marginLeft: "1em",
+						marginRight: "1em",
+						paddingRight: "1em",
+						marginBottom: "1em",
+						display: "flex",
+						flexDirection: "column",
+					}}
+					tabIndex={-1}
+				>
+					{props.language === "zh" ? BodyZh() : BodyEn()}
+				</div>
+			</LanguageContext.Provider>
 		</NavContext.Provider>
 	</div>;
 }

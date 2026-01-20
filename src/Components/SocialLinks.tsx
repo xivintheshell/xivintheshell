@@ -47,7 +47,7 @@ export function SocialLinks() {
 			</IconContext.Provider>
 			|
 			<IconContext.Provider value={{ color: iconColor, className: "linkOption" }}>
-				<a href="/manual" title={localize({ en: "User Manual", zh: "用户手册" })}>
+				<a href="/manual" title={localize({ en: "User Manual", zh: "用户手册" }) as string}>
 					<FaBookOpen />
 				</a>
 			</IconContext.Provider>
