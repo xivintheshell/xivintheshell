@@ -381,6 +381,15 @@ export function IntroSection(props: { job: ShellJob }) {
 							をホバーするとヘルプテキストを確認できます。
 						</div>,
 					})}
+					{localize({
+						en: <div className="paragraph">
+							For more detailed instructions, please refer to our{" "}
+							<a href="/manual">user manual</a>.
+						</div>,
+						zh: <div className="paragraph">
+							如需更详细的说明，请参考我们的<a href="/manual">使用手册</a>。
+						</div>,
+					})}
 					<div className="paragraph" style={{ marginTop: 16 }}>
 						<Expandable
 							title={"Troubleshoot"}

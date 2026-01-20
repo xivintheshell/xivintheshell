@@ -1,7 +1,18 @@
 [
 	{
-		"date": "1/17/25",
+		"date": "1/19/26",
 		"changes": [
+			"Added a user manual. You can find it at xivintheshell.com/manual, in the intro section, or in the links at the top right of the page."
+		],
+		"changes_zh": [
+			"新增用户手册：可在 xivintheshell.com/manual、简介区域或页面右上角的链接处访问。"
+		],
+		"level": "major"
+	},
+	{
+		"date": "1/17/26",
+		"changes": [
+			"Fixed a bug where the piety stat could not be configured."
 			"[BETA] Added the ability to change the target(s) of an ability below the skill hotbar. See target count help tooltip for details.",
 			"(this was previously added on the beta site already, i just accidentally reverted it due to some git accidents)"
 		]

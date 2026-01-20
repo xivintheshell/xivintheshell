@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { IconContext } from "react-icons";
-import { FaBluesky, FaGithub, FaBlog } from "react-icons/fa6";
+import { FaBluesky, FaGithub, FaBlog, FaBookOpen } from "react-icons/fa6";
 import { ColorThemeContext, getThemeField } from "./ColorTheme";
 import { BSKY_URL, GITHUB_URL, BLOG_URL } from "./IntroSection";
 import { localize } from "./Localization";
@@ -43,6 +43,12 @@ export function SocialLinks() {
 			<IconContext.Provider value={{ color: iconColor, className: "linkOption" }}>
 				<a href={BLOG_URL} title={localize({ en: "Blog", zh: "博客" }) as string}>
 					<FaBlog />
+				</a>
+			</IconContext.Provider>
+			|
+			<IconContext.Provider value={{ color: iconColor, className: "linkOption" }}>
+				<a href="/manual" title={localize({ en: "User Manual", zh: "用户手册" }) as string}>
+					<FaBookOpen />
 				</a>
 			</IconContext.Provider>
 		</div>
