@@ -12,7 +12,7 @@
 	{
 		"date": "1/17/26",
 		"changes": [
-			"Fixed a bug where the piety stat could not be configured."
+			"Fixed a bug where the piety stat could not be configured.",
 			"[BETA] Added the ability to change the target(s) of an ability below the skill hotbar. See target count help tooltip for details.",
 			"(this was previously added on the beta site already, i just accidentally reverted it due to some git accidents)"
 		]
