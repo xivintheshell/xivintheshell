@@ -1,5 +1,14 @@
 [
 	{
+		"date": "1/20/26",
+		"changes": [
+			"Added Chinese-language M11S and M12S P1 tracks (translated by yuyuka)."
+		],
+		"changes_zh": [
+			"增加了 M11S 和 M12S 门神的中文语言时间轴标记（感谢 鱼卡 提供的翻译）。"
+		]
+	},
+	{
 		"date": "1/19/26",
 		"changes": [
 			"Added a user manual. You can find it at xivintheshell.com/manual, in the intro section, or in the links at the top right of the page."

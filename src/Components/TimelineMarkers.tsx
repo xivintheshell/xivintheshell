@@ -155,7 +155,7 @@ function metaToTitleText(meta: MarkerTrackMeta, showAuthors: boolean): Localized
 				: meta.name.en,
 		zh:
 			(meta.authors?.length ?? 0) > 0 && showAuthors
-				? `${meta.name.zh}（来自${meta.authors?.join("+")}）`
+				? `${meta.name.zh}（来自 ${meta.authors?.join(" + ")} ）`
 				: meta.name.zh,
 	};
 }
@@ -384,8 +384,8 @@ function TrackCollection(props: {
 									),
 									zh: group.commonAuthors ? (
 										<p style={pStyle}>
-											{displayFightKind(kind)}（{localizeLanguage(lang)}，来自
-											{group.commonAuthors.join("+")}）：
+											{displayFightKind(kind)}（{localizeLanguage(lang)}，来自{" "}
+											{group.commonAuthors.join(" + ")}）：
 										</p>
 									) : (
 										<p style={pStyle}>

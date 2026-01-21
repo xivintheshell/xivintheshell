@@ -581,6 +581,11 @@ export function calculateDamageStats(props: {
 		} else if (a.skillName !== b.skillName) {
 			const pa = skillPotencies.get(a.skillName) ?? 0;
 			const pb = skillPotencies.get(b.skillName) ?? 0;
+			if (pa === pb) {
+				// Attempt to order skills by base potency. If two skills share the same potency,
+				// then sort them lexicographically.
+				return a.skillName.localeCompare(b.skillName);
+			}
 			return pb - pa;
 		} else if (a.targetCount !== b.targetCount) {
 			return b.targetCount - a.targetCount;
@@ -594,7 +599,6 @@ export function calculateDamageStats(props: {
 			return 0;
 		}
 	});
-
 	return {
 		time: ctl.game.time,
 		tinctureBuffPercentage: props.tinctureBuffPercentage,
