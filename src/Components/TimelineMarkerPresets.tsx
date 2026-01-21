@@ -72,7 +72,6 @@ export const TRACK_META_MAP: Map<string, MarkerTrackMeta> = new Map([
 	["m9s", mm("M9S", "savage", "en", "shanzhe")],
 	["m10s", mm("M10S", "savage", "en", "shanzhe")],
 	["m11s", mm("M11S", "savage", "en", "shanzhe")],
-	["m11s_zh", mm("M11S", "savage", "en", "shanzhe")],
 	["m11s_zh", mm("M11S", "savage", "zh", ["shanzhe", "鱼卡"])],
 	["m12s_p1", mm({ en: "M12S P1", zh: "M12S门神" }, "savage", "en", "shanzhe")],
 	["m12s_p1_zh", mm({ en: "M12S P1", zh: "M12S门神" }, "savage", "zh", ["shanzhe", "鱼卡"])],
