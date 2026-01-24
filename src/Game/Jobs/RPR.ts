@@ -349,6 +349,7 @@ const enshroudSkills = new Set<RPRActionKey | RoleActionKey | CommonActionKey>([
 
 	"HARVEST_MOON",
 	"HARPE",
+	"SOULSOW",
 
 	"VOID_REAPING",
 	"CROSS_REAPING",
@@ -765,7 +766,9 @@ makeRPRWeaponskill("PLENTIFUL_HARVEST", 88, {
 	onConfirm: (state) => {
 		state.tryConsumeResource("IMMORTAL_SACRIFICE", true);
 		state.setTimedResource("IDEAL_HOST", 1);
-		state.setTimedResource("PERFECTIO_OCCULTA", 1);
+		if (state.hasTraitUnlocked("ENHANCED_PLENTIFUL_HARVEST")) {
+			state.setTimedResource("PERFECTIO_OCCULTA", 1);
+		}
 	},
 });
 
@@ -787,7 +790,10 @@ makeRPRSpell("COMMUNIO", 90, {
 		state.hasResourceAvailable("ENSHROUDED") &&
 		state.resources.get("LEMURE_SHROUD").availableAmount() === 1,
 	onConfirm: (state) => {
-		if (state.tryConsumeResource("PERFECTIO_OCCULTA")) {
+		if (
+			state.tryConsumeResource("PERFECTIO_OCCULTA") &&
+			state.hasTraitUnlocked("ENHANCED_PLENTIFUL_HARVEST")
+		) {
 			state.setTimedResource("PERFECTIO_PARATA", 1);
 		}
 		state.exitEnshroud();
