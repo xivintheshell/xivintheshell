@@ -1,5 +1,14 @@
 [
 	{
+		"date": "1/24/26",
+		"changes": [
+			"[AST] Fixed a bug where Oracle's potency was missing."
+		],
+		"changes_zh": [
+			"【占星术士】修复了神谕缺少威力的问题。"
+		]
+	},
+	{
 		"date": "1/23/26",
 		"changes": [
 			"[RPR] Fixed a bug where Soulsow could not be cast during Enshroud.",

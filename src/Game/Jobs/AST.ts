@@ -850,6 +850,8 @@ makeASTAbility("ORACLE", 92, "cd_ORACLE", {
 	startOnHotbar: false,
 	applicationDelay: 1.74,
 	cooldown: 1,
+	potency: 860,
+	falloff: 0.5,
 	highlightIf: (state) => state.hasResourceAvailable("DIVINING"),
 	validateAttempt: (state) => state.hasResourceAvailable("DIVINING"),
 	onConfirm: (state) => state.tryConsumeResource("DIVINING"),
