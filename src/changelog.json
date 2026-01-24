@@ -1,5 +1,16 @@
 [
 	{
+		"date": "1/23/26",
+		"changes": [
+			"[RPR] Fixed a bug where Soulsow could not be cast during Enshroud.",
+			"[MNK] Fixed a bug where Chakra spenders did not receive the effects of Brotherhood and Riddle of Fire."
+		],
+		"changes_zh": [
+			"【钐镰客】修复了在夜游魂衣状态下不能使用播魂种的问题。",
+			"【武僧】修复了阴阳斗气斩和万象斗气圈不收到buff的问题。"
+		]
+	},
+	{
 		"date": "1/22/26",
 		"changes": [
 			"Added Chinese-language M9S, M10S, and M12S P2 tracks (translated by yuyuka)."

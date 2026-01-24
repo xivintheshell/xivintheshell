@@ -363,6 +363,16 @@ const makeMNKAbility = (
 	params: Partial<MakeAbilityParams<MNKState>>,
 ): Ability<MNKState> => {
 	return makeAbility("MNK", name, unlockLevel, cdName, {
+		jobPotencyModifiers: (state) => {
+			const mods = params.jobPotencyModifiers?.(state) ?? [];
+			if (state.hasResourceAvailable("BROTHERHOOD")) {
+				mods.push(Modifiers.Brotherhood);
+			}
+			if (state.hasResourceAvailable("RIDDLE_OF_FIRE")) {
+				mods.push(Modifiers.RiddleOfFire);
+			}
+			return mods;
+		},
 		...params,
 	});
 };
