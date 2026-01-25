@@ -1,5 +1,11 @@
 [
 	{
+		"date": "1/25/26",
+		"changes": [
+			"[NIN] Fixed a bug where Mudras were sometimes not visible after FFLogs import."
+		]
+	},
+	{
 		"date": "1/24/26",
 		"changes": [
 			"[AST] Fixed a bug where Oracle's potency was missing."
