@@ -253,6 +253,10 @@ skillIdMap.set(SMN_ACTIONS.MOUNTAIN_BUSTER.id, "MOUNTAIN_BUSTER");
 skillIdMap.set(45960, "ENCHANTED_RIPOSTE");
 skillIdMap.set(45961, "ENCHANTED_ZWERCHHAU");
 skillIdMap.set(45962, "ENCHANTED_REDOUBLEMENT");
+// NIN mudras have multiple different IDs for some reason.
+skillIdMap.set(18805, "TEN");
+skillIdMap.set(18806, "CHI");
+skillIdMap.set(18807, "JIN");
 
 const seenUnknownNames = new Set<string>();
 const normalizedSkillNameMap = new Map<string, ActionKey>();
