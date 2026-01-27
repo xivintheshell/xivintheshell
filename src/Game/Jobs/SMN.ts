@@ -500,7 +500,7 @@ makeSpell_SMN("FOUNTAIN_OF_FIRE", 80, {
 });
 
 makeSpell_SMN("UMBRAL_IMPULSE", 100, {
-	basePotency: 620,
+	basePotency: 640,
 	manaCost: 300,
 	replaceIf: R3_REPLACE_LIST,
 	applicationDelay: 0.8,
@@ -574,7 +574,7 @@ makeSpell_SMN("BRAND_OF_PURGATORY", 80, {
 });
 
 makeSpell_SMN("UMBRAL_FLARE", 100, {
-	basePotency: 280,
+	basePotency: 300,
 	manaCost: 300,
 	replaceIf: OUTBURST_REPLACE_LIST,
 	applicationDelay: 0.53,
@@ -1156,7 +1156,7 @@ makeAbility_SMN("REKINDLE", 80, "cd_ASTRAL_FLOW", {
 });
 
 makeAbility_SMN("SUNFLARE", 100, "cd_ASTRAL_FLOW", {
-	potency: 800,
+	potency: 1000,
 	applicationDelay: 0.8,
 	cooldown: 20,
 	replaceIf: ASTRAL_FLOW_REPLACE_LIST,
@@ -1379,7 +1379,7 @@ makeResourceAbility("SMN", "SEARING_LIGHT", 66, "cd_SEARING_LIGHT", {
 });
 
 makeAbility_SMN("SEARING_FLASH", 96, "cd_SEARING_FLASH", {
-	potency: 600,
+	potency: 700,
 	applicationDelay: 0.8,
 	cooldown: 1,
 	falloff: 0,
