@@ -1,5 +1,14 @@
 [
 	{
+		"date": "1/26/26",
+		"changes": [
+			"Updated for patch 7.41."
+		],
+		"changes_zh": [
+			"更新至7.41版本。"
+		]
+	},
+	{
 		"date": "1/25/26",
 		"changes": [
 			"[NIN] Fixed a bug where Mudras were sometimes not visible after FFLogs import."
