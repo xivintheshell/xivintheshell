@@ -872,7 +872,7 @@ function GearImport(props: {
 					// 坚韧 568
 					// 耐力 7513
 					// 物理基本性能 158
-					// 攻击间隔 NaN
+					// 攻击间隔 2.80
 					const statNames = {
 						STR: '力量', DEX: '灵巧', INT: '智力', MND: '精神', VIT: '耐力',
 						CRT: '暴击', DHT: '直击', DET: '信念', SKS: '技速', SPS: '咏速', TEN: '坚韧', PIE: '信仰',
@@ -883,11 +883,7 @@ function GearImport(props: {
 					for (let i = 0; i < attrArray.length; i+=2) {
 						attrObj[attrArray[i]] = attrArray[i + 1];
 					}
-					const mainStat = Math.max(
-						...[statNames.STR, statNames.DEX, statNames.INT, statNames.MND].map(
-							(field) => Number(attrObj[field] ?? 0),
-						),
-					).toString();
+					const mainStat = attrArray[1]
 					const fields: Partial<ConfigFields> = {
 						spellSpeed: attrObj[statNames.SPS] ?? 420,
 						skillSpeed: attrObj[statNames.SKS] ?? 0,
@@ -904,7 +900,7 @@ function GearImport(props: {
 					props.setImportedFields(Object.keys(fields));
 					setImported(true);
 				} else {
-					throw new Error("Invalid gearset link (must be from etro.gg or xivgear.app)");
+					throw new Error("Invalid gearset link (must be from etro.gg, xivgear.app, or ffxiv-gearing)");
 				}
 			}
 		} catch (e: any) {
