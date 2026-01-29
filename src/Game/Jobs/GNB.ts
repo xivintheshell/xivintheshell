@@ -492,6 +492,7 @@ makeAbility_GNB("BLOODFEST", 76, "cd_BLOODFEST", {
 				"POWDER_GAUGE",
 				maxCarts * 2,
 				state.resources.get("POWDER_GAUGE").availableAmount(),
+				true,
 			),
 		);
 		state.addEvent(
@@ -510,6 +511,7 @@ makeAbility_GNB("BLOODFEST", 76, "cd_BLOODFEST", {
 								state.resources.get("POWDER_GAUGE").availableAmount(),
 								maxCarts,
 							),
+							true,
 						),
 					);
 				},
