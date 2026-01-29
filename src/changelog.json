@@ -1,5 +1,11 @@
 [
 	{
+		"date": "1/28/26",
+		"changes": [
+			"[GNB] Fixed a bug where overcapping on cartridges after using Bloodfest did not raise a warning."
+		]
+	},
+	{
 		"date": "1/26/26",
 		"changes": [
 			"Updated for patch 7.41."
