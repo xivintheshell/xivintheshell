@@ -990,8 +990,8 @@ function GearImport(props: {
 					</p>
 					<p>
 						{localize({
-							en: "ffxiv-gearing：There are three dots on the right side of the race option at the bottom, click on it to appear a menu with the [Copy Gear Total Attribute Value] option, click [Copy Gear Total Attribute Value]（example：力量 6450 暴击 3595 信念 3174 直击 1176 技速 420 坚韧 568 耐力 7513 物理基本性能 158 攻击间隔 2.80）",
-							zh: "ffxiv-gearing：在最底部种族选项的右侧有三个点，点击后会出现带有【复制套装总属性值】选项的菜单，点击【复制套装总属性值】（例：力量 6450 暴击 3595 信念 3174 直击 1176 技速 420 坚韧 568 耐力 7513 物理基本性能 158 攻击间隔 2.80）",
+							en: "ffxiv-gearing：There are three dots on the right side of the race option at the bottom, click on it to appear a menu with the [Copy Gear Total Attribute Value] option, click [Copy Gear Total Attribute Value] (Note: ffxiv-gearing do not export job class, so you will need to select your job class first.) (example:力量 6450 暴击 3595 信念 3174 直击 1176 技速 420 坚韧 568 耐力 7513 物理基本性能 158 攻击间隔 2.80)",
+							zh: "ffxiv-gearing：在最底部种族选项的右侧有三个点，点击后会出现带有【复制套装总属性值】选项的菜单，点击【复制套装总属性值】（注意：ffxiv-gearing不导出职业，因此您需要先选择职业。）（例：力量 6450 暴击 3595 信念 3174 直击 1176 技速 420 坚韧 568 耐力 7513 物理基本性能 158 攻击间隔 2.80）",
 						})}
 					</p>
 				</>
