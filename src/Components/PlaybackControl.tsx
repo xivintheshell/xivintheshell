@@ -862,8 +862,8 @@ function GearImport(props: {
 					throw new Error("xivgear load failed (please check your link)");
 				}
 			} else {
-				const attrArray = gearImportLink.split(" ");
-				if (attrArray.length > 1) {						
+				const attrArray = gearImportLink.split(/\s+/);
+				if (attrArray.length > 1) {
 					// 力量 6450
 					// 暴击 3595
 					// 信念 3174
@@ -873,34 +873,59 @@ function GearImport(props: {
 					// 耐力 7513
 					// 物理基本性能 158
 					// 攻击间隔 2.80
+
+					// name mapping table from ffxiv-gearing
 					const statNames = {
-						STR: '力量', DEX: '灵巧', INT: '智力', MND: '精神', VIT: '耐力',
-						CRT: '暴击', DHT: '直击', DET: '信念', SKS: '技速', SPS: '咏速', TEN: '坚韧', PIE: '信仰',
-						CMS: '作业精度', CRL: '加工精度', CP: '制作力', GTH: '获得力', PCP: '鉴别力', GP: '采集力',
-						PDMG: '物理基本性能', MDMG: '魔法基本性能', DLY: '攻击间隔',
+						STR: "力量",
+						DEX: "灵巧",
+						INT: "智力",
+						MND: "精神",
+						VIT: "耐力",
+						CRT: "暴击",
+						DHT: "直击",
+						DET: "信念",
+						SKS: "技速",
+						SPS: "咏速",
+						TEN: "坚韧",
+						PIE: "信仰",
+						CMS: "作业精度",
+						CRL: "加工精度",
+						CP: "制作力",
+						GTH: "获得力",
+						PCP: "鉴别力",
+						GP: "采集力",
+						PDMG: "物理基本性能",
+						MDMG: "魔法基本性能",
+						DLY: "攻击间隔",
 					};
-					const attrObj:{ [key: string]: string } = {};
-					for (let i = 0; i < attrArray.length; i+=2) {
-						attrObj[attrArray[i]] = attrArray[i + 1];
+					const attrObj = new Map<string, string>();
+					for (let i = 0; i < attrArray.length - 1; i += 2) {
+						attrObj.set(attrArray[i], attrArray[i + 1]);
 					}
-					const mainStat = attrArray[1]
+					const mainStat = attrArray[1];
 					const fields: Partial<ConfigFields> = {
-						spellSpeed: attrObj[statNames.SPS] ?? 420,
-						skillSpeed: attrObj[statNames.SKS] ?? 0,
-						criticalHit: attrObj[statNames.CRT] ?? 0,
-						directHit: attrObj[statNames.DHT] ?? 0,
-						determination: attrObj[statNames.DET] ?? 0,
-						piety: attrObj[statNames.PIE] ?? 440,
-						tenacity: attrObj[statNames.TEN] ?? 0,
-						wd: attrObj[statNames.PDMG] ?? attrObj[statNames.MDMG],
+						spellSpeed: attrObj.get(statNames.SPS),
+						skillSpeed: attrObj.get(statNames.SKS),
+						criticalHit: attrObj.get(statNames.CRT),
+						directHit: attrObj.get(statNames.DHT),
+						determination: attrObj.get(statNames.DET),
+						piety: attrObj.get(statNames.PIE),
+						tenacity: attrObj.get(statNames.TEN),
+						wd: attrObj.get(statNames.PDMG) ?? attrObj.get(statNames.MDMG),
 						main: mainStat,
 					};
+					Object.keys(fields).forEach((key) => {
+						// @ts-expect-error compiler can't be sure that Object.keys matches ConfigFields
+						if (fields[key] === undefined) delete fields[key];
+					});
 					props.dispatch(fields);
 					// @ts-expect-error compiler can't be sure that Object.keys matches ConfigFields
 					props.setImportedFields(Object.keys(fields));
 					setImported(true);
 				} else {
-					throw new Error("Invalid gearset link (must be from etro.gg, xivgear.app, or ffxiv-gearing)");
+					throw new Error(
+						"Invalid input (must be a link from etro.gg or xivgear.app, or an exported string copied from ffxiv-gearing)",
+					);
 				}
 			}
 		} catch (e: any) {
@@ -914,7 +939,11 @@ function GearImport(props: {
 	const xivgearLink = <a href="https://xivgear.app" target="_blank" rel="noreferrer">
 		xivgear
 	</a>;
-	const ffxiv_gearing = <a href="https://asvel.github.io/ffxiv-gearing/" target="_blank" rel="noreferrer">
+	const ffxiv_gearing = <a
+		href="https://asvel.github.io/ffxiv-gearing/"
+		target="_blank"
+		rel="noreferrer"
+	>
 		ffxiv-gearing
 	</a>;
 	return <form onSubmit={importGear}>
@@ -934,8 +963,8 @@ function GearImport(props: {
 						{localize({
 							en: <span>
 								Enter and <ButtonIndicator text={"Load"} /> a link to a gearset from
-								xivgear.app or etro.gg or attribute from ffxiv-gearing, edit the rest of config, then{" "}
-								<ButtonIndicator text={"apply and reset"} />.
+								xivgear.app or etro.gg or attribute from ffxiv-gearing, edit the
+								rest of config, then <ButtonIndicator text={"apply and reset"} />.
 							</span>,
 							zh: <span>
 								输入xivgear.app或etro.gg的套装链接或ffxiv-gearing的属性并点击
@@ -961,8 +990,8 @@ function GearImport(props: {
 					</p>
 					<p>
 						{localize({
-							en: "ffxiv-gearing：There are three dots on the right side of the race option at the bottom, click on it to appear a menu with the [Copy Gear Total Attribute Value] option, click [Copy Gear Total Attribute Value]（example：https://asvel.github.io/ffxiv-gearing/?45WGpd4LvOX9v3JkHJrIG8hUEncvc0s0we）",
-							zh: "ffxiv-gearing：在最底部种族选项的右侧有三个点，点击后会出现带有【复制套装总属性值】选项的菜单，点击【复制套装总属性值】（例：https://asvel.github.io/ffxiv-gearing/?45WGpd4LvOX9v3JkHJrIG8hUEncvc0s0we）",
+							en: "ffxiv-gearing：There are three dots on the right side of the race option at the bottom, click on it to appear a menu with the [Copy Gear Total Attribute Value] option, click [Copy Gear Total Attribute Value]（example：力量 6450 暴击 3595 信念 3174 直击 1176 技速 420 坚韧 568 耐力 7513 物理基本性能 158 攻击间隔 2.80）",
+							zh: "ffxiv-gearing：在最底部种族选项的右侧有三个点，点击后会出现带有【复制套装总属性值】选项的菜单，点击【复制套装总属性值】（例：力量 6450 暴击 3595 信念 3174 直击 1176 技速 420 坚韧 568 耐力 7513 物理基本性能 158 攻击间隔 2.80）",
 						})}
 					</p>
 				</>
