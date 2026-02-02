@@ -9,6 +9,15 @@
 		]
 	},
 	{
+		"date": "2/1/26",
+		"changes": [
+			"[BETA] The following entries relate to bugs created by multi-target changes on the beta site only.",
+			"[BETA] Fixed a major issue with DoT damage calculations where only the first DoT effect on any boss was applied.",
+			"[BETA][AST] Fixed a bug where Earthly Star did not compute damage when automatically detonated (you may need to re-add this ability to your saved timelines).",
+			"[BETA][BRD] Fixed a bug where Iron Jaws did not refresh DoT effects."
+		]
+	},
+	{
 		"date": "1/28/26",
 		"changes": [
 			"[GNB] Fixed a bug where overcapping on cartridges after using Bloodfest did not raise a warning."
