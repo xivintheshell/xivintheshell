@@ -107,15 +107,17 @@ export class NINState extends GameState {
 	}
 
 	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<NINState>): void {
-		if (this.hasResourceAvailable("DOKUMORI")) {
-			node.addBuff(BuffType.Dokumori);
-		}
-		if (this.hasResourceAvailable("TRICK_ATTACK")) {
-			node.addBuff(BuffType.TrickAttack);
-		}
-		if (this.hasResourceAvailable("KUNAIS_BANE")) {
-			node.addBuff(BuffType.KunaisBane);
-		}
+		node.targetList.forEach((targetNumber) => {
+			if (this.hasDebuffActive("DOKUMORI", targetNumber)) {
+				node.addBuff(BuffType.Dokumori);
+			}
+			if (this.hasDebuffActive("TRICK_ATTACK", targetNumber)) {
+				node.addBuff(BuffType.TrickAttack);
+			}
+			if (this.hasDebuffActive("KUNAIS_BANE", targetNumber)) {
+				node.addBuff(BuffType.KunaisBane);
+			}
+		});
 		if (this.hasResourceAvailable("BUNSHIN") && BUFFED_BY_BUNSHIN.includes(skill.name)) {
 			node.addBuff(BuffType.Bunshin);
 		}
@@ -276,13 +278,13 @@ const validateWithTCJ = (validateAttempt: StatePredicate<NINState> | undefined) 
 };
 
 const addUniversalPotencyModifiers = (state: Readonly<NINState>, mods: PotencyModifier[]) => {
-	if (state.hasResourceAvailable("DOKUMORI")) {
+	if (state.debuffs.hasAnyActive("DOKUMORI")) {
 		mods.push(Modifiers.Dokumori);
 	}
-	if (state.hasResourceAvailable("TRICK_ATTACK")) {
+	if (state.debuffs.hasAnyActive("TRICK_ATTACK")) {
 		mods.push(Modifiers.TrickAttack);
 	}
-	if (state.hasResourceAvailable("KUNAIS_BANE")) {
+	if (state.debuffs.hasAnyActive("KUNAIS_BANE")) {
 		mods.push(Modifiers.KunaisBane);
 	}
 };
@@ -1057,8 +1059,8 @@ makeNINAbility("DOKUMORI", 66, "cd_DOKUMORI", {
 	potency: 400,
 	falloff: 0,
 	cooldown: 120,
-	onConfirm: (state) => {
-		state.gainStatus("DOKUMORI");
+	onConfirm: (state, node) => {
+		state.gainDebuff("DOKUMORI", node.targetList);
 		state.gainNinki(40);
 		if (state.hasTraitUnlocked("ENHANCED_DOKUMORI")) {
 			state.gainStatus("HIGI");
@@ -1083,8 +1085,9 @@ makeNINAbility("TRICK_ATTACK", 18, "cd_TRICK_ATTACK", {
 	cooldown: 60,
 	highlightIf: TRICK_CONDITION,
 	validateAttempt: TRICK_CONDITION,
-	onConfirm: (state) => {
-		state.gainStatus("TRICK_ATTACK");
+	onConfirm: (state, node) => {
+		// Trick Attack hits only a single target
+		state.gainDebuff("TRICK_ATTACK", [node.targetList[0]]);
 		state.tryConsumeResource("SHADOW_WALKER");
 	},
 });
@@ -1101,8 +1104,8 @@ makeNINAbility("KUNAIS_BANE", 92, "cd_TRICK_ATTACK", {
 	falloff: 0,
 	highlightIf: TRICK_CONDITION,
 	validateAttempt: TRICK_CONDITION,
-	onConfirm: (state) => {
-		state.gainStatus("KUNAIS_BANE");
+	onConfirm: (state, node) => {
+		state.gainDebuff("KUNAIS_BANE", node.targetList);
 		state.tryConsumeResource("SHADOW_WALKER");
 	},
 });

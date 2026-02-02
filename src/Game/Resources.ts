@@ -356,6 +356,10 @@ export class DebuffState {
 		return this.#debuffMaps.some((m) => m.has(rscType));
 	}
 
+	hasAnyActive(rscType: ResourceKey): boolean {
+		return this.#debuffMaps.some((m) => m.get(rscType)?.available(1));
+	}
+
 	get(rscType: ResourceKey, targetNumber: number): OverTimeBuff {
 		if (targetNumber < 1 || targetNumber > MAX_ABILITY_TARGETS) {
 			console.error("targetNumber " + targetNumber + " is out of range");

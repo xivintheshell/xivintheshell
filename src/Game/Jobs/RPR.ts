@@ -425,8 +425,7 @@ const basePotencyModifiers = (state: Readonly<RPRState>): PotencyModifier[] => {
 		mods.push(Modifiers.ArcaneCircle);
 	}
 
-	// TODO:TARGET distinguish between multiple targets
-	if (state.debuffs.hasAny("DEATHS_DESIGN")) {
+	if (state.debuffs.hasAnyActive("DEATHS_DESIGN")) {
 		mods.push(Modifiers.DeathsDesign);
 	}
 

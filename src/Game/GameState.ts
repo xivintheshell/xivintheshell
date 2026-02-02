@@ -488,6 +488,25 @@ export class GameState {
 		return (getResourceInfo(this.job, rscType) as ResourceInfo).maxTimeout;
 	}
 
+	gainDebuff(rscType: ResourceKey, targetList: number[]) {
+		targetList.forEach((targetNumber) => {
+			const debuff = this.debuffs.get(rscType, targetNumber);
+			const resourceInfo = getResourceInfo(this.job, rscType) as ResourceInfo;
+			if (debuff.availableAmountIncludingDisabled() > 0) {
+				debuff.overrideTimer(this, resourceInfo.maxTimeout);
+			} else {
+				debuff.gain(1);
+				this.debuffs.addDebuffEvent({
+					rscType,
+					targetNumber,
+					name: `drop ${rscType} on target ${targetNumber}`,
+					delay: resourceInfo.maxTimeout,
+					fnOnRsc: (rsc) => rsc.consume(1),
+				});
+			}
+		});
+	}
+
 	gainStatus(rscType: ResourceKey, stacks: number = 1) {
 		const resource = this.resources.get(rscType);
 		const resourceInfo = getResourceInfo(this.job, rscType) as ResourceInfo;
