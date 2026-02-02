@@ -499,3 +499,88 @@ it(
 		},
 	}),
 );
+
+// Tests a range of DoT edge cases, including
+// - Overwriting HT with HT2
+// - Toggling off HT2 for a single target, then re-enabling it
+// - Overwriting HT2 on a single target with HT
+// - Toggling off HT for a single target, then letting it get overwritten w/o manually re-enabling it
+// Note the uptime % reported values may still not correctly reflect buff clickoffs.
+it(
+	"loads: blm_multi_dot_overwrite_test.txt",
+	testDamageFromTimeline("blm_multi_dot_overwrite_test.txt", {
+		time: 24.983 + 5,
+		lastDamageApplicationTime: 22.931 + 5,
+		totalPotency: {
+			applied: 1890.45,
+			pending: 749.12,
+		},
+		gcdSkills: {
+			applied: 5,
+			pending: 0,
+		},
+		mainTableSummary: {
+			totalPotencyWithoutPot: 1890.45,
+		},
+		dotTables: new Map([
+			[
+				"HIGH_THUNDER",
+				new Map([
+					[
+						1,
+						{
+							summary: {
+								totalTicks: 1,
+								maxTicks: 8,
+								cumulativeGap: 0.124,
+								cumulativeOverride: 0,
+								totalPotencyWithoutPot: 268,
+							},
+						},
+					],
+					[
+						2,
+						{
+							summary: {
+								totalTicks: 3,
+								maxTicks: 8,
+								cumulativeGap: 9.26,
+								cumulativeOverride: 34.523,
+								totalPotencyWithoutPot: 613.49,
+							},
+						},
+					],
+				]),
+			],
+			[
+				"HIGH_THUNDER_II",
+				new Map([
+					[
+						1,
+						{
+							summary: {
+								totalTicks: 5,
+								maxTicks: 8,
+								cumulativeGap: 0,
+								cumulativeOverride: 27.49,
+								totalPotencyWithoutPot: 385.32,
+							},
+						},
+					],
+					[
+						2,
+						{
+							summary: {
+								totalTicks: 4,
+								maxTicks: 8,
+								cumulativeGap: 2.633,
+								cumulativeOverride: 0,
+								totalPotencyWithoutPot: 333.65,
+							},
+						},
+					],
+				]),
+			],
+		]),
+	}),
+);

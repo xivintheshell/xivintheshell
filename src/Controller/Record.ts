@@ -61,6 +61,7 @@ interface SerializedMPWait {
 interface SerializedSetResource {
 	type: ActionType.SetResourceEnabled;
 	buffName: string; // uses the ResourceKey
+	targetNumber?: number; // set only for debuff toggles
 }
 
 export type SerializedAction =
@@ -91,6 +92,7 @@ interface UnknownSkillInfo {
 interface SetResourceNodeInfo {
 	type: ActionType.SetResourceEnabled;
 	buffName: ResourceKey;
+	targetNumber?: number;
 }
 
 export type NodeInfo =
@@ -140,10 +142,11 @@ export function waitForMPNode(): ActionNode {
 	});
 }
 
-export function setResourceNode(buffName: ResourceKey): ActionNode {
+export function setResourceNode(buffName: ResourceKey, targetNumber?: number): ActionNode {
 	return new ActionNode({
 		type: ActionType.SetResourceEnabled,
 		buffName,
+		targetNumber,
 	});
 }
 
@@ -210,6 +213,7 @@ export class ActionNode {
 			return {
 				type: ActionType.SetResourceEnabled,
 				buffName: this.info.buffName.toString(),
+				targetNumber: this.info.targetNumber,
 			};
 		} else if (this.info.type === ActionType.Unknown) {
 			return {
@@ -331,6 +335,7 @@ export class ActionNode {
 		includePartyBuffs: boolean;
 		includeSplash: boolean;
 		excludeDoT?: boolean;
+		targetNumber?: number;
 	}): { applied: number; snapshottedButPending: number } {
 		const res = {
 			applied: 0,
@@ -384,10 +389,14 @@ export class ActionNode {
 			includePartyBuffs: boolean;
 			includeSplash: boolean;
 			excludeDoT?: boolean;
+			targetNumber?: number;
 		},
 		potency: Potency,
 		record: { applied: number; snapshottedButPending: number },
 	) {
+		if (props.targetNumber !== undefined && !potency.hasTarget(props.targetNumber)) {
+			return;
+		}
 		if (potency.hasHitBoss(props.untargetable)) {
 			record.applied += potency.getAmount(props);
 		} else if (!potency.hasResolved() && potency.hasSnapshotted()) {
@@ -678,6 +687,8 @@ export class Line {
 					{
 						type: ActionType.SetResourceEnabled,
 						buffName: getResourceKeyFromBuffName(serializedAction.buffName)!,
+						// Newer versions require a targetNumber for toggling DoT effects
+						targetNumber: serializedAction.targetNumber ?? 1,
 					},
 					// @ts-expect-error used for parsing legacy format
 					legacyWaitDuration,

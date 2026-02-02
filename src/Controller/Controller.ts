@@ -725,7 +725,7 @@ class Controller {
 	}
 	resolveOverTimePotency(p: Potency, kind: PotencyKind) {
 		if (kind === "damage") {
-			this.resolveAnyPotency(p, ElemType.DamageMark, this.#damageLogCsv);
+			this.resolveAnyPotency(p, ElemType.DamageMark, this.#damageLogCsv, false);
 		} else {
 			this.resolveAnyPotency(p, ElemType.HealingMark, this.#healingLogCsv);
 		}
@@ -735,6 +735,7 @@ class Controller {
 		p: Potency,
 		elemType: ElemType.DamageMark | ElemType.HealingMark | ElemType.AggroMark,
 		csvLog: PotencyLogCsv[],
+		includeSplash: boolean = true,
 	) {
 		if (p === undefined) {
 			// This error case occurs when actions with DoT effects are improperly imported with
@@ -790,7 +791,7 @@ class Controller {
 				potency: p.getAmount({
 					tincturePotencyMultiplier: 1,
 					includePartyBuffs: true,
-					includeSplash: true,
+					includeSplash: includeSplash,
 				}),
 				buffs: pot ? ["TINCTURE"] : [],
 			});
@@ -1503,7 +1504,11 @@ class Controller {
 				itr.info.type === ActionType.SetResourceEnabled &&
 				(currentReplayMode === ReplayMode.Exact || currentReplayMode === ReplayMode.Edited)
 			) {
-				const success = this.requestToggleBuff(itr.info.buffName as ResourceKey);
+				const success = this.requestToggleBuff(
+					itr.info.buffName as ResourceKey,
+					false,
+					itr.info.targetNumber,
+				);
 				const exact = currentReplayMode === ReplayMode.Exact;
 				if (success) {
 					this.#requestTick({
@@ -2114,12 +2119,12 @@ class Controller {
 		this.#bTakingUserInput = false;
 	}
 
-	requestToggleBuff(buffName: ResourceKey, canUndo: boolean = false) {
+	requestToggleBuff(buffName: ResourceKey, canUndo: boolean = false, targetNumber?: number) {
 		// TODO:TARGET support toggling debuffs on specific enemies
-		const success = this.game.requestToggleBuff(buffName);
+		const success = this.game.requestToggleBuff(buffName, targetNumber);
 		if (!success) return false;
 
-		const toggleNode = setResourceNode(buffName);
+		const toggleNode = setResourceNode(buffName, targetNumber);
 		toggleNode.tmp_startLockTime = this.game.time;
 		toggleNode.tmp_endLockTime = toggleNode.tmp_startLockTime;
 		this.record.addActionNode(toggleNode);

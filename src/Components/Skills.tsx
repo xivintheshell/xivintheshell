@@ -684,19 +684,19 @@ export function SkillsWindow() {
 					indicates which enemy is the primary target, and a{" "}
 					<span style={{ color: colors.accent }}>purple</span> checkmark indicates which
 					enemies are also hit by the attack. Modifying the "# of targets" field will
-					automatically change these boxes, and vice versa.
+					automatically change these boxes, and vice versa.{" "}
 				</span>
 				<span>
 					Exactly one primary target must be selected at all times. Clicking an
 					un-selected enemy turns it into the primary target. When multiple enemies are
 					selected, clicking on the primary target will demote it to a secondary target,
-					and clicking on a secondary target will un-target it.
+					and clicking on a secondary target will un-target it.{" "}
 				</span>
 				<br />
 				<br />
 				<span>
-					Buff calculations for enemy debuffs like Dokumori and Chain Stratagem may be
-					inaccurate when multiple targets are selected.
+					Damage calculations with party buff markers for enemy debuffs like Dokumori and
+					Chain Stratagem may be inaccurate when multiple targets are selected.
 				</span>
 			</>,
 			zh: <div>

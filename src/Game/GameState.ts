@@ -544,6 +544,24 @@ export class GameState {
 	}
 	handleOverTimeTick(effect: ResourceKey, kind: PotencyKind) {
 		if (this.debuffs.hasAny(effect)) {
+			// Perform one pass over all targets to check if the status has been disabled on any.
+			// This handles cases like BLM's High Thunder II, which may have been toggled off on
+			// specific enemies.
+			// Since all targets of an AoE DoT share the same potency object, we perform resolution
+			// after having pruned the target lists in this first loop.
+			for (let i = 1; i <= MAX_ABILITY_TARGETS; i++) {
+				const effectBuff = this.debuffs.get(effect, i);
+				if (
+					effectBuff.availableAmountIncludingDisabled() > 0 &&
+					effectBuff.node &&
+					!effectBuff.enabled
+				) {
+					const p = effectBuff.node.getOverTimePotencies(effect, kind)[
+						effectBuff.tickCount
+					];
+					p.tryRemoveTarget(i);
+				}
+			}
 			for (let i = 1; i <= MAX_ABILITY_TARGETS; i++) {
 				const effectBuff = this.debuffs.get(effect, i);
 				if (effectBuff.availableAmountIncludingDisabled() > 0) {
@@ -674,15 +692,27 @@ export class GameState {
 		return 200;
 	}
 
-	requestToggleBuff(buffName: ResourceKey) {
-		// TODO:TARGET support toggling enemy dot debuffs
-		const rsc = this.resources.get(buffName);
+	requestToggleBuff(buffName: ResourceKey, targetNumber?: number) {
+		// If the buff corresponds to a DoT effect, then allow it to be re-enabled to simulate cases
+		// where a boss jumps away, then returns before it expires.
+		console.log("receive toggle", targetNumber);
+		if (this.debuffs.hasAny(buffName)) {
+			const dot = this.debuffs.get(buffName, targetNumber ?? 1);
+			if (dot.available(1)) {
+				dot.enabled = false;
+			} else {
+				dot.enabled = true;
+			}
+			return true;
+		}
 
-		// autos are different
+		// autos are handled separately
 		if (buffName === "AUTOS_ENGAGED") {
 			this.toggleAutosEngaged();
 			return true;
 		}
+
+		const rsc = this.resources.get(buffName);
 
 		// Ley lines, paint lines, and positionals can be toggled.
 		if (RESOURCES[buffName].mayBeToggled) {
@@ -1619,13 +1649,15 @@ export class GameState {
 					this.tryRemoveDebuff(removeEffect, targetNumber);
 				});
 
-				if (effectBuff.available(1)) {
+				if (effectBuff.availableAmountIncludingDisabled() > 0) {
 					if (effectBuff.node === undefined) {
 						console.error(
 							`DoT debuff for ${effectName}, target ${targetNumber} has no node`,
 						);
 						return;
 					}
+					// Always enable the DoT buff in case it was previously toggled off
+					effectBuff.enabled = true;
 					effectBuff.node.removeUnresolvedOvertimePotencies(kind);
 					node.setOverTimeOverrideAmount(
 						effectName,

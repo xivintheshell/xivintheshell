@@ -128,7 +128,7 @@ function expandDoTNode(node: ActionNode, dotName: ResourceKey, targetNumber: num
 		}
 	}
 
-	node.getDotPotencies(dotName).forEach((p, i) => {
+	node.getDotPotencies(dotName).forEach((p) => {
 		if (p.hasResolved() && p.hasTarget(targetNumber)) {
 			entry.totalNumTicks++;
 			entry.baseDotPotency = p.base;
@@ -142,21 +142,24 @@ function expandDoTNode(node: ActionNode, dotName: ResourceKey, targetNumber: num
 		tincturePotencyMultiplier: 1,
 		includePartyBuffs: false,
 		untargetable: bossIsUntargetable,
-		includeSplash: true,
+		includeSplash: false,
+		targetNumber,
 	}).applied;
 
 	const potencyWithPot = node.getPotency({
 		tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 		includePartyBuffs: false,
 		untargetable: bossIsUntargetable,
-		includeSplash: true,
+		includeSplash: false,
+		targetNumber,
 	}).applied;
 
 	const potencyWithPartyBuffs = node.getPotency({
 		tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 		includePartyBuffs: true,
 		untargetable: bossIsUntargetable,
-		includeSplash: true,
+		includeSplash: false,
+		targetNumber,
 	}).applied;
 
 	entry.potencyWithoutPot = potencyWithoutPot;

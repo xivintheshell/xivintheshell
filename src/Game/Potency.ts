@@ -754,6 +754,7 @@ export class Potency {
 		const idx = this.#targetList?.indexOf(targetNumber) ?? -1;
 		if (idx > -1) {
 			this.#targetList!.splice(idx, 1);
+			this.#targetCount = this.targetList.length;
 			return true;
 		}
 		return false;
