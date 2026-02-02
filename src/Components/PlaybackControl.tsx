@@ -939,7 +939,7 @@ function GearImport(props: {
 	const xivgearLink = <a href="https://xivgear.app" target="_blank" rel="noreferrer">
 		xivgear
 	</a>;
-	const ffxiv_gearing = <a
+	const ffxivGearingLink  = <a
 		href="https://asvel.github.io/ffxiv-gearing/"
 		target="_blank"
 		rel="noreferrer"
@@ -949,10 +949,10 @@ function GearImport(props: {
 	return <form onSubmit={importGear}>
 		{localize({
 			en: <span>
-				Load stats from {etroLink}/{xivgearLink}/{ffxiv_gearing}:{" "}
+				Load stats from {etroLink}/{xivgearLink}/{ffxivGearingLink }:{" "}
 			</span>,
 			zh: <span>
-				从{etroLink}、{xivgearLink}或{ffxiv_gearing}导入套装：
+				从{etroLink}、{xivgearLink}或{ffxivGearingLink }导入套装：
 			</span>,
 		})}
 		<Help
