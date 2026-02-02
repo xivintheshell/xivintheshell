@@ -695,7 +695,6 @@ export class GameState {
 	requestToggleBuff(buffName: ResourceKey, targetNumber?: number) {
 		// If the buff corresponds to a DoT effect, then allow it to be re-enabled to simulate cases
 		// where a boss jumps away, then returns before it expires.
-		console.log("receive toggle", targetNumber);
 		if (this.debuffs.hasAny(buffName)) {
 			const dot = this.debuffs.get(buffName, targetNumber ?? 1);
 			if (dot.available(1)) {
