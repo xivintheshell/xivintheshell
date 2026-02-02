@@ -514,7 +514,6 @@ makeSCHSpell("BIO_II", 26, {
 			skillName: "BIO_II",
 			tickPotency: 40,
 			speedStat: "sps",
-			// TODO chain should not snapshot since it's a debuff
 			modifiers: state.maybeChainModifier(),
 		});
 	},
@@ -537,7 +536,6 @@ makeSCHSpell("BIOLYSIS", 72, {
 			skillName: "BIOLYSIS",
 			tickPotency: state.hasTraitUnlocked("TACTICIANS_MASTERY") ? 85 : 70,
 			speedStat: "sps",
-			// TODO chain should not snapshot since it's a debuff
 			modifiers: state.maybeChainModifier(),
 		});
 	},
@@ -610,7 +608,6 @@ makeSCHAbility("BANEFUL_IMPACTION", 92, "cd_BANEFUL_IMPACTION", {
 			skillName: "BANEFUL_IMPACTION",
 			tickPotency: 140,
 			speedStat: "sps",
-			// TODO chain should not snapshot since it's a debuff
 			modifiers: state.maybeChainModifier(),
 		});
 	},

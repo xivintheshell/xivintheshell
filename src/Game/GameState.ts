@@ -356,7 +356,7 @@ export class GameState {
 				}
 
 				if (!resourceArray.includes(registeredEffect.effectName)) {
-					if (!registeredEffect.isGroundTargeted) {
+					if (!registeredEffect.isGroundTargeted && !effectGroup.isHealing) {
 						// Ground-target effects do not need special debuff handling, but others
 						// do for uptime calculation purposes.
 						this.debuffs.initialize(registeredEffect.effectName);

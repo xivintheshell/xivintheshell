@@ -738,6 +738,10 @@ export class Potency {
 		this.falloff = props.falloff;
 	}
 
+	hasTarget(targetNumber: number): boolean {
+		return this.targetList.includes(targetNumber);
+	}
+
 	get targetList(): number[] {
 		return this.#targetList ?? [];
 	}

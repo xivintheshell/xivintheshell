@@ -404,7 +404,7 @@ export class ActionNode {
 				// However, if the previous potency corresponds to an AoE DoT, we must ensure
 				// all targets no longer have the debuff active before we can remove the potency.
 				if (!p.hasResolved()) {
-					if (targetNumber) {
+					if (targetNumber !== undefined) {
 						p.tryRemoveTarget(targetNumber);
 					}
 					// If targetNumber was unspecified, then forcibly remove all remaining ticks.

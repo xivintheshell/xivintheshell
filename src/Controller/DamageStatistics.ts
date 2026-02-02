@@ -129,7 +129,7 @@ function expandDoTNode(node: ActionNode, dotName: ResourceKey, targetNumber: num
 	}
 
 	node.getDotPotencies(dotName).forEach((p, i) => {
-		if (p.hasResolved()) {
+		if (p.hasResolved() && p.hasTarget(targetNumber)) {
 			entry.totalNumTicks++;
 			entry.baseDotPotency = p.base;
 			if (p.hasHitBoss(bossIsUntargetable)) {
@@ -505,33 +505,33 @@ export function calculateDamageStats(props: {
 						...new Set(potenciesArr.flatMap((p) => p.targetList)),
 					].sort();
 					targetList.forEach((targetNumber) => {
-						if (targetDotData.has(targetNumber)) {
-							return;
+						let dotTrackingData = targetDotData.get(targetNumber);
+						if (dotTrackingData === undefined) {
+							dotTrackingData = {
+								tableRows: [],
+								summary: {
+									cumulativeGap: 0,
+									cumulativeOverride: 0,
+									timeSinceLastDoTDropped: 0,
+									totalTicks: 0,
+									maxTicks: ctl.getMaxTicks(
+										ctl.game.time,
+										rscType,
+										excludeStandardTicks,
+									),
+									dotCoverageTimeFraction: ctl.getDotCoverageTimeFraction(
+										ctl.game.getDisplayTime(),
+										rscType,
+										targetNumber,
+									),
+									totalPotencyWithoutPot: 0,
+									totalPotPotency: 0,
+									totalPartyBuffPotency: 0,
+								},
+								lastDoT: undefined,
+							};
+							targetDotData.set(targetNumber, dotTrackingData);
 						}
-						const dotTrackingData: DamageStatsDoTTrackingData = {
-							tableRows: [],
-							summary: {
-								cumulativeGap: 0,
-								cumulativeOverride: 0,
-								timeSinceLastDoTDropped: 0,
-								totalTicks: 0,
-								maxTicks: ctl.getMaxTicks(
-									ctl.game.time,
-									rscType,
-									excludeStandardTicks,
-								),
-								dotCoverageTimeFraction: ctl.getDotCoverageTimeFraction(
-									ctl.game.getDisplayTime(),
-									rscType,
-									targetNumber,
-								),
-								totalPotencyWithoutPot: 0,
-								totalPotPotency: 0,
-								totalPartyBuffPotency: 0,
-							},
-							lastDoT: undefined,
-						};
-						targetDotData.set(targetNumber, dotTrackingData);
 
 						const dotTableEntry = expandDoTNode(node, rscType, targetNumber);
 						dotTrackingData.tableRows.push(dotTableEntry);
