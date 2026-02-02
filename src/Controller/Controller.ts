@@ -751,10 +751,7 @@ class Controller {
 			elemType = ElemType.AggroMark;
 		}
 
-		let pot = false;
-		p.modifiers.forEach((m) => {
-			if (m.source === PotencyModifierType.POT) pot = true;
-		});
+		const pot = p.getDisplayedModifiers().some((m) => m.source === PotencyModifierType.POT);
 
 		if (!this.#bInSandbox) {
 			let sourceDesc = "{skill}@" + p.sourceTime.toFixed(3);
@@ -2120,7 +2117,6 @@ class Controller {
 	}
 
 	requestToggleBuff(buffName: ResourceKey, canUndo: boolean = false, targetNumber?: number) {
-		// TODO:TARGET support toggling debuffs on specific enemies
 		const success = this.game.requestToggleBuff(buffName, targetNumber);
 		if (!success) return false;
 

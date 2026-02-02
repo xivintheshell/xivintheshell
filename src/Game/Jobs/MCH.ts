@@ -238,7 +238,7 @@ export class MCHState extends GameState {
 
 		// Queen actions snapshot at execution time, not when the button was pressed, add Tincture modifier and note snapshot time for party buff handling
 		if (this.hasResourceAvailable("TINCTURE")) {
-			queenPotency.modifiers.push(Modifiers.Tincture);
+			queenPotency.addModifiers(Modifiers.Tincture);
 		}
 		queenPotency.snapshotTime = this.getDisplayTime();
 
@@ -626,9 +626,9 @@ makeAbility_MCH("WILDFIRE", 45, "cd_WILDFIRE", {
 			description: "wildfire",
 			targetList: node.targetList,
 		});
-		wildFirePotency.modifiers = [Modifiers.NoCDH]; // Wildfire can neither crit nor direct hit
+		wildFirePotency.addModifiers(Modifiers.NoCDH); // Wildfire can neither crit nor direct hit
 		if (state.hasResourceAvailable("TINCTURE")) {
-			wildFirePotency.modifiers.push(Modifiers.Tincture);
+			wildFirePotency.addModifiers(Modifiers.Tincture);
 		}
 
 		node.addDoTPotency(wildFirePotency, "WILDFIRE");

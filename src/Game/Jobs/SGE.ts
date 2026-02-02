@@ -225,10 +225,10 @@ export class SGEState extends GameState {
 			snapshotTime: this.getDisplayTime(),
 		});
 		if (this.hasResourceAvailable("TINCTURE")) {
-			pepsisPotency.modifiers.push(Modifiers.Tincture);
+			pepsisPotency.addModifiers(Modifiers.Tincture);
 		}
 		if (this.hasResourceAvailable("AUTOPHYSIS")) {
-			pepsisPotency.modifiers.push(Modifiers.Autophysis);
+			pepsisPotency.addModifiers(Modifiers.Autophysis);
 		}
 		if (this.hasResourceAvailable("KRASIS")) {
 			if (consumedShield === "EUKRASIAN_PROGNOSIS") {
@@ -246,7 +246,7 @@ export class SGEState extends GameState {
 				pepsisPotency.healTargetCount = 1;
 				pepsisPotency.description += ", " + localizeResourceType("KRASIS");
 			}
-			pepsisPotency.modifiers.push(Modifiers.Krasis);
+			pepsisPotency.addModifiers(Modifiers.Krasis);
 		}
 		node.addHoTPotency(pepsisPotency, "PEPSIS");
 	}
@@ -266,10 +266,10 @@ export class SGEState extends GameState {
 			snapshotTime: this.getDisplayTime(),
 		});
 		if (this.hasResourceAvailable("TINCTURE")) {
-			expirationPotency.modifiers.push(Modifiers.Tincture);
+			expirationPotency.addModifiers(Modifiers.Tincture);
 		}
 		if (this.hasResourceAvailable("AUTOPHYSIS")) {
-			expirationPotency.modifiers.push(Modifiers.Autophysis);
+			expirationPotency.addModifiers(Modifiers.Autophysis);
 		}
 		if (this.hasResourceAvailable("KRASIS")) {
 			if (effect === "PANHAIMA") {
@@ -286,7 +286,7 @@ export class SGEState extends GameState {
 				node.addHoTPotency(nonKrasisPanhaimaPotency, effect);
 				expirationPotency.healTargetCount = 1;
 			}
-			expirationPotency.modifiers.push(Modifiers.Krasis);
+			expirationPotency.addModifiers(Modifiers.Krasis);
 		}
 		node.addHoTPotency(expirationPotency, effect);
 	}
@@ -316,7 +316,7 @@ export class SGEState extends GameState {
 						")";
 					if (
 						effect === "PANHAIMA" &&
-						expirationPotency.modifiers.includes(Modifiers.Krasis)
+						expirationPotency.getDisplayedModifiers().includes(Modifiers.Krasis)
 					) {
 						expirationPotency.description += ", " + localizeResourceType("KRASIS");
 					}
@@ -396,13 +396,13 @@ const makeSGESpell = (
 				snapshotTime: state.getDisplayTime(),
 			});
 			if (state.hasResourceAvailable("TINCTURE")) {
-				kardiaPotency.modifiers.push(Modifiers.Tincture);
+				kardiaPotency.addModifiers(Modifiers.Tincture);
 			}
 			if (state.hasResourceAvailable("SOTERIA")) {
-				kardiaPotency.modifiers.push(Modifiers.Soteria);
+				kardiaPotency.addModifiers(Modifiers.Soteria);
 			}
 
-			state.addHealingActionPotencyModifiers(kardiaPotency.modifiers);
+			state.addHealingActionPotencyModifiers(kardiaPotency.getDisplayedModifiers());
 
 			node.addHoTPotency(kardiaPotency, "KARDION");
 		},
@@ -423,10 +423,10 @@ const makeSGESpell = (
 				snapshotTime: state.getDisplayTime(),
 			});
 			if (state.hasResourceAvailable("TINCTURE")) {
-				eudaimoniaPotency.modifiers.push(Modifiers.Tincture);
+				eudaimoniaPotency.addModifiers(Modifiers.Tincture);
 			}
 
-			state.addHealingActionPotencyModifiers(eudaimoniaPotency.modifiers);
+			state.addHealingActionPotencyModifiers(eudaimoniaPotency.getDisplayedModifiers());
 
 			node.addHoTPotency(eudaimoniaPotency, "EUDAIMONIA");
 		},

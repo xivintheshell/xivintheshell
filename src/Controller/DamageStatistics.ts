@@ -85,7 +85,7 @@ function expandDoTNode(node: ActionNode, dotName: ResourceKey, targetNumber: num
 	entry.gap = node.getOverTimeGap(dotName, "damage", targetNumber);
 	entry.override = node.getOverTimeOverrideAmount(dotName, "damage", targetNumber);
 	entry.baseMainPotency = mainPotency?.base ?? 0;
-	entry.initialHitCalculationModifiers = mainPotency?.modifiers ?? [];
+	entry.initialHitCalculationModifiers = mainPotency?.getDisplayedModifiers([targetNumber]) ?? [];
 	entry.mainPotencyHit = node.hitBoss(bossIsUntargetable);
 
 	// No DoT effects currently in the game have their tick potencies enhanced by combo or positional bonuses
@@ -180,6 +180,7 @@ function expandNode(node: ActionNode): ExpandedNode {
 	if (node.info.type === ActionType.Skill) {
 		const skillName = node.info.skillName;
 		const mainPotency = node.getInitialPotency();
+		const mainModifiers = mainPotency?.getDisplayedModifiers(node.targetList);
 		if (!mainPotency) {
 			// do nothing if the used ability does no damage
 		} else {
@@ -189,8 +190,8 @@ function expandNode(node: ActionNode): ExpandedNode {
 				// for AF/UI skills, display the first modifier that's not enochian or pot
 				// (must be one of af123, ui123)
 				res.basePotency = mainPotency.base;
-				res.calculationModifiers = mainPotency.modifiers;
-				for (const modifier of mainPotency.modifiers) {
+				res.calculationModifiers = mainModifiers!;
+				for (const modifier of res.calculationModifiers) {
 					const tag = modifier.source;
 					if (tag !== PotencyModifierType.ENO && tag !== PotencyModifierType.POT) {
 						res.displayedModifiers.push(tag);
@@ -199,12 +200,12 @@ function expandNode(node: ActionNode): ExpandedNode {
 				}
 			} else if (enoSkills.has(skillName)) {
 				// for foul/xeno/para, display enochian modifier if it has one. Otherwise empty.
-				for (const modifier of mainPotency.modifiers) {
+				for (const modifier of mainPotency.getDisplayedModifiers(node.targetList)) {
 					const tag = modifier.source;
 					if (tag === PotencyModifierType.ENO) {
 						res.basePotency = mainPotency.base;
 						res.displayedModifiers = [tag];
-						res.calculationModifiers = mainPotency.modifiers;
+						res.calculationModifiers = mainModifiers!;
 						break;
 					}
 				}
@@ -215,7 +216,7 @@ function expandNode(node: ActionNode): ExpandedNode {
 			} else {
 				// for non-BLM jobs, display all non-pot modifiers on all damaging skills
 				res.basePotency = mainPotency.base;
-				for (const modifier of mainPotency.modifiers) {
+				for (const modifier of mainModifiers!) {
 					const tag = modifier.source;
 					if (tag !== PotencyModifierType.POT) {
 						res.displayedModifiers.push(tag);

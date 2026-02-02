@@ -420,16 +420,23 @@ const baseOnConfirm = (name: RPRActionKey): EffectFn<RPRState> => {
 
 const basePotencyModifiers = (state: Readonly<RPRState>): PotencyModifier[] => {
 	const mods: PotencyModifier[] = [];
-
 	if (state.hasResourceAvailable("ARCANE_CIRCLE")) {
 		mods.push(Modifiers.ArcaneCircle);
 	}
-
-	if (state.debuffs.hasAnyActive("DEATHS_DESIGN")) {
-		mods.push(Modifiers.DeathsDesign);
-	}
-
 	return mods;
+};
+
+const targetPotencyModifiers = (
+	state: Readonly<RPRState>,
+	node: ActionNode,
+): Map<number, PotencyModifier[]> => {
+	const result = new Map();
+	node.targetList.forEach((targetNumber) => {
+		if (state.debuffs.get("DEATHS_DESIGN", targetNumber).available(1)) {
+			result.set(targetNumber, [Modifiers.DeathsDesign]);
+		}
+	});
+	return result;
 };
 
 const makeRPRSpell = (
@@ -470,6 +477,7 @@ const makeRPRSpell = (
 				(name === "SOULSOW" && state.isInCombat())
 			),
 		jobPotencyModifiers: basePotencyModifiers,
+		jobTargetPotencyModifiers: targetPotencyModifiers,
 	});
 };
 
@@ -544,6 +552,7 @@ const makeRPRWeaponskill = (
 
 			return mods;
 		},
+		jobTargetPotencyModifiers: targetPotencyModifiers,
 		validateAttempt,
 	});
 };
@@ -580,6 +589,7 @@ const makeRPRAbility = (
 		onConfirm,
 		validateAttempt,
 		jobPotencyModifiers: basePotencyModifiers,
+		jobTargetPotencyModifiers: targetPotencyModifiers,
 	});
 };
 

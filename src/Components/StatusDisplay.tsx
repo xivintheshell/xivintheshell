@@ -465,7 +465,6 @@ function Buff(props: BuffProps) {
 				onClickFn={() => {
 					// Self-buffs and enemy DoTs may be toggled
 					if (props.onSelf || props.targetNumber !== undefined) {
-						console.log("UI TOGGLE", props.targetNumber);
 						controller.requestToggleBuff(props.rscType, true, props.targetNumber);
 						controller.updateStatusDisplay(controller.game);
 						controller.updateSkillButtons(controller.game);

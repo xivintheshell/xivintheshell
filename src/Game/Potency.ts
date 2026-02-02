@@ -717,7 +717,8 @@ export class Potency {
 	falloff?: number;
 	snapshotTime?: number;
 	applicationTime?: number;
-	modifiers: PotencyModifier[] = [];
+	#modifiers: PotencyModifier[] = [];
+	#targetSpecificModifiers?: Map<number, PotencyModifier[]>;
 
 	constructor(props: InitialPotencyProps) {
 		this.config = props.config;
@@ -736,6 +737,7 @@ export class Potency {
 		this.#targetList = props.targetList;
 		this.#targetCount = props.healTargetCount ?? this.#targetList?.length ?? 0;
 		this.falloff = props.falloff;
+		this.#targetSpecificModifiers = undefined;
 	}
 
 	hasTarget(targetNumber: number): boolean {
@@ -746,11 +748,11 @@ export class Potency {
 		return this.#targetList ?? [];
 	}
 
+	// Attempt to remove a target from the targetList.
+	// Used by DoT tracking logic when a DoT is overridden for some, but not all targets
+	// affected by this application.
+	// Returns true if the target was removed.
 	tryRemoveTarget(targetNumber: number) {
-		// Attempt to remove a target from the targetList.
-		// Used by DoT tracking logic when a DoT is overridden for some, but not all targets
-		// affected by this application.
-		// Returns true if the target was removed.
 		const idx = this.#targetList?.indexOf(targetNumber) ?? -1;
 		if (idx > -1) {
 			this.#targetList!.splice(idx, 1);
@@ -758,6 +760,20 @@ export class Potency {
 			return true;
 		}
 		return false;
+	}
+
+	addTargetSpecificModifiers(m: Map<number, PotencyModifier[]>) {
+		if (this.#targetSpecificModifiers === undefined) {
+			this.#targetSpecificModifiers = new Map();
+		}
+		m.forEach((modifiers, targetNumber) => {
+			const modList = this.#targetSpecificModifiers!.get(targetNumber);
+			if (!modList) {
+				this.#targetSpecificModifiers!.set(targetNumber, [...modifiers]);
+			} else {
+				modList.push(...modifiers);
+			}
+		});
 	}
 
 	get targetCount(): number {
@@ -774,11 +790,62 @@ export class Potency {
 		this.#targetCount = n;
 	}
 
+	addModifiers(...mods: PotencyModifier[]) {
+		this.#modifiers.push(...mods);
+	}
+
+	getDisplayedModifiers(targetList?: number[]): PotencyModifier[] {
+		if (targetList !== undefined) {
+			const allTargetMods = new Set<PotencyModifier>();
+			this.#targetSpecificModifiers?.forEach((mods, targetNumber) => {
+				if (targetList.includes(targetNumber)) {
+					mods.forEach((mod) => allTargetMods.add(mod));
+				}
+			});
+			return [...this.#modifiers, ...allTargetMods];
+		}
+		return this.#modifiers;
+	}
+
 	getAmount(props: {
 		tincturePotencyMultiplier: number;
 		includePartyBuffs: boolean;
 		includeSplash: boolean;
-	}) {
+	}): number {
+		// To account for different targets having different debuffs, we group targets by
+		// the target-specific modifiers they have applied.
+		// Since it's kind of hard to do a proper group by in JS, we just do separate computation
+		// for each target that has debuff modifiers.
+		const noDebuffTargetCount = this.targetCount - (this.#targetSpecificModifiers?.size ?? 0);
+		let totalAmount = this.#getAmountWithModifiers(
+			props,
+			this.targetList.length === 0 || !this.#targetSpecificModifiers?.has(this.targetList[0]),
+			noDebuffTargetCount,
+			this.#modifiers,
+		);
+		if (this.targetList.length === 0) {
+			return totalAmount;
+		}
+		const primary = this.targetList[0];
+		this.#targetSpecificModifiers?.forEach((modifiers, targetNumber) => {
+			totalAmount += this.#getAmountWithModifiers(props, targetNumber === primary, 1, [
+				...this.#modifiers,
+				...modifiers,
+			]);
+		});
+		return totalAmount;
+	}
+
+	#getAmountWithModifiers(
+		props: {
+			tincturePotencyMultiplier: number;
+			includePartyBuffs: boolean;
+			includeSplash: boolean;
+		},
+		includesPrimary: boolean,
+		targetCount: number,
+		modifiers: PotencyModifier[],
+	): number {
 		let totalDamageFactor = 1;
 		let totalAdditiveAmount = 0;
 		let totalCritBonus = 0;
@@ -788,7 +855,7 @@ export class Potency {
 		let isAutoCrit = false;
 		let noCDH = false;
 
-		this.modifiers.forEach((m) => {
+		modifiers.forEach((m) => {
 			if (m.source === PotencyModifierType.POT)
 				totalDamageFactor *= props.tincturePotencyMultiplier;
 			else if (m.source === PotencyModifierType.AUTO_CDH) isAutoCDH = true;
@@ -851,7 +918,9 @@ export class Potency {
 				);
 		}
 		if (props.includeSplash) {
-			const splashScalar = 1 + (1 - (this.falloff ?? 1)) * (this.targetCount - 1);
+			const splashScalar = includesPrimary
+				? 1 + (1 - (this.falloff ?? 1)) * (targetCount - 1)
+				: (1 - (this.falloff ?? 1)) * targetCount;
 			amt *= splashScalar;
 		}
 		return amt;

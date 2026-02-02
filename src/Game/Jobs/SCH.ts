@@ -257,8 +257,7 @@ export class SCHState extends GameState {
 			healTargetCount,
 			falloff: undefined,
 		});
-		const mods = [Modifiers.SchPet];
-		potency.modifiers = mods;
+		potency.addModifiers(Modifiers.SchPet);
 		return potency;
 	}
 
@@ -807,8 +806,8 @@ makeSCHAbility("WHISPERING_DAWN", 20, "cd_WHISPERING_DAWN", {
 			return (state: SCHState) => {
 				state.applyHoT(effectName, node);
 				node.getHotPotencies("WHISPERING_DAWN").forEach((potency) => {
-					if (!potency.modifiers.includes(Modifiers.SchPet)) {
-						potency.modifiers.push(Modifiers.SchPet);
+					if (!potency.getDisplayedModifiers().includes(Modifiers.SchPet)) {
+						potency.addModifiers(Modifiers.SchPet);
 					}
 				});
 				state.gainStatus(effectName);
@@ -910,7 +909,7 @@ makeSCHAbility("FEY_BLESSING", 76, "cd_FEY_BLESSING", {
 				state.getDisplayTime(),
 				320,
 			);
-			state.addHealingActionPotencyModifiers(healPotency.modifiers);
+			state.addHealingActionPotencyModifiers(healPotency.getDisplayedModifiers());
 			return (state: SCHState) => controller.resolveHealingPotency(healPotency);
 		};
 		state.queuePetAction(

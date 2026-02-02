@@ -765,7 +765,6 @@ makeASTAbility("EARTHLY_STAR", 62, "cd_EARTHLY_STAR", {
 					name: "auto-detonate earthly star",
 					delay: 10,
 					fnOnRsc: () => {
-						const modifiers: PotencyModifier[] = [];
 						const healModifiers: PotencyModifier[] = [];
 						const potency = new Potency({
 							config: state.config,
@@ -779,14 +778,13 @@ makeASTAbility("EARTHLY_STAR", 62, "cd_EARTHLY_STAR", {
 							falloff: 0,
 						});
 						if (state.hasResourceAvailable("TINCTURE")) {
-							modifiers.push(Modifiers.Tincture);
+							potency.addModifiers(Modifiers.Tincture);
 							healModifiers.push(Modifiers.Tincture);
 						}
 						if (state.hasResourceAvailable("DIVINATION")) {
-							modifiers.push(Modifiers.Divination);
+							potency.addModifiers(Modifiers.Divination);
 						}
-						modifiers.push(Modifiers.AstPet);
-						potency.modifiers = modifiers;
+						potency.addModifiers(Modifiers.AstPet);
 						node.addPotency(potency);
 						const healingPotency = new Potency({
 							config: state.config,

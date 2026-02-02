@@ -45,6 +45,10 @@ export type StatePredicate<T> = (state: Readonly<T>) => boolean;
 // TODO encode graceful error handling into these types
 export type EffectFn<T> = (state: T, node: ActionNode) => void;
 export type PotencyModifierFn<T> = (state: Readonly<T>) => PotencyModifier[];
+export type TargetPotencyModifierFn<T> = (
+	state: Readonly<T>,
+	node: ActionNode,
+) => Map<number, PotencyModifier[]>;
 
 // empty function
 export function NO_EFFECT<T extends GameState>(state: T, node: ActionNode) {}
@@ -116,6 +120,8 @@ interface BaseSkill<T extends GameState> {
 	readonly potencyFn: ResourceCalculationFn<T>;
 	// Determine job-specific potency modifiers.
 	readonly jobPotencyModifiers: PotencyModifierFn<T>;
+	// Determine job-specific potency modifiers that are only active on certain targets.
+	readonly jobTargetPotencyModifiers: TargetPotencyModifierFn<T>;
 
 	// If defined, this button is treated as AoE damage with specified falloff for all enemies
 	// after the first, e.g. a value of 0.6 does 100% potency to one target, and 40% potency
@@ -432,6 +438,7 @@ export interface MakeSkillParams<T extends GameState> {
 	combo: ComboPotency;
 	positional: PositionalPotency;
 	jobPotencyModifiers: PotencyModifierFn<T>;
+	jobTargetPotencyModifiers: TargetPotencyModifierFn<T>;
 	drawsAggro: boolean;
 	savesTargets: boolean;
 	falloff: number;
@@ -527,6 +534,7 @@ export function makeSpell<T extends GameState>(
 		manaCostFn: fnify(params.manaCost, 0),
 		potencyFn: (state) => getBasePotency(state, params.potency),
 		jobPotencyModifiers,
+		jobTargetPotencyModifiers: params.jobTargetPotencyModifiers ?? ((state) => new Map()),
 		drawsAggro: params.drawsAggro ?? false,
 		savesTargets: params.savesTargets ?? false,
 		falloff: params.falloff,
@@ -603,6 +611,7 @@ export function makeWeaponskill<T extends GameState>(
 		manaCostFn: fnify(params.manaCost, 0),
 		potencyFn: (state) => getBasePotency(state, params.potency),
 		jobPotencyModifiers,
+		jobTargetPotencyModifiers: params.jobTargetPotencyModifiers ?? ((state) => new Map()),
 		drawsAggro: params.drawsAggro ?? false,
 		savesTargets: params.savesTargets ?? false,
 		falloff: params.falloff,
@@ -692,6 +701,7 @@ export function makeAbility<T extends GameState>(
 		manaCostFn: fnify(params.manaCost, 0),
 		potencyFn: (state) => getBasePotency(state, params.potency),
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
+		jobTargetPotencyModifiers: params.jobTargetPotencyModifiers ?? ((state) => new Map()),
 		drawsAggro: params.drawsAggro ?? false,
 		savesTargets: params.savesTargets ?? false,
 		falloff: params.falloff,
@@ -815,6 +825,7 @@ export function makeLimitBreak<T extends GameState>(
 		manaCostFn: (state) => 0,
 		potencyFn: fnify(params.potency, 0),
 		jobPotencyModifiers: (state) => [],
+		jobTargetPotencyModifiers: (state) => new Map(),
 		healingPotencyFn: fnify(params.healingPotency, 0),
 		jobHealingPotencyModifiers: (state) => [],
 		aoeHeal: false,

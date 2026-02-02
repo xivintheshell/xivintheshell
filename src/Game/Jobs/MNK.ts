@@ -281,7 +281,9 @@ const makeMNKWeaponskill = (
 				? (state, node) => {
 						const potency = node.getInitialPotency();
 						if (potency) {
-							state.maybeGainChakra(potency.modifiers.includes(Modifiers.AutoCrit));
+							state.maybeGainChakra(
+								potency.getDisplayedModifiers().includes(Modifiers.AutoCrit),
+							);
 						}
 					}
 				: undefined,

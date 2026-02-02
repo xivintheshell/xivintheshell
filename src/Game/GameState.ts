@@ -1112,12 +1112,11 @@ export class GameState {
 			if (potency) {
 				potency.snapshotTime = this.getDisplayTime();
 				if (doesDamage) {
-					const mods: PotencyModifier[] = [];
 					if (this.hasResourceAvailable("TINCTURE")) {
-						mods.push(Modifiers.Tincture);
+						potency.addModifiers(Modifiers.Tincture);
 					}
-					mods.push(...skill.jobPotencyModifiers(this));
-					potency.modifiers = mods;
+					potency.addModifiers(...skill.jobPotencyModifiers(this));
+					potency.addTargetSpecificModifiers(skill.jobTargetPotencyModifiers(this, node));
 				}
 			}
 			if (doesDamage) {
@@ -1132,12 +1131,10 @@ export class GameState {
 			const heals = healingPotencyNumber > 0;
 			if (healingPotency) {
 				healingPotency.snapshotTime = this.getDisplayTime();
-				const mods: PotencyModifier[] = [];
 				if (this.hasResourceAvailable("TINCTURE")) {
-					mods.push(Modifiers.Tincture);
+					healingPotency.addModifiers(Modifiers.Tincture);
 				}
-				mods.push(...skill.jobHealingPotencyModifiers(this));
-				healingPotency.modifiers = mods;
+				healingPotency.addModifiers(...skill.jobHealingPotencyModifiers(this));
 			}
 			if (heals) {
 				// tincture
@@ -1251,12 +1248,11 @@ export class GameState {
 			});
 		}
 		if (potency && (potencyNumber > 0 || appliesDoT)) {
-			const mods: PotencyModifier[] = [];
 			if (this.hasResourceAvailable("TINCTURE")) {
-				mods.push(Modifiers.Tincture);
+				potency.addModifiers(Modifiers.Tincture);
 			}
-			mods.push(...skill.jobPotencyModifiers(this));
-			potency.modifiers = mods;
+			potency.addModifiers(...skill.jobPotencyModifiers(this));
+			potency.addTargetSpecificModifiers(skill.jobTargetPotencyModifiers(this, node));
 			node.addPotency(potency);
 		}
 
@@ -1299,12 +1295,10 @@ export class GameState {
 				healTargetCount: node.healTargetCount,
 				falloff: 0, // Heals do not have AoE falloff
 			});
-			const mods: PotencyModifier[] = [];
 			if (this.hasResourceAvailable("TINCTURE")) {
-				mods.push(Modifiers.Tincture);
+				healingPotency.addModifiers(Modifiers.Tincture);
 			}
-			mods.push(...skill.jobHealingPotencyModifiers(this));
-			healingPotency.modifiers = mods;
+			healingPotency.addModifiers(...skill.jobHealingPotencyModifiers(this));
 			node.addHealingPotency(healingPotency);
 		}
 
@@ -1857,7 +1851,7 @@ export class GameState {
 				healTargetCount: kind === "healing" ? props.node.healTargetCount : undefined,
 				falloff: 0, // assume all overtime effects have no falloff
 			});
-			overtimePotency.modifiers = mods;
+			overtimePotency.addModifiers(...mods);
 			props.node.addOverTimePotency(overtimePotency, props.effectName, kind);
 		}
 	}

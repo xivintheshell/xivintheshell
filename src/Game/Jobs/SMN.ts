@@ -199,12 +199,11 @@ export class SMNState extends GameState {
 	}
 
 	snapSearingAndTincture(node: ActionNode, potency: Potency) {
-		const mods = potency.modifiers;
 		if (this.hasResourceAvailable("SEARING_LIGHT")) {
-			mods.push(Modifiers.SearingLight);
+			potency.addModifiers(Modifiers.SearingLight);
 		}
 		if (this.hasResourceAvailable("TINCTURE")) {
-			mods.push(Modifiers.Tincture);
+			potency.addModifiers(Modifiers.Tincture);
 			node.addBuff(BuffType.Tincture);
 		}
 	}
@@ -227,8 +226,7 @@ export class SMNState extends GameState {
 			targetList,
 			falloff,
 		});
-		const mods = [Modifiers.SmnPet];
-		potency.modifiers = mods;
+		potency.addModifiers(Modifiers.SmnPet);
 		return potency;
 	}
 
