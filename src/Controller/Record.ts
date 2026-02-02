@@ -399,6 +399,7 @@ export class ActionNode {
 	anyHealingPotencies(): boolean {
 		return this.#healingPotency !== undefined || this.#hotPotencies.size > 0;
 	}
+
 	getInitialPotency(): Potency | undefined {
 		return this.#potency;
 	}
