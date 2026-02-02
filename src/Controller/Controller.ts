@@ -2059,8 +2059,10 @@ class Controller {
 	filterTargetList(targetList: number[], skillName: ActionKey): number[] {
 		// Until we get more intelligent targeting logic, non-damaging abilities
 		// that do not apply dots should not have a target selected.
+		const skill = getSkill(controller.game.job, skillName);
 		if (
-			getSkill(controller.game.job, skillName)?.potencyFn(controller.game) === 0 &&
+			skill?.potencyFn(controller.game) === 0 &&
+			!skill?.savesTargets &&
 			!controller.game.dotSkills.includes(skillName)
 		) {
 			return [];

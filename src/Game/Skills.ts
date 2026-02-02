@@ -145,6 +145,11 @@ interface BaseSkill<T extends GameState> {
 	// determine when the prepull should occur.
 	readonly drawsAggro: boolean;
 
+	// If true, indicates that this ability should track its list of targets for later use. This is
+	// used primarily by AST's Earthly Star, which must track the number of available targets when
+	// it was placed to properly resolve auto-detonations.
+	readonly savesTargets: boolean;
+
 	// Perform side effects that occur at the time the player presses the button
 	// This is mainly for things like cancelling channeled abilites, such as Meditate, Improvisation, Collective Unconscious, and Flamethrower
 	readonly onExecute: EffectFn<T>;
@@ -428,6 +433,7 @@ export interface MakeSkillParams<T extends GameState> {
 	positional: PositionalPotency;
 	jobPotencyModifiers: PotencyModifierFn<T>;
 	drawsAggro: boolean;
+	savesTargets: boolean;
 	falloff: number;
 	healingPotency: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
 	jobHealingPotencyModifiers: PotencyModifierFn<T>;
@@ -522,6 +528,7 @@ export function makeSpell<T extends GameState>(
 		potencyFn: (state) => getBasePotency(state, params.potency),
 		jobPotencyModifiers,
 		drawsAggro: params.drawsAggro ?? false,
+		savesTargets: params.savesTargets ?? false,
 		falloff: params.falloff,
 		healingPotencyFn: (state) => getBasePotency(state, params.healingPotency),
 		jobHealingPotencyModifiers: params.jobHealingPotencyModifiers ?? ((state) => []),
@@ -597,6 +604,7 @@ export function makeWeaponskill<T extends GameState>(
 		potencyFn: (state) => getBasePotency(state, params.potency),
 		jobPotencyModifiers,
 		drawsAggro: params.drawsAggro ?? false,
+		savesTargets: params.savesTargets ?? false,
 		falloff: params.falloff,
 		healingPotencyFn: (state) => getBasePotency(state, params.healingPotency),
 		jobHealingPotencyModifiers: params.jobHealingPotencyModifiers ?? ((state) => []),
@@ -685,6 +693,7 @@ export function makeAbility<T extends GameState>(
 		potencyFn: (state) => getBasePotency(state, params.potency),
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		drawsAggro: params.drawsAggro ?? false,
+		savesTargets: params.savesTargets ?? false,
 		falloff: params.falloff,
 		healingPotencyFn: (state) => getBasePotency(state, params.healingPotency),
 		jobHealingPotencyModifiers: params.jobHealingPotencyModifiers ?? ((state) => []),
@@ -810,6 +819,7 @@ export function makeLimitBreak<T extends GameState>(
 		jobHealingPotencyModifiers: (state) => [],
 		aoeHeal: false,
 		drawsAggro: false,
+		savesTargets: false,
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		onExecute,

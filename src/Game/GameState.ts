@@ -992,7 +992,10 @@ export class GameState {
 		// to ensure buffs snapshot properly.
 		if (
 			!potency &&
-			(potencyNumber > 0 || (skill.drawsAggro && !this.isInCombat()) || appliesDoT)
+			(potencyNumber > 0 ||
+				(skill.drawsAggro && !this.isInCombat()) ||
+				skill.savesTargets ||
+				appliesDoT)
 		) {
 			// refresh autos for skills with potency here
 			this.refreshAutoBasedOnSkill(skill, capturedCastTime, true);
@@ -1186,7 +1189,7 @@ export class GameState {
 		const potencyNumber = skill.potencyFn(this);
 		let potency: Potency | undefined = undefined;
 		const appliesDoT = this.dotSkills.includes(skill.name);
-		if (potencyNumber > 0 || skill.drawsAggro || appliesDoT) {
+		if (potencyNumber > 0 || skill.drawsAggro || skill.savesTargets || appliesDoT) {
 			potency = new Potency({
 				config: this.config,
 				sourceTime: this.getDisplayTime(),
@@ -1985,7 +1988,7 @@ export class GameState {
 
 		// If there is no falloff field specified, then reset the node's targetCount to 1,
 		// ignoring whatever input the user gave
-		if (skill.falloff === undefined) {
+		if (skill.falloff === undefined && !skill.savesTargets) {
 			node.forceOneTarget();
 		}
 		if (skill.aoeHeal) {

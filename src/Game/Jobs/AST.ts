@@ -742,6 +742,7 @@ makeASTAbility("EARTHLY_STAR", 62, "cd_EARTHLY_STAR", {
 	applicationDelay: 0,
 	cooldown: 60,
 	falloff: 0,
+	savesTargets: true,
 	replaceIf: [
 		{
 			newSkill: "STELLAR_DETONATION",
