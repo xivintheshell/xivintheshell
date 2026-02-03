@@ -949,7 +949,27 @@ function drawSkills(params: {
 			localizeSkillName(icon.elem.skillName) + "@" + icon.elem.displayTime.toFixed(3);
 		lines.push(description);
 
-		// 2. potency
+		// 2. target(s)
+		const targets = node.targetList;
+		if (targets.length > 0) {
+			if (targets.length === 1) {
+				lines.push(
+					localize({
+						en: "target: ",
+						zh: "目标：",
+					}).toString() + targets[0],
+				);
+			} else {
+				lines.push(
+					localize({
+						en: "targets: ",
+						zh: "目标：",
+					}).toString() + node.targetList.join(" "),
+				);
+			}
+		}
+
+		// 3. potency
 		if (!((node.maybeGetActionKey() ?? "NEVER") in LIMIT_BREAK_ACTIONS)) {
 			const potency = node.getPotency({
 				tincturePotencyMultiplier: renderingProps.tincturePotencyMultiplier,
@@ -970,14 +990,14 @@ function drawSkills(params: {
 				lines.push(localize({ en: "healing potency: " }) + healingPotency.toFixed(2));
 		}
 
-		// 3. duration
+		// 4. duration
 		let lockDuration = 0;
 		if (node.tmp_endLockTime !== undefined && node.tmp_startLockTime !== undefined) {
 			lockDuration = node.tmp_endLockTime - node.tmp_startLockTime;
 		}
 		lines.push(localize({ en: "duration: ", zh: "耗时：" }) + lockDuration.toFixed(3));
 
-		// 3.5. invalid reasons
+		// 4.5. invalid reasons
 		if (node.tmp_invalid_reasons.length > 0) {
 			lines.push("");
 			lines.push(localize({ en: "skill is invalid:", zh: "技能有问题：" }).toString());
@@ -986,7 +1006,7 @@ function drawSkills(params: {
 			);
 		}
 
-		// 4. buff images
+		// 5. buff images
 		coverInfo.forEach((info, buff) => {
 			if (info.showImage && node.hasBuff(buff))
 				buffImages.push(buffIconImages.get(buff) as HTMLImageElement);

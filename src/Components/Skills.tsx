@@ -490,7 +490,7 @@ export function SkillsWindow() {
 	const [waitSince, setWaitSince] = useState<WaitSince>(WaitSince.Now);
 	const [waitUntil, setWaitUntil] = useState<string>("0:00");
 	// 16 0-indexed booleans representing which targets are selected.
-	const initialSelected = Array(16).fill(false);
+	const initialSelected = Array(MAX_ABILITY_TARGETS).fill(false);
 	initialSelected[0] = true;
 	const [targetSelected, setTargetSelected] = useState<boolean[]>(initialSelected);
 	// 0-indexed number representing the primary target of AoE abilities.

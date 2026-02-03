@@ -86,8 +86,9 @@ export function TargetSelector(props: {
 	// both these are 0-indexed
 	selected: boolean[];
 	primary: number;
-	onSelectedChange: (arr: boolean[]) => void;
-	onPrimaryChange: (n: number) => void;
+	onSelectedChange?: (arr: boolean[]) => void;
+	onPrimaryChange?: (n: number) => void;
+	onAnySelectionChange?: (newPrimary: number, newSelected: boolean[]) => void;
 }) {
 	// Use a radio style selector for abilities that can hit only a single target.
 	// Use checkboxes for abilities that can hit multiple targets.
@@ -103,7 +104,8 @@ export function TargetSelector(props: {
 					: TargetState.NONE
 		}
 		onChange={(oldState: TargetState, newState: TargetState) => {
-			const selected = props.selected.slice();
+			let selected = props.selected.slice();
+			let primary = props.primary;
 			// If this target would be deselected but is the only one remaining, then
 			// do not perform the de-selection.
 			if (newState === TargetState.NONE) {
@@ -114,20 +116,28 @@ export function TargetSelector(props: {
 			} else if (newState === TargetState.TARGETED) {
 				selected[i] = true;
 			} else if (newState === TargetState.PRIMARY) {
+				// If this selector supports only a single target, then all other indices must be
+				// de-selected.
+				if (props.primaryOnly) {
+					selected = Array(selected.length).fill(false);
+				}
 				selected[i] = true;
-				props.onPrimaryChange(i);
+				props.onPrimaryChange?.(i);
+				primary = i;
 			}
 			if (oldState === TargetState.PRIMARY) {
 				// If this target is no longer PRIMARY, force a different primary target.
 				// If this is the only remaining target, then do not perform the change.
 				for (let j = 0; j < selected.length; j++) {
 					if (j != i && selected[j]) {
-						props.onPrimaryChange(j);
+						props.onPrimaryChange?.(j);
+						primary = j;
 						break;
 					}
 				}
 			}
-			props.onSelectedChange(selected);
+			props.onSelectedChange?.(selected);
+			props.onAnySelectionChange?.(primary, selected);
 		}}
 	/>);
 	return <div

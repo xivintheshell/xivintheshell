@@ -8,10 +8,12 @@ import React, {
 	createContext,
 	DragEventHandler,
 } from "react";
+import { MAX_ABILITY_TARGETS } from "../Controller/Common";
 import { controller } from "../Controller/Controller";
-import { MoveNodes, DeleteNodes } from "../Controller/UndoStack";
+import { EditNode, MoveNodes, DeleteNodes } from "../Controller/UndoStack";
 import { copy, paste } from "../Controller/Clipboard";
-import { ActionNode, ActionType, Record, RecordValidStatus } from "../Controller/Record";
+import { ActionNode, ActionType, Record, RecordValidStatus, skillNode } from "../Controller/Record";
+import { TargetSelector } from "./TargetSelector";
 import { StaticFn, Columns } from "./Common";
 import { getCurrentThemeColors, ThemeColors } from "./ColorTheme";
 import {
@@ -275,6 +277,15 @@ export function TimelineEditor() {
 	const [firstEditedNodeIndex, setFirstEditedNodeIndex] = useState<number | undefined>(undefined);
 	const [, forceUpdate] = useReducer((x) => x + 1, 0);
 	const bHandledSkillSelectionThisFrame = useRef(false);
+	// These variables are 0-indexed, unlike UI display.
+	// These are not state because they're explicitly re-computed when forceUpdate is called.
+	const targetList = controller.record.getFirstSelection()?.targetList;
+	const skillEditPrimaryTarget: number | undefined =
+		targetList && targetList.length > 0 ? targetList[0] - 1 : undefined;
+	const skillEditTargetList = Array(MAX_ABILITY_TARGETS).fill(false);
+	targetList?.forEach((i) => {
+		skillEditTargetList[i - 1] = true;
+	});
 	// In previous versions of XIV in the Shell, when using the timeline editor, we created a
 	// copy of the record within the TimelineEditor object, and did not reflect any staged
 	// edits in the timeline canvas.
@@ -452,8 +463,115 @@ export function TimelineEditor() {
 		};
 	};
 
-	// left: toolbar
 	const applyTextStyle = { padding: "0.3em" };
+	const skillPropertiesSection = () => {
+		// Allow editing the selected skill if only a single skill is selected.
+		const record = controller.record;
+		const selectionLength = record.getSelectionLength();
+		if (selectionLength === 0) {
+			return <div style={applyTextStyle}>
+				{localize({
+					en: "No actions selected.",
+					zh: "无技能选中。",
+				})}
+			</div>;
+		} else if (selectionLength === 1) {
+			const i = record.selectionStartIndex!;
+			const selected = record.getFirstSelection()!;
+			const nodeInfo = selected.info;
+			// Skill nodes: allow re-selection of targets, with discrimination for whether
+			// the skill has falloff or not.
+			// Jump/wait nodes: allow modification of the target time/duration.
+			// Other nodes: display only bare information
+			let selectedInfo = <></>;
+			const useTimeString = StaticFn.displayTime(recordValidStatus?.skillUseTimes[i] ?? 0, 3);
+			if (nodeInfo.type === ActionType.Skill) {
+				const skillName = nodeInfo.skillName;
+				const skill = getSkill(controller.game.job, skillName);
+				const showTargetSelector =
+					skill?.potencyFn(controller.game) > 0 ||
+					skill?.savesTargets ||
+					controller.game.dotSkills.includes(skillName);
+				selectedInfo = <>
+					<b>{localizeSkillName(skillName)}</b> @ {useTimeString}
+					<br />
+					{showTargetSelector && <TargetSelector
+						style={{ marginBlock: "5px" }}
+						// In some edge cases (namely AST Earthly Star), a skill has no specified
+						// falloff but can still have multiple targets selected
+						primaryOnly={skill.falloff === undefined || nodeInfo.targetList.length > 1}
+						selected={skillEditTargetList!}
+						primary={skillEditPrimaryTarget!}
+						onAnySelectionChange={(newPrimary: number, selectArray: boolean[]) =>
+							doRecordEdit((record) => {
+								const targets = selectArray.flatMap((flag, i) =>
+									flag && i !== newPrimary ? [i + 1] : [],
+								);
+								targets.splice(0, 0, newPrimary + 1);
+								const editNode = new EditNode(skillNode(skillName, targets), i);
+								controller.undoStack.push(editNode);
+								editNode.redo();
+								return i;
+							})
+						}
+					/>}
+				</>;
+			} else if (nodeInfo.type === ActionType.Wait) {
+				// TODO make editable
+				const waitDurationString = nodeInfo.waitDuration.toFixed(3);
+				selectedInfo = <>
+					{localize({
+						en: `wait for ${waitDurationString}s @ ${useTimeString}`,
+						zh: `等${waitDurationString}秒 @ ${useTimeString}`,
+					})}
+				</>;
+			} else if (nodeInfo.type === ActionType.JumpToTimestamp) {
+				// TODO make editable
+				const jumpTarget = StaticFn.displayTime(nodeInfo.targetTime, 3);
+				selectedInfo = <>
+					{localize({
+						en: `jump from time ${useTimeString} to ${jumpTarget}`,
+						zh: `从时间 ${useTimeString} 跳到 ${jumpTarget}`,
+					})}
+				</>;
+			} else if (nodeInfo.type === ActionType.WaitForMP) {
+				selectedInfo = <>
+					{localize({
+						en: `wait for MP/lucid tick @ ${useTimeString}`,
+						zh: `快进至跳蓝/跳醒梦 @ ${useTimeString}`,
+					})}
+				</>;
+			} else if (nodeInfo.type === ActionType.SetResourceEnabled) {
+				const localizedBuffName = localizeResourceType(nodeInfo.buffName);
+				selectedInfo = <>
+					{localize({
+						en: "toggle resource: ",
+						zh: "开关或去除BUFF：",
+					}).toString() +
+						localizedBuffName +
+						(nodeInfo.targetNumber !== undefined
+							? localize({
+									en: `(Boss ${nodeInfo.targetNumber})`,
+									zh: `（Boss ${nodeInfo.targetNumber}）`,
+								})
+							: "") +
+						" @ " +
+						useTimeString}
+				</>;
+			} else if (nodeInfo.type === ActionType.Unknown) {
+				selectedInfo = <>nodeInfo.skillName</>;
+			}
+			return <div style={applyTextStyle}>{selectedInfo}</div>;
+		} else {
+			return <div style={applyTextStyle}>
+				{localize({
+					en: `${selectionLength} actions selected.`,
+					zh: `选中${selectionLength}个技能。`,
+				})}
+			</div>;
+		}
+	};
+
 	const applySection = () => {
 		if (isDirty) {
 			return <div>
@@ -561,6 +679,13 @@ export function TimelineEditor() {
 		width: "100%",
 		padding: 3,
 	};
+	// TODO: users can cause potentially sight-breaking sequence braeaks by performing the following actions:
+	// 1. Perform edits in the timeline editor table, creating new actions in the undo stack
+	// 2. Hit "discard changes", reverting their new edits (does not affect the undo stack)
+	// 3. Attempt to use undo/redo shortcuts, which may now be invalid because the attempted
+	//    edits were alreaady discarded.
+	// To fix this, we need to either invalidate undo history after hitting "discard", or support
+	// "discard" as an undo-able action.
 	const doRecordEdit = (action: (record: Record) => number | undefined) => {
 		if (controller.record.getFirstSelection()) {
 			bHandledSkillSelectionThisFrame.current = true;
@@ -906,7 +1031,24 @@ export function TimelineEditor() {
 					showScrollbar: true,
 				},
 				{
-					content: applySection(),
+					content: <div
+						style={{
+							display: "flex 4 6",
+							flexDirection: "column",
+							height: "100%",
+							width: "100%",
+						}}
+					>
+						<div style={{ height: "30%" }}>{skillPropertiesSection()}</div>
+						<hr
+							style={{
+								marginLeft: "5px",
+								border: "none",
+								borderTop: ("1px solid " + colors.bgHighContrast) as string,
+							}}
+						/>
+						<div style={{ height: "60%" }}>{applySection()}</div>
+					</div>,
 					defaultSize: 40,
 					fullBorder: true,
 				},

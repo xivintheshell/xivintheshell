@@ -884,6 +884,16 @@ export class Record extends Line {
 		this.unselectAll();
 		return originalStartIndex;
 	}
+
+	// Replace the node at `index` with the provided argument.
+	replaceNode(newNode: ActionNode, index: number) {
+		if (index >= 0 && index < this.actions.length) {
+			this.actions[index] = newNode;
+		} else {
+			console.error("invalid index for replaceNode", index);
+		}
+	}
+
 	serialized(): SerializedRecord {
 		console.assert(this.config);
 		const base = super.serialized();
