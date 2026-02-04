@@ -58,7 +58,8 @@ function serializeToClipboard(mode: ClipboardMode): string {
 			rows.push(
 				[
 					status.skillUseTimes[i + start].toFixed(3),
-					// TODO:TARGET serialize actual target numbers instead
+					// Note that this serialization is lossy: we cannot reliably recreate
+					// targetList from the scalar targetCount value.
 					node.targetList.length,
 					node.toLocalizedString(),
 				].join("\t"),
@@ -160,7 +161,8 @@ function parseTextNode(text: string, targetCount: number = 1): ActionNode | unde
 	// (small penalty of a few more map lookups)
 	const key: ActionKey | undefined =
 		getNormalizedSkillName(text) ?? zhSkillNameMap.get(text) ?? jaSkillNameMap.get(text);
-	// TODO:TARGET find a way to serialize/parse target list
+	// Note that this serialization is lossy: we cannot reliably recreate
+	// targetList from the scalar targetCount value.
 	return key !== undefined
 		? skillNode(
 				key,
