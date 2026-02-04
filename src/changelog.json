@@ -1,21 +1,23 @@
 [
 	{
+		"date": "2/10/26",
+		"changes": [
+			"TODO!! UPDATE THE DATE IN CHANGELOG BEFORE DEPLOYING TO PRODUCTION if any user reads this message that would be really embarrassing",
+			"Added the ability to choose specific targets for damaging skills. Please see the \"# of targets hit\" help item for details.",
+			"Abilities imported from FFLogs now correctly track the number of targets hit."
+		],
+		"changes_zh": [
+			"新增了为伤害技能选择特定目标的功能。详情请查看“击中目标数”处的帮助提示。",
+			"从 FFLogs 导入的技能现在可以正确记录击中目标数了。"
+		]
+	},
+	{
 		"date": "2/3/26",
 		"changes": [
 			"[DRG] Fixed a bug where Mirage Dive was not recognized by FFLogs imports."
 		],
 		"changes_zh": [
 			"【龙骑】修复了 FFLogs 导入中无法识别【幻象冲】的问题。"
-		]
-	},
-	{
-		"date": "2/1/26",
-		"changes": [
-			"[BETA] The following entries relate to bugs created by multi-target changes on the beta site only.",
-			"[BETA] Fixed a major issue with DoT damage calculations where only the first DoT effect on any boss was applied.",
-			"[BETA] Fixed a bug where DoT effects could not be clicked off",
-			"[BETA][AST] Fixed a bug where Earthly Star did not compute damage when automatically detonated (you may need to re-add this ability to your saved timelines).",
-			"[BETA][BRD] Fixed a bug where Iron Jaws did not refresh DoT effects."
 		]
 	},
 	{
