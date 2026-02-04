@@ -159,8 +159,6 @@ timelinesToExpect.length &&
 	describe("timelines with existing expectations", () => {
 		timelinesToExpect.forEach((name) => {
 			it(`${name} matches previous potencies`, () => {
-				expect(true);
-				return;
 				const expectedOutput = JSON.parse(
 					fs.readFileSync(OUT_DIR + name + ".json", { encoding: "utf8" }),
 				);
