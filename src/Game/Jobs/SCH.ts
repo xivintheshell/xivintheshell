@@ -201,7 +201,11 @@ export class SCHState extends GameState {
 	}
 
 	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
-		if (this.hasResourceAvailable("CHAIN_STRATAGEM")) {
+		if (
+			node.targetList.some((targetNumber) =>
+				this.hasDebuffActive("CHAIN_STRATAGEM", targetNumber),
+			)
+		) {
 			node.addBuff(BuffType.ChainStratagem);
 		}
 	}
@@ -310,8 +314,14 @@ export class SCHState extends GameState {
 		);
 	}
 
-	maybeChainModifier(): PotencyModifier[] {
-		return this.hasResourceAvailable("CHAIN_STRATAGEM") ? [Modifiers.ChainStrat] : [];
+	maybeChainModifier(node: ActionNode): Map<number, PotencyModifier[]> {
+		const result = new Map<number, PotencyModifier[]>();
+		node.targetList.forEach((targetNumber) => {
+			if (this.hasDebuffActive("CHAIN_STRATAGEM", targetNumber)) {
+				result.set(targetNumber, [Modifiers.ChainStrat]);
+			}
+		});
+		return result;
 	}
 
 	maybeGainFaerieGauge() {
@@ -390,7 +400,7 @@ const makeSCHSpell = (
 		castTime: (state) => state.config.adjustedCastTime(params.baseCastTime ?? 0),
 		recastTime: (state) => state.config.adjustedGCD(2.5),
 		isInstantFn: (state) => !params.baseCastTime || state.hasResourceAvailable("SWIFTCAST"),
-		jobPotencyModifiers: (state) => state.maybeChainModifier(),
+		jobTargetPotencyModifiers: (state, node) => state.maybeChainModifier(node),
 		jobHealingPotencyModifiers,
 		onConfirm: combineEffects(
 			params.baseCastTime ? (state) => state.tryConsumeResource("SWIFTCAST") : undefined,
@@ -422,7 +432,7 @@ const makeSCHAbility = (
 	};
 	return makeAbility("SCH", name, unlockLevel, cdName, {
 		...params,
-		jobPotencyModifiers: (state) => state.maybeChainModifier(),
+		jobTargetPotencyModifiers: (state, node) => state.maybeChainModifier(node),
 		jobHealingPotencyModifiers,
 	});
 };
@@ -513,7 +523,7 @@ makeSCHSpell("BIO_II", 26, {
 			skillName: "BIO_II",
 			tickPotency: 40,
 			speedStat: "sps",
-			modifiers: state.maybeChainModifier(),
+			targetModifiers: state.maybeChainModifier(node),
 		});
 	},
 	onApplication: (state, node) => state.applyDoT("BIO_II", node),
@@ -535,7 +545,7 @@ makeSCHSpell("BIOLYSIS", 72, {
 			skillName: "BIOLYSIS",
 			tickPotency: state.hasTraitUnlocked("TACTICIANS_MASTERY") ? 85 : 70,
 			speedStat: "sps",
-			modifiers: state.maybeChainModifier(),
+			targetModifiers: state.maybeChainModifier(node),
 		});
 	},
 	onApplication: (state, node) => state.applyDoT("BIOLYSIS", node),
@@ -575,17 +585,17 @@ makeSCHSpell("ART_OF_WAR_II", 82, {
 	falloff: 0,
 });
 
-makeSCHResourceAbility("CHAIN_STRATAGEM", 66, "cd_CHAIN_STRATAGEM", {
+makeSCHAbility("CHAIN_STRATAGEM", 66, "cd_CHAIN_STRATAGEM", {
 	replaceIf: [
 		{
 			newSkill: "BANEFUL_IMPACTION",
 			condition: (state) => state.hasResourceAvailable("IMPACT_IMMINENT"),
 		},
 	],
-	rscType: "CHAIN_STRATAGEM",
 	applicationDelay: 0.8,
 	cooldown: 120,
-	onConfirm: (state) => {
+	onConfirm: (state, node) => {
+		state.gainDebuff("CHAIN_STRATAGEM", [node.targetList[0]]);
 		if (state.hasTraitUnlocked("ENHANCED_CHAIN_STRATAGEM")) {
 			state.gainStatus("IMPACT_IMMINENT");
 		}
@@ -607,7 +617,7 @@ makeSCHAbility("BANEFUL_IMPACTION", 92, "cd_BANEFUL_IMPACTION", {
 			skillName: "BANEFUL_IMPACTION",
 			tickPotency: 140,
 			speedStat: "sps",
-			modifiers: state.maybeChainModifier(),
+			targetModifiers: state.maybeChainModifier(node),
 		});
 	},
 	onApplication: (state, node) => state.applyDoT("BANEFUL_IMPACTION", node),

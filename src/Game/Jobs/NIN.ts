@@ -281,13 +281,13 @@ const targetPotencyModifiers = (state: Readonly<NINState>, node: ActionNode) => 
 	const result = new Map<number, PotencyModifier[]>();
 	node.targetList.forEach((targetNumber) => {
 		const mods = [];
-		if (state.debuffs.get("DOKUMORI", targetNumber).available(1)) {
+		if (state.hasDebuffActive("DOKUMORI", targetNumber)) {
 			mods.push(Modifiers.Dokumori);
 		}
-		if (state.debuffs.get("TRICK_ATTACK", targetNumber).available(1)) {
+		if (state.hasDebuffActive("TRICK_ATTACK", targetNumber)) {
 			mods.push(Modifiers.TrickAttack);
 		}
-		if (state.debuffs.get("KUNAIS_BANE", targetNumber).available(1)) {
+		if (state.hasDebuffActive("KUNAIS_BANE", targetNumber)) {
 			mods.push(Modifiers.KunaisBane);
 		}
 		if (mods.length > 0) {

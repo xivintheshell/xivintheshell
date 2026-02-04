@@ -83,6 +83,7 @@ export interface OverTimePotencyProps {
 	speedStat: "sks" | "sps" | "unscaled";
 	aspect?: Aspect;
 	modifiers?: PotencyModifier[];
+	targetModifiers?: Map<number, PotencyModifier[]>;
 }
 
 // GameState := resources + events queue
@@ -1852,6 +1853,9 @@ export class GameState {
 				falloff: 0, // assume all overtime effects have no falloff
 			});
 			overtimePotency.addModifiers(...mods);
+			if (props.targetModifiers) {
+				overtimePotency.addTargetSpecificModifiers(props.targetModifiers);
+			}
 			props.node.addOverTimePotency(overtimePotency, props.effectName, kind);
 		}
 	}
