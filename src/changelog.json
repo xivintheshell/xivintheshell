@@ -1,5 +1,14 @@
 [
 	{
+		"date": "2/3/26",
+		"changes": [
+			"[DRG] Fixed a bug where Mirage Dive was not recognized by FFLogs imports."
+		],
+		"changes_zh": [
+			"【龙骑】修复了 FFLogs 导入中无法识别【幻象冲】的问题。"
+		]
+	},
+	{
 		"date": "1/28/26",
 		"changes": [
 			"[GNB] Fixed a bug where overcapping on cartridges after using Bloodfest did not raise a warning."
