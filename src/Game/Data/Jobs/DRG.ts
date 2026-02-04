@@ -29,7 +29,7 @@ export const DRG_ACTIONS = ensureRecord<ActionData>()({
 	LANCE_CHARGE: { id: 85, name: "Lance Charge" },
 	JUMP: { id: 92, name: "Jump" },
 	HIGH_JUMP: { id: 16478, name: "High Jump" },
-	MIRAGE_DIVE: { id: 7339, name: "Mirage Dive" },
+	MIRAGE_DIVE: { id: 7399, name: "Mirage Dive" },
 	DRAGONFIRE_DIVE: { id: 96, name: "Dragonfire Dive" },
 	RISE_OF_THE_DRAGON: { id: 36953, name: "Rise of the Dragon" },
 	BATTLE_LITANY: { id: 3557, name: "Battle Litany" },
