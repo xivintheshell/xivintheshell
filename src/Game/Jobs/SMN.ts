@@ -382,6 +382,7 @@ const makeSpell_SMN = (
 		basePotency?: number | Array<[TraitKey, number]>;
 		drawsAggro?: boolean;
 		falloff?: number;
+		savesTargets?: boolean;
 		applicationDelay: number;
 		isPetAttack?: boolean;
 		validateAttempt?: StatePredicate<SMNState>;

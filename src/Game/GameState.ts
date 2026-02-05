@@ -1041,10 +1041,7 @@ export class GameState {
 		// to ensure buffs snapshot properly.
 		if (
 			!potency &&
-			(potencyNumber > 0 ||
-				(skill.drawsAggro && !this.isInCombat()) ||
-				skill.savesTargets ||
-				appliesDoT)
+			(potencyNumber > 0 || (skill.drawsAggro && !this.isInCombat()) || appliesDoT)
 		) {
 			// refresh autos for skills with potency here
 			this.refreshAutoBasedOnSkill(skill, capturedCastTime, true);
@@ -1235,7 +1232,7 @@ export class GameState {
 		const potencyNumber = skill.potencyFn(this);
 		let potency: Potency | undefined = undefined;
 		const appliesDoT = this.dotSkills.includes(skill.name);
-		if (potencyNumber > 0 || skill.drawsAggro || skill.savesTargets || appliesDoT) {
+		if (potencyNumber > 0 || skill.drawsAggro || appliesDoT) {
 			potency = new Potency({
 				config: this.config,
 				sourceTime: this.getDisplayTime(),
