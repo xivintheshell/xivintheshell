@@ -427,6 +427,7 @@ const makeAbility_SMN = (
 		replaceIf?: ConditionalSkillReplace<SMNState>[];
 		highlightIf?: StatePredicate<SMNState>;
 		startOnHotbar?: boolean;
+		savesTargets?: boolean;
 		falloff?: number;
 		applicationDelay?: number;
 		cooldown: number;
@@ -1025,6 +1026,7 @@ makeSpell_SMN("SUMMON_IFRIT", 30, {
 	validateAttempt: ifritCondition,
 	onConfirm: ifritConfirm("SUMMON_IFRIT"),
 	falloff: SUMMON_FALLOFF,
+	savesTargets: true,
 });
 
 makeSpell_SMN("SUMMON_TITAN", 35, {
@@ -1037,6 +1039,7 @@ makeSpell_SMN("SUMMON_TITAN", 35, {
 	validateAttempt: titanCondition,
 	onConfirm: titanConfirm("SUMMON_TITAN"),
 	falloff: SUMMON_FALLOFF,
+	savesTargets: true,
 });
 
 makeSpell_SMN("SUMMON_GARUDA", 45, {
@@ -1049,6 +1052,7 @@ makeSpell_SMN("SUMMON_GARUDA", 45, {
 	validateAttempt: garudaCondition,
 	onConfirm: garudaConfirm("SUMMON_GARUDA"),
 	falloff: SUMMON_FALLOFF,
+	savesTargets: true,
 });
 
 makeSpell_SMN("SUMMON_IFRIT_II", 90, {
@@ -1064,6 +1068,7 @@ makeSpell_SMN("SUMMON_IFRIT_II", 90, {
 		ifritConfirm("SUMMON_IFRIT_II"),
 	),
 	falloff: SUMMON_FALLOFF,
+	savesTargets: true,
 });
 
 makeSpell_SMN("SUMMON_TITAN_II", 90, {
@@ -1077,6 +1082,7 @@ makeSpell_SMN("SUMMON_TITAN_II", 90, {
 	// titan's favor is gained upon executing rite/catastrophe
 	onConfirm: titanConfirm("SUMMON_TITAN_II"),
 	falloff: SUMMON_FALLOFF,
+	savesTargets: true,
 });
 
 makeSpell_SMN("SUMMON_GARUDA_II", 90, {
@@ -1092,6 +1098,7 @@ makeSpell_SMN("SUMMON_GARUDA_II", 90, {
 		garudaConfirm("SUMMON_GARUDA_II"),
 	),
 	falloff: SUMMON_FALLOFF,
+	savesTargets: true,
 });
 
 const ASTRAL_FLOW_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
@@ -1280,6 +1287,7 @@ const ENKINDLE_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 		validateAttempt: (state) => state.activeDemi === info.activeValue,
 		onConfirm: (state, node) => state.queueEnkindle(node, info.name as SMNActionKey),
 		startOnHotbar: i === 0,
+		savesTargets: true,
 		falloff: info.falloff,
 	}),
 );

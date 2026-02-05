@@ -497,8 +497,8 @@ export function TimelineEditor() {
 					<br />
 					{showTargetSelector && <TargetSelector
 						style={{ marginBlock: "5px" }}
-						// In some edge cases (namely AST Earthly Star), a skill has no specified
-						// falloff but can still have multiple targets selected
+						// In some edge cases (namely AST Earthly Star and SMn pet summons), a skill
+						// has no specified falloff but can still have multiple targets selected
 						primaryOnly={skill.falloff === undefined || nodeInfo.targetList.length > 1}
 						selected={skillEditTargetList!}
 						primary={skillEditPrimaryTarget!}

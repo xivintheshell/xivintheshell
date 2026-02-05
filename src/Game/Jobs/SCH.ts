@@ -595,11 +595,11 @@ makeSCHAbility("CHAIN_STRATAGEM", 66, "cd_CHAIN_STRATAGEM", {
 	applicationDelay: 0.8,
 	cooldown: 120,
 	onConfirm: (state, node) => {
-		state.gainDebuff("CHAIN_STRATAGEM", [node.targetList[0]]);
 		if (state.hasTraitUnlocked("ENHANCED_CHAIN_STRATAGEM")) {
 			state.gainStatus("IMPACT_IMMINENT");
 		}
 	},
+	onApplication: (state, node) => state.gainDebuff("CHAIN_STRATAGEM", [node.targetList[0]]),
 });
 
 makeSCHAbility("BANEFUL_IMPACTION", 92, "cd_BANEFUL_IMPACTION", {

@@ -659,7 +659,9 @@ export class Line {
 						: undefined;
 				const targetList =
 					serializedAction.targetCount !== undefined
-						? [1]
+						? Array(serializedAction.targetCount)
+								.fill(0)
+								.map((_, i) => i + 1)
 						: (serializedAction.targetList ?? [1]);
 				return new ActionNode(
 					skillName !== undefined
