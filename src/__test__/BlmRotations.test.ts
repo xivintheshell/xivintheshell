@@ -349,20 +349,20 @@ it(
 		const state = controller.game as BLMState;
 
 		// Each DoT should have applied once
-		expect(damageData.dotTables.get("HIGH_THUNDER")?.tableRows.length).toBe(1);
-		expect(damageData.dotTables.get("HIGH_THUNDER_II")?.tableRows.length).toBe(1);
+		expect(damageData.dotTables.get("HIGH_THUNDER")?.get(1)?.tableRows.length).toBe(1);
+		expect(damageData.dotTables.get("HIGH_THUNDER_II")?.get(1)?.tableRows.length).toBe(1);
 
 		const b3CastTime = state.config.getAfterTaxCastTime(state.config.adjustedCastTime(3.5));
 		const htApplicationDelay = state.skillsList.get("HIGH_THUNDER").applicationDelay;
 		const htApplicationTime = b3CastTime + htApplicationDelay;
 		// check the DoT summary for HT
-		const htSummary = damageData.dotTables.get("HIGH_THUNDER")?.summary;
+		const htSummary = damageData.dotTables.get("HIGH_THUNDER")?.get(1)?.summary;
 		// There should be a gap from the start of the pull to the initial application
 		expect(htSummary?.cumulativeGap).toBeCloseTo(htApplicationTime, 0);
 		// HT will not have overridden anything
 		expect(htSummary?.cumulativeOverride).toEqual(0);
 
-		const ht2Summary = damageData.dotTables.get("HIGH_THUNDER_II")?.summary;
+		const ht2Summary = damageData.dotTables.get("HIGH_THUNDER_II")?.get(1)?.summary;
 		// Overriding DoTs should not list a gap
 		expect(ht2Summary?.cumulativeGap).toEqual(0);
 		const gcdRecastTime = state.config.getAfterTaxGCD(state.config.adjustedGCD(2.5));
@@ -460,17 +460,22 @@ it(
 		dotTables: new Map([
 			[
 				"HIGH_THUNDER",
-				{
-					summary: {
-						totalTicks: 88,
-						maxTicks: 89,
-						dotCoverageTimeFraction: 0.9788,
-						cumulativeGap: 4.966,
-						cumulativeOverride: 8.691,
-						totalPotencyWithoutPot: 8567.62,
-						totalPotPotency: 77.54,
-					},
-				},
+				new Map([
+					[
+						1,
+						{
+							summary: {
+								totalTicks: 88,
+								maxTicks: 89,
+								dotCoverageTimeFraction: 0.9788,
+								cumulativeGap: 4.966,
+								cumulativeOverride: 8.691,
+								totalPotencyWithoutPot: 8567.62,
+								totalPotPotency: 77.54,
+							},
+						},
+					],
+				]),
 			],
 		]),
 	}),
@@ -492,5 +497,90 @@ it(
 		mainTableSummary: {
 			totalPotencyWithoutPot: 7926.88,
 		},
+	}),
+);
+
+// Tests a range of DoT edge cases, including
+// - Overwriting HT with HT2
+// - Toggling off HT2 for a single target, then re-enabling it
+// - Overwriting HT2 on a single target with HT
+// - Toggling off HT for a single target, then letting it get overwritten w/o manually re-enabling it
+// Note the uptime % reported values may still not correctly reflect buff clickoffs.
+it(
+	"loads: blm_multi_dot_overwrite_test.txt",
+	testDamageFromTimeline("blm_multi_dot_overwrite_test.txt", {
+		time: 24.983 + 5,
+		lastDamageApplicationTime: 22.931 + 5,
+		totalPotency: {
+			applied: 1890.45,
+			pending: 749.12,
+		},
+		gcdSkills: {
+			applied: 5,
+			pending: 0,
+		},
+		mainTableSummary: {
+			totalPotencyWithoutPot: 1890.45,
+		},
+		dotTables: new Map([
+			[
+				"HIGH_THUNDER",
+				new Map([
+					[
+						1,
+						{
+							summary: {
+								totalTicks: 1,
+								maxTicks: 8,
+								cumulativeGap: 0.124,
+								cumulativeOverride: 0,
+								totalPotencyWithoutPot: 268,
+							},
+						},
+					],
+					[
+						2,
+						{
+							summary: {
+								totalTicks: 3,
+								maxTicks: 8,
+								cumulativeGap: 9.26,
+								cumulativeOverride: 34.523,
+								totalPotencyWithoutPot: 613.49,
+							},
+						},
+					],
+				]),
+			],
+			[
+				"HIGH_THUNDER_II",
+				new Map([
+					[
+						1,
+						{
+							summary: {
+								totalTicks: 5,
+								maxTicks: 8,
+								cumulativeGap: 0,
+								cumulativeOverride: 27.49,
+								totalPotencyWithoutPot: 385.32,
+							},
+						},
+					],
+					[
+						2,
+						{
+							summary: {
+								totalTicks: 4,
+								maxTicks: 8,
+								cumulativeGap: 2.633,
+								cumulativeOverride: 0,
+								totalPotencyWithoutPot: 333.65,
+							},
+						},
+					],
+				]),
+			],
+		]),
 	}),
 );

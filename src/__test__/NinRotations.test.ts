@@ -350,3 +350,24 @@ it(
 		},
 	}),
 );
+
+it(
+	"computes proper falloff for aoe debuffs",
+	// Tests hitting Doku + KB on multiple targets, and hitting a mix of buffed/debuffed enemies
+	// with AoE and single-target abilities. The "potency" column in the damage table may be
+	// inaccurate because we do not have mechanisms for splitting up debuff computation in the UI,
+	// but the final "total" figure should be correct.
+	testDamageFromTimeline("nin_mix_aoe_test.txt", {
+		time: 17.87,
+		lastDamageApplicationTime: 16.95,
+		totalPotency: {
+			applied: 6620.3,
+		},
+		gcdSkills: {
+			applied: 11,
+		},
+		mainTableSummary: {
+			totalPotencyWithoutPot: 6620.3,
+		},
+	}),
+);

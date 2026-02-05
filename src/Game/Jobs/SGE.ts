@@ -221,14 +221,14 @@ export class SGEState extends GameState {
 			aspect: Aspect.Other,
 			basePotency: consumedShield === "EUKRASIAN_DIAGNOSIS" ? 450 : 350,
 			description: localizeResourceType(consumedShield),
-			targetCount: consumedShield === "EUKRASIAN_DIAGNOSIS" ? 1 : this.partySize,
+			healTargetCount: consumedShield === "EUKRASIAN_DIAGNOSIS" ? 1 : this.partySize,
 			snapshotTime: this.getDisplayTime(),
 		});
 		if (this.hasResourceAvailable("TINCTURE")) {
-			pepsisPotency.modifiers.push(Modifiers.Tincture);
+			pepsisPotency.addModifiers(Modifiers.Tincture);
 		}
 		if (this.hasResourceAvailable("AUTOPHYSIS")) {
-			pepsisPotency.modifiers.push(Modifiers.Autophysis);
+			pepsisPotency.addModifiers(Modifiers.Autophysis);
 		}
 		if (this.hasResourceAvailable("KRASIS")) {
 			if (consumedShield === "EUKRASIAN_PROGNOSIS") {
@@ -239,14 +239,14 @@ export class SGEState extends GameState {
 					aspect: Aspect.Other,
 					basePotency: pepsisPotency.base,
 					description: localizeResourceType(consumedShield),
-					targetCount: pepsisPotency.targetCount - 1,
+					healTargetCount: pepsisPotency.targetCount - 1,
 					snapshotTime: this.getDisplayTime(),
 				});
 				node.addHoTPotency(nonKrasisPotency, "PEPSIS");
-				pepsisPotency.targetCount = 1;
+				pepsisPotency.healTargetCount = 1;
 				pepsisPotency.description += ", " + localizeResourceType("KRASIS");
 			}
-			pepsisPotency.modifiers.push(Modifiers.Krasis);
+			pepsisPotency.addModifiers(Modifiers.Krasis);
 		}
 		node.addHoTPotency(pepsisPotency, "PEPSIS");
 	}
@@ -262,14 +262,14 @@ export class SGEState extends GameState {
 			aspect: Aspect.Other,
 			basePotency: effect === "HAIMA" ? 150 : 100,
 			description: "",
-			targetCount: effect === "HAIMA" ? 1 : this.partySize,
+			healTargetCount: effect === "HAIMA" ? 1 : this.partySize,
 			snapshotTime: this.getDisplayTime(),
 		});
 		if (this.hasResourceAvailable("TINCTURE")) {
-			expirationPotency.modifiers.push(Modifiers.Tincture);
+			expirationPotency.addModifiers(Modifiers.Tincture);
 		}
 		if (this.hasResourceAvailable("AUTOPHYSIS")) {
-			expirationPotency.modifiers.push(Modifiers.Autophysis);
+			expirationPotency.addModifiers(Modifiers.Autophysis);
 		}
 		if (this.hasResourceAvailable("KRASIS")) {
 			if (effect === "PANHAIMA") {
@@ -280,13 +280,13 @@ export class SGEState extends GameState {
 					aspect: Aspect.Other,
 					basePotency: 100,
 					description: "",
-					targetCount: this.partySize - 1,
+					healTargetCount: this.partySize - 1,
 					snapshotTime: this.getDisplayTime(),
 				});
 				node.addHoTPotency(nonKrasisPanhaimaPotency, effect);
-				expirationPotency.targetCount = 1;
+				expirationPotency.healTargetCount = 1;
 			}
-			expirationPotency.modifiers.push(Modifiers.Krasis);
+			expirationPotency.addModifiers(Modifiers.Krasis);
 		}
 		node.addHoTPotency(expirationPotency, effect);
 	}
@@ -316,7 +316,7 @@ export class SGEState extends GameState {
 						")";
 					if (
 						effect === "PANHAIMA" &&
-						expirationPotency.modifiers.includes(Modifiers.Krasis)
+						expirationPotency.getDisplayedModifiers().includes(Modifiers.Krasis)
 					) {
 						expirationPotency.description += ", " + localizeResourceType("KRASIS");
 					}
@@ -392,17 +392,17 @@ const makeSGESpell = (
 				aspect: Aspect.Other,
 				basePotency: state.hasTraitUnlocked("ENHANCED_HEALING_MAGIC") ? 170 : 130,
 				description: localizeResourceType("KARDIA"),
-				targetCount: 1,
+				healTargetCount: 1,
 				snapshotTime: state.getDisplayTime(),
 			});
 			if (state.hasResourceAvailable("TINCTURE")) {
-				kardiaPotency.modifiers.push(Modifiers.Tincture);
+				kardiaPotency.addModifiers(Modifiers.Tincture);
 			}
 			if (state.hasResourceAvailable("SOTERIA")) {
-				kardiaPotency.modifiers.push(Modifiers.Soteria);
+				kardiaPotency.addModifiers(Modifiers.Soteria);
 			}
 
-			state.addHealingActionPotencyModifiers(kardiaPotency.modifiers);
+			state.addHealingActionPotencyModifiers(kardiaPotency.getDisplayedModifiers());
 
 			node.addHoTPotency(kardiaPotency, "KARDION");
 		},
@@ -419,14 +419,14 @@ const makeSGESpell = (
 				aspect: Aspect.Other,
 				basePotency: 150,
 				description: localizeResourceType("EUDAIMONIA"),
-				targetCount: state.partySize,
+				healTargetCount: state.partySize,
 				snapshotTime: state.getDisplayTime(),
 			});
 			if (state.hasResourceAvailable("TINCTURE")) {
-				eudaimoniaPotency.modifiers.push(Modifiers.Tincture);
+				eudaimoniaPotency.addModifiers(Modifiers.Tincture);
 			}
 
-			state.addHealingActionPotencyModifiers(eudaimoniaPotency.modifiers);
+			state.addHealingActionPotencyModifiers(eudaimoniaPotency.getDisplayedModifiers());
 
 			node.addHoTPotency(eudaimoniaPotency, "EUDAIMONIA");
 		},

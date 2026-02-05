@@ -3,6 +3,7 @@ import { GameState } from "./GameState";
 import { ActionNode } from "../Controller/Record";
 import { BLMState } from "./Jobs/BLM";
 import { controller } from "../Controller/Controller";
+import { MAX_ABILITY_TARGETS } from "../Controller/Common";
 import { ShellJob, ALL_JOBS, MELEE_JOBS } from "./Data/Jobs";
 import { ResourceKey, CooldownKey, RESOURCES } from "./Data";
 
@@ -319,6 +320,103 @@ export class ResourceState {
 				rsc.gain(1);
 			},
 		});
+	}
+}
+
+// State for debuffs with timers split across multiple enemies.
+// Certain debuffs may still use ResourceState for compatibility reasons. This construct is
+// used primarily for DoT tracking, and proper tracking of Death's Design.
+export class DebuffState {
+	game: GameState;
+	// Since targetNumber indices are 1-indexed, subtract 1 when interacting with this array.
+	#debuffMaps: Map<ResourceKey, OverTimeBuff>[];
+
+	constructor(game: GameState) {
+		this.game = game;
+		this.#debuffMaps = Array(MAX_ABILITY_TARGETS)
+			.fill(0)
+			.map(() => new Map());
+	}
+
+	initialize(rscType: ResourceKey) {
+		const info = getResourceInfo(this.game.job, rscType) as ResourceInfo;
+		for (let i = 0; i < MAX_ABILITY_TARGETS; i++) {
+			const rsc: any = new Resource(
+				rscType,
+				info.maxValue,
+				info.defaultValue,
+				info.warnOnOvercap,
+			);
+			rsc.tickCount = 0;
+			this.#debuffMaps[i].set(rscType, rsc as OverTimeBuff);
+		}
+	}
+
+	hasAny(rscType: ResourceKey): boolean {
+		return this.#debuffMaps.some((m) => m.has(rscType));
+	}
+
+	hasAnyActive(rscType: ResourceKey): boolean {
+		return this.#debuffMaps.some((m) => m.get(rscType)?.available(1));
+	}
+
+	get(rscType: ResourceKey, targetNumber: number): OverTimeBuff {
+		if (targetNumber < 1 || targetNumber > MAX_ABILITY_TARGETS) {
+			console.error("targetNumber " + targetNumber + " is out of range");
+			const rsc: any = new Resource("NEVER", 0, 0);
+			rsc.tickCount = 0;
+			return rsc;
+		}
+		const rsc = this.#debuffMaps[targetNumber - 1].get(rscType);
+		if (rsc) return rsc;
+		else {
+			console.error(`could not find debuff ${rscType}`);
+			const rsc: any = new Resource("NEVER", 0, 0);
+			rsc.tickCount = 0;
+			return rsc;
+		}
+	}
+
+	set(resource: OverTimeBuff, targetNumber: number) {
+		if (targetNumber < 1 || targetNumber > MAX_ABILITY_TARGETS) {
+			console.error("targetNumber " + targetNumber + " is out of range");
+			return;
+		}
+		this.#debuffMaps[targetNumber - 1].set(resource.type, resource);
+	}
+
+	timeTillExpiry(rscType: ResourceKey, targetNumber: number): number {
+		if (targetNumber < 1 || targetNumber > MAX_ABILITY_TARGETS) {
+			console.error("targetNumber " + targetNumber + " is out of range");
+			return 0;
+		}
+		const rsc = this.get(rscType, targetNumber);
+		if (rsc.pendingChange) {
+			return rsc.pendingChange.timeTillEvent;
+		}
+		return 0;
+	}
+
+	addDebuffEvent(props: {
+		rscType: ResourceKey;
+		targetNumber: number;
+		name: string;
+		delay: number;
+		fnOnRsc: (rsc: Resource) => void;
+		tags?: EventTag[];
+	}) {
+		const rsc = this.get(props.rscType, props.targetNumber);
+		const evt = new Event(props.name, props.delay, () => {
+			rsc.pendingChange = undefined; // unregister self from resource
+			props.fnOnRsc(rsc); // before the scheduled event takes effect
+		});
+		rsc.pendingChange = evt; // register to resource
+		if (props.tags) {
+			props.tags.forEach((tag) => {
+				evt.addTag(tag);
+			});
+		}
+		this.game.addEvent(evt); // register to events master list
 	}
 }
 

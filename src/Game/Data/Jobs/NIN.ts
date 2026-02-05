@@ -93,9 +93,9 @@ export const NIN_STATUSES = ensureRecord<ResourceData>()({
 	MUDRA: { name: "Mudra", label: { zh: "手势" } },
 	SHADE_SHIFT: { name: "Shade Shift", label: { zh: "残影" } },
 	HIDDEN: { name: "Hidden", label: { zh: "隐遁" } },
-	TRICK_ATTACK: { name: "Trick Attack", label: { zh: "攻其不备" } },
+	TRICK_ATTACK: { name: "Trick Attack", label: { zh: "攻其不备" }, specialDebuff: true },
 	KASSATSU: { name: "Kassatsu", label: { zh: "生杀予夺" } },
-	DOKUMORI: { name: "Dokumori", label: { zh: "介毒之术" } },
+	DOKUMORI: { name: "Dokumori", label: { zh: "介毒之术" }, specialDebuff: true },
 	TENRI_JINDO_READY: { name: "Tenri Jindo Ready", label: { zh: "天理人道预备" } },
 	// Internally tracks 3 stacks to simplify buff expiry logic.
 	TEN_CHI_JIN: { name: "Ten Chi Jin", maximumStacks: 3, label: { zh: "天地人" } },
@@ -104,7 +104,7 @@ export const NIN_STATUSES = ensureRecord<ResourceData>()({
 	BUNSHIN: { name: "Bunshin", maximumStacks: 5, label: { zh: "分身之术" } },
 	PHANTOM_KAMAITACHI_READY: { name: "Phantom Kamaitachi Ready", label: { zh: "残影镰鼬预备" } },
 	RAIJU_READY: { name: "Raiju Ready", maximumStacks: 3, label: { zh: "月影雷兽预备" } },
-	KUNAIS_BANE: { name: "Kunai's Bane", label: { zh: "百雷铳" } },
+	KUNAIS_BANE: { name: "Kunai's Bane", label: { zh: "百雷铳" }, specialDebuff: true },
 	HIGI: { name: "Higi", label: { zh: "秘技预备" } },
 	DOTON: { name: "Doton", mayBeToggled: true, label: { zh: "土遁之术" } },
 });

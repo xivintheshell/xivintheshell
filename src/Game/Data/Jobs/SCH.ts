@@ -367,7 +367,7 @@ export const SCH_STATUSES = ensureRecord<ResourceData>()({
 	EMERGENCY_TACTICS: { name: "Emergency Tactics", label: { zh: "应急战术" } },
 	DISSIPATION: { name: "Dissipation", label: { zh: "转化" }, mayNotBeCanceled: true },
 	EXCOGITATION: { name: "Excogitation", label: { zh: "深谋远虑之策" } },
-	CHAIN_STRATAGEM: { name: "Chain Stratagem", label: { zh: "连环计" } },
+	CHAIN_STRATAGEM: { name: "Chain Stratagem", label: { zh: "连环计" }, specialDebuff: true },
 	IMPACT_IMMINENT: { name: "Impact Imminent", label: { zh: "埋伏之毒预备" } },
 	BIOLYSIS: { name: "Biolysis", label: { zh: "蛊毒法" } },
 	RECITATION: { name: "Recitation", label: { zh: "秘策" } },

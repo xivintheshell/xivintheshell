@@ -214,11 +214,11 @@ it(
 		]);
 
 		const dotTables = damageData.dotTables;
-		expect(dotTables.get("BIOLYSIS")!.tableRows[0].displayedModifiers).toEqual([
+		expect(dotTables.get("BIOLYSIS")!.get(1)!.tableRows[0].displayedModifiers).toEqual([
 			PotencyModifierType.CHAIN_STRAT,
 		]);
-		expect(dotTables.get("BANEFUL_IMPACTION")!.tableRows[0].displayedModifiers).toEqual([
-			PotencyModifierType.CHAIN_STRAT,
-		]);
+		expect(dotTables.get("BANEFUL_IMPACTION")!.get(1)!.tableRows[0].displayedModifiers).toEqual(
+			[PotencyModifierType.CHAIN_STRAT],
+		);
 	}),
 );

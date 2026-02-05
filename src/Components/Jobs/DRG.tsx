@@ -24,7 +24,7 @@ const DRG_BUFFS: DRGResourceKey[] = (Object.keys(DRG_STATUSES) as DRGResourceKey
 
 export class DRGStatusPropsGenerator extends StatusPropsGenerator<DRGState> {
 	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
-		return [...DRG_DEBUFFS.map((rscType) => this.makeCommonTimer(rscType, false))];
+		return [...DRG_DEBUFFS.flatMap((rscType) => this.makeTargetedTimers(rscType))];
 	}
 
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {

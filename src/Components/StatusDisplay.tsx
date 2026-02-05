@@ -3,6 +3,7 @@ import { Clickable, ContentNode, Help, ProgressBar, StaticFn } from "./Common";
 import { updateInvalidStatus } from "./TimelineEditor";
 import type { GameState } from "../Game/GameState";
 import { controller } from "../Controller/Controller";
+import { MAX_ABILITY_TARGETS } from "../Controller/Common";
 import { localize, localizeResourceType } from "./Localization";
 import {
 	getThemeColors,
@@ -34,6 +35,7 @@ export type BuffProps = {
 	enabled: boolean;
 	stacks: number;
 	timeRemaining?: string;
+	targetNumber?: number;
 	className: string;
 };
 
@@ -461,8 +463,9 @@ function Buff(props: BuffProps) {
 				content={img}
 				style={style}
 				onClickFn={() => {
-					if (props.onSelf) {
-						controller.requestToggleBuff(props.rscType, true);
+					// Self-buffs and enemy DoTs may be toggled
+					if (props.onSelf || props.targetNumber !== undefined) {
+						controller.requestToggleBuff(props.rscType, true, props.targetNumber);
 						controller.updateStatusDisplay(controller.game);
 						controller.updateSkillButtons(controller.game);
 						controller.autoSave();
@@ -476,7 +479,9 @@ function Buff(props: BuffProps) {
 			className={"buff-label"}
 			style={{ visibility: props.timeRemaining === undefined ? "hidden" : undefined }}
 		>
-			{props.timeRemaining ?? "0.000"}
+			{/* TODO:TARGET spruce up */}
+			{(props.timeRemaining ?? "0.000") +
+				(props.targetNumber !== undefined ? ` (\u2192 ${props.targetNumber})` : "")}
 		</span>
 	</div>;
 }
@@ -926,6 +931,25 @@ export class StatusPropsGenerator<T extends GameState> {
 			timeRemaining: rscCountdown.toFixed(3),
 			className: resource.availableAmountIncludingDisabled() > 0 ? "" : "hidden",
 		};
+	}
+
+	makeTargetedTimers(rscType: ResourceKey): BuffProps[] {
+		return Array(MAX_ABILITY_TARGETS)
+			.fill(0)
+			.map((_, i) => {
+				const targetNumber = i + 1;
+				const rscCountdown = this.state.debuffs.timeTillExpiry(rscType, targetNumber);
+				const resource = this.state.debuffs.get(rscType, targetNumber);
+				return {
+					rscType,
+					onSelf: false,
+					targetNumber,
+					enabled: resource.enabled,
+					stacks: resource.availableAmount(),
+					timeRemaining: rscCountdown.toFixed(3),
+					className: resource.availableAmountIncludingDisabled() > 0 ? "" : "hidden",
+				};
+			});
 	}
 
 	makeToggleableTimer(rscType: ResourceKey, onSelf: boolean = true): BuffProps {

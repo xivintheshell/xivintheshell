@@ -219,9 +219,9 @@ export class DRKState extends GameState {
 
 		// Esteem actions snapshot at execution time, not when the button was pressed, add Tincture modifier and note snapshot time for party buff handling.
 		// Importantly, Esteem is NOT affected by Darkside.
-		esteemPotency.modifiers.push(Modifiers.DrkPet);
+		esteemPotency.addModifiers(Modifiers.DrkPet);
 		if (this.hasResourceAvailable("TINCTURE")) {
-			esteemPotency.modifiers.push(Modifiers.Tincture);
+			esteemPotency.addModifiers(Modifiers.Tincture);
 		}
 		esteemPotency.snapshotTime = this.getDisplayTime();
 
@@ -705,7 +705,7 @@ makeDRKAbility("LIVING_SHADOW", 80, "cd_LIVING_SHADOW", {
 					description: "",
 					basePotency,
 					snapshotTime: undefined,
-					targetCount: node.targetCount,
+					targetList: node.targetList,
 					falloff,
 				}),
 				"ESTEEM_TRACKER",

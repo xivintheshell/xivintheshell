@@ -88,6 +88,7 @@ import { XIVMath } from "../Game/XIVMath";
 import { TANK_JOBS, MELEE_JOBS, RANGED_JOBS, ShellJob } from "../Game/Data/Jobs";
 import { ActionKey, ACTIONS, ResourceKey, RESOURCES } from "../Game/Data";
 import { getGameState } from "../Game/Jobs";
+import { getSkill } from "../Game/Skills";
 import { localizeSkillName } from "../Components/Localization";
 
 // Ensure role actions are imported after job-specific ones to protect hotbar ordering
@@ -147,13 +148,13 @@ class Controller {
 		action: string;
 		isGCD: number;
 		castTime: number;
-		targetCount?: number;
+		targetList?: number[];
 		isDamaging: boolean; // used to track if the skill is damaging for combat sim export
 	}[] = [];
 	#dotTickTimes: Map<ResourceKey | string, number[]> = new Map();
 	#hotTickTimes: Map<ResourceKey | string, number[]> = new Map();
-	#dotCoverageTimes: Map<ResourceKey, Array<OvertimeEffectCoverage>> = new Map();
-	#hotCoverageTimes: Map<ResourceKey, Array<OvertimeEffectCoverage>> = new Map();
+	#dotCoverageTimes: Map<ResourceKey, Map<number, Array<OvertimeEffectCoverage>>> = new Map();
+	#hotCoverageTimes: Map<ResourceKey, Map<number, Array<OvertimeEffectCoverage>>> = new Map();
 
 	savedHistoricalGame: GameState;
 	savedHistoricalRecord: Record;
@@ -606,25 +607,47 @@ class Controller {
 		return cnt;
 	}
 
-	getDotCoverageTimeFraction(untilDisplayTime: number, dot: ResourceKey): number {
-		return this.getOverTimeCoverageTimeFraction(untilDisplayTime, dot, this.#dotCoverageTimes);
+	getDotCoverageTimeFraction(
+		untilDisplayTime: number,
+		dot: ResourceKey,
+		targetNumber: number,
+	): number {
+		return this.getOverTimeCoverageTimeFraction(
+			untilDisplayTime,
+			dot,
+			this.#dotCoverageTimes,
+			targetNumber,
+		);
 	}
-	getHotCoverageTimeFraction(untilDisplayTime: number, dot: ResourceKey): number {
-		return this.getOverTimeCoverageTimeFraction(untilDisplayTime, dot, this.#hotCoverageTimes);
+	getHotCoverageTimeFraction(
+		untilDisplayTime: number,
+		dot: ResourceKey,
+		targetNumber: number,
+	): number {
+		return this.getOverTimeCoverageTimeFraction(
+			untilDisplayTime,
+			dot,
+			this.#hotCoverageTimes,
+			targetNumber,
+		);
 	}
 	private getOverTimeCoverageTimeFraction(
 		untilDisplayTime: number,
 		effect: ResourceKey,
-		coverageTimes: Map<ResourceKey, Array<OvertimeEffectCoverage>>,
+		coverageTimes: Map<ResourceKey, Map<number, Array<OvertimeEffectCoverage>>>,
+		targetNumber: number,
 	): number {
 		if (untilDisplayTime <= Debug.epsilon) return 0;
 		const effectCoverages = coverageTimes.get(effect);
 		if (!effectCoverages) {
 			return 0;
 		}
+		if (!effectCoverages.has(targetNumber)) {
+			effectCoverages.set(targetNumber, []);
+		}
 
 		let coveredTime = 0;
-		effectCoverages.forEach((section) => {
+		effectCoverages.get(targetNumber)!.forEach((section) => {
 			if (section.tStartDisplay <= untilDisplayTime) {
 				const startTime = Math.max(0, section.tStartDisplay);
 				let endTime =
@@ -702,7 +725,7 @@ class Controller {
 	}
 	resolveOverTimePotency(p: Potency, kind: PotencyKind) {
 		if (kind === "damage") {
-			this.resolveAnyPotency(p, ElemType.DamageMark, this.#damageLogCsv);
+			this.resolveAnyPotency(p, ElemType.DamageMark, this.#damageLogCsv, false);
 		} else {
 			this.resolveAnyPotency(p, ElemType.HealingMark, this.#healingLogCsv);
 		}
@@ -712,6 +735,7 @@ class Controller {
 		p: Potency,
 		elemType: ElemType.DamageMark | ElemType.HealingMark | ElemType.AggroMark,
 		csvLog: PotencyLogCsv[],
+		includeSplash: boolean = true,
 	) {
 		if (p === undefined) {
 			// This error case occurs when actions with DoT effects are improperly imported with
@@ -727,10 +751,7 @@ class Controller {
 			elemType = ElemType.AggroMark;
 		}
 
-		let pot = false;
-		p.modifiers.forEach((m) => {
-			if (m.source === PotencyModifierType.POT) pot = true;
-		});
+		const pot = p.getDisplayedModifiers().some((m) => m.source === PotencyModifierType.POT);
 
 		if (!this.#bInSandbox) {
 			let sourceDesc = "{skill}@" + p.sourceTime.toFixed(3);
@@ -767,7 +788,7 @@ class Controller {
 				potency: p.getAmount({
 					tincturePotencyMultiplier: 1,
 					includePartyBuffs: true,
-					includeSplash: true,
+					includeSplash: includeSplash,
 				}),
 				buffs: pot ? ["TINCTURE"] : [],
 			});
@@ -846,51 +867,76 @@ class Controller {
 		}
 	}
 
-	reportDotStart(displayTime: number, dot: ResourceKey) {
-		this.reportOverTimeStart(displayTime, dot, "damage");
+	reportDotStart(displayTime: number, dot: ResourceKey, targetList: number[]) {
+		this.reportOverTimeStart(displayTime, dot, "damage", targetList);
 	}
 	reportHotStart(displayTime: number, hot: ResourceKey) {
-		this.reportOverTimeStart(displayTime, hot, "healing");
+		// Treat HoTs as occurring on target 1 for simplicity.
+		this.reportOverTimeStart(displayTime, hot, "healing", [1]);
 	}
-	reportOverTimeStart(displayTime: number, effect: ResourceKey, kind: PotencyKind) {
+	reportOverTimeStart(
+		displayTime: number,
+		effect: ResourceKey,
+		kind: PotencyKind,
+		targetList: number[],
+	) {
+		// NOTE: a lot of HoT logic calls this method directly, but we don't currently set targetList
+		// for those effects, so this may be broken if we ever need to integrate HoT uptime reporting.
 		if (!this.#bInSandbox) {
 			const coverageTimes =
 				kind === "damage" ? this.#dotCoverageTimes : this.#hotCoverageTimes;
 			let effectCoverages = coverageTimes.get(effect);
 			if (!effectCoverages) {
-				effectCoverages = [];
+				effectCoverages = new Map();
 				coverageTimes.set(effect, effectCoverages);
 			}
-			const len = effectCoverages.length;
-			console.assert(len === 0 || effectCoverages[len - 1].tEndDisplay !== undefined);
-			effectCoverages.push({
-				tStartDisplay: displayTime,
-				tEndDisplay: undefined,
+			targetList.forEach((targetNumber) => {
+				let targetEffectCoverage = effectCoverages.get(targetNumber);
+				if (!targetEffectCoverage) {
+					targetEffectCoverage = [];
+					effectCoverages.set(targetNumber, targetEffectCoverage);
+				}
+				const len = targetEffectCoverage.length;
+				console.assert(
+					len === 0 || targetEffectCoverage[len - 1].tEndDisplay !== undefined,
+				);
+				targetEffectCoverage.push({
+					tStartDisplay: displayTime,
+					tEndDisplay: undefined,
+				});
 			});
 		}
 	}
 
-	reportDotDrop(displayTime: number, dot: ResourceKey) {
-		this.reportOverTimeDrop(displayTime, dot, "damage");
+	reportDotDrop(displayTime: number, dot: ResourceKey, targetList: number[]) {
+		this.reportOverTimeDrop(displayTime, dot, "damage", targetList);
 	}
 	reportHotDrop(displayTime: number, hot: ResourceKey) {
-		this.reportOverTimeDrop(displayTime, hot, "healing");
+		// Treat HoTs as occurring on target 1 for simplicity.
+		this.reportOverTimeDrop(displayTime, hot, "healing", [1]);
 	}
-	reportOverTimeDrop(displayTime: number, effect: ResourceKey, kind: PotencyKind) {
+	reportOverTimeDrop(
+		displayTime: number,
+		effect: ResourceKey,
+		kind: PotencyKind,
+		targetList: number[],
+	) {
 		if (!this.#bInSandbox) {
 			const coverageTimes =
 				kind === "damage" ? this.#dotCoverageTimes : this.#hotCoverageTimes;
-			const effectCoverages = coverageTimes.get(effect);
-			console.assert(
-				effectCoverages,
-				`Reported dropping ${effect} when no coverage was detected`,
-			);
-			if (!effectCoverages) {
-				return;
-			}
-			const len = effectCoverages.length;
-			console.assert(len > 0 && effectCoverages[len - 1].tEndDisplay === undefined);
-			effectCoverages[len - 1].tEndDisplay = displayTime;
+			targetList.forEach((targetNumber) => {
+				const effectCoverages = coverageTimes.get(effect)?.get(targetNumber);
+				console.assert(
+					effectCoverages,
+					`Reported dropping ${effect} on target ${targetNumber} when no coverage was detected`,
+				);
+				if (!effectCoverages) {
+					return;
+				}
+				const len = effectCoverages.length;
+				console.assert(len > 0 && effectCoverages[len - 1].tEndDisplay === undefined);
+				effectCoverages[len - 1].tEndDisplay = displayTime;
+			});
 		}
 	}
 
@@ -1087,7 +1133,7 @@ class Controller {
 
 	#useSkill(
 		skillName: ActionKey,
-		targetCount: number,
+		targetList: number[],
 		overrideTickMode: TickMode = this.tickMode,
 		maxReplayTime: number = -1,
 		addInvalidNodes: boolean = true,
@@ -1106,8 +1152,9 @@ class Controller {
 		}
 		skillName = getConditionalReplacement(skillName, this.game);
 		status = this.game.getSkillAvailabilityStatus(skillName);
+		targetList = this.filterTargetList(targetList, skillName);
 
-		const node = skillNode(skillName, targetCount);
+		const node = skillNode(skillName, targetList);
 		let actionIndex: number;
 
 		if (status.status.ready()) {
@@ -1187,7 +1234,7 @@ class Controller {
 				action: ACTIONS[skillName].name,
 				isGCD: isGCD ? 1 : 0,
 				castTime: status.instantCast ? 0 : status.castTime,
-				targetCount: node.targetCount,
+				targetList: node.targetList,
 				isDamaging: node.anyPotencies(),
 			});
 		}
@@ -1417,7 +1464,7 @@ class Controller {
 				}
 				const status = this.#useSkill(
 					skillName,
-					itr.info.targetCount,
+					itr.info.targetList,
 					TickMode.Manual,
 					maxReplayTime,
 				);
@@ -1454,7 +1501,11 @@ class Controller {
 				itr.info.type === ActionType.SetResourceEnabled &&
 				(currentReplayMode === ReplayMode.Exact || currentReplayMode === ReplayMode.Edited)
 			) {
-				const success = this.requestToggleBuff(itr.info.buffName as ResourceKey);
+				const success = this.requestToggleBuff(
+					itr.info.buffName as ResourceKey,
+					false,
+					itr.info.targetNumber,
+				);
 				const exact = currentReplayMode === ReplayMode.Exact;
 				if (success) {
 					this.#requestTick({
@@ -1474,8 +1525,8 @@ class Controller {
 					});
 				}
 			} else if (itr.info.type === ActionType.Unknown) {
-				const { skillName, targetCount } = itr.info;
-				const node = unknownSkillNode(skillName, targetCount);
+				const { skillName, targetList } = itr.info;
+				const node = unknownSkillNode(skillName, targetList);
 				this.record.addActionNode(node);
 				const reason = makeSkillReadyStatus();
 				reason.addUnavailableReason(SkillUnavailableReason.UnknownSkill);
@@ -1507,7 +1558,7 @@ class Controller {
 						action: skillName,
 						isGCD: 0,
 						castTime: 0,
-						targetCount: node.targetCount,
+						targetList: node.targetList,
 						isDamaging: false,
 					});
 				}
@@ -1721,7 +1772,7 @@ class Controller {
 				buffName,
 				buff.info.job,
 				getBuffModifiers(),
-				isDebuff ? "Boss0" : "",
+				isDebuff ? "Boss1" : "",
 			];
 		});
 		// sim currently doesn't track mp ticks or mp costs, or any other manner of validation
@@ -1740,14 +1791,9 @@ class Controller {
 			.filter((row) => !row.action.includes("Toggle buff"))
 			.map((row) => {
 				let targetCell = "";
-				if (row.isDamaging && row.targetCount !== undefined) {
+				if (row.isDamaging && row.targetList !== undefined) {
 					targetCell = '"';
-					for (let i = 0; i < row.targetCount; i++) {
-						if (i !== 0) {
-							targetCell += ", ";
-						}
-						targetCell += "Boss" + i.toString();
-					}
+					targetCell += row.targetList.map((n) => `Boss${n}`).join(", ");
 					targetCell += '"';
 				}
 				let conditional = "";
@@ -2012,8 +2058,22 @@ class Controller {
 		this.insertRecordNodes([node], insertIdx);
 	}
 
+	filterTargetList(targetList: number[], skillName: ActionKey): number[] {
+		// Until we get more intelligent targeting logic, non-damaging abilities
+		// that do not apply dots should not have a target selected.
+		const skill = getSkill(controller.game.job, skillName);
+		if (
+			skill?.potencyFn(controller.game) === 0 &&
+			!skill?.savesTargets &&
+			!controller.game.dotSkills.includes(skillName)
+		) {
+			return [];
+		}
+		return targetList;
+	}
+
 	requestUseSkill(
-		props: { skillName: ActionKey; targetCount: number },
+		props: { skillName: ActionKey; targetList: number[] },
 		canUndo: boolean = false,
 	) {
 		this.#bTakingUserInput = true;
@@ -2024,7 +2084,7 @@ class Controller {
 				// Append the skill to the timeline.
 				const status = this.#useSkill(
 					props.skillName,
-					props.targetCount,
+					props.targetList,
 					this.tickMode,
 					-1,
 					false,
@@ -2043,8 +2103,9 @@ class Controller {
 				// Insert the skill to the middle of the timeline by modifying the record.
 				const insertIdx = this.record.selectionStartIndex;
 				if (insertIdx !== undefined) {
+					const targetList = this.filterTargetList(props.targetList, props.skillName);
 					// TODO this needs validity checking
-					const node = skillNode(props.skillName, props.targetCount);
+					const node = skillNode(props.skillName, targetList);
 					this.insertRecordNode(node, insertIdx);
 					if (canUndo) {
 						this.undoStack.push(new AddNode(node, insertIdx));
@@ -2055,11 +2116,11 @@ class Controller {
 		this.#bTakingUserInput = false;
 	}
 
-	requestToggleBuff(buffName: ResourceKey, canUndo: boolean = false) {
-		const success = this.game.requestToggleBuff(buffName);
+	requestToggleBuff(buffName: ResourceKey, canUndo: boolean = false, targetNumber?: number) {
+		const success = this.game.requestToggleBuff(buffName, targetNumber);
 		if (!success) return false;
 
-		const toggleNode = setResourceNode(buffName);
+		const toggleNode = setResourceNode(buffName, targetNumber);
 		toggleNode.tmp_startLockTime = this.game.time;
 		toggleNode.tmp_endLockTime = toggleNode.tmp_startLockTime;
 		this.record.addActionNode(toggleNode);
