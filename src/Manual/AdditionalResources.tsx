@@ -33,23 +33,23 @@ import {
 export function AdditionalResourcesEn() {
 	return <>
 		<NavH2Section id="additional-resources" label="Additional Resources" />
-		<p>
+		<p className="no-indent">
 			<i>XIV in the Shell</i>: <a href={GITHUB_URL}>GitHub</a> - <a href={BLOG_URL}>Blog</a> -{" "}
 			<a href={BSKY_URL}>Bluesky</a> -{" "}
 			<a href={HELP_CHANNEL_URL}>Discord channel in The Balance</a> -{" "}
 			<a href={TISCHEL_PLUGIN_URL}>Tischel's BLM in the Shell Dalamud Plugin</a>
 		</p>
-		<p>
+		<p className="no-indent">
 			Game assets and information:{" "}
 			<a href={OFFICIAL_JOB_GUIDE_URL}>Official FFXIV PvE job guide</a> -{" "}
 			<a href={FFXIV_WIKI_URL}>FFXIV Community Wiki</a> - <a href={XIVAPI_URL}>XIVAPI</a> -{" "}
 			<a href={XIV_ID_URL}>XIV-ID</a>
 		</p>
-		<p>
+		<p className="no-indent">
 			Job gameplay: <a href={BALANCE_PAGE_URL}>The Balance</a> -{" "}
 			<a href={ICY_VEINS_URL}>Icy Veins</a> - <a href={FFLOGS_URL}>FFLogs</a>
 		</p>
-		<p>
+		<p className="no-indent">
 			Game formulas, mechanics, and other cursed knowledge:{" "}
 			<a href={ALLAGAN_STUDIES_URL}>Allagan Studies</a> -{" "}
 			<a href={BATTLE_SYSTEM_DISCUSSION_URL}>#battle_system_discussion in The Balance</a> -
@@ -59,7 +59,7 @@ export function AdditionalResourcesEn() {
 			<a href={FPS_TAX_CN_URL}>CN</a>][
 			<a href={FPS_TAX_EN_URL}>EN</a>]
 		</p>
-		<p>
+		<p className="no-indent">
 			Other FFXIV community tools: <a href={XIVANALYSIS_URL}>xivanalysis</a> -{" "}
 			<a href={XIVGEAR_URL}>XivGear</a> - <a href={XIVRAIDER_URL}>XIV Raider</a> and{" "}
 			<a href={AMA_SIM_URL}>Ama's Combat Sim</a>
@@ -70,21 +70,21 @@ export function AdditionalResourcesEn() {
 export function AdditionalResourcesZh() {
 	return <>
 		<NavH2Section id="additional-resources" label="附录" />
-		<p>
+		<p className="no-indent">
 			<i>XIV in the Shell</i>: <a href={GITHUB_URL}>GitHub</a> - <a href={BLOG_URL}>Blog</a> -{" "}
 			<a href={BSKY_URL}>Bluesky</a> - <a href={HELP_CHANNEL_URL}>Discord频道</a> -{" "}
 			<a href={TISCHEL_PLUGIN_URL}>Tischel的BLM in the Shell卫月插件</a>
 		</p>
-		<p>
+		<p className="no-indent">
 			相关游戏资源: <a href={CN_JOB_GUIDE_URL}>最终幻想XIV职业指南</a> -{" "}
 			<a href={CN_WIKI_URL}>最终幻想XIV灰机wiki</a> - <a href={XIVAPI_URL}>XIVAPI</a> -{" "}
 			<a href={XIV_ID_URL}>XIV-ID</a>
 		</p>
-		<p>
+		<p className="no-indent">
 			职业玩法: <a href={BALANCE_PAGE_URL}>The Balance</a> -{" "}
 			<a href={ICY_VEINS_URL}>Icy Veins</a> - <a href={FFLOGS_URL}>FFLogs</a>
 		</p>
-		<p>
+		<p className="no-indent">
 			计算公式，游戏机制和其他相关知识: <a href={ALLAGAN_STUDIES_URL}>Allagan Studies</a> -{" "}
 			<a href={CN_MATH_WIZARD_URL}>光之数学家 第三版</a> -{" "}
 			<a href={BATTLE_SYSTEM_DISCUSSION_URL}>The Balance的战斗系统讨论频道</a> -
@@ -94,7 +94,7 @@ export function AdditionalResourcesZh() {
 			<a href={FPS_TAX_CN_URL}>中文</a>][
 			<a href={FPS_TAX_EN_URL}>英文</a>]
 		</p>
-		<p>
+		<p className="no-indent">
 			其他社区工具: <a href={XIVANALYSIS_URL}>xivanalysis</a> -{" "}
 			<a href={CN_GEARING_URL}>最终幻想14配装器</a> - <a href={XIVRAIDER_URL}>XIV Raider</a>{" "}
 			和 <a href={AMA_SIM_URL}>Ama的战斗模拟器</a>

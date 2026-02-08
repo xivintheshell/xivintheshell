@@ -683,14 +683,16 @@ export function SkillsWindow() {
 					An <span style={{ color: colors.timeline.aggroMark }}>orange</span> star
 					indicates which enemy is the primary target, and a{" "}
 					<span style={{ color: colors.accent }}>purple</span> checkmark indicates which
-					enemies are also hit by the attack. Modifying the "# of targets" field will
-					automatically change these boxes, and vice versa.{" "}
+					enemies are additionally hit by the attack. Modifying the "# of targets" field
+					will automatically change these boxes, and vice versa.{" "}
 				</span>
+				<br />
+				<br />
 				<span>
 					Exactly one primary target must be selected at all times. Clicking an
 					un-selected enemy turns it into the primary target. When multiple enemies are
 					selected, clicking on the primary target will demote it to a secondary target,
-					and clicking on a secondary target will un-target it.{" "}
+					and clicking on a secondary target will de-target it.{" "}
 				</span>
 				<br />
 				<br />
@@ -703,6 +705,18 @@ export function SkillsWindow() {
 				<span>
 					{"下一个技能击中的目标数。会自动计算对主目标之外敌人的伤害衰减。" +
 						"如果在此设置的敌人数量超过技能的生效敌人数上限（例：给对单技能设置2或更多目标数），多余的目标会被忽略。"}
+				</span>
+				<br />
+				<br />
+				<span>
+					<span style={{ color: colors.timeline.aggroMark }}>橙色</span>星标表示主要目标，
+					<span style={{ color: colors.accent }}>紫色</span>
+					对勾表示该攻击额外击中的目标。修改“击中目标数”数值会自动更新勾选框，反之亦然。
+				</span>
+				<br />
+				<br />
+				<span>
+					系统必须始终保留且仅有一个主要目标。点击未选中的敌人将使其成为主要目标。当选中多个敌人时，点击主要目标会将其降级为次要目标，点击次要目标则会取消选中。
 				</span>
 				<br />
 				<br />

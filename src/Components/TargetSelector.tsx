@@ -41,7 +41,7 @@ function TargetRadio(props: {
 			style={{ cursor: "pointer" }}
 			type="radio"
 			onChange={() => {}}
-			checked={props.state === TargetState.PRIMARY}
+			checked={false}
 		/>
 		<span>{props.i === 0 ? localize({ en: "Boss 1", zh: "Boss 1" }) : props.i + 1}</span>
 	</div>;

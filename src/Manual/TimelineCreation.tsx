@@ -104,7 +104,21 @@ export function TimelineCreationEn() {
 		<p>
 			To configure the number of targets hit by an AoE ability, adjust the "# of targets hit"
 			field <b>(2)</b>. This will affect all subsequent AoE ability inputs, and is ignored for
-			abilities that can only hit a single target.
+			abilities that can only hit a single target. To configure the number of targets hit by
+			an AoE ability, adjust the "# of targets hit" field <b>(2)</b>, or manually select which
+			targets to hit through the selector checkboxes below. This will affect all subsequent
+			AoE ability inputs, and is ignored for abilities that can only hit a single target. An
+			orange ★ indicates which enemy is the primary target of the ability, and will receive
+			the most damage: if an ability is used that can only hit a single target, then this is
+			the enemy that will be hit. A purple ✔ indicates a secondary target that will be
+			additionally hit by splash damage. Modifying the checkboxes will automatically modify
+			the "targets hit" field, and vice versa.
+		</p>
+		<p>
+			When multiple targets are selected, clicking on the current primary target will demote
+			it to a secondary target, and clicking on a secondary target will de-target it. Clicking
+			on an unselected enemy will turn that enemy into the new primary target. Exactly one
+			enemy must be selected as the primary target at all times.
 		</p>
 		<p>
 			To wait a specified duration after the end of the current animation lock, use the "wait
@@ -273,20 +287,27 @@ export function TimelineCreationEn() {
 			table.
 		</p>
 		<p>
-			Clicking a row in the editor table <b>(2)</b> selects it. Shift + click allows selecting
+			The enemy selector checkboxes <b>(2)</b> modify which enemies are targeted by the
+			selected ability. This behaves the same as the enemy selector in the skill input area
+			(described in <a href="#adding-skills">"Adding Skills"</a>), except single-target
+			abilities will automatically target only a single enemy.
+		</p>
+
+		<p>
+			Clicking a row in the editor table <b>(3)</b> selects it. Shift + click allows selecting
 			a range of rows. Dragging and dropping the selected actions will reorder them.
 		</p>
 		<p>
-			The "move up" and "move down" buttons <b>(3)</b> move the selected actions up or down in
-			the timeline. The "delete selected" button <b>(4)</b> deletes selected actions. The
-			"move end of selection to start of selection" button <b>(5)</b> moves the last selected
+			The "move up" and "move down" buttons <b>(4)</b> move the selected actions up or down in
+			the timeline. The "delete selected" button <b>(5)</b> deletes selected actions. The
+			"move end of selection to start of selection" button <b>(6)</b> moves the last selected
 			skill ahead of the first selected skill.
 		</p>
 		<p>
-			"Copy" and "paste" <b>(6)</b> copy or paste selected actions to/from the clipboard.
+			"Copy" and "paste" <b>(7)</b> copy or paste selected actions to/from the clipboard.
 		</p>
 		<p>
-			The "undo" and "redo" buttons <b>(7)</b> undo or redo the last timeline manipulation
+			The "undo" and "redo" buttons <b>(8)</b> undo or redo the last timeline manipulation
 			action, including those done outside the timeline editor. Undo history is lost upon
 			reloading the page.
 		</p>
@@ -490,18 +511,18 @@ export function TimelineCreationZh() {
 			才会生效。若编辑时间轴将导致某技能无法满足施放条件，该行会变红，同时右侧信息区会提示第一条无效技能发生的时间。
 		</p>
 		<p>
-			单击行 <b>(2)</b> 以选中，{bi("Shift")}+单击首尾行以多选，拖拽行可调整顺序。
+			单击行 <b>(3)</b> 以选中，{bi("Shift")}+单击首尾行以多选，拖拽行可调整顺序。
 		</p>
 		<p>
-			"上移/下移"按钮 <b>(3)</b> 可微调顺序；“删除所选”按钮 <b>(4)</b>{" "}
-			可批量删除选中的行。“将选中的最后一个技能节点移到选区最前”按钮 <b>(5)</b>{" "}
+			"上移/下移"按钮 <b>(4)</b> 可微调顺序；“删除所选”按钮 <b>(5)</b>{" "}
+			可批量删除选中的行。“将选中的最后一个技能节点移到选区最前”按钮 <b>(6)</b>{" "}
 			可把选区最后的技能插入到选区最前。
 		</p>
 		<p>
-			"复制/粘贴" <b>(6)</b> 与系统剪贴板互通。
+			"复制/粘贴" <b>(7)</b> 与系统剪贴板互通。
 		</p>
 		<p>
-			"撤销/重做"按钮 <b>(7)</b>{" "}
+			"撤销/重做"按钮 <b>(8)</b>{" "}
 			对当前激活的时间轴生效（包括图形时间轴操作），刷新页面后历史操作将清空。
 		</p>
 	</>;
