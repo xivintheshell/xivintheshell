@@ -1,5 +1,16 @@
 [
 	{
+		"date": "2/7/26",
+		"changes": [
+			"Added the ability to choose specific targets for damaging skills. Please see the \"# of targets hit\" help item for details.",
+			"Abilities imported from FFLogs now correctly track the number of targets hit."
+		],
+		"changes_zh": [
+			"新增了为伤害技能选择特定目标的功能。详情请查看“击中目标数”处的帮助提示。",
+			"从 FFLogs 导入的技能现在可以正确记录击中目标数了。"
+		]
+	},
+	{
 		"date": "2/3/26",
 		"changes": [
 			"[DRG] Fixed a bug where Mirage Dive was not recognized by FFLogs imports."

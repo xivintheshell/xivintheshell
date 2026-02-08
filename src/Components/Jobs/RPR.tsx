@@ -18,7 +18,7 @@ import {
 
 export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
 	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
-		return [this.makeCommonTimer("DEATHS_DESIGN", false)];
+		return this.makeTargetedTimers("DEATHS_DESIGN");
 	}
 
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {

@@ -199,18 +199,17 @@ export class SMNState extends GameState {
 	}
 
 	snapSearingAndTincture(node: ActionNode, potency: Potency) {
-		const mods = potency.modifiers;
 		if (this.hasResourceAvailable("SEARING_LIGHT")) {
-			mods.push(Modifiers.SearingLight);
+			potency.addModifiers(Modifiers.SearingLight);
 		}
 		if (this.hasResourceAvailable("TINCTURE")) {
-			mods.push(Modifiers.Tincture);
+			potency.addModifiers(Modifiers.Tincture);
 			node.addBuff(BuffType.Tincture);
 		}
 	}
 
 	makePetPotency(
-		targetCount: number,
+		targetList: number[],
 		petSkill: SMNActionKey,
 		sourceTime: number,
 		basePotency: number,
@@ -224,11 +223,10 @@ export class SMNState extends GameState {
 			basePotency,
 			snapshotTime: this.getDisplayTime(),
 			description: "",
-			targetCount,
+			targetList,
 			falloff,
 		});
-		const mods = [Modifiers.SmnPet];
-		potency.modifiers = mods;
+		potency.addModifiers(Modifiers.SmnPet);
 		return potency;
 	}
 
@@ -260,7 +258,7 @@ export class SMNState extends GameState {
 		// assume a fixed delay between demi autos, which is close enough to reality
 		for (let i = 0; i < 4; i++) {
 			node.addDoTPotency(
-				this.makePetPotency(1, autoName, this.getDisplayTime(), basePotency),
+				this.makePetPotency(node.targetList, autoName, this.getDisplayTime(), basePotency),
 				"DEMI_AUTO",
 			);
 		}
@@ -280,7 +278,7 @@ export class SMNState extends GameState {
 		this.addEvent(
 			new Event(petSkill + " pet snapshot", summonDelay, () => {
 				const potency = this.makePetPotency(
-					node.targetCount,
+					node.targetList,
 					petSkill,
 					sourceTime,
 					basePotency,
@@ -384,6 +382,7 @@ const makeSpell_SMN = (
 		basePotency?: number | Array<[TraitKey, number]>;
 		drawsAggro?: boolean;
 		falloff?: number;
+		savesTargets?: boolean;
 		applicationDelay: number;
 		isPetAttack?: boolean;
 		validateAttempt?: StatePredicate<SMNState>;
@@ -429,6 +428,7 @@ const makeAbility_SMN = (
 		replaceIf?: ConditionalSkillReplace<SMNState>[];
 		highlightIf?: StatePredicate<SMNState>;
 		startOnHotbar?: boolean;
+		savesTargets?: boolean;
 		falloff?: number;
 		applicationDelay?: number;
 		cooldown: number;
@@ -1027,6 +1027,7 @@ makeSpell_SMN("SUMMON_IFRIT", 30, {
 	validateAttempt: ifritCondition,
 	onConfirm: ifritConfirm("SUMMON_IFRIT"),
 	falloff: SUMMON_FALLOFF,
+	savesTargets: true,
 });
 
 makeSpell_SMN("SUMMON_TITAN", 35, {
@@ -1039,6 +1040,7 @@ makeSpell_SMN("SUMMON_TITAN", 35, {
 	validateAttempt: titanCondition,
 	onConfirm: titanConfirm("SUMMON_TITAN"),
 	falloff: SUMMON_FALLOFF,
+	savesTargets: true,
 });
 
 makeSpell_SMN("SUMMON_GARUDA", 45, {
@@ -1051,6 +1053,7 @@ makeSpell_SMN("SUMMON_GARUDA", 45, {
 	validateAttempt: garudaCondition,
 	onConfirm: garudaConfirm("SUMMON_GARUDA"),
 	falloff: SUMMON_FALLOFF,
+	savesTargets: true,
 });
 
 makeSpell_SMN("SUMMON_IFRIT_II", 90, {
@@ -1066,6 +1069,7 @@ makeSpell_SMN("SUMMON_IFRIT_II", 90, {
 		ifritConfirm("SUMMON_IFRIT_II"),
 	),
 	falloff: SUMMON_FALLOFF,
+	savesTargets: true,
 });
 
 makeSpell_SMN("SUMMON_TITAN_II", 90, {
@@ -1079,6 +1083,7 @@ makeSpell_SMN("SUMMON_TITAN_II", 90, {
 	// titan's favor is gained upon executing rite/catastrophe
 	onConfirm: titanConfirm("SUMMON_TITAN_II"),
 	falloff: SUMMON_FALLOFF,
+	savesTargets: true,
 });
 
 makeSpell_SMN("SUMMON_GARUDA_II", 90, {
@@ -1094,6 +1099,7 @@ makeSpell_SMN("SUMMON_GARUDA_II", 90, {
 		garudaConfirm("SUMMON_GARUDA_II"),
 	),
 	falloff: SUMMON_FALLOFF,
+	savesTargets: true,
 });
 
 const ASTRAL_FLOW_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
@@ -1282,6 +1288,7 @@ const ENKINDLE_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 		validateAttempt: (state) => state.activeDemi === info.activeValue,
 		onConfirm: (state, node) => state.queueEnkindle(node, info.name as SMNActionKey),
 		startOnHotbar: i === 0,
+		savesTargets: true,
 		falloff: info.falloff,
 	}),
 );

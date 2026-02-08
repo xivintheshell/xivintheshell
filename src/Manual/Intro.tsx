@@ -33,7 +33,7 @@ export function IntroEn() {
 				<i>by Shanzhe Qi @ Seraph</i>
 			</div>
 			<Sep />
-			<div>last updated 19 January 2026</div>
+			<div>last updated 7 February 2026</div>
 		</div>
 		<p className="no-indent">
 			Welcome to <i>XIV in the Shell</i>, a rotation planner tool for <i>Final Fantasy XIV</i>

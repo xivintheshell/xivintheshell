@@ -517,8 +517,9 @@ makeWeaponskill_BRD("IRON_JAWS", 56, {
 		// GH#131: iron jaws checks whether the dots are active at cast confirm,
 		// not at application time
 		// the refreshed status is still applied at application
+		console.assert(node.targetList.length === 1, "Iron Jaws must have exactly 1 target");
 		const dotActive = dotAppliers.map((dotParams) =>
-			state.hasResourceAvailable(dotParams.dotName),
+			state.hasDebuffActive(dotParams.dotName, node.targetList[0]),
 		);
 		state.addEvent(
 			new Event("iron jaws dot refresh", 0.67, () => {

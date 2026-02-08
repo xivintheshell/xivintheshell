@@ -50,11 +50,11 @@ const AOE_BUFFS: SGEResourceKey[] = [
 ];
 export class SGEStatusPropsGenerator extends StatusPropsGenerator<SGEState> {
 	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
-		return [...DEBUFFS, ...OTHER_TARGET_BUFFS].map((key) => {
+		return [...DEBUFFS, ...OTHER_TARGET_BUFFS].flatMap((key) => {
 			if (key === "KARDION") {
-				return this.makeCommonTimerless(key, false);
+				return [this.makeCommonTimerless(key, false)];
 			}
-			return this.makeCommonTimer(key, false);
+			return this.makeTargetedTimers(key);
 		});
 	}
 

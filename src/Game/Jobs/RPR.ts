@@ -100,24 +100,32 @@ export class RPRState extends GameState {
 			node.addBuff(BuffType.ArcaneCircle);
 		}
 
-		if (this.hasResourceAvailable("DEATHS_DESIGN")) {
+		if (
+			node.targetList.some((targetNumber) =>
+				this.hasDebuffActive("DEATHS_DESIGN", targetNumber),
+			)
+		) {
 			node.addBuff(BuffType.DeathsDesign);
 		}
 	}
 
-	refreshDeathsDesign() {
-		const dd = this.resources.get("DEATHS_DESIGN");
+	refreshDeathsDesign(targetNumber: number) {
+		const dd = this.debuffs.get("DEATHS_DESIGN", targetNumber);
 
-		const newTime = Math.min(this.resources.timeTillReady("DEATHS_DESIGN") + 30, 60);
+		const newTime = Math.min(
+			this.debuffs.timeTillExpiry("DEATHS_DESIGN", targetNumber) + 30,
+			60,
+		);
 		if (dd.available(1)) {
 			dd.overrideTimer(this, newTime);
 			return;
 		}
 
 		dd.gain(1);
-		this.resources.addResourceEvent({
+		this.debuffs.addDebuffEvent({
 			rscType: "DEATHS_DESIGN",
-			name: "drop Death's Design",
+			name: "drop Death's Design on target " + targetNumber,
+			targetNumber,
 			delay: newTime,
 			fnOnRsc: (rsc) => {
 				rsc.consume(1);
@@ -412,16 +420,23 @@ const baseOnConfirm = (name: RPRActionKey): EffectFn<RPRState> => {
 
 const basePotencyModifiers = (state: Readonly<RPRState>): PotencyModifier[] => {
 	const mods: PotencyModifier[] = [];
-
 	if (state.hasResourceAvailable("ARCANE_CIRCLE")) {
 		mods.push(Modifiers.ArcaneCircle);
 	}
-
-	if (state.hasResourceAvailable("DEATHS_DESIGN")) {
-		mods.push(Modifiers.DeathsDesign);
-	}
-
 	return mods;
+};
+
+const targetPotencyModifiers = (
+	state: Readonly<RPRState>,
+	node: ActionNode,
+): Map<number, PotencyModifier[]> => {
+	const result = new Map();
+	node.targetList.forEach((targetNumber) => {
+		if (state.debuffs.get("DEATHS_DESIGN", targetNumber).available(1)) {
+			result.set(targetNumber, [Modifiers.DeathsDesign]);
+		}
+	});
+	return result;
 };
 
 const makeRPRSpell = (
@@ -462,6 +477,7 @@ const makeRPRSpell = (
 				(name === "SOULSOW" && state.isInCombat())
 			),
 		jobPotencyModifiers: basePotencyModifiers,
+		jobTargetPotencyModifiers: targetPotencyModifiers,
 	});
 };
 
@@ -536,6 +552,7 @@ const makeRPRWeaponskill = (
 
 			return mods;
 		},
+		jobTargetPotencyModifiers: targetPotencyModifiers,
 		validateAttempt,
 	});
 };
@@ -572,6 +589,7 @@ const makeRPRAbility = (
 		onConfirm,
 		validateAttempt,
 		jobPotencyModifiers: basePotencyModifiers,
+		jobTargetPotencyModifiers: targetPotencyModifiers,
 	});
 };
 
@@ -580,7 +598,7 @@ makeRPRWeaponskill("SHADOW_OF_DEATH", 10, {
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	applicationDelay: 1.15,
-	onConfirm: (state) => state.refreshDeathsDesign(),
+	onConfirm: (state, node) => state.refreshDeathsDesign(node.targetList[0]),
 });
 
 makeRPRWeaponskill("SLICE", 1, {
@@ -1119,7 +1137,8 @@ makeRPRWeaponskill("WHORL_OF_DEATH", 35, {
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	falloff: 0,
 	applicationDelay: 1.15,
-	onConfirm: (state) => state.refreshDeathsDesign(),
+	onConfirm: (state, node) =>
+		node.targetList.forEach((target) => state.refreshDeathsDesign(target)),
 });
 
 makeRPRWeaponskill("SPINNING_SCYTHE", 25, {

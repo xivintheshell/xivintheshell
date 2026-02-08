@@ -233,7 +233,7 @@ export const RPR_GAUGES = ensureRecord<ResourceData>()({
 });
 
 export const RPR_STATUSES = ensureRecord<ResourceData>()({
-	DEATHS_DESIGN: { name: "Death's Design", label: { zh: "死亡烙印" } }, // [0, 1]
+	DEATHS_DESIGN: { name: "Death's Design", label: { zh: "死亡烙印" }, specialDebuff: true }, // [0, 1]
 
 	SOUL_REAVER: { name: "Soul Reaver", label: { zh: "妖异之镰" }, maximumStacks: 2 }, // [0, 2], Gibbet/Gallows
 	ENHANCED_GIBBET: { name: "Enhanced Gibbet", label: { zh: "绞决效果提高" } }, // [0, 1]

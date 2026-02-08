@@ -117,6 +117,36 @@ export class AddNode extends TimelineInteraction {
 	}
 }
 
+export class EditNode extends TimelineInteraction {
+	oldNode: ActionNode;
+	newNode: ActionNode;
+	index: number;
+
+	constructor(newNode: ActionNode, index: number) {
+		super({
+			en: `edit action`,
+			zh: `修改技能`,
+		});
+		controller.record.selectSingle(index);
+		this.oldNode = controller.record.getFirstSelection()!;
+		console.assert(this.oldNode !== undefined);
+		this.newNode = newNode;
+		this.index = index;
+	}
+
+	override undo() {
+		controller.record.replaceNode(this.oldNode, this.index);
+		controller.autoSave();
+		updateInvalidStatus();
+	}
+
+	override redo() {
+		controller.record.replaceNode(this.newNode, this.index);
+		controller.autoSave();
+		updateInvalidStatus();
+	}
+}
+
 export class MoveNodes extends TimelineInteraction {
 	startIndex: number;
 	selectCount: number;

@@ -1,4 +1,4 @@
-import React, { useContext, useState, FormEvent, FormEventHandler } from "react";
+import React, { useContext, useEffect, useState, FormEvent } from "react";
 import { Tooltip } from "@base-ui-components/react/tooltip";
 import { Clickable, ContentNode, Help, parseTime, ValueChangeEvent } from "./Common";
 import { Debug, SkillReadyStatus, SkillUnavailableReason } from "../Game/Common";
@@ -6,7 +6,8 @@ import { controller } from "../Controller/Controller";
 import { MAX_ABILITY_TARGETS } from "../Controller/Common";
 import { localize, localizeSkillName, localizeSkillUnavailableReason } from "./Localization";
 import { updateTimelineView } from "./Timeline";
-import { getThemeColors, ColorThemeContext } from "./ColorTheme";
+import { getCurrentThemeColors, getThemeColors, ColorThemeContext } from "./ColorTheme";
+import { TargetSelector } from "./TargetSelector";
 import { getSkillAssetPath } from "../Game/Skills";
 import { ActionKey, ACTIONS } from "../Game/Data";
 
@@ -200,7 +201,7 @@ type SkillButtonProps = {
 	readyAsideFromCd: boolean;
 	cdProgress: number;
 	secondaryCdProgress?: number;
-	targetCount: number;
+	targetList: number[];
 };
 
 function SkillButton(props: SkillButtonProps) {
@@ -439,7 +440,7 @@ function SkillButton(props: SkillButtonProps) {
 				controller.requestUseSkill(
 					{
 						skillName: props.skillName,
-						targetCount: props.targetCount,
+						targetList: props.targetList,
 					},
 					true,
 				);
@@ -482,371 +483,424 @@ export type SkillButtonViewInfo = {
 };
 
 export let updateSkillButtons = (statusList: SkillButtonViewInfo[]) => {};
-export class SkillsWindow extends React.Component {
-	state: {
-		statusList: SkillButtonViewInfo[];
-		waitTime: string;
-		waitSince: WaitSince;
-		waitUntil: string;
-		targetCount: number;
+
+export function SkillsWindow() {
+	const [statusList, setStatusList] = useState<SkillButtonViewInfo[]>([]);
+	const [waitTime, setWaitTime] = useState<string>("1");
+	const [waitSince, setWaitSince] = useState<WaitSince>(WaitSince.Now);
+	const [waitUntil, setWaitUntil] = useState<string>("0:00");
+	// 16 0-indexed booleans representing which targets are selected.
+	const initialSelected = Array(MAX_ABILITY_TARGETS).fill(false);
+	initialSelected[0] = true;
+	const [targetSelected, setTargetSelected] = useState<boolean[]>(initialSelected);
+	// 0-indexed number representing the primary target of AoE abilities.
+	// targetSelected[primaryTarget] must be true.
+	const [primaryTarget, setPrimaryTarget] = useState<number>(0);
+
+	const getTargetList = () => {
+		// Only pick selected elements, and convert from 0-indexing to 1-indexing
+		// used by serialization and display.
+		const selected = targetSelected.flatMap((flag, i) =>
+			flag && i !== primaryTarget ? [i + 1] : [],
+		);
+		// Primary target always goes first.
+		selected.splice(0, 0, primaryTarget + 1);
+		return selected;
 	};
 
-	onWaitTimeChange: (e: ValueChangeEvent) => void;
-	onWaitTimeSubmit: FormEventHandler<HTMLFormElement>;
-	onWaitUntilChange: (e: ValueChangeEvent) => void;
-	onWaitUntilSubmit: FormEventHandler<HTMLFormElement>;
-	onWaitSinceChange: (e: ValueChangeEvent) => void;
-	onTargetCountChange: (e: ValueChangeEvent) => void;
-	onRemoveTrailingIdleTime: () => void;
-	onWaitTillNextMpOrLucidTick: () => void;
+	const colors = getCurrentThemeColors();
 
-	static contextType = ColorThemeContext;
+	useEffect(() => {
+		updateSkillButtons = (statusList: SkillButtonViewInfo[]) => setStatusList(statusList);
+	}, []);
 
-	constructor(props: {}) {
-		super(props);
-		updateSkillButtons = (statusList) => {
-			this.setState({
-				statusList: statusList,
-			});
-		};
+	const onWaitTimeChange = (e: ValueChangeEvent) => {
+		if (!e || !e.target) return;
+		setWaitTime(e.target.value);
+	};
 
-		this.onWaitTimeChange = (e: ValueChangeEvent) => {
-			if (!e || !e.target) return;
-			this.setState({ waitTime: e.target.value });
-		};
-
-		this.onWaitTimeSubmit = (e: FormEvent<HTMLFormElement>) => {
-			e.preventDefault();
-			const waitTime = parseFloat(this.state.waitTime);
-			if (!isNaN(waitTime)) {
-				if (this.state.waitSince === WaitSince.Now) {
-					controller.step(waitTime, true);
-				} else if (this.state.waitSince === WaitSince.LastSkill) {
-					const timeSinceLastSkill = controller.game.time - controller.lastSkillTime;
-					const stepTime = waitTime - timeSinceLastSkill;
-					if (stepTime <= 0) {
-						window.alert(
-							"Invalid input: trying to jump to " +
-								waitTime +
-								"s since the last action, but " +
-								timeSinceLastSkill +
-								"s has already elapsed.",
-						);
-					} else {
-						controller.step(stepTime, true);
-					}
+	const onWaitTimeSubmit = (e: FormEvent<HTMLFormElement>) => {
+		e.preventDefault();
+		const parsedWaitTime = parseFloat(waitTime);
+		if (!isNaN(parsedWaitTime)) {
+			if (waitSince === WaitSince.Now) {
+				controller.step(parsedWaitTime, true);
+			} else if (waitSince === WaitSince.LastSkill) {
+				const timeSinceLastSkill = controller.game.time - controller.lastSkillTime;
+				const stepTime = parsedWaitTime - timeSinceLastSkill;
+				if (stepTime <= 0) {
+					window.alert(
+						"Invalid input: trying to jump to " +
+							parsedWaitTime +
+							"s since the last action, but " +
+							timeSinceLastSkill +
+							"s has already elapsed.",
+					);
 				} else {
-					console.assert(false);
+					controller.step(stepTime, true);
 				}
+			} else {
+				console.assert(false);
 			}
-		};
-
-		this.onWaitUntilChange = (e: ValueChangeEvent) => {
-			if (!e || !e.target) return;
-			this.setState({ waitUntil: e.target.value });
-		};
-
-		this.onWaitUntilSubmit = (e: FormEvent<HTMLFormElement>) => {
-			e.preventDefault();
-			const targetTime = parseTime(this.state.waitUntil);
-			if (!isNaN(targetTime)) {
-				if (
-					targetTime >
-					(controller.displayingUpToDateGameState
-						? controller.game.getDisplayTime()
-						: controller.savedHistoricalGame.getDisplayTime())
-				) {
-					controller.stepUntil(targetTime, true);
-				} else {
-					window.alert("Can only jump to a time in the future!");
-				}
-			}
-		};
-
-		this.onWaitSinceChange = (e: ValueChangeEvent) => {
-			this.setState({ waitSince: e.target.value });
-		};
-
-		this.onTargetCountChange = (e: ValueChangeEvent) => {
-			this.setState({ targetCount: parseInt(e.target.value) });
-		};
-
-		this.onRemoveTrailingIdleTime = () => {
-			controller.removeTrailingIdleTime();
-		};
-
-		this.onWaitTillNextMpOrLucidTick = () => {
-			controller.waitTillNextMpOrLucidTick();
-		};
-
-		this.state = {
-			statusList: [],
-			waitTime: "1",
-			waitSince: WaitSince.Now,
-			waitUntil: "0:00",
-			targetCount: 1,
-		};
-	}
-
-	render() {
-		const skillButtons = [];
-		for (let i = 0; i < this.state.statusList.length; i++) {
-			const skillName = this.state.statusList[i].skillName;
-			const info = this.state.statusList[i];
-
-			const readyAsideFromCd = info
-				? !info.status.unavailableReasons.some(
-						(reason) => reason !== SkillUnavailableReason.Blocked,
-					)
-				: false;
-			const btn = <SkillButton
-				key={i}
-				highlight={info ? info.highlight : false}
-				skillName={skillName}
-				ready={info ? info.status.ready() : false}
-				readyAsideFromCd={readyAsideFromCd}
-				cdProgress={info ? 1 - info.timeTillNextStackReady / info.cdRecastTime : 1}
-				secondaryCdProgress={
-					info
-						? info.secondaryCdRecastTime && info.timeTillSecondaryReady
-							? 1 - info.timeTillSecondaryReady / info.secondaryCdRecastTime
-							: 1
-						: 1
-				}
-				targetCount={this.state.targetCount}
-			/>;
-			skillButtons.push(btn);
 		}
+	};
 
-		const waitUntilHelp = <Help
-			topic="waitUntilInputFormat"
-			content={
-				<div>
-					<div className="paragraph">
-						{localize({ en: "Examples:", zh: "时间格式举例：" })}
-					</div>
-					<div className="paragraph">
-						12 <br />
-						1.5 <br />
-						10:04.2 <br />
-						-0:03
-					</div>
-				</div>
+	const onWaitUntilChange = (e: ValueChangeEvent) => {
+		if (!e || !e.target) return;
+		setWaitUntil(e.target.value);
+	};
+
+	const onWaitUntilSubmit = (e: FormEvent<HTMLFormElement>) => {
+		e.preventDefault();
+		const targetTime = parseTime(waitUntil);
+		if (!isNaN(targetTime)) {
+			if (
+				targetTime >
+				(controller.displayingUpToDateGameState
+					? controller.game.getDisplayTime()
+					: controller.savedHistoricalGame.getDisplayTime())
+			) {
+				controller.stepUntil(targetTime, true);
+			} else {
+				window.alert("Can only jump to a time in the future!");
 			}
+		}
+	};
+
+	const onWaitSinceChange = (e: ValueChangeEvent) => setWaitSince(e.target.value as WaitSince);
+
+	const onRemoveTrailingIdleTime = () => controller.removeTrailingIdleTime();
+
+	const onWaitTillNextMpOrLucidTick = () => controller.waitTillNextMpOrLucidTick();
+
+	const onTargetCountChange = (e: ValueChangeEvent) => {
+		let currentTargetCount = targetSelected.reduce(
+			(total, flag) => (flag ? total + 1 : total),
+			0,
+		);
+		const newTargetCount = parseInt(e.target.value);
+		const newTargets = targetSelected.slice();
+		if (newTargetCount > 0 && newTargetCount < currentTargetCount) {
+			// If the target count decreased, then remove non-primary targets starting from the end
+			// of the array until we've reached the new target count.
+			for (let i = newTargets.length - 1; i >= 0; i--) {
+				if (i !== primaryTarget && newTargets[i]) {
+					newTargets[i] = false;
+					currentTargetCount--;
+				}
+				if (currentTargetCount === newTargetCount) {
+					break;
+				}
+			}
+			setTargetSelected(newTargets);
+		} else if (newTargetCount > currentTargetCount) {
+			// If it increased, then add non-primary targets starting from the start of the array.
+			for (let i = 0; i < newTargets.length; i++) {
+				if (!newTargets[i]) {
+					newTargets[i] = true;
+					currentTargetCount++;
+				}
+				if (newTargetCount === currentTargetCount) {
+					break;
+				}
+			}
+			setTargetSelected(newTargets);
+		}
+	};
+
+	const skillButtons = statusList.map((info, i) => {
+		const skillName = info.skillName;
+
+		const readyAsideFromCd = info
+			? !info.status.unavailableReasons.some(
+					(reason) => reason !== SkillUnavailableReason.Blocked,
+				)
+			: false;
+		return <SkillButton
+			key={i}
+			highlight={info ? info.highlight : false}
+			skillName={skillName}
+			ready={info ? info.status.ready() : false}
+			readyAsideFromCd={readyAsideFromCd}
+			cdProgress={info ? 1 - info.timeTillNextStackReady / info.cdRecastTime : 1}
+			secondaryCdProgress={
+				info
+					? info.secondaryCdRecastTime && info.timeTillSecondaryReady
+						? 1 - info.timeTillSecondaryReady / info.secondaryCdRecastTime
+						: 1
+					: 1
+			}
+			targetList={getTargetList()}
 		/>;
+	});
 
-		const textInputStyle = {
-			display: "inline-block",
-			flex: "auto",
-			//marginRight: 10,
-			//border: "1px solid red",
-		};
-
-		// @ts-expect-error we need to read untyped this.context in place of a context hook
-		const colors = getThemeColors(this.context);
-		const textInputFieldStyle = {
-			outline: "none",
-			border: "none",
-			borderBottom: "1px solid " + colors.text,
-			borderRadius: 0,
-			background: "transparent",
-			color: colors.text,
-		};
-
-		const targetCountHelp = <Help
-			topic="targetCount"
-			content={localize({
-				en: <>
-					<span>
-						The number of targets hit by the next ability. Damage fall-off is
-						automatically computed. If the number of targets set is more than the number
-						of enemies the ability can hit, then the additional targets are ignored.
-					</span>
-					<br />
-					<br />
-					<span>
-						Buff calculations for enemy debuffs like Dokumori and Chain Stratagem may be
-						inaccurate when multiple targets are selected.
-					</span>
-				</>,
-				zh: <div>
-					<span>
-						{"下一个技能击中的目标数。会自动计算对主目标之外敌人的伤害衰减。" +
-							"如果在此设置的敌人数量超过技能的生效敌人数上限（例：给对单技能设置2或更多目标数），多余的目标会被忽略。"}
-					</span>
-					<br />
-					<br />
-					<span>
-						注：介毒之术、连环计等作用于目标的团辅可能会使多目标技能威力计算出现误差。
-					</span>
-				</div>,
-			})}
-		/>;
-		return <div className={"skillsWindow"} id={"skillsWindowAnchor"}>
-			<div className={"skillIcons"}>
-				<style>{`
-					.info-tooltip {
-						color: ${colors.text};
-						background-color: ${colors.tipBackground};
-						opacity: 0.98;
-						max-width: 300px;
-						outline: 1px solid ${colors.bgHighContrast};
-						transition: none;
-						font-size: 100%;
-						z-index: 10;
-					}
-				`}</style>
-				{skillButtons}
-				<div style={{ margin: "10px 0" }}>
-					{localize({
-						en: "# of targets hit",
-						zh: "击中目标数",
-						// we don't want to change MAX_ABILITY_TARGETS to match each ability's properties
-						// to allow easy input of scenarios where a user swaps between single and multi-target
-						// abilities
-					})}{" "}
-					{targetCountHelp}:{" "}
-					<input
-						type={"number"}
-						min={1}
-						max={MAX_ABILITY_TARGETS}
-						style={{
-							width: 30,
-							...textInputFieldStyle,
-						}}
-						value={this.state.targetCount}
-						onChange={this.onTargetCountChange}
-					/>
-					<div style={{ display: "flex", flexDirection: "row", marginBottom: 6 }}>
-						{localize({
-							en: <form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
-								Wait until{" "}
-								<input
-									type={"text"}
-									style={{
-										...{ width: 40 },
-										...textInputFieldStyle,
-									}}
-									value={this.state.waitTime}
-									onChange={this.onWaitTimeChange}
-								/>{" "}
-								second(s) since{" "}
-								<select
-									style={{ display: "inline-block", outline: "none" }}
-									value={this.state.waitSince}
-									onChange={this.onWaitSinceChange}
-								>
-									<option value={WaitSince.Now}>now</option>
-									<option value={WaitSince.LastSkill}>last action</option>
-								</select>{" "}
-								<input type="submit" value="GO" />
-							</form>,
-							zh: <form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
-								快进至{" "}
-								<select
-									style={{ display: "inline-block", outline: "none" }}
-									value={this.state.waitSince}
-									onChange={this.onWaitSinceChange}
-								>
-									<option value={WaitSince.Now}>当前</option>
-									<option value={WaitSince.LastSkill}>上次操作</option>
-								</select>{" "}
-								后的{" "}
-								<input
-									type={"text"}
-									style={{
-										...{ width: 30 },
-										...textInputFieldStyle,
-									}}
-									value={this.state.waitTime}
-									onChange={this.onWaitTimeChange}
-								/>{" "}
-								秒 <input type="submit" value="GO" />
-							</form>,
-							ja: <form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
-								<select
-									style={{
-										display: "inline-block",
-										outline: "none",
-										marginRight: "4px",
-									}}
-									value={this.state.waitSince}
-									onChange={this.onWaitSinceChange}
-								>
-									<option value={WaitSince.Now}>現在のカーソルの位置</option>
-									<option value={WaitSince.LastSkill}>最後のアクション</option>
-								</select>
-								から
-								<input
-									type={"text"}
-									style={{
-										...{ width: 30 },
-										...textInputFieldStyle,
-									}}
-									value={this.state.waitTime}
-									onChange={this.onWaitTimeChange}
-								/>
-								秒進む
-								<input type="submit" value="GO" />
-							</form>,
-						})}
-						{localize({
-							en: <form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
-								Wait until {waitUntilHelp}{" "}
-								<input
-									type={"text"}
-									style={{
-										...{ width: 60 },
-										...textInputFieldStyle,
-									}}
-									value={this.state.waitUntil}
-									onChange={this.onWaitUntilChange}
-								/>
-								<input type="submit" value="GO" />
-							</form>,
-							zh: <form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
-								快进至指定时间 {waitUntilHelp}{" "}
-								<input
-									type={"text"}
-									style={{
-										...{ width: 60 },
-										...textInputFieldStyle,
-									}}
-									value={this.state.waitUntil}
-									onChange={this.onWaitUntilChange}
-								/>
-								<input type="submit" value="GO" />
-							</form>,
-							ja: <form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
-								指定した時間まで進む {waitUntilHelp}{" "}
-								<input
-									type={"text"}
-									style={{
-										...{ width: 60 },
-										...textInputFieldStyle,
-									}}
-									value={this.state.waitUntil}
-									onChange={this.onWaitUntilChange}
-								/>
-								<input type="submit" value="GO" />
-							</form>,
-						})}
-					</div>
-					<button onClick={this.onWaitTillNextMpOrLucidTick}>
-						{localize({
-							en: "Wait until MP tick / lucid tick",
-							zh: "快进至跳蓝/跳醒梦",
-						})}
-					</button>
-					<span> </span>
-					<button onClick={this.onRemoveTrailingIdleTime}>
-						{localize({
-							en: "Remove trailing idle time",
-							zh: "去除时间轴末尾的发呆时间",
-						})}
-					</button>
+	const waitUntilHelp = <Help
+		topic="waitUntilInputFormat"
+		content={
+			<div>
+				<div className="paragraph">
+					{localize({ en: "Examples:", zh: "时间格式举例：" })}
+				</div>
+				<div className="paragraph">
+					12 <br />
+					1.5 <br />
+					10:04.2 <br />
+					-0:03
 				</div>
 			</div>
-		</div>;
-	}
+		}
+	/>;
+
+	const textInputStyle = {
+		display: "inline-block",
+		flex: "auto",
+		//marginRight: 10,
+		//border: "1px solid red",
+	};
+
+	const textInputFieldStyle = {
+		outline: "none",
+		border: "none",
+		borderBottom: "1px solid " + colors.text,
+		borderRadius: 0,
+		background: "transparent",
+		color: colors.text,
+	};
+
+	// TODO:TARGET localize
+	const targetCountHelp = <Help
+		topic="targetCount"
+		content={localize({
+			en: <>
+				<span>
+					The number of targets hit by the next ability. Damage fall-off is automatically
+					computed. If the number of targets set is more than the number of enemies the
+					ability can hit, then the additional targets are ignored.
+				</span>
+				<br />
+				<br />
+				<span>
+					An <span style={{ color: colors.timeline.aggroMark }}>orange</span> star
+					indicates which enemy is the primary target, and a{" "}
+					<span style={{ color: colors.accent }}>purple</span> checkmark indicates which
+					enemies are additionally hit by the attack. Modifying the "# of targets" field
+					will automatically change these boxes, and vice versa.{" "}
+				</span>
+				<br />
+				<br />
+				<span>
+					Exactly one primary target must be selected at all times. Clicking an
+					un-selected enemy turns it into the primary target. When multiple enemies are
+					selected, clicking on the primary target will demote it to a secondary target,
+					and clicking on a secondary target will de-target it.{" "}
+				</span>
+				<br />
+				<br />
+				<span>
+					Damage calculations with party buff markers for enemy debuffs like Dokumori and
+					Chain Stratagem may be inaccurate when multiple targets are selected.
+				</span>
+			</>,
+			zh: <div>
+				<span>
+					{"下一个技能击中的目标数。会自动计算对主目标之外敌人的伤害衰减。" +
+						"如果在此设置的敌人数量超过技能的生效敌人数上限（例：给对单技能设置2或更多目标数），多余的目标会被忽略。"}
+				</span>
+				<br />
+				<br />
+				<span>
+					<span style={{ color: colors.timeline.aggroMark }}>橙色</span>星标表示主要目标，
+					<span style={{ color: colors.accent }}>紫色</span>
+					对勾表示该攻击额外击中的目标。修改“击中目标数”数值会自动更新勾选框，反之亦然。
+				</span>
+				<br />
+				<br />
+				<span>
+					系统必须始终保留且仅有一个主要目标。点击未选中的敌人将使其成为主要目标。当选中多个敌人时，点击主要目标会将其降级为次要目标，点击次要目标则会取消选中。
+				</span>
+				<br />
+				<br />
+				<span>
+					注：介毒之术、连环计等作用于目标的团辅可能会使多目标技能威力计算出现误差。
+				</span>
+			</div>,
+		})}
+	/>;
+	return <div className={"skillsWindow"} id={"skillsWindowAnchor"}>
+		<div className={"skillIcons"}>
+			<style>{`
+				.info-tooltip {
+					color: ${colors.text};
+					background-color: ${colors.tipBackground};
+					opacity: 0.98;
+					max-width: 300px;
+					outline: 1px solid ${colors.bgHighContrast};
+					transition: none;
+					font-size: 100%;
+					z-index: 10;
+				}
+			`}</style>
+			{skillButtons}
+			<div style={{ margin: "10px 0" }}>
+				{localize({
+					en: "# of targets hit",
+					zh: "击中目标数",
+					// we don't want to change MAX_ABILITY_TARGETS to match each ability's properties
+					// to allow easy input of scenarios where a user swaps between single and multi-target
+					// abilities
+				})}{" "}
+				{targetCountHelp}:{" "}
+				<input
+					type={"number"}
+					min={1}
+					max={MAX_ABILITY_TARGETS}
+					style={{
+						width: 30,
+						...textInputFieldStyle,
+					}}
+					value={targetSelected.filter((flag) => flag).length}
+					onChange={onTargetCountChange}
+				/>
+				<TargetSelector
+					style={{
+						width: "75%",
+						marginBlock: "5px",
+					}}
+					selected={targetSelected}
+					primary={primaryTarget}
+					primaryOnly={false}
+					onSelectedChange={setTargetSelected}
+					onPrimaryChange={setPrimaryTarget}
+				/>
+				<div style={{ display: "flex", flexDirection: "row", marginBottom: 6 }}>
+					{localize({
+						en: <form onSubmit={onWaitTimeSubmit} style={textInputStyle}>
+							Wait until{" "}
+							<input
+								type={"text"}
+								style={{
+									...{ width: 40 },
+									...textInputFieldStyle,
+								}}
+								value={waitTime}
+								onChange={onWaitTimeChange}
+							/>{" "}
+							second(s) since{" "}
+							<select
+								style={{ display: "inline-block", outline: "none" }}
+								value={waitSince}
+								onChange={onWaitSinceChange}
+							>
+								<option value={WaitSince.Now}>now</option>
+								<option value={WaitSince.LastSkill}>last action</option>
+							</select>{" "}
+							<input type="submit" value="GO" />
+						</form>,
+						zh: <form onSubmit={onWaitTimeSubmit} style={textInputStyle}>
+							快进至{" "}
+							<select
+								style={{ display: "inline-block", outline: "none" }}
+								value={waitSince}
+								onChange={onWaitSinceChange}
+							>
+								<option value={WaitSince.Now}>当前</option>
+								<option value={WaitSince.LastSkill}>上次操作</option>
+							</select>{" "}
+							后的{" "}
+							<input
+								type={"text"}
+								style={{
+									...{ width: 30 },
+									...textInputFieldStyle,
+								}}
+								value={waitTime}
+								onChange={onWaitTimeChange}
+							/>{" "}
+							秒 <input type="submit" value="GO" />
+						</form>,
+						ja: <form onSubmit={onWaitTimeSubmit} style={textInputStyle}>
+							<select
+								style={{
+									display: "inline-block",
+									outline: "none",
+									marginRight: "4px",
+								}}
+								value={waitSince}
+								onChange={onWaitSinceChange}
+							>
+								<option value={WaitSince.Now}>現在のカーソルの位置</option>
+								<option value={WaitSince.LastSkill}>最後のアクション</option>
+							</select>
+							から
+							<input
+								type={"text"}
+								style={{
+									...{ width: 30 },
+									...textInputFieldStyle,
+								}}
+								value={waitTime}
+								onChange={onWaitTimeChange}
+							/>
+							秒進む
+							<input type="submit" value="GO" />
+						</form>,
+					})}
+					{localize({
+						en: <form onSubmit={onWaitUntilSubmit} style={textInputStyle}>
+							Wait until {waitUntilHelp}{" "}
+							<input
+								type={"text"}
+								style={{
+									...{ width: 60 },
+									...textInputFieldStyle,
+								}}
+								value={waitUntil}
+								onChange={onWaitUntilChange}
+							/>
+							<input type="submit" value="GO" />
+						</form>,
+						zh: <form onSubmit={onWaitUntilSubmit} style={textInputStyle}>
+							快进至指定时间 {waitUntilHelp}{" "}
+							<input
+								type={"text"}
+								style={{
+									...{ width: 60 },
+									...textInputFieldStyle,
+								}}
+								value={waitUntil}
+								onChange={onWaitUntilChange}
+							/>
+							<input type="submit" value="GO" />
+						</form>,
+						ja: <form onSubmit={onWaitUntilSubmit} style={textInputStyle}>
+							指定した時間まで進む {waitUntilHelp}{" "}
+							<input
+								type={"text"}
+								style={{
+									...{ width: 60 },
+									...textInputFieldStyle,
+								}}
+								value={waitUntil}
+								onChange={onWaitUntilChange}
+							/>
+							<input type="submit" value="GO" />
+						</form>,
+					})}
+				</div>
+				<button onClick={onWaitTillNextMpOrLucidTick}>
+					{localize({
+						en: "Wait until MP tick / lucid tick",
+						zh: "快进至跳蓝/跳醒梦",
+					})}
+				</button>
+				<span> </span>
+				<button onClick={onRemoveTrailingIdleTime}>
+					{localize({
+						en: "Remove trailing idle time",
+						zh: "去除时间轴末尾的发呆时间",
+					})}
+				</button>
+			</div>
+		</div>
+	</div>;
 }

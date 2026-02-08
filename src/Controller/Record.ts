@@ -38,7 +38,9 @@ export const enum ActionType {
 interface SerializedSkill {
 	type: ActionType.Skill;
 	skillName: string; // uses the VALUE of the skill name, not the ActionKey
-	targetCount: number;
+	// Legacy field: targetCount used to be present instead of targetList.
+	targetCount?: number;
+	targetList?: number[];
 	healTargetCount: number | undefined;
 }
 
@@ -59,6 +61,7 @@ interface SerializedMPWait {
 interface SerializedSetResource {
 	type: ActionType.SetResourceEnabled;
 	buffName: string; // uses the ResourceKey
+	targetNumber?: number; // set only for debuff toggles
 }
 
 export type SerializedAction =
@@ -75,20 +78,21 @@ export type SerializedAction =
 export interface SkillNodeInfo {
 	type: ActionType.Skill;
 	skillName: ActionKey;
-	targetCount: number;
+	targetList: number[];
 	healTargetCount: number | undefined;
 }
 
 interface UnknownSkillInfo {
 	type: ActionType.Unknown;
 	skillName: string;
-	targetCount: number;
+	targetList: number[];
 	healTargetCount: number | undefined;
 }
 
 interface SetResourceNodeInfo {
 	type: ActionType.SetResourceEnabled;
 	buffName: ResourceKey;
+	targetNumber?: number;
 }
 
 export type NodeInfo =
@@ -100,20 +104,20 @@ export type NodeInfo =
 	| UnknownSkillInfo
 	| { type: ActionType.Invalid };
 
-export function skillNode(skillName: ActionKey, targetCount?: number): ActionNode {
+export function skillNode(skillName: ActionKey, targetList?: number[]): ActionNode {
 	return new ActionNode({
 		type: ActionType.Skill,
 		skillName,
-		targetCount: targetCount ?? 1,
+		targetList: targetList ?? [1],
 		healTargetCount: undefined,
 	});
 }
 
-export function unknownSkillNode(skillName: string, targetCount?: number): ActionNode {
+export function unknownSkillNode(skillName: string, targetList?: number[]): ActionNode {
 	return new ActionNode({
 		type: ActionType.Unknown,
 		skillName,
-		targetCount: targetCount ?? 1,
+		targetList: targetList ?? [1],
 		healTargetCount: undefined,
 	});
 }
@@ -138,10 +142,11 @@ export function waitForMPNode(): ActionNode {
 	});
 }
 
-export function setResourceNode(buffName: ResourceKey): ActionNode {
+export function setResourceNode(buffName: ResourceKey, targetNumber?: number): ActionNode {
 	return new ActionNode({
 		type: ActionType.SetResourceEnabled,
 		buffName,
+		targetNumber,
 	});
 }
 
@@ -162,10 +167,13 @@ export class ActionNode {
 	#hotPotencies: Map<ResourceKey, Potency[]>;
 	// TODO split into different properties for dots/hots?
 	applicationTime?: number;
-	#dotOverrideAmount: Map<ResourceKey, number>;
-	#dotTimeGap: Map<ResourceKey, number>;
-	#hotOverrideAmount: Map<ResourceKey, number>;
-	#hotTimeGap: Map<ResourceKey, number>;
+	// maps of DoT/HoT name -> target number -> # of seconds
+	// effects that don't support target selection use 1 as the default placeholder,
+	// but we keep these consistent for code reuse
+	#dotOverrideAmount: Map<ResourceKey, Map<number, number>>;
+	#dotTimeGap: Map<ResourceKey, Map<number, number>>;
+	#hotOverrideAmount: Map<ResourceKey, Map<number, number>>;
+	#hotTimeGap: Map<ResourceKey, Map<number, number>>;
 	info: NodeInfo;
 	// Older versions of xivintheshell attached waitDuration fields to every action
 	// this field is only populated during deserialization.
@@ -198,19 +206,20 @@ export class ActionNode {
 			return {
 				type: ActionType.Skill,
 				skillName: ACTIONS[this.info.skillName].name,
-				targetCount: this.info.targetCount,
+				targetList: this.info.targetList,
 				healTargetCount: this.info.healTargetCount,
 			};
 		} else if (this.info.type === ActionType.SetResourceEnabled) {
 			return {
 				type: ActionType.SetResourceEnabled,
 				buffName: this.info.buffName.toString(),
+				targetNumber: this.info.targetNumber,
 			};
 		} else if (this.info.type === ActionType.Unknown) {
 			return {
 				type: ActionType.Skill,
 				skillName: this.info.skillName,
-				targetCount: this.info.targetCount,
+				targetList: this.info.targetList,
 				healTargetCount: this.info.healTargetCount,
 			};
 		} else {
@@ -244,8 +253,16 @@ export class ActionNode {
 		return this.info.type === ActionType.Skill ? this.info.skillName : undefined;
 	}
 
-	get targetCount(): number {
-		return this.info.type === ActionType.Skill ? this.info.targetCount : 0;
+	get targetList(): number[] {
+		return this.info.type === ActionType.Skill ? this.info.targetList.slice() : [];
+	}
+
+	set targetList(l: number[]) {
+		if (this.info.type === ActionType.Skill) {
+			// We deliberately avoid a copy here because the owner of `l` modifying it after setting
+			// this node field is a reasonable JS pattern.
+			this.info.targetList = l;
+		}
 	}
 
 	get healTargetCount(): number {
@@ -280,9 +297,9 @@ export class ActionNode {
 		return snapshotTime ? [...controller.game.getPartyBuffs(snapshotTime).keys()] : [];
 	}
 
-	setTargetCount(count: number) {
+	forceOneTarget() {
 		if (this.info.type === ActionType.Skill) {
-			this.info.targetCount = count;
+			this.info.targetList = [this.info.targetList.length > 0 ? this.info.targetList[0] : 1];
 		}
 	}
 
@@ -318,6 +335,7 @@ export class ActionNode {
 		includePartyBuffs: boolean;
 		includeSplash: boolean;
 		excludeDoT?: boolean;
+		targetNumber?: number;
 	}): { applied: number; snapshottedButPending: number } {
 		const res = {
 			applied: 0,
@@ -371,10 +389,14 @@ export class ActionNode {
 			includePartyBuffs: boolean;
 			includeSplash: boolean;
 			excludeDoT?: boolean;
+			targetNumber?: number;
 		},
 		potency: Potency,
 		record: { applied: number; snapshottedButPending: number },
 	) {
+		if (props.targetNumber !== undefined && !potency.hasTarget(props.targetNumber)) {
+			return;
+		}
 		if (potency.hasHitBoss(props.untargetable)) {
 			record.applied += potency.getAmount(props);
 		} else if (!potency.hasResolved() && potency.hasSnapshotted()) {
@@ -382,14 +404,26 @@ export class ActionNode {
 		}
 	}
 
-	removeUnresolvedOvertimePotencies(kind: PotencyKind) {
+	removeUnresolvedOvertimePotencies(kind: PotencyKind, targetNumber?: number) {
 		const potencyMap = kind === "damage" ? this.#dotPotencies : this.#hotPotencies;
 		potencyMap.forEach((pArr) => {
-			const unresolvedIndex = pArr.findIndex((p) => !p.hasResolved());
-			if (unresolvedIndex < 0) {
-				return;
+			for (let i = 0; i < pArr.length; i++) {
+				const p = pArr[i];
+				// If the potency has not yet resolved, this means it was a future DoT tick
+				// that potentially should be overwritten.
+				// However, if the previous potency corresponds to an AoE DoT, we must ensure
+				// all targets no longer have the debuff active before we can remove the potency.
+				if (!p.hasResolved()) {
+					if (targetNumber !== undefined) {
+						p.tryRemoveTarget(targetNumber);
+					}
+					// If targetNumber was unspecified, then forcibly remove all remaining ticks.
+					if (targetNumber === undefined || p.targetList.length === 0) {
+						pArr.splice(i);
+						break;
+					}
+				}
 			}
-			pArr.splice(unresolvedIndex);
 		});
 	}
 
@@ -467,48 +501,91 @@ export class ActionNode {
 		pArr.push(p);
 	}
 
-	setOverTimeGap(effectName: ResourceKey, amount: number, kind: PotencyKind) {
+	setOverTimeGap(
+		effectName: ResourceKey,
+		amount: number,
+		kind: PotencyKind,
+		targetNumber?: number,
+	) {
 		this.setOverTimeMappedAmount(
 			effectName,
 			amount,
+			kind,
 			kind === "damage" ? this.#dotTimeGap : this.#hotTimeGap,
+			targetNumber,
 		);
 	}
 
-	getOverTimeGap(effectName: ResourceKey, kind: PotencyKind): number {
+	getOverTimeGap(effectName: ResourceKey, kind: PotencyKind, targetNumber?: number): number {
 		return this.getOverTimeMappedAmount(
 			effectName,
+			kind,
 			kind === "damage" ? this.#dotTimeGap : this.#hotTimeGap,
+			targetNumber,
 		);
 	}
 
-	setOverTimeOverrideAmount(effectName: ResourceKey, amount: number, kind: PotencyKind) {
+	setOverTimeOverrideAmount(
+		effectName: ResourceKey,
+		amount: number,
+		kind: PotencyKind,
+		targetNumber?: number,
+	) {
 		this.setOverTimeMappedAmount(
 			effectName,
 			amount,
+			kind,
 			kind === "damage" ? this.#dotOverrideAmount : this.#hotOverrideAmount,
+			targetNumber,
 		);
 	}
 
-	getOverTimeOverrideAmount(effectName: ResourceKey, kind: PotencyKind): number {
+	getOverTimeOverrideAmount(
+		effectName: ResourceKey,
+		kind: PotencyKind,
+		targetNumber?: number,
+	): number {
 		return this.getOverTimeMappedAmount(
 			effectName,
+			kind,
 			kind === "damage" ? this.#dotOverrideAmount : this.#hotOverrideAmount,
+			targetNumber,
 		);
 	}
 
 	private setOverTimeMappedAmount(
 		effectName: ResourceKey,
 		amount: number,
-		map: Map<ResourceKey, number>,
+		kind: PotencyKind,
+		map: Map<ResourceKey, Map<number, number>>,
+		targetNumber?: number,
 	) {
-		map.set(effectName, amount);
+		if (!map.has(effectName)) {
+			map.set(effectName, new Map());
+		}
+		if (targetNumber !== undefined) {
+			map.get(effectName)!.set(targetNumber, amount);
+		} else {
+			const targets = this.getOverTimePotencies(effectName, kind)[0].targetList;
+			targets?.forEach((target) => map.get(effectName)!.set(target, amount));
+		}
 	}
 	private getOverTimeMappedAmount(
 		effectName: ResourceKey,
-		map: Map<ResourceKey, number>,
+		kind: PotencyKind,
+		map: Map<ResourceKey, Map<number, number>>,
+		targetNumber?: number,
 	): number {
-		return map.get(effectName) ?? 0;
+		if (!map.has(effectName)) {
+			map.set(effectName, new Map());
+		}
+		if (targetNumber !== undefined) {
+			return map.get(effectName)!.get(targetNumber) ?? 0;
+		} else {
+			// Just return whatever the first potency is. I'm too lazy to add proper bounds checks.
+			const target = this.getOverTimePotencies(effectName, kind)[0].targetList[0] ?? 1;
+			return map.get(effectName)!.get(target) ?? 0;
+		}
 	}
 }
 
@@ -573,7 +650,6 @@ export class Line {
 
 	static deserialize(serialized: SerializedLine): Line {
 		const actions = serialized.map((serializedAction) => {
-			// TODO handle additional wait types
 			// TODO ensure objects are well-formed and insert invalid nodes if not
 			if (serializedAction.type === ActionType.Skill) {
 				const skillName = getNormalizedSkillName(serializedAction.skillName);
@@ -581,18 +657,24 @@ export class Line {
 					"waitDuration" in serializedAction
 						? serializedAction["waitDuration"]
 						: undefined;
+				const targetList =
+					serializedAction.targetCount !== undefined
+						? Array(serializedAction.targetCount)
+								.fill(0)
+								.map((_, i) => i + 1)
+						: (serializedAction.targetList ?? [1]);
 				return new ActionNode(
 					skillName !== undefined
 						? {
 								type: ActionType.Skill,
 								skillName,
-								targetCount: serializedAction.targetCount,
+								targetList,
 								healTargetCount: serializedAction.healTargetCount,
 							}
 						: {
 								type: ActionType.Unknown,
 								skillName: serializedAction.skillName,
-								targetCount: serializedAction.targetCount,
+								targetList,
 								healTargetCount: serializedAction.healTargetCount,
 							},
 					// @ts-expect-error used for parsing legacy format
@@ -607,6 +689,8 @@ export class Line {
 					{
 						type: ActionType.SetResourceEnabled,
 						buffName: getResourceKeyFromBuffName(serializedAction.buffName)!,
+						// Newer versions require a targetNumber for toggling DoT effects
+						targetNumber: serializedAction.targetNumber ?? 1,
 					},
 					// @ts-expect-error used for parsing legacy format
 					legacyWaitDuration,
@@ -802,6 +886,16 @@ export class Record extends Line {
 		this.unselectAll();
 		return originalStartIndex;
 	}
+
+	// Replace the node at `index` with the provided argument.
+	replaceNode(newNode: ActionNode, index: number) {
+		if (index >= 0 && index < this.actions.length) {
+			this.actions[index] = newNode;
+		} else {
+			console.error("invalid index for replaceNode", index);
+		}
+	}
+
 	serialized(): SerializedRecord {
 		console.assert(this.config);
 		const base = super.serialized();

@@ -18,7 +18,7 @@ import { SAM_STATUSES } from "../../Game/Data/Jobs/SAM";
 
 export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
-		return [this.makeCommonTimer("HIGANBANA_DOT", false)];
+		return this.makeTargetedTimers("HIGANBANA_DOT");
 	}
 
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {

@@ -29,7 +29,7 @@ const BLM_BUFFS: BLMResourceKey[] = (Object.keys(BLM_STATUSES) as BLMResourceKey
 
 export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
 	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
-		return [...BLM_DEBUFFS.map((rscType) => this.makeCommonTimer(rscType, false))];
+		return [...BLM_DEBUFFS.flatMap((rscType) => this.makeTargetedTimers(rscType))];
 	}
 
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {

@@ -59,6 +59,7 @@ try {
 
 interface DotTableInfo {
 	label: string;
+	targetNumber: number;
 	summary: {
 		totalTicks: number;
 		maxTicks: number;
@@ -97,19 +98,22 @@ const sim = (tlPath: string) => {
 	controller.setTinctureBuffPercentage(8);
 	controller.loadBattleRecordFromFile(content);
 	const dotTables: DotTableInfo[] = [];
-	damageData.dotTables.forEach((value, key) => {
-		return {
-			label: key,
-			summary: {
-				totalTicks: value.summary.totalTicks,
-				maxTicks: value.summary.maxTicks,
-				dotCoverageTimeFraction: value.summary.dotCoverageTimeFraction,
-				cumulativeGap: value.summary.cumulativeGap,
-				cumulativeOverride: value.summary.cumulativeOverride,
-				totalPotencyWithoutPot: value.summary.totalPotencyWithoutPot,
-				totalPotPotency: value.summary.totalPotPotency,
-			},
-		};
+	damageData.dotTables.forEach((table, key) => {
+		table.forEach((value, targetNumber) => {
+			return {
+				label: key,
+				targetNumber,
+				summary: {
+					totalTicks: value.summary.totalTicks,
+					maxTicks: value.summary.maxTicks,
+					dotCoverageTimeFraction: value.summary.dotCoverageTimeFraction,
+					cumulativeGap: value.summary.cumulativeGap,
+					cumulativeOverride: value.summary.cumulativeOverride,
+					totalPotencyWithoutPot: value.summary.totalPotencyWithoutPot,
+					totalPotPotency: value.summary.totalPotPotency,
+				},
+			};
+		});
 	});
 	return {
 		summary: {

@@ -107,15 +107,17 @@ export class NINState extends GameState {
 	}
 
 	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<NINState>): void {
-		if (this.hasResourceAvailable("DOKUMORI")) {
-			node.addBuff(BuffType.Dokumori);
-		}
-		if (this.hasResourceAvailable("TRICK_ATTACK")) {
-			node.addBuff(BuffType.TrickAttack);
-		}
-		if (this.hasResourceAvailable("KUNAIS_BANE")) {
-			node.addBuff(BuffType.KunaisBane);
-		}
+		node.targetList.forEach((targetNumber) => {
+			if (this.hasDebuffActive("DOKUMORI", targetNumber)) {
+				node.addBuff(BuffType.Dokumori);
+			}
+			if (this.hasDebuffActive("TRICK_ATTACK", targetNumber)) {
+				node.addBuff(BuffType.TrickAttack);
+			}
+			if (this.hasDebuffActive("KUNAIS_BANE", targetNumber)) {
+				node.addBuff(BuffType.KunaisBane);
+			}
+		});
 		if (this.hasResourceAvailable("BUNSHIN") && BUFFED_BY_BUNSHIN.includes(skill.name)) {
 			node.addBuff(BuffType.Bunshin);
 		}
@@ -275,16 +277,24 @@ const validateWithTCJ = (validateAttempt: StatePredicate<NINState> | undefined) 
 	}
 };
 
-const addUniversalPotencyModifiers = (state: Readonly<NINState>, mods: PotencyModifier[]) => {
-	if (state.hasResourceAvailable("DOKUMORI")) {
-		mods.push(Modifiers.Dokumori);
-	}
-	if (state.hasResourceAvailable("TRICK_ATTACK")) {
-		mods.push(Modifiers.TrickAttack);
-	}
-	if (state.hasResourceAvailable("KUNAIS_BANE")) {
-		mods.push(Modifiers.KunaisBane);
-	}
+const targetPotencyModifiers = (state: Readonly<NINState>, node: ActionNode) => {
+	const result = new Map<number, PotencyModifier[]>();
+	node.targetList.forEach((targetNumber) => {
+		const mods = [];
+		if (state.hasDebuffActive("DOKUMORI", targetNumber)) {
+			mods.push(Modifiers.Dokumori);
+		}
+		if (state.hasDebuffActive("TRICK_ATTACK", targetNumber)) {
+			mods.push(Modifiers.TrickAttack);
+		}
+		if (state.hasDebuffActive("KUNAIS_BANE", targetNumber)) {
+			mods.push(Modifiers.KunaisBane);
+		}
+		if (mods.length > 0) {
+			result.set(targetNumber, mods);
+		}
+	});
+	return result;
 };
 
 const makeNINWeaponskill = (
@@ -346,9 +356,9 @@ const makeNINWeaponskill = (
 					mods.push(Modifiers.BunshinST);
 				}
 			}
-			addUniversalPotencyModifiers(state, mods);
 			return mods;
 		},
+		jobTargetPotencyModifiers: targetPotencyModifiers,
 	});
 };
 
@@ -384,11 +394,7 @@ const makeNINAbility = (
 		onConfirm: combineEffects(bunny, (state: NINState, node: ActionNode) =>
 			params.onConfirm?.(state, node),
 		),
-		jobPotencyModifiers: (state) => {
-			const mods = params.jobPotencyModifiers?.(state) ?? [];
-			addUniversalPotencyModifiers(state, mods);
-			return mods;
-		},
+		jobTargetPotencyModifiers: targetPotencyModifiers,
 	});
 };
 
@@ -721,12 +727,12 @@ tcjReplaces.forEach(
 			validateAttempt: condition,
 			jobPotencyModifiers: (state) => {
 				const mods: PotencyModifier[] = [];
-				addUniversalPotencyModifiers(state, mods);
 				if (name === "KATON" && state.hasResourceAvailable("DOTON")) {
 					mods.push(Modifiers.HollowNozuchi);
 				}
 				return mods;
 			},
+			jobTargetPotencyModifiers: targetPotencyModifiers,
 			onConfirm: combineEffects(
 				(state: NINState) =>
 					state.pushMudra(
@@ -755,11 +761,7 @@ makeWeaponskill("NIN", "DOTON_CHI", 70, {
 	replaceIf: CHI_REPLACEMENTS,
 	falloff: 0,
 	validateAttempt: DOTON_TCJ_CONDITION,
-	jobPotencyModifiers: (state) => {
-		const mods: PotencyModifier[] = [];
-		addUniversalPotencyModifiers(state, mods);
-		return mods;
-	},
+	jobTargetPotencyModifiers: targetPotencyModifiers,
 	onConfirm: combineEffects(
 		(state, node) => {
 			state.addDoTPotencies({
@@ -794,11 +796,7 @@ makeWeaponskill("NIN", "DOTON_CHI", 70, {
 			cooldown: 20,
 			maxCharges: 2,
 		},
-		jobPotencyModifiers: (state) => {
-			const mods: PotencyModifier[] = [];
-			addUniversalPotencyModifiers(state, mods);
-			return mods;
-		},
+		jobTargetPotencyModifiers: targetPotencyModifiers,
 		validateAttempt: (state: Readonly<NINState>) => !state.hasResourceAvailable("TEN_CHI_JIN"),
 		onConfirm: (state: NINState) => state.pushMudra(i + 1, false),
 	});
@@ -993,9 +991,9 @@ NINJUTSU_POTENCY_LIST.forEach(([name, level, applicationDelay, potency, falloff]
 			if (state.hasResourceAvailable("DOTON") && ["KATON", "GOKA_MEKKYAKU"].includes(name)) {
 				mods.push(Modifiers.HollowNozuchi);
 			}
-			addUniversalPotencyModifiers(state, mods);
 			return mods;
 		},
+		jobTargetPotencyModifiers: targetPotencyModifiers,
 	});
 });
 
@@ -1057,8 +1055,8 @@ makeNINAbility("DOKUMORI", 66, "cd_DOKUMORI", {
 	potency: 400,
 	falloff: 0,
 	cooldown: 120,
-	onConfirm: (state) => {
-		state.gainStatus("DOKUMORI");
+	onConfirm: (state, node) => {
+		state.gainDebuff("DOKUMORI", node.targetList);
 		state.gainNinki(40);
 		if (state.hasTraitUnlocked("ENHANCED_DOKUMORI")) {
 			state.gainStatus("HIGI");
@@ -1083,8 +1081,9 @@ makeNINAbility("TRICK_ATTACK", 18, "cd_TRICK_ATTACK", {
 	cooldown: 60,
 	highlightIf: TRICK_CONDITION,
 	validateAttempt: TRICK_CONDITION,
-	onConfirm: (state) => {
-		state.gainStatus("TRICK_ATTACK");
+	onConfirm: (state, node) => {
+		// Trick Attack hits only a single target
+		state.gainDebuff("TRICK_ATTACK", [node.targetList[0]]);
 		state.tryConsumeResource("SHADOW_WALKER");
 	},
 });
@@ -1101,8 +1100,8 @@ makeNINAbility("KUNAIS_BANE", 92, "cd_TRICK_ATTACK", {
 	falloff: 0,
 	highlightIf: TRICK_CONDITION,
 	validateAttempt: TRICK_CONDITION,
-	onConfirm: (state) => {
-		state.gainStatus("KUNAIS_BANE");
+	onConfirm: (state, node) => {
+		state.gainDebuff("KUNAIS_BANE", node.targetList);
 		state.tryConsumeResource("SHADOW_WALKER");
 	},
 });

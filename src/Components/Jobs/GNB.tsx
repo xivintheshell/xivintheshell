@@ -24,7 +24,7 @@ const GNB_BUFFS: GNBResourceKey[] = (Object.keys(GNB_STATUSES) as GNBResourceKey
 
 export class GNBStatusPropsGenerator extends StatusPropsGenerator<GNBState> {
 	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
-		return [...GNB_DEBUFFS.map((rscType) => this.makeCommonTimer(rscType, false))];
+		return [...GNB_DEBUFFS.flatMap((rscType) => this.makeTargetedTimers(rscType))];
 	}
 
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {

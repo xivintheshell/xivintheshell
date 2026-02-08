@@ -347,6 +347,15 @@ export default class Main extends React.Component<{ command?: string }> {
 					top: -6px;
 					left: -2px;
 				}
+				.checkbox-star:before {
+					content: "\\2605";
+					color: ${colors.timeline.aggroMark};
+					position: absolute;
+					font-size: 22px;
+					top: -7px;
+					left: -3px;
+					visibility: visible;
+				}
 				input[type="range"] {
 					appearance: none;
 					background-color: transparent;

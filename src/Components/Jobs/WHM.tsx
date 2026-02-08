@@ -23,7 +23,7 @@ const WHM_BUFFS: WHMResourceKey[] = (Object.keys(WHM_STATUSES) as WHMResourceKey
 
 export class WHMStatusPropsGenerator extends StatusPropsGenerator<WHMState> {
 	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
-		return [...WHM_DEBUFFS.map((rscType) => this.makeCommonTimer(rscType))];
+		return [...WHM_DEBUFFS.flatMap((rscType) => this.makeTargetedTimers(rscType))];
 	}
 
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {

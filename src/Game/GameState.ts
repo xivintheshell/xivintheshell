@@ -24,6 +24,7 @@ import {
 	CoolDown,
 	CoolDownState,
 	OverTimeBuff,
+	DebuffState,
 	Event,
 	EventTag,
 	getAllResources,
@@ -34,6 +35,7 @@ import {
 } from "./Resources";
 
 import { controller } from "../Controller/Controller";
+import { MAX_ABILITY_TARGETS } from "../Controller/Common";
 import { ActionNode } from "../Controller/Record";
 import {
 	Modifiers,
@@ -81,6 +83,7 @@ export interface OverTimePotencyProps {
 	speedStat: "sks" | "sps" | "unscaled";
 	aspect?: Aspect;
 	modifiers?: PotencyModifier[];
+	targetModifiers?: Map<number, PotencyModifier[]>;
 }
 
 // GameState := resources + events queue
@@ -93,6 +96,7 @@ export class GameState {
 	hotTickOffset: number;
 	time: number; // raw time which starts at 0 regardless of countdown
 	resources: ResourceState;
+	debuffs: DebuffState;
 	cooldowns: CoolDownState;
 	eventsQueue: Event[];
 	skillsList: SkillsList<GameState>;
@@ -126,6 +130,8 @@ export class GameState {
 		// RESOURCES (checked when using skills)
 		// and skill CDs (also a form of resource)
 		this.resources = new ResourceState(this);
+		// Debuffs are registered when the corresponding DoT status is registered.
+		this.debuffs = new DebuffState(this);
 		this.cooldowns = new CoolDownState(this);
 		getAllResources(this.job).forEach((info, rsc) => {
 			if (info.isCoolDown) {
@@ -138,6 +144,8 @@ export class GameState {
 						info.maxStacks,
 					),
 				);
+			} else if (RESOURCES[rsc as ResourceKey].specialDebuff) {
+				this.debuffs.initialize(rsc as ResourceKey);
 			} else {
 				this.resources.set(
 					new Resource(
@@ -349,6 +357,11 @@ export class GameState {
 				}
 
 				if (!resourceArray.includes(registeredEffect.effectName)) {
+					if (!registeredEffect.isGroundTargeted && !effectGroup.isHealing) {
+						// Ground-target effects do not need special debuff handling, but others
+						// do for uptime calculation purposes.
+						this.debuffs.initialize(registeredEffect.effectName);
+					}
 					resourceArray.push(registeredEffect.effectName);
 					registeredEffect.appliedBy.forEach((effectSkill) => {
 						if (!effectGroup.isHealing && !this.dotSkills.includes(effectSkill)) {
@@ -476,6 +489,25 @@ export class GameState {
 		return (getResourceInfo(this.job, rscType) as ResourceInfo).maxTimeout;
 	}
 
+	gainDebuff(rscType: ResourceKey, targetList: number[]) {
+		targetList.forEach((targetNumber) => {
+			const debuff = this.debuffs.get(rscType, targetNumber);
+			const resourceInfo = getResourceInfo(this.job, rscType) as ResourceInfo;
+			if (debuff.availableAmountIncludingDisabled() > 0) {
+				debuff.overrideTimer(this, resourceInfo.maxTimeout);
+			} else {
+				debuff.gain(1);
+				this.debuffs.addDebuffEvent({
+					rscType,
+					targetNumber,
+					name: `drop ${rscType} on target ${targetNumber}`,
+					delay: resourceInfo.maxTimeout,
+					fnOnRsc: (rsc) => rsc.consume(1),
+				});
+			}
+		});
+	}
+
 	gainStatus(rscType: ResourceKey, stacks: number = 1) {
 		const resource = this.resources.get(rscType);
 		const resourceInfo = getResourceInfo(this.job, rscType) as ResourceInfo;
@@ -531,21 +563,70 @@ export class GameState {
 		this.handleOverTimeTick(hotResource, "healing");
 	}
 	handleOverTimeTick(effect: ResourceKey, kind: PotencyKind) {
-		const effectBuff = this.resources.get(effect) as OverTimeBuff;
-		if (effectBuff.availableAmountIncludingDisabled() > 0) {
-			// For floor effects that are toggled off, don't resolve its potency, but increment the tick count.
-			if (effectBuff.node && effectBuff.enabled) {
-				const p = effectBuff.node.getOverTimePotencies(effect, kind)[effectBuff.tickCount];
-				controller.resolveOverTimePotency(p, kind);
-				this.onResolveOverTimeTick(effect, kind);
+		if (this.debuffs.hasAny(effect)) {
+			// Perform one pass over all targets to check if the status has been disabled on any.
+			// This handles cases like BLM's High Thunder II, which may have been toggled off on
+			// specific enemies.
+			// Since all targets of an AoE DoT share the same potency object, we perform resolution
+			// after having pruned the target lists in this first loop.
+			for (let i = 1; i <= MAX_ABILITY_TARGETS; i++) {
+				const effectBuff = this.debuffs.get(effect, i);
+				if (
+					effectBuff.availableAmountIncludingDisabled() > 0 &&
+					effectBuff.node &&
+					!effectBuff.enabled
+				) {
+					const p = effectBuff.node.getOverTimePotencies(effect, kind)[
+						effectBuff.tickCount
+					];
+					p.tryRemoveTarget(i);
+				}
 			}
-			effectBuff.tickCount++;
+			for (let i = 1; i <= MAX_ABILITY_TARGETS; i++) {
+				const effectBuff = this.debuffs.get(effect, i);
+				if (effectBuff.availableAmountIncludingDisabled() > 0) {
+					// For floor effects that are toggled off, don't resolve its potency, but increment the tick count.
+					if (effectBuff.node && effectBuff.enabled) {
+						const p = effectBuff.node.getOverTimePotencies(effect, kind)[
+							effectBuff.tickCount
+						];
+						// Since we may be resolving an AoE dot, check if this was already resolved.
+						if (!p.hasResolved()) {
+							controller.resolveOverTimePotency(p, kind);
+						}
+						// on-tick effects should still occur once per target
+						this.onResolveOverTimeTick(effect, kind);
+					}
+					effectBuff.tickCount++;
+				} else {
+					// If the effect has expired and was not simply toggled off, then remove
+					// all future dot tick potencies for this target.
+					// Overwrites should already have been handled.
+					if (effectBuff.node) {
+						effectBuff.node.removeUnresolvedOvertimePotencies(kind, i);
+						effectBuff.node = undefined;
+					}
+				}
+			}
 		} else {
-			// If the effect has expired and was not simply toggled off, then remove
-			// all future dot tick potencies.
-			if (effectBuff.node) {
-				effectBuff.node.removeUnresolvedOvertimePotencies(kind);
-				effectBuff.node = undefined;
+			const effectBuff = this.resources.get(effect) as OverTimeBuff;
+			if (effectBuff.availableAmountIncludingDisabled() > 0) {
+				// For floor effects that are toggled off, don't resolve its potency, but increment the tick count.
+				if (effectBuff.node && effectBuff.enabled) {
+					const p = effectBuff.node.getOverTimePotencies(effect, kind)[
+						effectBuff.tickCount
+					];
+					controller.resolveOverTimePotency(p, kind);
+					this.onResolveOverTimeTick(effect, kind);
+				}
+				effectBuff.tickCount++;
+			} else {
+				// If the effect has expired and was not simply toggled off, then remove
+				// all future dot tick potencies.
+				if (effectBuff.node) {
+					effectBuff.node.removeUnresolvedOvertimePotencies(kind);
+					effectBuff.node = undefined;
+				}
 			}
 		}
 	}
@@ -631,14 +712,26 @@ export class GameState {
 		return 200;
 	}
 
-	requestToggleBuff(buffName: ResourceKey) {
-		const rsc = this.resources.get(buffName);
+	requestToggleBuff(buffName: ResourceKey, targetNumber?: number) {
+		// If the buff corresponds to a DoT effect, then allow it to be re-enabled to simulate cases
+		// where a boss jumps away, then returns before it expires.
+		if (this.debuffs.hasAny(buffName)) {
+			const dot = this.debuffs.get(buffName, targetNumber ?? 1);
+			if (dot.available(1)) {
+				dot.enabled = false;
+			} else {
+				dot.enabled = true;
+			}
+			return true;
+		}
 
-		// autos are different
+		// autos are handled separately
 		if (buffName === "AUTOS_ENGAGED") {
 			this.toggleAutosEngaged();
 			return true;
 		}
+
+		const rsc = this.resources.get(buffName);
 
 		// Ley lines, paint lines, and positionals can be toggled.
 		if (RESOURCES[buffName].mayBeToggled) {
@@ -961,7 +1054,7 @@ export class GameState {
 				basePotency: potencyNumber,
 				snapshotTime: undefined,
 				description: "",
-				targetCount: node.targetCount,
+				targetList: node.targetList,
 				falloff: skill.falloff,
 			});
 			node.addPotency(potency);
@@ -981,7 +1074,7 @@ export class GameState {
 				basePotency: healingPotencyNumber,
 				snapshotTime: undefined,
 				description: "",
-				targetCount: node.healTargetCount,
+				healTargetCount: node.healTargetCount,
 				falloff: 0, // Heals do not have AoE falloff
 			});
 			node.addHealingPotency(healingPotency);
@@ -1017,12 +1110,11 @@ export class GameState {
 			if (potency) {
 				potency.snapshotTime = this.getDisplayTime();
 				if (doesDamage) {
-					const mods: PotencyModifier[] = [];
 					if (this.hasResourceAvailable("TINCTURE")) {
-						mods.push(Modifiers.Tincture);
+						potency.addModifiers(Modifiers.Tincture);
 					}
-					mods.push(...skill.jobPotencyModifiers(this));
-					potency.modifiers = mods;
+					potency.addModifiers(...skill.jobPotencyModifiers(this));
+					potency.addTargetSpecificModifiers(skill.jobTargetPotencyModifiers(this, node));
 				}
 			}
 			if (doesDamage) {
@@ -1037,12 +1129,10 @@ export class GameState {
 			const heals = healingPotencyNumber > 0;
 			if (healingPotency) {
 				healingPotency.snapshotTime = this.getDisplayTime();
-				const mods: PotencyModifier[] = [];
 				if (this.hasResourceAvailable("TINCTURE")) {
-					mods.push(Modifiers.Tincture);
+					healingPotency.addModifiers(Modifiers.Tincture);
 				}
-				mods.push(...skill.jobHealingPotencyModifiers(this));
-				healingPotency.modifiers = mods;
+				healingPotency.addModifiers(...skill.jobHealingPotencyModifiers(this));
 			}
 			if (heals) {
 				// tincture
@@ -1151,17 +1241,16 @@ export class GameState {
 				basePotency: potencyNumber,
 				snapshotTime: this.getDisplayTime(),
 				description: "",
-				targetCount: node.targetCount,
+				targetList: node.targetList,
 				falloff: skill.falloff,
 			});
 		}
 		if (potency && (potencyNumber > 0 || appliesDoT)) {
-			const mods: PotencyModifier[] = [];
 			if (this.hasResourceAvailable("TINCTURE")) {
-				mods.push(Modifiers.Tincture);
+				potency.addModifiers(Modifiers.Tincture);
 			}
-			mods.push(...skill.jobPotencyModifiers(this));
-			potency.modifiers = mods;
+			potency.addModifiers(...skill.jobPotencyModifiers(this));
+			potency.addTargetSpecificModifiers(skill.jobTargetPotencyModifiers(this, node));
 			node.addPotency(potency);
 		}
 
@@ -1201,15 +1290,13 @@ export class GameState {
 				basePotency: healingPotencyNumber,
 				snapshotTime: this.getDisplayTime(),
 				description: "",
-				targetCount: node.healTargetCount,
+				healTargetCount: node.healTargetCount,
 				falloff: 0, // Heals do not have AoE falloff
 			});
-			const mods: PotencyModifier[] = [];
 			if (this.hasResourceAvailable("TINCTURE")) {
-				mods.push(Modifiers.Tincture);
+				healingPotency.addModifiers(Modifiers.Tincture);
 			}
-			mods.push(...skill.jobHealingPotencyModifiers(this));
-			healingPotency.modifiers = mods;
+			healingPotency.addModifiers(...skill.jobHealingPotencyModifiers(this));
 			node.addHealingPotency(healingPotency);
 		}
 
@@ -1306,7 +1393,7 @@ export class GameState {
 				basePotency: potencyNumber,
 				snapshotTime: undefined,
 				description: "",
-				targetCount: node.targetCount,
+				targetList: node.targetList,
 				falloff: skill.falloff,
 			});
 			node.addPotency(potency);
@@ -1323,7 +1410,7 @@ export class GameState {
 				basePotency: healingPotencyNumber,
 				snapshotTime: undefined,
 				description: "",
-				targetCount: node.healTargetCount,
+				healTargetCount: node.healTargetCount,
 				falloff: 0, // Heals do not have AoE falloff
 			});
 			node.addHealingPotency(healingPotency);
@@ -1440,6 +1527,10 @@ export class GameState {
 		return this.resources.get(rscType).availableAmount() === target;
 	}
 
+	hasDebuffActive(rscType: ResourceKey, targetNumber: number): boolean {
+		return this.debuffs.get(rscType, targetNumber).available(1);
+	}
+
 	hitPositional(location: "flank" | "rear"): boolean {
 		return (
 			this.hasResourceAvailable("TRUE_NORTH") ||
@@ -1524,6 +1615,101 @@ export class GameState {
 		kind: PotencyKind,
 		duration?: number,
 	) {
+		// If the effect is applied as a debuff, we have slightly different logic to handle uptime
+		// tracking across different targets.
+		if (this.debuffs.hasAny(effectName)) {
+			if (kind !== "damage") {
+				console.error(
+					`over time debuff ${effectName} must have kind="damage", instead got ${kind}`,
+				);
+				return;
+			}
+			const effectDuration = duration ?? this.getStatusDuration(effectName);
+			node.targetList.forEach((targetNumber) => {
+				const effectBuff = this.debuffs.get(effectName, targetNumber);
+				let effectGap: number | undefined = undefined;
+				const overriddenEffects = this.getOverriddenDots(effectName);
+				overriddenEffects.forEach((removeEffect: ResourceKey) => {
+					if (!this.hasDebuffActive(removeEffect, targetNumber)) {
+						const lastExpiration = this.debuffs
+							.get(removeEffect, targetNumber)
+							.getLastExpirationTime();
+
+						// If a mutually exclusive effect was previously applied but has fallen off,
+						// the gap is the smallest of the times since any of those effects expired
+						if (lastExpiration) {
+							const thisGap = this.getDisplayTime() - lastExpiration;
+							effectGap =
+								effectGap === undefined ? thisGap : Math.min(effectGap, thisGap);
+						}
+						return;
+					}
+
+					node.setOverTimeOverrideAmount(
+						effectName,
+						node.getOverTimeOverrideAmount(effectName, kind, targetNumber) +
+							this.debuffs.timeTillExpiry(removeEffect, targetNumber),
+						kind,
+						targetNumber,
+					);
+					controller.reportOverTimeDrop(this.getDisplayTime(), removeEffect, kind, [
+						targetNumber,
+					]);
+					effectGap = 0;
+					this.tryRemoveDebuff(removeEffect, targetNumber);
+				});
+
+				if (effectBuff.availableAmountIncludingDisabled() > 0) {
+					if (effectBuff.node === undefined) {
+						console.error(
+							`DoT debuff for ${effectName}, target ${targetNumber} has no node`,
+						);
+						return;
+					}
+					// Always enable the DoT buff in case it was previously toggled off
+					effectBuff.enabled = true;
+					effectBuff.node.removeUnresolvedOvertimePotencies(kind);
+					node.setOverTimeOverrideAmount(
+						effectName,
+						node.getOverTimeOverrideAmount(effectName, kind, targetNumber) +
+							this.debuffs.timeTillExpiry(effectName, targetNumber),
+						kind,
+						targetNumber,
+					);
+					effectBuff.overrideTimer(this, effectDuration);
+				} else {
+					const thisGap =
+						this.getDisplayTime() - (effectBuff.getLastExpirationTime() ?? 0);
+					effectGap = effectGap === undefined ? thisGap : Math.min(effectGap, thisGap);
+
+					effectBuff.gain(1);
+
+					const otName = kind === "damage" ? " DoT" : " HoT";
+					controller.reportOverTimeStart(this.getDisplayTime(), effectName, kind, [
+						targetNumber,
+					]);
+					this.debuffs.addDebuffEvent({
+						rscType: effectName,
+						name: "drop " + effectName + otName + " on " + targetNumber,
+						targetNumber: targetNumber,
+						delay: effectDuration,
+						fnOnRsc: (rsc) => {
+							rsc.consume(1);
+							controller.reportOverTimeDrop(this.getDisplayTime(), effectName, kind, [
+								targetNumber,
+							]);
+						},
+					});
+				}
+
+				node.setOverTimeGap(effectName, effectGap ?? 0, kind, targetNumber);
+
+				effectBuff.node = node;
+				effectBuff.tickCount = 0;
+			});
+			return;
+		}
+
 		const effectBuff = this.resources.get(effectName) as OverTimeBuff;
 		const effectDuration = duration ?? this.getStatusDuration(effectName);
 
@@ -1554,7 +1740,12 @@ export class GameState {
 					this.resources.timeTillReady(removeEffect),
 				kind,
 			);
-			controller.reportOverTimeDrop(this.getDisplayTime(), removeEffect, kind);
+			controller.reportOverTimeDrop(
+				this.getDisplayTime(),
+				removeEffect,
+				kind,
+				node.targetList,
+			);
 			effectGap = 0;
 			this.tryConsumeResource(removeEffect);
 		});
@@ -1576,14 +1767,24 @@ export class GameState {
 			effectBuff.gain(1);
 
 			const otName = kind === "damage" ? " DoT" : " HoT";
-			controller.reportOverTimeStart(this.getDisplayTime(), effectName, kind);
+			controller.reportOverTimeStart(
+				this.getDisplayTime(),
+				effectName,
+				kind,
+				node.targetList,
+			);
 			this.resources.addResourceEvent({
 				rscType: effectName,
 				name: "drop " + effectName + otName,
 				delay: effectDuration,
 				fnOnRsc: (rsc) => {
 					rsc.consume(1);
-					controller.reportOverTimeDrop(this.getDisplayTime(), effectName, kind);
+					controller.reportOverTimeDrop(
+						this.getDisplayTime(),
+						effectName,
+						kind,
+						node.targetList,
+					);
 				},
 			});
 		}
@@ -1627,7 +1828,6 @@ export class GameState {
 			Math.ceil(effectDuration / (props.tickFrequency ?? 3)) + (isGroundTargeted ? 1 : 0);
 
 		const tickDescriptor = kind === "damage" ? "DoT" : "HoT";
-		const targetCount = kind === "damage" ? props.node.targetCount : props.node.healTargetCount;
 
 		for (let i = 0; i < effectTicks; i++) {
 			const overtimePotency = new Potency({
@@ -1645,10 +1845,14 @@ export class GameState {
 					` ${tickDescriptor} ` +
 					(i + 1) +
 					`/${effectTicks}`,
-				targetCount,
+				targetList: kind === "damage" ? props.node.targetList : undefined,
+				healTargetCount: kind === "healing" ? props.node.healTargetCount : undefined,
 				falloff: 0, // assume all overtime effects have no falloff
 			});
-			overtimePotency.modifiers = mods;
+			overtimePotency.addModifiers(...mods);
+			if (props.targetModifiers) {
+				overtimePotency.addTargetSpecificModifiers(props.targetModifiers);
+			}
 			props.node.addOverTimePotency(overtimePotency, props.effectName, kind);
 		}
 	}
@@ -1829,8 +2033,8 @@ export class GameState {
 
 		// If there is no falloff field specified, then reset the node's targetCount to 1,
 		// ignoring whatever input the user gave
-		if (skill.falloff === undefined) {
-			node.setTargetCount(1);
+		if (skill.falloff === undefined && !skill.savesTargets) {
+			node.forceOneTarget();
 		}
 		if (skill.aoeHeal) {
 			node.setHealTargetCount(this.resources.get("PARTY_SIZE").availableAmount());
@@ -1850,7 +2054,7 @@ export class GameState {
 	useInvalidSkill(skillName: ActionKey, node: ActionNode) {
 		const skill = this.skillsList.get(skillName);
 		if (skill.falloff === undefined) {
-			node.setTargetCount(1);
+			node.forceOneTarget();
 		}
 		if (skill.aoeHeal) {
 			node.setHealTargetCount(this.resources.get("PARTY_SIZE").availableAmount());
@@ -1929,6 +2133,17 @@ export class GameState {
 			if (!resource.available(toConsume)) {
 				resource.removeTimer();
 			}
+			return true;
+		}
+		return false;
+	}
+
+	tryRemoveDebuff(rscType: ResourceKey, targetNumber: number) {
+		const resource = this.debuffs.get(rscType, targetNumber);
+		const toConsume = resource.availableAmount();
+		if (toConsume > 0) {
+			resource.consume(toConsume);
+			resource.removeTimer();
 			return true;
 		}
 		return false;

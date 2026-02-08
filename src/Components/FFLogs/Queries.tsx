@@ -348,6 +348,14 @@ const castQueryCache = new Map<
 	Map<FightID, Map<PlayerID, IntermediateLogImportState>>
 >();
 
+interface CalculatedDamageEvent {
+	timestamp: number;
+	type: "calculateddamage";
+	targetID: number;
+	abilityGameID: number;
+	unmitigatedAmount: number;
+}
+
 /**
  * Issue a GraphQL query given fight report ID, fight index ID, and player index ID.
  * These can be parsed from a report URL that has a fight/player selected, or retrieved by query.
@@ -381,9 +389,24 @@ export async function queryPlayerEvents(
 	const fight = data.reportData.report.fights[0];
 	const castEvents = [];
 	const timestamps = [];
+	// A list of targets that have been seen in "calculateddamage" events so far, in the order
+	// in which they appear in packets.
+	// The first target on this list will be used as boss 1.
+	const seenTargetOrder: number[] = [];
+	const seenTargetSet: Set<number> = new Set();
+	// A map of timestamps to calculateddamage events. This is used in a second pass later on
+	// to determine which target(s) a damaging ability hit. Note that these correspond to "prepares"
+	// events (snapshots) rather than actual damage application, and thus are not susceptible
+	// to errors due to ghosting.
+	// This makes the assumption that for a given player, the pair of (timestamp, targetID) is
+	// sufficient to pair damage instances to their cast.
+	const damageEvents = new Map<number, CalculatedDamageEvent[]>();
 	// If a "begin cast" is left at the end of the loop without a paired "cast", don't bother
 	// adding it to the timeline since we can safely assume it was canceled.
 	let stagedBeginEvent: any | undefined = undefined;
+	// Map of "begin cast" timestamps to their corresponding "cast" events. Necessary to pair
+	// damage instances for hardcast abilities.
+	const hardcastSnapTimes = new Map<number, number>();
 	// Map buff tags to timestamps at which they were removed.
 	// This is populated for jobs that have gauge events tied to the consumption of buffs, such as
 	// PCT's Tempera Coat/Grassa, SAM's Tengentsu, and DRK's Blackest Night.
@@ -402,6 +425,7 @@ export async function queryPlayerEvents(
 			// Otherwise, use the timestamp of the "begin cast" event for simulation reference.
 			if (stagedBeginEvent !== undefined) {
 				if (stagedBeginEvent.abilityGameID === entry.abilityGameID) {
+					hardcastSnapTimes.set(stagedBeginEvent.timestamp, entry.timestamp);
 					entry = stagedBeginEvent;
 				}
 				stagedBeginEvent = undefined;
@@ -417,6 +441,17 @@ export async function queryPlayerEvents(
 			// possible to remove that cast with some pre-processing here.
 		} else if (entry.type === "begincast" && !FILTERED_ACTION_IDS.has(entry.abilityGameID)) {
 			stagedBeginEvent = entry;
+		} else if (entry.type === "calculateddamage") {
+			let tsList = damageEvents.get(entry.timestamp);
+			if (tsList === undefined) {
+				tsList = [];
+				damageEvents.set(entry.timestamp, tsList);
+			}
+			tsList.push(entry as CalculatedDamageEvent);
+			if (!seenTargetSet.has(entry.targetID)) {
+				seenTargetOrder.push(entry.targetID);
+				seenTargetSet.add(entry.targetID);
+			}
 		} else if (entry.type === "combatantinfo") {
 			// These stats are only populated for the log creator; these fields are otherwise
 			// left undefined.
@@ -494,11 +529,40 @@ export async function queryPlayerEvents(
 		if (key === "NEVER") {
 			console.error("unknown action id", id);
 		}
+		let pairedDamageEvents =
+			damageEvents.get(event.timestamp)?.filter((dmg) => dmg.abilityGameID === id) ?? [];
+		// If this was a hardcast: we need to look up the time of the actual snapshot event.
+		// We can't use the ?? operator in case a dot tick occurred at the same time as the start of the cast.
+		if (pairedDamageEvents.length === 0) {
+			const snapTime = hardcastSnapTimes.get(event.timestamp);
+			if (snapTime !== undefined) {
+				pairedDamageEvents =
+					damageEvents.get(snapTime)?.filter((dmg) => dmg.abilityGameID === id) ?? [];
+			}
+		}
+		let targetList = [1];
+		if (pairedDamageEvents.length > 0) {
+			// Assume the target with highest received damage was the primary target.
+			let primaryID = pairedDamageEvents[0].targetID;
+			let maxDamage = pairedDamageEvents[0].unmitigatedAmount;
+			const targetIDs = new Set<number>([primaryID]);
+			for (let i = 1; i < pairedDamageEvents.length; i++) {
+				const dmg = pairedDamageEvents[i];
+				if (dmg.unmitigatedAmount > maxDamage) {
+					primaryID = dmg.targetID;
+					maxDamage = dmg.unmitigatedAmount;
+				}
+				targetIDs.add(dmg.targetID);
+			}
+			targetIDs.delete(primaryID);
+			targetList = Array.from(targetIDs);
+			targetList.splice(0, 0, primaryID);
+			targetList = targetList.map((targetID) => seenTargetOrder.indexOf(targetID) + 1);
+		}
 		return {
 			type: ActionType.Skill,
 			skillName: key,
-			// TODO set these fields properly
-			targetCount: 1,
+			targetList,
 			healTargetCount: undefined,
 		} as SkillNodeInfo;
 	});
