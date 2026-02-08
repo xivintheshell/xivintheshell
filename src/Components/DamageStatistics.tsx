@@ -660,7 +660,7 @@ export class DamageStatistics extends React.Component {
 						dotGroup.reportName +
 						(localize({
 							en: ` uptime (Boss ${targetNumber})`,
-							zh: "覆盖率（Boss ${targetNumber}）",
+							zh: `覆盖率（Boss ${targetNumber}）`,
 						}) as string) +
 						colon;
 					const { uptime, totalTicks, maxTicks } = summary;
