@@ -1,8 +1,7 @@
 [
 	{
-		"date": "2/10/26",
+		"date": "2/7/26",
 		"changes": [
-			"TODO!! UPDATE THE DATE IN CHANGELOG BEFORE DEPLOYING TO PRODUCTION if any user reads this message that would be really embarrassing",
 			"Added the ability to choose specific targets for damaging skills. Please see the \"# of targets hit\" help item for details.",
 			"Abilities imported from FFLogs now correctly track the number of targets hit."
 		],
