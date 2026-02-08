@@ -407,7 +407,8 @@ export class ActionNode {
 	removeUnresolvedOvertimePotencies(kind: PotencyKind, targetNumber?: number) {
 		const potencyMap = kind === "damage" ? this.#dotPotencies : this.#hotPotencies;
 		potencyMap.forEach((pArr) => {
-			pArr.forEach((p, i) => {
+			for (let i = 0; i < pArr.length; i++) {
+				const p = pArr[i];
 				// If the potency has not yet resolved, this means it was a future DoT tick
 				// that potentially should be overwritten.
 				// However, if the previous potency corresponds to an AoE DoT, we must ensure
@@ -417,13 +418,12 @@ export class ActionNode {
 						p.tryRemoveTarget(targetNumber);
 					}
 					// If targetNumber was unspecified, then forcibly remove all remaining ticks.
-					// not sure if it's safe to mutate the array during iteration like this,
-					// but whatever
 					if (targetNumber === undefined || p.targetList.length === 0) {
 						pArr.splice(i);
+						break;
 					}
 				}
-			});
+			}
 		});
 	}
 

@@ -11,8 +11,6 @@ enum TargetState {
 
 // Radio selects must be in the PRIMARY or NONE state, as only one option can be chosen at a time.
 // Unlike our standard in-house radio component, this does not cache its state to localStorage.
-// This component has not yet been tested: it will be used later when target editing is added
-// to the timeline editor tab.
 function TargetRadio(props: {
 	i: number;
 	state: TargetState;
@@ -40,7 +38,8 @@ function TargetRadio(props: {
 			}
 			style={{ cursor: "pointer" }}
 			type="radio"
-			onChange={() => {}}
+			role="radio"
+			aria-checked={props.state === TargetState.PRIMARY}
 			checked={false}
 		/>
 		<span>{props.i === 0 ? localize({ en: "Boss 1", zh: "Boss 1" }) : props.i + 1}</span>
@@ -128,7 +127,7 @@ export function TargetSelector(props: {
 				// If this target is no longer PRIMARY, force a different primary target.
 				// If this is the only remaining target, then do not perform the change.
 				for (let j = 0; j < selected.length; j++) {
-					if (j != i && selected[j]) {
+					if (j !== i && selected[j]) {
 						props.onPrimaryChange?.(j);
 						primary = j;
 						break;
