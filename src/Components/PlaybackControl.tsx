@@ -939,7 +939,7 @@ function GearImport(props: {
 	const xivgearLink = <a href="https://xivgear.app" target="_blank" rel="noreferrer">
 		xivgear
 	</a>;
-	const ffxivGearingLink  = <a
+	const ffxivGearingLink = <a
 		href="https://asvel.github.io/ffxiv-gearing/"
 		target="_blank"
 		rel="noreferrer"
@@ -949,10 +949,10 @@ function GearImport(props: {
 	return <form onSubmit={importGear}>
 		{localize({
 			en: <span>
-				Load stats from {etroLink}/{xivgearLink}/{ffxivGearingLink }:{" "}
+				Load stats from {etroLink}/{xivgearLink}/{ffxivGearingLink}:{" "}
 			</span>,
 			zh: <span>
-				从{etroLink}、{xivgearLink}或{ffxivGearingLink }导入套装：
+				从{etroLink}、{xivgearLink}或{ffxivGearingLink}导入套装：
 			</span>,
 		})}
 		<Help
@@ -990,8 +990,24 @@ function GearImport(props: {
 					</p>
 					<p>
 						{localize({
-							en: "ffxiv-gearing：Click the three dots to the right of the race selector option at the bottom of the page, then click the <ButtonIndicator text={"Copy Gear Total Attribute Value"} /> option. Note that ffxiv-gearing does not export the gearset's job, so you will need to configure it manually. (example: 力量 6450 暴击 3595 信念 3174 直击 1176 技速 420 坚韧 568 耐力 7513 物理基本性能 158 攻击间隔 2.80)",
-							zh: "ffxiv-gearing：在最底部种族选项的右侧有三个点，点击后会出现带有<ButtonIndicator text={"复制套装总属性值"} />选项的菜单，点击<ButtonIndicator text={"复制套装总属性值"} />（注意：ffxiv-gearing不导出职业，因此您需要先选择职业。）（例：力量 6450 暴击 3595 信念 3174 直击 1176 技速 420 坚韧 568 耐力 7513 物理基本性能 158 攻击间隔 2.80）",
+							en: <>
+								ffxiv-gearing：Click the three dots to the right of the race
+								selector option at the bottom of the page, then click the
+								<ButtonIndicator text="Copy Gear Total Attribute Value" />
+								option. Note that ffxiv-gearing does not export the gearset's job,
+								so you will need to configure it manually. (example: 力量 6450 暴击
+								3595 信念 3174 直击 1176 技速 420 坚韧 568 耐力 7513 物理基本性能
+								158 攻击间隔 2.80)
+							</>,
+							zh: <>
+								ffxiv-gearing：在最底部种族选项的右侧有三个点，点击后会出现带有
+								<ButtonIndicator text="复制套装总属性值" />
+								选项的菜单，点击
+								<ButtonIndicator text="复制套装总属性值" />
+								（注意：ffxiv-gearing不导出职业，因此您需要先选择职业。）（例：力量
+								6450 暴击 3595 信念 3174 直击 1176 技速 420 坚韧 568 耐力 7513
+								物理基本性能 158 攻击间隔 2.80）
+							</>,
 						})}
 					</p>
 				</>
