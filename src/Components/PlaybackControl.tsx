@@ -862,7 +862,71 @@ function GearImport(props: {
 					throw new Error("xivgear load failed (please check your link)");
 				}
 			} else {
-				throw new Error("Invalid gearset link (must be from etro.gg or xivgear.app)");
+				const attrArray = gearImportLink.split(/\s+/);
+				if (attrArray.length > 1) {
+					// 力量 6450
+					// 暴击 3595
+					// 信念 3174
+					// 直击 1176
+					// 技速 420
+					// 坚韧 568
+					// 耐力 7513
+					// 物理基本性能 158
+					// 攻击间隔 2.80
+
+					// name mapping table from ffxiv-gearing
+					const statNames = {
+						STR: "力量",
+						DEX: "灵巧",
+						INT: "智力",
+						MND: "精神",
+						VIT: "耐力",
+						CRT: "暴击",
+						DHT: "直击",
+						DET: "信念",
+						SKS: "技速",
+						SPS: "咏速",
+						TEN: "坚韧",
+						PIE: "信仰",
+						CMS: "作业精度",
+						CRL: "加工精度",
+						CP: "制作力",
+						GTH: "获得力",
+						PCP: "鉴别力",
+						GP: "采集力",
+						PDMG: "物理基本性能",
+						MDMG: "魔法基本性能",
+						DLY: "攻击间隔",
+					};
+					const attrObj = new Map<string, string>();
+					for (let i = 0; i < attrArray.length - 1; i += 2) {
+						attrObj.set(attrArray[i], attrArray[i + 1]);
+					}
+					const mainStat = attrArray[1];
+					const fields: Partial<ConfigFields> = {
+						spellSpeed: attrObj.get(statNames.SPS),
+						skillSpeed: attrObj.get(statNames.SKS),
+						criticalHit: attrObj.get(statNames.CRT),
+						directHit: attrObj.get(statNames.DHT),
+						determination: attrObj.get(statNames.DET),
+						piety: attrObj.get(statNames.PIE),
+						tenacity: attrObj.get(statNames.TEN),
+						wd: attrObj.get(statNames.PDMG) ?? attrObj.get(statNames.MDMG),
+						main: mainStat,
+					};
+					Object.keys(fields).forEach((key) => {
+						// @ts-expect-error compiler can't be sure that Object.keys matches ConfigFields
+						if (fields[key] === undefined) delete fields[key];
+					});
+					props.dispatch(fields);
+					// @ts-expect-error compiler can't be sure that Object.keys matches ConfigFields
+					props.setImportedFields(Object.keys(fields));
+					setImported(true);
+				} else {
+					throw new Error(
+						"Invalid input (must be a link from etro.gg or xivgear.app, or an exported string copied from ffxiv-gearing)",
+					);
+				}
 			}
 		} catch (e: any) {
 			console.error(e);
@@ -875,13 +939,20 @@ function GearImport(props: {
 	const xivgearLink = <a href="https://xivgear.app" target="_blank" rel="noreferrer">
 		xivgear
 	</a>;
+	const ffxivGearingLink = <a
+		href="https://asvel.github.io/ffxiv-gearing/"
+		target="_blank"
+		rel="noreferrer"
+	>
+		ffxiv-gearing
+	</a>;
 	return <form onSubmit={importGear}>
 		{localize({
 			en: <span>
-				Load stats from {etroLink}/{xivgearLink}:{" "}
+				Load stats from {etroLink}/{xivgearLink}/{ffxivGearingLink}:{" "}
 			</span>,
 			zh: <span>
-				从{etroLink}或{xivgearLink}导入套装：
+				从{etroLink}、{xivgearLink}或{ffxivGearingLink}导入套装：
 			</span>,
 		})}
 		<Help
@@ -892,11 +963,11 @@ function GearImport(props: {
 						{localize({
 							en: <span>
 								Enter and <ButtonIndicator text={"Load"} /> a link to a gearset from
-								xivgear.app or etro.gg, edit the rest of config, then{" "}
-								<ButtonIndicator text={"apply and reset"} />.
+								xivgear.app or etro.gg or attribute from ffxiv-gearing, edit the
+								rest of config, then <ButtonIndicator text={"apply and reset"} />.
 							</span>,
 							zh: <span>
-								输入xivgear.app或etro.gg的套装链接并
+								输入xivgear.app或etro.gg的套装链接或ffxiv-gearing的属性并点击
 								<ButtonIndicator text={"加载"} />
 								，调整其余角色属性，然后
 								<ButtonIndicator text={"应用并重置时间轴"} />。
@@ -915,6 +986,28 @@ function GearImport(props: {
 								'xivgear: At the top of the page, click "Export" -> "Selected Set" -> "Link to This Set" -> "Generate"' +
 								" (example: https://xivgear.app/?page=sl%7C143f3245-c35b-4391-8b2b-db5cc1a8de9a)",
 							zh: 'xivgear：从页面顶端点击 "Export" -> "Selected Set" -> "Link to This Set" -> "Generate"（例：https://xivgear.app/?page=sl%7C143f3245-c35b-4391-8b2b-db5cc1a8de9a）',
+						})}
+					</p>
+					<p>
+						{localize({
+							en: <>
+								ffxiv-gearing：Click the three dots to the right of the race
+								selector option at the bottom of the page, then click the
+								<ButtonIndicator text="Copy Gear Total Attribute Value" />
+								option. Note that ffxiv-gearing does not export the gearset's job,
+								so you will need to configure it manually. (example: 力量 6450 暴击
+								3595 信念 3174 直击 1176 技速 420 坚韧 568 耐力 7513 物理基本性能
+								158 攻击间隔 2.80)
+							</>,
+							zh: <>
+								ffxiv-gearing：在最底部种族选项的右侧有三个点，点击后会出现带有
+								<ButtonIndicator text="复制套装总属性值" />
+								选项的菜单，点击
+								<ButtonIndicator text="复制套装总属性值" />
+								（注意：ffxiv-gearing不导出职业，因此您需要先选择职业。）（例：力量
+								6450 暴击 3595 信念 3174 直击 1176 技速 420 坚韧 568 耐力 7513
+								物理基本性能 158 攻击间隔 2.80）
+							</>,
 						})}
 					</p>
 				</>
