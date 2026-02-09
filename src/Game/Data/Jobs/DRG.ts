@@ -2,46 +2,46 @@ import { ensureRecord } from "../../../utilities";
 import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
 export const DRG_ACTIONS = ensureRecord<ActionData>()({
-	PIERCING_TALON: { id: 90, name: "Piercing Talon" },
-	TRUE_THRUST: { id: 75, name: "True Thrust" },
-	RAIDEN_THRUST: { id: 16479, name: "Raiden Thrust" },
+	PIERCING_TALON: { id: 90, name: "Piercing Talon", label: { zh: "Piercing Talon" } },
+	TRUE_THRUST: { id: 75, name: "True Thrust", label: { zh: "精准刺" } },
+	RAIDEN_THRUST: { id: 16479, name: "Raiden Thrust", label: { zh: "龙眼雷电" } },
 
-	DISEMBOWEL: { id: 87, name: "Disembowel" },
-	SPIRAL_BLOW: { id: 36955, name: "Spiral Blow" },
-	CHAOS_THRUST: { id: 88, name: "Chaos Thrust" },
-	CHAOTIC_SPRING: { id: 25772, name: "Chaotic Spring" },
-	WHEELING_THRUST: { id: 3556, name: "Wheeling Thrust" },
+	DISEMBOWEL: { id: 87, name: "Disembowel", label: { zh: "开膛枪" } },
+	SPIRAL_BLOW: { id: 36955, name: "Spiral Blow", label: { zh: "螺旋击" } },
+	CHAOS_THRUST: { id: 88, name: "Chaos Thrust", label: { zh: "樱花怒放" } },
+	CHAOTIC_SPRING: { id: 25772, name: "Chaotic Spring", label: { zh: "樱花缭乱" } },
+	WHEELING_THRUST: { id: 3556, name: "Wheeling Thrust", label: { zh: "龙尾大回旋" } },
 
-	VORPAL_THRUST: { id: 78, name: "Vorpal Thrust" },
-	LANCE_BARRAGE: { id: 36954, name: "Lance Barrage" },
-	FULL_THRUST: { id: 84, name: "Full Thrust" },
-	HEAVENS_THRUST: { id: 25771, name: "Heavens' Thrust" },
-	FANG_AND_CLAW: { id: 3554, name: "Fang and Claw" },
+	VORPAL_THRUST: { id: 78, name: "Vorpal Thrust", label: { zh: "贯通刺" } },
+	LANCE_BARRAGE: { id: 36954, name: "Lance Barrage", label: { zh: "前冲刺" } },
+	FULL_THRUST: { id: 84, name: "Full Thrust", label: { zh: "直刺" } },
+	HEAVENS_THRUST: { id: 25771, name: "Heavens' Thrust", label: { zh: "苍穹刺" } },
+	FANG_AND_CLAW: { id: 3554, name: "Fang and Claw", label: { zh: "龙牙龙爪" } },
 
-	DRAKESBANE: { id: 36952, name: "Drakesbane" },
+	DRAKESBANE: { id: 36952, name: "Drakesbane", label: { zh: "云蒸龙变" } },
 
-	DOOM_SPIKE: { id: 86, name: "Doom Spike" },
-	DRACONIAN_FURY: { id: 25770, name: "Draconian Fury" },
-	SONIC_THRUST: { id: 7397, name: "Sonic Thrust" },
-	COERTHAN_TORMENT: { id: 16477, name: "Coerthan Torment" },
+	DOOM_SPIKE: { id: 86, name: "Doom Spike", label: { zh: "死天枪" } },
+	DRACONIAN_FURY: { id: 25770, name: "Draconian Fury", label: { zh: "龙眼苍穹" } },
+	SONIC_THRUST: { id: 7397, name: "Sonic Thrust", label: { zh: "音速刺" } },
+	COERTHAN_TORMENT: { id: 16477, name: "Coerthan Torment", label: { zh: "山境酷刑" } },
 
-	LIFE_SURGE: { id: 83, name: "Life Surge" },
-	LANCE_CHARGE: { id: 85, name: "Lance Charge" },
-	JUMP: { id: 92, name: "Jump" },
-	HIGH_JUMP: { id: 16478, name: "High Jump" },
-	MIRAGE_DIVE: { id: 7399, name: "Mirage Dive" },
-	DRAGONFIRE_DIVE: { id: 96, name: "Dragonfire Dive" },
-	RISE_OF_THE_DRAGON: { id: 36953, name: "Rise of the Dragon" },
-	BATTLE_LITANY: { id: 3557, name: "Battle Litany" },
-	WYRMWIND_THRUST: { id: 25773, name: "Wyrmwind Thrust" },
+	LIFE_SURGE: { id: 83, name: "Life Surge", label: { zh: "龙剑" } },
+	LANCE_CHARGE: { id: 85, name: "Lance Charge", label: { zh: "猛枪" } },
+	JUMP: { id: 92, name: "Jump", label: { zh: "跳跃" } },
+	HIGH_JUMP: { id: 16478, name: "High Jump", label: { zh: "高跳" } },
+	MIRAGE_DIVE: { id: 7399, name: "Mirage Dive", label: { zh: "幻象冲" } },
+	DRAGONFIRE_DIVE: { id: 96, name: "Dragonfire Dive", label: { zh: "龙炎冲" } },
+	RISE_OF_THE_DRAGON: { id: 36953, name: "Rise of the Dragon", label: { zh: "龙炎升" } },
+	BATTLE_LITANY: { id: 3557, name: "Battle Litany", label: { zh: "战斗连祷" } },
+	WYRMWIND_THRUST: { id: 25773, name: "Wyrmwind Thrust", label: { zh: "天龙点睛" } },
 
-	GEIRSKOGUL: { id: 3555, name: "Geirskogul" },
-	NASTROND: { id: 7400, name: "Nastrond" },
-	STARDIVER: { id: 16480, name: "Stardiver" },
-	STARCROSS: { id: 36956, name: "Starcross" },
+	GEIRSKOGUL: { id: 3555, name: "Geirskogul", label: { zh: "武神枪" } },
+	NASTROND: { id: 7400, name: "Nastrond", label: { zh: "死者之岸" } },
+	STARDIVER: { id: 16480, name: "Stardiver", label: { zh: "坠星冲" } },
+	STARCROSS: { id: 36956, name: "Starcross", label: { zh: "渡星冲" } },
 
-	ELUSIVE_JUMP: { id: 94, name: "Elusive Jump" },
-	WINGED_GLIDE: { id: 36951, name: "Winged Glide" },
+	ELUSIVE_JUMP: { id: 94, name: "Elusive Jump", label: { zh: "回避跳跃" } },
+	WINGED_GLIDE: { id: 36951, name: "Winged Glide", label: { zh: "龙翼滑翔" } },
 });
 
 export const DRG_COOLDOWNS = ensureRecord<CooldownData>()({
@@ -63,32 +63,32 @@ export const DRG_COOLDOWNS = ensureRecord<CooldownData>()({
 });
 
 export const DRG_GAUGES = ensureRecord<ResourceData>()({
-	LIFE_OF_THE_DRAGON: { name: "Life of the Dragon" }, // [0, 1]
-	FIRSTMINDS_FOCUS: { name: "Firstminds' Focus" }, // [0, 2]
+	LIFE_OF_THE_DRAGON: { name: "Life of the Dragon", label: { zh: "红莲龙血" } }, // [0, 1]
+	FIRSTMINDS_FOCUS: { name: "Firstminds' Focus", label: { zh: "天龙眼" } }, // [0, 2]
 });
 
 export const DRG_STATUSES = ensureRecord<ResourceData>()({
-	LIFE_SURGE: { name: "Life Surge" }, // [0, 1]
-	ENHANCED_PIERCING_TALON: { name: "Enhanced Piercing Talon" }, // [0, 1]
-	POWER_SURGE: { name: "Power Surge" }, // [0, 1]
-	LANCE_CHARGE: { name: "Lance Charge" }, // [0, 1]
-	DIVE_READY: { name: "Dive Ready" }, // [0, 1]
-	CHAOS_THRUST_DOT: { name: "Chaos Thrust DoT" }, // [0, 1]
-	CHAOTIC_SPRING_DOT: { name: "Chaotic Spring DoT" }, // [0, 1]
-	DRAGONS_FLIGHT: { name: "Dragon's Flight" }, // [0, 1]
-	BATTLE_LITANY: { name: "Battle Litany" }, // [0, 1]
-	NASTROND_READY: { name: "Nastrond Ready" }, // [0, 1]
-	DRACONIAN_FIRE: { name: "Draconian Fire" }, // [0, 1]
-	STARCROSS_READY: { name: "Starcross Ready" }, // [0, 1]
+	LIFE_SURGE: { name: "Life Surge", label: { zh: "龙剑" } }, // [0, 1]
+	ENHANCED_PIERCING_TALON: { name: "Enhanced Piercing Talon", label: { zh: "贯穿尖" } }, // [0, 1]
+	POWER_SURGE: { name: "Power Surge", label: { zh: "龙枪" } }, // [0, 1]
+	LANCE_CHARGE: { name: "Lance Charge", label: { zh: "猛枪" } }, // [0, 1]
+	DIVE_READY: { name: "Dive Ready", label: { zh: "幻象冲预备" } }, // [0, 1]
+	CHAOS_THRUST_DOT: { name: "Chaos Thrust DoT", label: { zh: "樱花怒放" } }, // [0, 1]
+	CHAOTIC_SPRING_DOT: { name: "Chaotic Spring DoT", label: { zh: "樱花缭乱" } }, // [0, 1]
+	DRAGONS_FLIGHT: { name: "Dragon's Flight", label: { zh: "龙炎升预备" } }, // [0, 1]
+	BATTLE_LITANY: { name: "Battle Litany", label: { zh: "战斗连祷" } }, // [0, 1]
+	NASTROND_READY: { name: "Nastrond Ready", label: { zh: "死者之岸预备" } }, // [0, 1]
+	DRACONIAN_FIRE: { name: "Draconian Fire", label: { zh: "龙眼" } }, // [0, 1]
+	STARCROSS_READY: { name: "Starcross Ready", label: { zh: "渡星冲预备" } }, // [0, 1]
 });
 
 export const DRG_TRACKERS = ensureRecord<ResourceData>()({
 	// 0 - no combo, 1 - disembowelready, 2 - chaosready, 3 - wheelingthrustready, 4 - drakesbane
-	DRG_CHAOS_COMBO_TRACKER: { name: "DRG Chaos Combo" }, // [0, 4]
+	DRG_CHAOS_COMBO_TRACKER: { name: "DRG Chaos Combo", label: { zh: "樱花连" } }, // [0, 4]
 	// 0 - no combo, 1 - vorpalready, 2 - fullready, 3 - fangready, 4 - drakesbane
-	DRG_HEAVENS_COMBO_TRACKER: { name: "DRG Heavens Combo" }, // [0, 4]
+	DRG_HEAVENS_COMBO_TRACKER: { name: "DRG Heavens Combo", label: { zh: "苍穹刺连" } }, // [0, 4]
 	// 0 - no combo, 1 - sonic thrust ready, 2 - coerthian ready
-	DRG_AOE_COMBO_TRACKER: { name: "DRG AOE Combo" }, // [0, 2]
+	DRG_AOE_COMBO_TRACKER: { name: "DRG AOE Combo", label: { zh: "AOE连" } }, // [0, 2]
 });
 
 export const DRG_TRAITS = ensureRecord<TraitData>()({

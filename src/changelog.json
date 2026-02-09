@@ -1,5 +1,16 @@
 [
 	{
+		"date": "2/8/26",
+		"changes": [
+			"Added the ability to import gearsets from ffxiv-gearing.",
+			"[BRD][DRG] Added Chinese translations."
+		],
+		"changes_zh": [
+			"新增了从ffxiv-gearing导入套装的功能。",
+			"【吟游诗人】【龙骑】 新增了中文翻译。"
+		]
+	},
+	{
 		"date": "2/7/26",
 		"changes": [
 			"Added the ability to choose specific targets for damaging skills. Please see the \"# of targets hit\" help item for details.",

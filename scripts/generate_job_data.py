@@ -76,7 +76,6 @@ APPLICATION_DELAY_CSV_PATH: str = "scripts/application delay DT - HEALER.csv"
 
 # Action names are scraped from the job guide files. If there are any actions that should not be
 # included due to being out-leveled, list their proper English names here.
-<<<<<<< Updated upstream
 EXCLUDE_ACTIONS: list[str] = [
     "Ruin",
     "Bio",

@@ -991,7 +991,7 @@ function GearImport(props: {
 					<p>
 						{localize({
 							en: <>
-								ffxiv-gearing：Click the three dots to the right of the race
+								ffxiv-gearing: Click the three dots to the right of the race
 								selector option at the bottom of the page, then click the
 								<ButtonIndicator text="Copy Gear Total Attribute Value" />
 								option. Note that ffxiv-gearing does not export the gearset's job,
