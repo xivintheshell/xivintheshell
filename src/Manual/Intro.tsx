@@ -33,7 +33,7 @@ export function IntroEn() {
 				<i>by Shanzhe Qi @ Seraph</i>
 			</div>
 			<Sep />
-			<div>last updated 7 February 2026</div>
+			<div>last updated 9 February 2026</div>
 		</div>
 		<p className="no-indent">
 			Welcome to <i>XIV in the Shell</i>, a rotation planner tool for <i>Final Fantasy XIV</i>
@@ -71,7 +71,7 @@ export function IntroZh() {
 	return <>
 		<div style={AUTHOR_DIV_STYLE}>
 			<i>作者：Shanzhe Qi @ Seraph</i> <Sep /> <i>翻译：羽卡（由ai帮助）</i> <Sep />{" "}
-			最近更新：2026年1月19号
+			最近更新：2026年2月9号
 		</div>
 		<p>
 			欢迎来到 XIV in the
