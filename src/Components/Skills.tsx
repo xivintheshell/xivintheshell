@@ -711,7 +711,7 @@ export function SkillsWindow() {
 				<span>
 					<span style={{ color: colors.timeline.aggroMark }}>橙色</span>星标表示主要目标，
 					<span style={{ color: colors.accent }}>紫色</span>
-					对勾表示该攻击额外击中的目标。修改“击中目标数”数值会自动更新勾选框，反之亦然。
+					对勾表示次要目标。修改“击中目标数”数值会自动更新勾选框，反之亦然。
 				</span>
 				<br />
 				<br />

@@ -108,11 +108,11 @@ export function TimelineCreationEn() {
 			an AoE ability, adjust the "# of targets hit" field <b>(2)</b>, or manually select which
 			targets to hit through the selector checkboxes below. This will affect all subsequent
 			AoE ability inputs, and is ignored for abilities that can only hit a single target. An
-			orange ★ indicates which enemy is the primary target of the ability, and will receive
-			the most damage: if an ability is used that can only hit a single target, then this is
-			the enemy that will be hit. A purple ✔ indicates a secondary target that will be
-			additionally hit by splash damage. Modifying the checkboxes will automatically modify
-			the "targets hit" field, and vice versa.
+			orange star ★ indicates which enemy is the primary target of the ability, and will
+			receive the most damage: if an ability is used that can only hit a single target, then
+			this is the enemy that will be hit. A purple checkmark ✔ indicates a secondary target
+			that will be additionally hit by splash damage. Modifying the checkboxes will
+			automatically modify the "targets hit" field, and vice versa.
 		</p>
 		<p>
 			When multiple targets are selected, clicking on the current primary target will demote
@@ -386,8 +386,13 @@ export function TimelineCreationZh() {
 			即可插入技能。新技能将在时间轴光标处使用；若已选中技能，则插入至该技能之前。系统会自动在当前条件下的最早可用时间施放技能。
 		</p>
 		<p>
-			若需要调整AoE技能的命中数量，可以在“击中目标数” <b>(2)</b> 输入数字。后续使用的所有 AoE
+			若需要调整AoE技能的命中数量，可以在“击中目标数” <b>(2)</b>{" "}
+			输入数字，或者在下方的选框中手动选择所击中的目标。后续使用的所有 AoE
 			技能均按此目标数计算威力，单目标技能不受影响。
+		</p>
+		<p>
+			橙色星标代表主要目标，当使用单目标技能时将会击中该目标。紫色“✔”代表次要目标，使用 AoE
+			技能时该目标会受到衰减后的伤害。修改选框时，“击中目标数”栏将会自动同步。当选中多个目标时，点击主要目标的选框会将其更改为次要目标，点击次要目标的选框会取消其选中。点击未选中目标的选框会将其选中，并设置为主要目标。战斗中将会保持至少有一个主要目标。
 		</p>
 		<p>
 			若需要自定义等待时间，用“快进至__后的__秒” <b>(3)</b>{" "}
@@ -509,6 +514,11 @@ export function TimelineCreationZh() {
 			页面底部的“时间轴编辑器”标签提供紧凑的表格视图。此处进行的任何改动需点击右侧“应用并保存编辑”或“放弃更改”{" "}
 			<b>(1)</b>{" "}
 			才会生效。若编辑时间轴将导致某技能无法满足施放条件，该行会变红，同时右侧信息区会提示第一条无效技能发生的时间。
+		</p>
+		<p>
+			目标选择器 <b>(2)</b>{" "}
+			用于修改被选中技能命中的敌人。其功能与技能输入区域中的目标选择器相同（详见
+			<a href="#adding-skills">"添加技能"</a>）。单目标技能将自动仅命中主要目标。
 		</p>
 		<p>
 			单击行 <b>(3)</b> 以选中，{bi("Shift")}+单击首尾行以多选，拖拽行可调整顺序。
