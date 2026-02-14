@@ -1,5 +1,12 @@
 [
 	{
+		"date": "2/13/26",
+		"changes": [
+			"[BRD][MCH][DNC] Added Leg Graze and Foot Graze for compatibility with FFLogs import.",
+			"Fixed a bug where importing certain logs for jobs with DoT effects would crash the page."
+		]
+	},
+	{
 		"date": "2/8/26",
 		"changes": [
 			"Added the ability to import gearsets from ffxiv-gearing.",

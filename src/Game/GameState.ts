@@ -591,7 +591,7 @@ export class GameState {
 							effectBuff.tickCount
 						];
 						// Since we may be resolving an AoE dot, check if this was already resolved.
-						if (!p.hasResolved()) {
+						if (!p?.hasResolved()) {
 							controller.resolveOverTimePotency(p, kind);
 						}
 						// on-tick effects should still occur once per target

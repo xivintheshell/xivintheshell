@@ -38,6 +38,9 @@ export const ROLE_ACTIONS = ensureRecord<ActionData>()({
 	INTERJECT: { id: 7538, name: "Interject", label: { zh: "插言" } },
 	PROVOKE: { id: 7533, name: "Provoke", label: { zh: "挑衅" } },
 	SHIRK: { id: 7537, name: "Shirk", label: { zh: "退避" } },
+
+	FOOT_GRAZE: { id: 7553, name: "Foot Graze", label: { zh: "伤足" } },
+	LEG_GRAZE: { id: 7554, name: "Leg Graze", label: { zh: "伤腿" } },
 });
 
 export const ROLE_COOLDOWNS = ensureRecord<CooldownData>()({
@@ -63,6 +66,8 @@ export const ROLE_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_SHIRK: { name: "cd_Shirk" },
 
 	cd_HEAD_GRAZE: { name: "cd_HeadGraze" },
+	cd_LEG_GRAZE: { name: "cd_LegGraze" },
+	cd_FOOT_GRAZE: { name: "cd_FootGraze" },
 });
 
 // There are not currently any role-specific gauge-like resources to track
