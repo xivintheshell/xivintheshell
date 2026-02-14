@@ -275,6 +275,18 @@ makeAbility(MELEE_JOBS, "LEG_SWEEP", 10, "cd_LEG_SWEEP", {
 	onConfirm: bunny,
 });
 
+makeAbility(RANGED_JOBS, "LEG_GRAZE", 6, "cd_LEG_GRAZE", {
+	applicationDelay: 0, // Who knows
+	cooldown: 30,
+	assetPath: "Role/Leg Graze.png",
+});
+
+makeAbility(RANGED_JOBS, "FOOT_GRAZE", 10, "cd_FOOT_GRAZE", {
+	applicationDelay: 0, // Who knows
+	cooldown: 30,
+	assetPath: "Role/Foot Graze.png",
+});
+
 //#endregion
 
 //#region All-jobs (Tincture and Sprint)
