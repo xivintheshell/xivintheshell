@@ -1,8 +1,9 @@
 [
 	{
-		"date": "2/14/26",
+		"date": "2/15/26",
 		"changes": [
 			"[WAR] Added a \"Retaliation\" skill to simulate taking damage while Damnation or Vengeance is active.",
+			"Abilities usable at range no longer automatically re-enable auto-attacks on melee and tank jobs (this does not currently affect damage calculations).",
 			"Added auto-attack downtime windows to Ama's combat sim export."
 		]
 	},

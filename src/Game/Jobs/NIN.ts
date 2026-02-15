@@ -321,6 +321,7 @@ const makeNINWeaponskill = (
 		onApplication?: EffectFn<NINState>;
 		jobPotencyModifiers?: PotencyModifierFn<NINState>;
 		animationLock?: number;
+		startsAuto?: boolean;
 	},
 ): Weaponskill<NINState> => {
 	return makeWeaponskill("NIN", name, unlockLevel, {
@@ -420,6 +421,7 @@ makeNINWeaponskill("THROWING_DAGGER", 15, {
 		["MELEE_MASTERY_II_NIN", 200],
 	],
 	onConfirm: (state) => state.gainNinki(5),
+	startsAuto: false,
 });
 
 makeNINWeaponskill("SPINNING_EDGE", 1, {
@@ -745,6 +747,7 @@ tcjReplaces.forEach(
 						? (state) => state.gainStatus("SHADOW_WALKER")
 						: undefined,
 			),
+			startsAuto: false,
 		});
 	},
 );
@@ -994,6 +997,7 @@ NINJUTSU_POTENCY_LIST.forEach(([name, level, applicationDelay, potency, falloff]
 			return mods;
 		},
 		jobTargetPotencyModifiers: targetPotencyModifiers,
+		startsAuto: false,
 	});
 });
 

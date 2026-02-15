@@ -296,6 +296,7 @@ const makeAbility_WAR = (
 makeWeaponskill_WAR("TOMAHAWK", 15, {
 	potency: 150,
 	applicationDelay: 0.71,
+	startsAuto: false,
 });
 
 makeWeaponskill_WAR("HEAVY_SWING", 1, {

@@ -246,6 +246,7 @@ type DRKGCDParams = {
 	highlightIf?: StatePredicate<DRKState>;
 	onApplication?: EffectFn<DRKState>;
 	secondaryCooldown?: CooldownGroupProperties;
+	startsAuto?: boolean;
 };
 
 const makeDRKWeaponskill = (
@@ -305,6 +306,7 @@ const makeDRKResourceAbility = (
 makeDRKSpell("UNMEND", 15, {
 	applicationDelay: 0.98,
 	potency: 150,
+	startsAuto: false,
 	onConfirm: (state) => {
 		if (state.hasTraitUnlocked("ENHANCED_UNMEND")) {
 			// Reduce the cooldown of shadowstride by 5s
