@@ -1143,6 +1143,7 @@ fangsAndBloods.forEach(
 					state.tryConsumeResource(applies);
 				}
 			},
+			startsAuto: false,
 		});
 	},
 );
