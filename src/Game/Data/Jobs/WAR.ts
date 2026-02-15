@@ -147,6 +147,14 @@ export const WAR_ACTIONS = ensureRecord<ActionData>()({
 		name: "Holmgang",
 		label: { zh: "死斗" },
 	},
+	RETALIATION: {
+		// "Retaliation" occurrs when Vengeance/Damnation are triggered.
+		// In logs it appears to just match the name of the ability that used it, but
+		// it does not have an independent action ID.
+		// We keep this around for compatibilit with Ama's combat sim.
+		name: "Retaliation",
+		label: { zh: "报复" },
+	},
 
 	DEFIANCE: {
 		id: 48,
@@ -173,6 +181,8 @@ export const WAR_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_EQUILIBRIUM: { name: "cd_Equilibrium" },
 	cd_SHAKE_IT_OFF: { name: "cd_ShakeItOff" },
 	cd_HOLMGANG: { name: "cd_Holmgang" },
+
+	cd_RETALIATION: { name: "cd_Retaliation" },
 
 	cd_DEFIANCE: { name: "cd_Defiance" },
 	cd_RELEASE_DEFIANCE: { name: "cd_ReleaseDefiance" },

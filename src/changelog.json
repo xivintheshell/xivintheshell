@@ -1,5 +1,12 @@
 [
 	{
+		"date": "2/14/26",
+		"changes": [
+			"[WAR] Added a \"Retaliation\" skill to simulate taking damage while Damnation or Vengeance is active.",
+			"Added auto-attack downtime windows to Ama's combat sim export."
+		]
+	},
+	{
 		"date": "2/13/26",
 		"changes": [
 			"[BRD][MCH][DNC] Added Leg Graze and Foot Graze for compatibility with FFLogs import.",

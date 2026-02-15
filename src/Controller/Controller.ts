@@ -1895,7 +1895,46 @@ class Controller {
 			// append a comma to every window so python recognizes the tuple
 			.map((marker) => `(${marker.time}, ${marker.time + marker.duration}),`);
 		if (downtimeWindows.length > 0) {
-			meta.push("downtime_windows = (" + downtimeWindows.join(" ") + ")");
+			// Add a dummy empty element before joining to make sure we always get a trailing comma
+			// to allow for parsing as a python tuple
+			downtimeWindows.push("");
+			meta.push("downtime_windows = (" + downtimeWindows.join(", ") + ")");
+		}
+		// Manually construct auto-attack downtime windows, an extension added by sleeposim
+		// (I don't think it's currently visible in Ama's sim code)
+		const autoDowntimeWindows = [];
+		if (this.game.autoStartTimes.length > 0 && this.game.autoStopTimes.length > 0) {
+			let autoStartIdx = 0;
+			let autoStopIdx = 0;
+			while (
+				autoStartIdx < this.game.autoStartTimes.length &&
+				this.game.autoStopTimes[0] > this.game.autoStartTimes[autoStartIdx]
+			) {
+				autoStartIdx++;
+			}
+			// Assume that all auto stop/start windows are paired together. If the simulation ends
+			// with an unpaired stop event, assume the window ends at the end of simulation time (now)
+			while (
+				autoStartIdx < this.game.autoStartTimes.length &&
+				autoStopIdx < this.game.autoStopTimes.length
+			) {
+				const stopTime = this.game.autoStopTimes[autoStopIdx];
+				const startTime = this.game.autoStartTimes[autoStartIdx];
+				autoDowntimeWindows.push(`(${stopTime}, ${startTime - stopTime})`);
+				autoStartIdx++;
+				autoStopIdx++;
+			}
+			if (autoStopIdx < this.game.autoStopTimes.length) {
+				autoDowntimeWindows.push(
+					`(${this.game.autoStopTimes[autoStopIdx]}, ${this.game.getDisplayTime()})`,
+				);
+			}
+		}
+		if (autoDowntimeWindows.length > 0) {
+			// Add a dummy empty element before joining to make sure we always get a trailing comma
+			// to allow for parsing as a python tuple
+			autoDowntimeWindows.push("");
+			meta.push("auto_downtime_windows = (" + autoDowntimeWindows.join(", ") + ")");
 		}
 		const headers = ["time", "skill_name", "job_class", "skill_conditional", "targets"];
 		// At Amarantine's request, we additionally emit 2 empty columns for compatibility with
