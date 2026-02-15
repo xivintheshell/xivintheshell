@@ -292,6 +292,7 @@ const makeVPRWeaponskill = (
 		onApplication?: EffectFn<VPRState>;
 		highlightIf?: StatePredicate<VPRState>;
 		extendedStatus?: VPRStatusKey;
+		startsAuto?: boolean;
 	},
 ): Weaponskill<VPRState> => {
 	const replaceCondition: StatePredicate<VPRState> | undefined = params.replaceIf?.find(
@@ -510,6 +511,7 @@ const REAWAKEN_REPLACEMENTS: ConditionalSkillReplace<VPRState>[] = [
 makeVPRWeaponskill("WRITHING_SNAP", 15, {
 	applicationDelay: 0.488,
 	potency: 200,
+	startsAuto: false,
 });
 
 makeVPRWeaponskill("STEEL_FANGS", 1, {
@@ -777,6 +779,7 @@ makeVPRWeaponskill("UNCOILED_FURY", 82, {
 			state.gainStatus("UNCOILED_OGCD_READY", 2);
 		}
 	},
+	startsAuto: false,
 });
 
 makeVPRWeaponskill("STEEL_MAW", 25, {
@@ -1140,6 +1143,7 @@ fangsAndBloods.forEach(
 					state.tryConsumeResource(applies);
 				}
 			},
+			startsAuto: false,
 		});
 	},
 );

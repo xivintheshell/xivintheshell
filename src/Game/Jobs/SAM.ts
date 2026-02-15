@@ -265,6 +265,7 @@ const makeGCD_SAM = (
 		validateAttempt?: StatePredicate<SAMState>;
 		onConfirm?: EffectFn<SAMState>;
 		onApplication?: EffectFn<SAMState>;
+		startsAuto?: boolean;
 	},
 ): Weaponskill<SAMState> => {
 	const jobPotencyModifiers = (state: Readonly<SAMState>) => {
@@ -343,6 +344,7 @@ makeGCD_SAM("ENPI", 15, {
 				]
 			: [],
 	highlightIf: (state) => state.hasResourceAvailable("ENHANCED_ENPI"),
+	startsAuto: false,
 });
 
 makeGCD_SAM("HAKAZE", 1, {

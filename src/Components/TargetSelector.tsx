@@ -41,6 +41,7 @@ function TargetRadio(props: {
 			role="radio"
 			aria-checked={props.state === TargetState.PRIMARY}
 			checked={false}
+			onChange={() => {}}
 		/>
 		<span>{props.i === 0 ? localize({ en: "Boss 1", zh: "Boss 1" }) : props.i + 1}</span>
 	</div>;

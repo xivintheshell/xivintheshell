@@ -230,6 +230,7 @@ const makeWeaponskill_GNB = (
 		highlightIf?: StatePredicate<GNBState>;
 		onApplication?: EffectFn<GNBState>;
 		secondaryCooldown?: CooldownGroupProperties;
+		startsAuto?: boolean;
 	},
 ): Weaponskill<GNBState> => {
 	const onConfirm: EffectFn<GNBState> = combineEffects(params.onConfirm, (state) => {
@@ -364,6 +365,7 @@ const releaseRoyalGuardCondition: ConditionalSkillReplace<GNBState> = {
 makeWeaponskill_GNB("LIGHTNING_SHOT", 15, {
 	potency: 150,
 	applicationDelay: 0.72,
+	startsAuto: false,
 });
 
 makeWeaponskill_GNB("KEEN_EDGE", 1, {

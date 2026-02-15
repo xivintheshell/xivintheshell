@@ -16,6 +16,7 @@ import {
 	makeAbility,
 	makeResourceAbility,
 	makeWeaponskill,
+	FAKE_SKILL_ANIMATION_LOCK,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
 	PotencyModifierFn,
 	SkillAutoReplace,
@@ -277,6 +278,7 @@ const makeAbility_WAR = (
 		onConfirm?: EffectFn<WARState>;
 		onApplication?: EffectFn<WARState>;
 		secondaryCooldown?: CooldownGroupProperties;
+		startsAuto?: boolean;
 	},
 ): Ability<WARState> => {
 	return makeAbility("WAR", name, unlockLevel, cdName, {
@@ -294,6 +296,7 @@ const makeAbility_WAR = (
 makeWeaponskill_WAR("TOMAHAWK", 15, {
 	potency: 150,
 	applicationDelay: 0.71,
+	startsAuto: false,
 });
 
 makeWeaponskill_WAR("HEAVY_SWING", 1, {
@@ -631,6 +634,18 @@ makeResourceAbility("WAR", "DAMNATION", 92, "cd_VENGEANCE", {
 	autoDowngrade: { trait: "VENGEANCE_MASTERY", otherSkill: "VENGEANCE" },
 	cooldown: 120,
 	applicationDelay: 0.62,
+});
+
+makeAbility_WAR("RETALIATION", 38, "cd_RETALIATION", {
+	highlightIf: (state) =>
+		state.hasResourceAvailable("VENGEANCE") || state.hasResourceAvailable("DAMNATION"),
+	validateAttempt: (state) =>
+		state.hasResourceAvailable("VENGEANCE") || state.hasResourceAvailable("DAMNATION"),
+	potency: 55,
+	applicationDelay: 0.534,
+	animationLock: FAKE_SKILL_ANIMATION_LOCK,
+	cooldown: FAKE_SKILL_ANIMATION_LOCK,
+	startsAuto: false,
 });
 
 makeResourceAbility("WAR", "RAW_INTUITION", 56, "cd_RAW_INTUITION", {

@@ -456,6 +456,7 @@ const makeRPRSpell = (
 		onConfirm?: EffectFn<RPRState>;
 		highlightIf?: StatePredicate<RPRState>;
 		onApplication?: EffectFn<RPRState>;
+		startsAuto?: boolean;
 	},
 ): Spell<RPRState> => {
 	const onConfirm: EffectFn<RPRState> = combineEffects(baseOnConfirm(name), params.onConfirm);
@@ -828,6 +829,7 @@ makeRPRSpell("HARPE", 15, {
 	applicationDelay: 0.9,
 	highlightIf: (state) => state.hasResourceAvailable("ENHANCED_HARPE"),
 	onConfirm: (state) => state.tryConsumeResource("ENHANCED_HARPE"),
+	startsAuto: false,
 });
 
 makeRPRSpell("SOULSOW", 82, {
@@ -860,6 +862,7 @@ makeRPRSpell("HARVEST_MOON", 82, {
 	validateAttempt: (state) => state.hasResourceAvailable("SOULSOW"),
 	highlightIf: (state) => state.hasResourceAvailable("SOULSOW"),
 	onConfirm: (state) => state.resources.get("SOULSOW").consume(1),
+	startsAuto: false,
 });
 
 makeRPRAbility("GLUTTONY", 76, "cd_GLUTTONY", {

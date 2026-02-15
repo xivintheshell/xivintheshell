@@ -285,6 +285,7 @@ const makeWeaponskill_DRG = (
 		highlightIf?: StatePredicate<DRGState>;
 		onApplication?: EffectFn<DRGState>;
 		secondaryCooldown?: CooldownGroupProperties;
+		startsAuto?: boolean;
 	},
 ): Weaponskill<DRGState> => {
 	const onConfirm: EffectFn<DRGState> = combineEffects(params.onConfirm, (state) => {
@@ -407,6 +408,7 @@ makeWeaponskill_DRG("PIERCING_TALON", 15, {
 		state.tryConsumeResource("ENHANCED_PIERCING_TALON");
 	},
 	highlightIf: (state) => state.hasResourceAvailable("ENHANCED_PIERCING_TALON"),
+	startsAuto: false,
 });
 
 makeWeaponskill_DRG("TRUE_THRUST", 1, {

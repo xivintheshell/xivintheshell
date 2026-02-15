@@ -115,6 +115,8 @@ export class GameState {
 	hotSkills: ActionKey[] = [];
 	#exclusiveDots: Map<ResourceKey, ResourceKey[]> = new Map();
 	#exclusiveHots: Map<ResourceKey, ResourceKey[]> = new Map();
+	autoStartTimes: number[];
+	autoStopTimes: number[];
 
 	constructor(config: GameConfig) {
 		this.config = config;
@@ -196,6 +198,10 @@ export class GameState {
 		this.displayedSkills = new DisplayedSkills(this.job, config.level);
 
 		this.autoAttackDelay = 2.5; // defaults to 2.5
+
+		// Tracked for compatibility with sleeposim
+		this.autoStartTimes = [];
+		this.autoStopTimes = [];
 	}
 
 	get statusPropsGenerator(): StatusPropsGenerator<GameState> {
@@ -837,6 +843,7 @@ export class GameState {
 		// make sure "AUTOS_ENGAGED" set to 1
 		if (this.resources.get("AUTOS_ENGAGED").availableAmount() === 0) {
 			this.resources.get("AUTOS_ENGAGED").gain(1);
+			this.autoStartTimes.push(this.getDisplayTime());
 		}
 
 		// calculate reccuring delay
@@ -872,6 +879,7 @@ export class GameState {
 		} else {
 			// toggle autos OFF
 			this.resources.get("AUTOS_ENGAGED").consume(1);
+			this.autoStopTimes.push(this.getDisplayTime());
 			if (currentTimer !== -1) {
 				// create a new event that turns on stored auto at the end
 				this.removeAutoAttackTimer();
@@ -1261,7 +1269,9 @@ export class GameState {
 		const autosEngaged = this.resources.get("AUTOS_ENGAGED").available(1);
 		const recurringAutoDelay = this.autoAttackDelay; // <<---- placeholder for changing auto attack speed
 		const currentDelay = this.findAutoAttackTimerInQueue();
-		const startsAutos = skill.startsAuto || (potency && potencyNumber > 0); // <<---  for spells starting autos
+		// Abilities with startsAuto explicitly set to false should not begin auto-attacks, even if they do potency.
+		const startsAutos =
+			skill.startsAuto || (skill.startsAuto !== false && potency && potencyNumber > 0);
 
 		if (startsAutos) {
 			if (!this.isInCombat()) {
