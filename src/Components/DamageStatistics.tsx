@@ -806,9 +806,10 @@ export class DamageStatistics extends React.Component {
 
 		///////////////////////// Main table //////////////////////////
 
-		const isDoTProp = function (skillName: ActionKey) {
-			return controller.game.dotSkills.includes(skillName);
-		};
+		const isDoTProp = (skillName: ActionKey) => controller.game.dotSkills.includes(skillName);
+
+		const isPetTracker = (skillName: ActionKey) =>
+			controller.game.petSkills.includes(skillName);
 
 		const hidePotency = function (skillName: ActionKey) {
 			if (isDoTProp(skillName)) {
@@ -888,17 +889,8 @@ export class DamageStatistics extends React.Component {
 						}}
 					>
 						{localizeSkillName(props.row.skillName)}{" "}
-						{isDoTProp(props.row.skillName) ? (
-							<Help
-								topic={"potencyStats-thunder"}
-								content={localize({
-									en: "See table below for details",
-									zh: "详见下方统计表格",
-								})}
-							/>
-						) : undefined}
 					</span>
-					{isDoTProp(props.row.skillName) ? (
+					{isDoTProp(props.row.skillName) && <>
 						<span
 							style={{
 								textDecoration: getSkillOrDotInclude("DoT")
@@ -909,10 +901,18 @@ export class DamageStatistics extends React.Component {
 									: colors.bgHighContrast,
 							}}
 						>
-							<br />
-							{localize({ en: "(DoT)", zh: "（DoT）" })}{" "}
+							{isPetTracker(props.row.skillName)
+								? localize({ en: "(pet)", zh: "（宠物）" })
+								: localize({ en: "(DoT)", zh: "（DoT）" })}{" "}
 						</span>
-					) : undefined}
+						<Help
+							topic={`potencyStats-${props.row.skillName}`}
+							content={localize({
+								en: "See table below for details",
+								zh: "详见下方统计表格",
+							})}
+						/>
+					</>}
 				</span>;
 			}
 

@@ -7,7 +7,7 @@
 			"Added auto-attack downtime windows to Ama's combat sim export.",
 			"[MCH] Fixed a bug where the Wildfire debuff would not appear.",
 			"[MCH][SMN][DRK] Removed unnecessary columns in display of damage breakdown from pets.",
-			"During FFLogs import, players will now appear according to the order of their jobs."
+			"While importing from FFLogs, players will now be listed according to the order of their jobs."
 		]
 	},
 	{
