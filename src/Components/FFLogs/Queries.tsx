@@ -2,7 +2,7 @@
 import { ActionType, SkillNodeInfo } from "../../Controller/Record";
 import { LevelSync } from "../../Game/Common";
 import { ActionKey, ResourceKey } from "../../Game/Data";
-import { JOBS, ShellJob } from "../../Game/Data/Jobs";
+import { ALL_JOBS, JOBS, ShellJob } from "../../Game/Data/Jobs";
 import { ConfigData } from "../../Game/GameConfig";
 import { skillIdMap } from "../../Game/Skills";
 import { localize, LocalizedContent } from "../Localization";
@@ -336,6 +336,13 @@ export async function queryPlayerList(
 	} else {
 		playerQueryCache.get(reportCode)!.set(fightID, [fightInfo, players]);
 	}
+	// Sort players by job guide order (same as config selector)
+	// If multiple people have the same job, then lexicographically compare by name
+	players.sort((a, b) => {
+		const jobCompare =
+			ALL_JOBS.indexOf(a.job as ShellJob) - ALL_JOBS.indexOf(b.job as ShellJob);
+		return jobCompare === 0 ? a.name.localeCompare(b.name) : jobCompare;
+	});
 	return [fightInfo, players];
 }
 

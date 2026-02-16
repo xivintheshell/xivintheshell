@@ -112,6 +112,7 @@ export class GameState {
 	#groundTargetDoTs: ResourceKey[] = [];
 	#groundTargetHoTs: ResourceKey[] = [];
 	dotSkills: ActionKey[] = [];
+	petSkills: ActionKey[] = [];
 	hotSkills: ActionKey[] = [];
 	#exclusiveDots: Map<ResourceKey, ResourceKey[]> = new Map();
 	#exclusiveHots: Map<ResourceKey, ResourceKey[]> = new Map();
@@ -419,7 +420,13 @@ export class GameState {
 			});
 		});
 		// Register pet summoning skills as DoTs for the purposes of damage reporting
-		petSkills.forEach((skill) => this.dotSkills.push(skill));
+		petSkills.forEach((skill) => {
+			this.dotSkills.push(skill);
+			// Hard-coded case for Wildfire because we do some jank for it
+			if (skill !== "WILDFIRE") {
+				this.petSkills.push(skill);
+			}
+		});
 
 		this.overTimeEffectGroups = effectGroups;
 

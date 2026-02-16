@@ -218,6 +218,7 @@ const makeWeaponskill_WAR = (
 		onConfirm?: EffectFn<WARState>;
 		highlightIf?: StatePredicate<WARState>;
 		onApplication?: EffectFn<WARState>;
+		startsAuto?: boolean;
 	},
 ): Weaponskill<WARState> => {
 	const onConfirm: EffectFn<WARState> = combineEffects(

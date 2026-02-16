@@ -243,6 +243,7 @@ function* applyImportedActions(
 		new ImportLog(insertedNodes, initialRecordLength, oldConfig, newConfig),
 	);
 	controller.autoSave();
+	controller.record.unselectAll();
 	// TODO return timestamps here too
 	return updateInvalidStatus().invalidActions;
 }
@@ -676,7 +677,6 @@ export function FflogsImportFlow() {
 		</span>}
 		<b>{localize({ en: "Choose a player", zh: "选择队员" })}</b>
 		<ul>
-			{/* TODO sort jobs by role */}
 			{playerList.current.map((info, i) => <li
 				key={i}
 				onClick={() => {

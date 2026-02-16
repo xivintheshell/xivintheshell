@@ -21,15 +21,25 @@ export interface ResourceData {
 	name: string;
 	label?: Omit<LocalizedContent, "en">; // Defines the locale-specific text that will be displayed. English is inferred from the name property
 
-	// Set to indicate the maximum number of stacks for a resource. Defaults to 1 if not set.
-	// Note that for status effects, this also controls the stacked icon registration
+	/**
+	 * Set to indicate the maximum number of stacks for a resource. Defaults to 1 if not set.
+	 * Note that for status effects, this also controls the stacked icon registration
+	 */
 	maximumStacks?: number;
 
 	mayBeToggled?: boolean; // set to true to allow the resource to be toggled via the UI
 	mayNotBeCanceled?: boolean; // set to true to prevent the resource from being clicked off
-	// Set to true if this is internally tracked through DebuffState instead of ResourceState.
-	// All DoT debuffs will use DebuffState, regardless of this flag.
-	specialDebuff?: true;
+	/**
+	 * Set to true if this is internally tracked through DebuffState instead of ResourceState.
+	 * All DoT debuffs will use DebuffState, regardless of this flag.
+	 */
+	specialDebuff?: boolean;
+	/**
+	 * Set to true if this resource is used to represent damage from a "pet" actor. Since we track
+	 * autonomous pet damage (Bahamut, Living Shadow, Automaton Queen) as DoTs internally, this flag
+	 * tells the frontend to avoid displaying irrelevant DoT-only information.
+	 */
+	isPetTracker?: boolean;
 }
 
 export interface TraitData {

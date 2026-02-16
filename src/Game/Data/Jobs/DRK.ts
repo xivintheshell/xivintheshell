@@ -114,7 +114,7 @@ export const DRK_TRACKERS = ensureRecord<ResourceData>()({
 	DRK_AOE_COMBO_TRACKER: { name: "DRK AOE Combo", label: { zh: "AOE连连击状态" } }, // [0, 1]
 	DRK_DELIRIUM_COMBO_TRACKER: { name: "DRK Delirium Combo", label: { zh: "血红乱连连击状态" } }, // [0, 2]
 	DARK_ARTS: { name: "Dark Arts", label: { zh: "暗技" } }, // [0, 1]
-	ESTEEM_TRACKER: { name: "Esteem Attacks", label: { zh: "掠影攻击" } }, // [0, 5]
+	ESTEEM_TRACKER: { name: "Esteem Attacks", label: { zh: "掠影攻击" }, isPetTracker: true }, // [0, 5]
 });
 
 export const DRK_TRAITS = ensureRecord<TraitData>()({

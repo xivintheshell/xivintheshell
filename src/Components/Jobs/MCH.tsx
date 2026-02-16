@@ -17,11 +17,7 @@ import {
 
 export class MCHStatusPropsGenerator extends StatusPropsGenerator<MCHState> {
 	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
-		return [
-			...(["WILDFIRE", "BIOBLASTER"] as MCHResourceKey[]).flatMap((key) =>
-				this.makeTargetedTimers(key),
-			),
-		];
+		return [this.makeCommonTimer("WILDFIRE", false), ...this.makeTargetedTimers("BIOBLASTER")];
 	}
 
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
