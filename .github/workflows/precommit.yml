@@ -25,7 +25,7 @@ jobs:
         cache: 'npm'
     - run: npm ci
     - run: npm run build --if-present
-    - run: npx tsc --no-emit
+    - run: npx tsc --noEmit
     - run: npm test
     - run: npm run lint
     - run: npx prettier-no-jsx-parens --check .
