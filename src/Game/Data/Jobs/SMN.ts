@@ -395,7 +395,7 @@ export const SMN_TRACKERS = ensureRecord<ResourceData>()({
 	// (next demi summon) 0 = solar, 1 = baha, 2 = solar, 3 = phoenix
 	NEXT_DEMI_CYCLE: { name: "Next Demi Cycle", label: { zh: "亚灵神循环" } },
 	// # of remaining demi autos during this summon
-	DEMI_AUTO: { name: "Demi Auto-attack", label: { zh: "亚灵神自动攻击" } },
+	DEMI_AUTO: { name: "Demi Auto-attack", label: { zh: "亚灵神自动攻击" }, isPetTracker: true },
 });
 
 export const SMN_TRAITS = ensureRecord<TraitData>()({

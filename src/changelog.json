@@ -4,7 +4,10 @@
 		"changes": [
 			"[WAR] Added a \"Retaliation\" skill to simulate taking damage while Damnation or Vengeance is active.",
 			"Abilities usable at range no longer automatically re-enable auto-attacks on melee and tank jobs (this does not currently affect damage calculations).",
-			"Added auto-attack downtime windows to Ama's combat sim export."
+			"Added auto-attack downtime windows to Ama's combat sim export.",
+			"[MCH] Fixed a bug where the Wildfire debuff would not appear.",
+			"[MCH][SMN][DRK] Removed unnecessary columns in display of damage breakdown from pets.",
+			"During FFLogs import, players will now appear according to the order of their jobs."
 		]
 	},
 	{

@@ -23,7 +23,7 @@ import {
 	updateSkillOrDoTInclude,
 } from "../Controller/DamageStatistics";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
-import { ActionKey, ResourceKey } from "../Game/Data";
+import { ActionKey, ResourceKey, RESOURCES } from "../Game/Data";
 import { LIMIT_BREAK_ACTIONS } from "../Game/Data/Shared/LimitBreak";
 
 export type DamageStatsMainTableEntry = {
@@ -267,6 +267,7 @@ function DoTTableRow(props: {
 	name: ResourceKey;
 	targetNumber: number;
 	row: DamageStatsDoTTableEntry;
+	isPetTracker?: boolean;
 }) {
 	const colors = getCurrentThemeColors();
 	const tags = props.row.displayedModifiers.map((tag, i) => <BuffTag key={i} buff={tag} />);
@@ -345,15 +346,28 @@ function DoTTableRow(props: {
 			borderTop: "1px solid " + colors.bgMediumContrast,
 		}}
 	>
-		<div style={cell(8)}>{props.row.castTime.toFixed(3)}</div>
-		<div style={cell(8)}>{props.row.applicationTime.toFixed(3)}</div>
-		<div style={cell(12)}>{tags}</div>
-		<div style={cell(10)}>{gapNode}</div>
-		<div style={cell(10)}>{overrideNode}</div>
-		<div style={cell(10)}>{mainPotencyNode}</div>
-		<div style={cell(10)}>{dotPotencyNode}</div>
-		<div style={cell(8)}>{numTicksNode}</div>
-		<div style={cell(24)}>{totalPotencyNode}</div>
+		{props.isPetTracker ? (
+			<>
+				<div style={cell(3)} />
+				<div style={cell(12)}>{props.row.castTime.toFixed(3)}</div>
+				<div style={cell(27)}>{tags}</div>
+				<div style={cell(20)}>{dotPotencyNode}</div>
+				<div style={cell(8)}>{numTicksNode}</div>
+				<div style={cell(30)}>{totalPotencyNode}</div>
+			</>
+		) : (
+			<>
+				<div style={cell(8)}>{props.row.castTime.toFixed(3)}</div>
+				<div style={cell(8)}>{props.row.applicationTime.toFixed(3)}</div>
+				<div style={cell(12)}>{tags}</div>
+				<div style={cell(10)}>{gapNode}</div>
+				<div style={cell(10)}>{overrideNode}</div>
+				<div style={cell(10)}>{mainPotencyNode}</div>
+				<div style={cell(10)}>{dotPotencyNode}</div>
+				<div style={cell(8)}>{numTicksNode}</div>
+				<div style={cell(24)}>{totalPotencyNode}</div>
+			</>
+		)}
 	</div>;
 }
 
@@ -371,10 +385,12 @@ function DoTTable(props: {
 	// right arrow
 	const dotHeaderStr = `${localizeResourceType(props.dotName)} \u2192 Boss ${props.targetNumber} ${props.dotHeaderSuffix}`;
 	const colors = getCurrentThemeColors();
+	const isPetTracker = RESOURCES[props.dotName].isPetTracker;
 	const dotTableRows = props.tableRows.map((row, i) => <DoTTableRow
 		name={props.dotName}
 		targetNumber={props.targetNumber}
 		row={row}
+		isPetTracker={isPetTracker}
 		key={i}
 	/>);
 	return <div
@@ -390,20 +406,21 @@ function DoTTable(props: {
 		</div>
 		<div style={{ outline: "1px solid " + colors.bgMediumContrast }}>
 			<div>
-				<div style={{ display: "inline-block", width: "8%" }}>
+				{isPetTracker && <div style={{ display: "inline-block", width: "3%" }} />}
+				<div style={{ display: "inline-block", width: isPetTracker ? "12%" : "8%" }}>
 					<span style={headerCellStyle}>
 						<b>{localize({ en: "cast time", zh: "施放时间" })}</b>
 					</span>
 				</div>
-				<div style={{ display: "inline-block", width: "8%" }}>
+				{!isPetTracker && <div style={{ display: "inline-block", width: "8%" }}>
 					<span style={headerCellStyle}>
 						<b>{localize({ en: "application time", zh: "结算时间" })}</b>
 					</span>
-				</div>
-				<div style={{ display: "inline-block", width: "12%" }}>
+				</div>}
+				<div style={{ display: "inline-block", width: isPetTracker ? "27%" : "12%" }}>
 					<span style={headerCellStyle} />
 				</div>
-				<div style={{ display: "inline-block", width: "10%" }}>
+				{!isPetTracker && <div style={{ display: "inline-block", width: "10%" }}>
 					<span style={headerCellStyle}>
 						<b>{localize({ en: "gap", zh: "DoT间隙" })} </b>
 						<Help
@@ -424,8 +441,8 @@ function DoTTable(props: {
 							})}
 						/>
 					</span>
-				</div>
-				<div style={{ display: "inline-block", width: "10%" }}>
+				</div>}
+				{!isPetTracker && <div style={{ display: "inline-block", width: "10%" }}>
 					<span style={headerCellStyle}>
 						<b>{localize({ en: "override", zh: "DoT覆盖" })} </b>
 						<Help
@@ -436,23 +453,33 @@ function DoTTable(props: {
 							})}
 						/>
 					</span>
-				</div>
-				<div style={{ display: "inline-block", width: "10%" }}>
+				</div>}
+				{!isPetTracker && <div style={{ display: "inline-block", width: "10%" }}>
 					<span style={headerCellStyle}>
 						<b>{localize({ en: "initial", zh: "初始威力" })}</b>
 					</span>
-				</div>
-				<div style={{ display: "inline-block", width: "10%" }}>
-					<span style={headerCellStyle}>
-						<b>{localize({ en: "DoT", zh: "DoT威力" })}</b>
-					</span>
-				</div>
+				</div>}
+				{
+					<div style={{ display: "inline-block", width: isPetTracker ? "20%" : "10%" }}>
+						<span style={headerCellStyle}>
+							<b>
+								{isPetTracker
+									? localize({ en: "last hit potency", zh: "最终击中威力" })
+									: localize({ en: "DoT", zh: "DoT威力" })}
+							</b>
+						</span>
+					</div>
+				}
 				<div style={{ display: "inline-block", width: "8%" }}>
 					<span style={headerCellStyle}>
-						<b>{localize({ en: "ticks", zh: "跳DoT次数" })}</b>
+						<b>
+							{isPetTracker
+								? localize({ en: "hits", zh: "击中数量" })
+								: localize({ en: "ticks", zh: "跳DoT次数" })}
+						</b>
 					</span>
 				</div>
-				<div style={{ display: "inline-block", width: "24%" }}>
+				<div style={{ display: "inline-block", width: isPetTracker ? "30%" : "24%" }}>
 					<span style={headerCellStyle}>
 						<b>{localize({ en: "total", zh: "总威力" })}</b>
 					</span>
@@ -466,22 +493,28 @@ function DoTTable(props: {
 					borderTop: "1px solid " + colors.bgMediumContrast,
 				}}
 			>
-				<div style={cell(28)} />
-				<div style={cell(10)}>{dotTableSummary.cumulativeGap.toFixed(3)}</div>
-				<div style={cell(10)}>{dotTableSummary.cumulativeOverride.toFixed(3)}</div>
-				<div style={cell(20)} />
-				<div style={cell(8)}>
-					{
-						/* The total tick denominator isn't terribly useful for DoTs that aren't maintained full-time */
-						controller.game.fullTimeDoTs.includes(props.dotName) ? (
-							<>
-								{dotTableSummary.totalTicks}/{dotTableSummary.maxTicks}
-							</>
-						) : (
-							<>{dotTableSummary.totalTicks}</>
-						)
-					}
-				</div>
+				{isPetTracker ? (
+					<div style={cell(70)} />
+				) : (
+					<>
+						<div style={cell(28)} />
+						<div style={cell(10)}>{dotTableSummary.cumulativeGap.toFixed(3)}</div>
+						<div style={cell(10)}>{dotTableSummary.cumulativeOverride.toFixed(3)}</div>
+						<div style={cell(20)} />
+						<div style={cell(8)}>
+							{
+								/* The total tick denominator isn't terribly useful for DoTs that aren't maintained full-time */
+								controller.game.fullTimeDoTs.includes(props.dotName) ? (
+									<>
+										{dotTableSummary.totalTicks}/{dotTableSummary.maxTicks}
+									</>
+								) : (
+									<>{dotTableSummary.totalTicks}</>
+								)
+							}
+						</div>
+					</>
+				)}
 				<div style={cell(24)}>
 					{dotTableSummary.totalPotencyWithoutPot.toFixed(2)}
 					{dotTableSummary.totalPotPotency > 0 ? (

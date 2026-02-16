@@ -80,7 +80,7 @@ export const MCH_STATUSES = ensureRecord<ResourceData>()({
 
 export const MCH_TRACKERS = ensureRecord<ResourceData>()({
 	HEAT_COMBO: { name: "Heat Combo", label: { zh: "热连击" } },
-	QUEEN: { name: "Queen", label: { zh: "人偶预备" } },
+	QUEEN: { name: "Queen", label: { zh: "人偶预备" }, isPetTracker: true },
 	QUEEN_PUNCHES: { name: "QueenPunches", label: { zh: "人偶铁壁拳" } },
 	QUEEN_FINISHERS: { name: "QueenFinishers", label: { zh: "人偶离场" } },
 	BATTERY_BONUS: { name: "BatteryBonus", label: { zh: "额外电量" } },
