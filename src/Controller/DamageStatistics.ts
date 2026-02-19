@@ -557,6 +557,8 @@ export function calculateDamageStats(props: {
 		ctl.record.iterateSelected(processNodeFn);
 	} else {
 		ctl.record.iterateAll(processNodeFn);
+		// Insert auto-attack damage explicitly when summarizing the whole table.
+		ctl.game.fakeAutoActionNodes.forEach(processNodeFn);
 	}
 
 	dotTables.forEach((table, dotName) => {

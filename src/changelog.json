@@ -1,5 +1,13 @@
 [
 	{
+		"date": "2/18/26",
+		"changes": [
+			"[BETA] Auto-attack potencies are now tracked for all melee and tank jobs. Haste buffs may not yet be properly applied.",
+			"[BETA] Auto-attacks are now automatically delayed during downtime windows."
+		],
+		"level": "major"
+	},
+	{
 		"date": "2/15/26",
 		"changes": [
 			"[WAR] Added a \"Retaliation\" skill to simulate taking damage while Damnation or Vengeance is active.",

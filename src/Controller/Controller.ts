@@ -828,13 +828,13 @@ class Controller {
 		}
 	}
 
-	reportAutoTick(time: number, sourceDesc: string) {
+	reportAutoTick(time: number) {
 		if (!this.#bInSandbox) {
 			this.timeline.addElement({
 				type: ElemType.AutoTickMark,
 				time: time,
 				displayTime: this.game.getDisplayTime(),
-				sourceDesc: sourceDesc,
+				sourceDesc: "",
 			});
 		}
 	}

@@ -611,14 +611,30 @@ export class Timeline {
 		return maxTrack + 1;
 	}
 
-	duringUntargetable(displayTime: number) {
-		for (let i = 0; i < this.#untargetableMarkers.length; i++) {
-			const m = this.#untargetableMarkers[i];
+	duringUntargetable(displayTime: number): boolean {
+		// probably should binary search but whatever
+		for (const m of this.#untargetableMarkers) {
 			const mStart = m.time;
 			const mEnd = m.time + m.duration;
 			if (displayTime >= mStart && displayTime < mEnd) return true;
 		}
 		return false;
+	}
+
+	// Returns the first targetable timestamp after the provided `displayTime`. That is,
+	// if we're currently in an untargetable marker, then returns the end of that marker.
+	// If we are not currently in an untargetable marker, then returns `displayTime`.
+	nextTargetableAfter(displayTime: number): number {
+		for (const m of this.#untargetableMarkers) {
+			if (m.time > displayTime) {
+				return displayTime;
+			}
+			const mEnd = m.time + m.duration;
+			if (m.time <= displayTime && displayTime < mEnd) {
+				return mEnd;
+			}
+		}
+		return displayTime;
 	}
 
 	// inputs are displayed numbers
