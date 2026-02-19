@@ -433,7 +433,11 @@ function drawAutoTickMarks(params: MarkerDrawParams<AutoTickMarkElem>) {
 
 		testInteraction(
 			{ x: x - 2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight() },
-			{ hoverTip: [`[${tick.displayTime.toFixed(3)}] ${tick.sourceDesc}`] },
+			{
+				hoverTip: [
+					`[${tick.displayTime.toFixed(3)}] ${localize({ en: "auto-attack", zh: "自动攻击" })}`,
+				],
+			},
 		);
 	});
 	ctx.stroke();

@@ -309,6 +309,11 @@ makeResourceAbility(ALL_JOBS, "SPRINT", 1, "cd_SPRINT", {
 	onConfirm: combineEffects(cancelDualcast, bunny),
 });
 
+// Fake auto-attack ability that is special-case hidden from the UI. Should never be constructable.
+makeAbility(ALL_JOBS, "ATTACK", 1, "NEVER", {
+	applicationDelay: 0,
+});
+
 //#endregion
 
 //#region Limit Breaks

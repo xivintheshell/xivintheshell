@@ -36,7 +36,7 @@ import {
 
 import { controller } from "../Controller/Controller";
 import { MAX_ABILITY_TARGETS } from "../Controller/Common";
-import { ActionNode } from "../Controller/Record";
+import { skillNode, ActionNode } from "../Controller/Record";
 import {
 	Modifiers,
 	Potency,
@@ -118,6 +118,7 @@ export class GameState {
 	#exclusiveHots: Map<ResourceKey, ResourceKey[]> = new Map();
 	autoStartTimes: number[];
 	autoStopTimes: number[];
+	fakeAutoActionNodes: ActionNode[] = [];
 
 	constructor(config: GameConfig) {
 		this.config = config;
@@ -494,7 +495,35 @@ export class GameState {
 	jobSpecificOnAutoAttack() {}
 
 	private onAutoAttack() {
-		// TODO: HANDLE AUTO ATTACK POTENCY
+		// Auto-attacks have a universal application delay of 0.53s.
+		const AUTO_DELAY = 0.53;
+		const potency = new Potency({
+			config: this.config,
+			sourceTime: this.getDisplayTime() + AUTO_DELAY,
+			sourceSkill: "ATTACK",
+			aspect: Aspect.Physical,
+			basePotency: 100, // TODO
+			snapshotTime: this.getDisplayTime(),
+			description: "auto-attack",
+			// For now, assume that autos always hit the first available boss.
+			targetList: [1],
+			falloff: undefined,
+		});
+		// Create a fake ActionNode for damage tracking purposes.
+		const autoNode = skillNode("ATTACK");
+		autoNode.applicationTime = this.time;
+		autoNode.addPotency(potency);
+		this.fakeAutoActionNodes.push(autoNode);
+		this.addEvent(
+			new Event("aa applied", 0.53, () => {
+				controller.resolvePotency(potency);
+				if (!this.hasResourceAvailable("IN_COMBAT")) {
+					this.resources.get("IN_COMBAT").gain(1);
+				}
+			}),
+		);
+		controller.reportAutoTick(this.time);
+		// Assume all effects are resolved on snapshot rather than on application.
 		this.jobSpecificOnAutoAttack();
 	}
 
@@ -798,11 +827,20 @@ export class GameState {
 	addRecurringAutoAttackEvent(initialDelay: number, recurringDelay: number) {
 		const autoAttackEvent = (initialDelay: number, recurringDelay: number) => {
 			const event = new Event("aa tick", initialDelay, () => {
+				let nextAutoDelay = recurringDelay;
 				if (this.resources.get("AUTOS_ENGAGED").available(1) && this.isInCombat()) {
-					// do an auto
-					this.onAutoAttack();
+					// If the boss is untargetable, then do not trigger the auto-attack event.
+					// Instead, store the auto until the untargetable event ends.
+					// We assume that changing the untargetable track will force a re-simulation,
+					// so this will always be reliable.
+					const now = this.getDisplayTime();
+					if (!controller.timeline.duringUntargetable(now)) {
+						this.onAutoAttack();
+					} else {
+						nextAutoDelay = controller.timeline.nextTargetableAfter(now) - now;
+					}
 				}
-				this.addEvent(autoAttackEvent(recurringDelay, recurringDelay));
+				this.addEvent(autoAttackEvent(nextAutoDelay, recurringDelay));
 			});
 			event.addTag(EventTag.AutoTick);
 			return event;
@@ -854,8 +892,7 @@ export class GameState {
 		}
 
 		// calculate reccuring delay
-		const defaultAutoDelay = 3;
-		const autoDelay = reccuringDelay ? reccuringDelay : defaultAutoDelay;
+		const autoDelay = reccuringDelay ?? this.autoAttackDelay;
 
 		let initDelay = 0;
 		if (initialDelay === -1) {
@@ -882,7 +919,7 @@ export class GameState {
 		const currentTimer = this.findAutoAttackTimerInQueue();
 		if (this.resources.get("AUTOS_ENGAGED").availableAmount() === 0) {
 			// toggle autos ON
-			this.startAutoAttackTimer(currentTimer === -1 ? 3 : currentTimer);
+			this.startAutoAttackTimer(currentTimer === -1 ? this.autoAttackDelay : currentTimer);
 		} else {
 			// toggle autos OFF
 			this.resources.get("AUTOS_ENGAGED").consume(1);
@@ -982,12 +1019,26 @@ export class GameState {
 				}
 			} else {
 				// AUTOS OUT OF COMBAT
-
 				if (startsAutos) {
-					const aaDelay =
-						capturedCastTime +
-						(currentDelay === -1 ? recurringAutoDelay : currentDelay);
-					this.startAutoAttackTimer(aaDelay, recurringAutoDelay, capturedCastTime);
+					// If we're out of combat, perform an auto  with timing depending on
+					// 1. Application delay of this ability (to simulate macro pulling)
+					// 2. t=0 (in case users deliberately want to weave something that requires starting combat)
+					const displayTime = this.getDisplayTime();
+					const applicationDelay =
+						skill.applicationDelay +
+						(capturedCastTime > 0
+							? capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime)
+							: 0);
+					const applicationTime = displayTime + applicationDelay;
+					const initialDelay =
+						applicationTime < 0
+							? applicationDelay
+							: Math.min(applicationDelay, -displayTime) + Debug.epsilon;
+					this.startAutoAttackTimer(
+						initialDelay + recurringAutoDelay,
+						recurringAutoDelay,
+						initialDelay,
+					);
 				}
 			}
 		} else {
@@ -1282,8 +1333,20 @@ export class GameState {
 
 		if (startsAutos) {
 			if (!this.isInCombat()) {
-				const aaDelay = currentDelay === -1 ? recurringAutoDelay : currentDelay;
-				this.startAutoAttackTimer(aaDelay, recurringAutoDelay, undefined);
+				// If we're out of combat, perform an auto  with timing depending on
+				// 1. Application delay of this ability (to simulate macro pulling)
+				// 2. t=0 (in case users deliberately want to weave something that requires starting combat)
+				const displayTime = this.getDisplayTime();
+				const applicationTime = displayTime + skill.applicationDelay;
+				const initialDelay =
+					applicationTime < 0
+						? skill.applicationDelay
+						: Math.min(skill.applicationDelay, -displayTime) + Debug.epsilon;
+				this.startAutoAttackTimer(
+					recurringAutoDelay + initialDelay,
+					recurringAutoDelay,
+					initialDelay,
+				);
 			} else {
 				if (!autosEngaged) {
 					// start autos with current delay
