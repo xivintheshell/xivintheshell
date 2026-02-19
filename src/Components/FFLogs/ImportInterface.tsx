@@ -505,12 +505,6 @@ export function FflogsImportFlow() {
 				</li>
 				<li>
 					{localize({
-						en: "XIV in the Shell currently does not track when multiple enemies are hit by an ability.",
-						zh: "XIV in the Shell目前不支持识别技能命中的目标数，默认所有技能仅击中一个目标。",
-					})}
-				</li>
-				<li>
-					{localize({
 						en: "XIV in the Shell does not reflect job gauge updates that are affected by random factors, or by whether an enemy is hit or killed.",
 						zh: "XIV in the Shell目前不会显示由随机因素/目标被击中/目标死亡导致的职业量谱状态更新。",
 					})}
