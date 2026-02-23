@@ -161,6 +161,11 @@ export function TimelineDisplaySettings() {
 				controller.setTimelineOptions({ drawBuffIndicators: val });
 			}}
 		/>
+		<Checkbox
+			uniqueName={"showAutoAttackIndicators"}
+			label={localize({ en: "show auto-attack indicators", zh: "显示自动攻击标记" })}
+			onChange={(val) => controller.setTimelineOptions({ drawAutoAttackIndicators: val })}
+		/>
 		<br />
 		{header({ en: "Clipboard copy mode", zh: "剪贴板复制模式" }, clipboardTopHelp)}
 		<RadioSet

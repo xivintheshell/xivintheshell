@@ -184,6 +184,10 @@ export class PLDState extends GameState {
 		this.resources.get("OATH_GAUGE").gain(5);
 	}
 
+	override jobSpecificAutoPotencyModifiers(): PotencyModifier[] {
+		return this.hasResourceAvailable("FIGHT_OR_FLIGHT") ? [Modifiers.FightOrFlight] : [];
+	}
+
 	isSpellInstant(name: ActionKey) {
 		if (name !== "CLEMENCY") {
 			return (

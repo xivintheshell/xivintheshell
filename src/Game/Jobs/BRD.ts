@@ -3,7 +3,7 @@ import { localizeResourceType } from "../../Components/Localization";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { ActionNode } from "../../Controller/Record";
 import { Debug, BuffType } from "../Common";
-import { TraitKey } from "../Data";
+import { ActionKey, TraitKey } from "../Data";
 import { BRDResourceKey, BRDActionKey, BRDCooldownKey } from "../Data/Jobs/BRD";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
@@ -139,6 +139,20 @@ export class BRDState extends GameState {
 		} else if (this.hasResourceAvailable("ARMYS_PAEON")) {
 			node.addBuff(BuffType.ArmysPaeon);
 		}
+	}
+
+	override jobSpecificAutoPotencyModifiers(): PotencyModifier[] {
+		return this.getJobPotencyModifiers("ATTACK");
+	}
+
+	override jobSpecificAutoReduction(): number {
+		let speedBuff: BRDResourceKey | undefined = undefined;
+		if (this.hasResourceAvailable("ARMYS_PAEON")) {
+			speedBuff = "ARMYS_PAEON";
+		} else if (this.hasResourceAvailable("ARMYS_MUSE")) {
+			speedBuff = "ARMYS_MUSE";
+		}
+		return this.getSpeedModifier(speedBuff);
 	}
 
 	// Songs tick based on their application time, so they're not registered as a normal recurring event
@@ -289,7 +303,7 @@ export class BRDState extends GameState {
 		return wanderers + mages + armys;
 	}
 
-	getJobPotencyModifiers(skillName: BRDActionKey): PotencyModifier[] {
+	getJobPotencyModifiers(skillName: ActionKey): PotencyModifier[] {
 		const mods: PotencyModifier[] = [];
 
 		const modiferResources: { rscType: BRDResourceKey; mod: PotencyModifier }[] = [

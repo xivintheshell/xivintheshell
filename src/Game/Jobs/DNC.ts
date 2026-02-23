@@ -118,6 +118,37 @@ export class DNCState extends GameState {
 		this.tryConsumeResource("RISING_RHYTHM", true);
 	}
 
+	override jobSpecificAutoPotencyModifiers(): PotencyModifier[] {
+		return this.getGenericPotencyModifiers();
+	}
+
+	getGenericPotencyModifiers(): PotencyModifier[] {
+		const mods: PotencyModifier[] = [];
+		if (this.hasResourceAvailable("STANDARD_FINISH")) {
+			const modifier =
+				this.resources.get("STANDARD_BONUS").availableAmount() === 2
+					? Modifiers.DoubleStandardFinish
+					: Modifiers.SingleStandardFinish;
+			mods.push(modifier);
+		}
+		if (this.hasResourceAvailable("TECHNICAL_FINISH")) {
+			const technicalBonus = this.resources.get("TECHNICAL_BONUS").availableAmount();
+			const modifier =
+				technicalBonus === 4
+					? Modifiers.QuadrupleTechnicalFinish
+					: technicalBonus === 3
+						? Modifiers.TripleTechnicalFinish
+						: technicalBonus === 2
+							? Modifiers.SingleTechnicalFinish
+							: Modifiers.SingleTechnicalFinish;
+			mods.push(modifier);
+		}
+		if (this.hasResourceAvailable("DEVILMENT")) {
+			mods.push(Modifiers.Devilment);
+		}
+		return mods;
+	}
+
 	processComboStatus(skill: DNCActionKey) {
 		if (!COMBO_GCDS.includes(skill)) {
 			return;
@@ -294,29 +325,7 @@ const makeGCD_DNC = (
 		...params,
 		onConfirm,
 		jobPotencyModifiers: (state) => {
-			const mods: PotencyModifier[] = [];
-			if (state.hasResourceAvailable("STANDARD_FINISH")) {
-				const modifier =
-					state.resources.get("STANDARD_BONUS").availableAmount() === 2
-						? Modifiers.DoubleStandardFinish
-						: Modifiers.SingleStandardFinish;
-				mods.push(modifier);
-			}
-			if (state.hasResourceAvailable("TECHNICAL_FINISH")) {
-				const technicalBonus = state.resources.get("TECHNICAL_BONUS").availableAmount();
-				const modifier =
-					technicalBonus === 4
-						? Modifiers.QuadrupleTechnicalFinish
-						: technicalBonus === 3
-							? Modifiers.TripleTechnicalFinish
-							: technicalBonus === 2
-								? Modifiers.SingleTechnicalFinish
-								: Modifiers.SingleTechnicalFinish;
-				mods.push(modifier);
-			}
-			if (state.hasResourceAvailable("DEVILMENT")) {
-				mods.push(Modifiers.Devilment);
-			}
+			const mods = state.getGenericPotencyModifiers();
 			if (name === "STARFALL_DANCE") {
 				mods.push(Modifiers.AutoCDH);
 			}
@@ -349,32 +358,7 @@ const makeAbility_DNC = (
 	return makeAbility("DNC", name, unlockLevel, cdName, {
 		...params,
 		onConfirm: params.onConfirm,
-		jobPotencyModifiers: (state) => {
-			const mods: PotencyModifier[] = [];
-			if (state.hasResourceAvailable("STANDARD_FINISH")) {
-				const modifier =
-					state.resources.get("STANDARD_BONUS").availableAmount() === 2
-						? Modifiers.DoubleStandardFinish
-						: Modifiers.SingleStandardFinish;
-				mods.push(modifier);
-			}
-			if (state.hasResourceAvailable("TECHNICAL_FINISH")) {
-				const technicalBonus = state.resources.get("TECHNICAL_BONUS").availableAmount();
-				const modifier =
-					technicalBonus === 4
-						? Modifiers.QuadrupleTechnicalFinish
-						: technicalBonus === 3
-							? Modifiers.TripleTechnicalFinish
-							: technicalBonus === 2
-								? Modifiers.SingleTechnicalFinish
-								: Modifiers.SingleTechnicalFinish;
-				mods.push(modifier);
-			}
-			if (state.hasResourceAvailable("DEVILMENT")) {
-				mods.push(Modifiers.Devilment);
-			}
-			return mods;
-		},
+		jobPotencyModifiers: (state) => state.getGenericPotencyModifiers(),
 	});
 };
 

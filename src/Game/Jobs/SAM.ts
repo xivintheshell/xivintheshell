@@ -122,10 +122,18 @@ export class SAMState extends GameState {
 		}
 	}
 
+	override jobSpecificAutoPotencyModifiers(): PotencyModifier[] {
+		return this.hasResourceAvailable("FUGETSU") ? [this.getFugetsuModifier()] : [];
+	}
+
 	override jobSpecificAddSpeedBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
 		if (this.hasResourceAvailable("FUKA") && skill.cdName === "cd_GCD") {
 			node.addBuff(BuffType.Fuka);
 		}
+	}
+
+	override jobSpecificAutoReduction(): number {
+		return this.hasResourceAvailable("FUKA") ? this.inherentSpeedModifier() : 0;
 	}
 
 	override hitCombo(combo: ComboPotency): boolean {

@@ -1429,11 +1429,13 @@ export function drawTimelines(params: {
 			elems: (elemBins.get(ElemType.MeditateTickMark) as MeditateTickMarkElem[]) ?? [],
 		});
 
-		// draw auto tick marks here
-		drawAutoTickMarks({
-			...markDrawBase,
-			elems: (elemBins.get(ElemType.AutoTickMark) as AutoTickMarkElem[]) ?? [],
-		});
+		// auto tick marks
+		if (renderingProps.drawOptions.drawAutoAttackIndicators) {
+			drawAutoTickMarks({
+				...markDrawBase,
+				elems: (elemBins.get(ElemType.AutoTickMark) as AutoTickMarkElem[]) ?? [],
+			});
+		}
 
 		// warning marks (polyglot overcap)
 		drawWarningMarks({

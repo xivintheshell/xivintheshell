@@ -5,7 +5,7 @@ import { GameConfig } from "../GameConfig";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
 import { Aspect } from "../Common";
-import { Modifiers, Potency } from "../Potency";
+import { Modifiers, Potency, PotencyModifier } from "../Potency";
 import {
 	Ability,
 	combineEffects,
@@ -107,6 +107,10 @@ export class DRKState extends GameState {
 
 	override get statusPropsGenerator(): StatusPropsGenerator<DRKState> {
 		return new DRKStatusPropsGenerator(this);
+	}
+
+	override jobSpecificAutoPotencyModifiers(): PotencyModifier[] {
+		return this.hasResourceAvailable("DARKSIDE") ? [Modifiers.Darkside] : [];
 	}
 
 	refreshDarkside() {

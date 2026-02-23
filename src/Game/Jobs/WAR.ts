@@ -116,6 +116,10 @@ export class WARState extends GameState {
 		return new WARStatusPropsGenerator(this);
 	}
 
+	override jobSpecificAutoPotencyModifiers(): PotencyModifier[] {
+		return this.hasResourceAvailable("SURGING_TEMPEST") ? [Modifiers.SurgingTempest] : [];
+	}
+
 	processComboStatus(skill: WARActionKey) {
 		if (!COMBO_GCDS.includes(skill)) {
 			return;

@@ -101,7 +101,6 @@ export class GameState {
 	eventsQueue: Event[];
 	skillsList: SkillsList<GameState>;
 	displayedSkills: DisplayedSkills;
-	private autoAttackDelay: number; // auto attack delay
 
 	overTimeEffectGroups: OverTimeRegistrationGroup[] = [];
 	dotResources: ResourceKey[] = [];
@@ -198,8 +197,6 @@ export class GameState {
 		// SKILLS (instantiated once, read-only later)
 		this.skillsList = new SkillsList(this);
 		this.displayedSkills = new DisplayedSkills(this.job, config.level);
-
-		this.autoAttackDelay = 2.5; // defaults to 2.5
 
 		// Tracked for compatibility with sleeposim
 		this.autoStartTimes = [];
@@ -497,18 +494,29 @@ export class GameState {
 	private onAutoAttack() {
 		// Auto-attacks have a universal application delay of 0.53s.
 		const AUTO_DELAY = 0.53;
+		const autoPotencyAmount = this.config.adjustedOvertimePotency(
+			this.jobSpecificAutoBasePotency(),
+			// Assume that we only care about auto-attacks for melee/ranged/tanks. If we ever
+			// need to model it for casters, then we need to account for sps here.
+			"sks",
+		);
 		const potency = new Potency({
 			config: this.config,
 			sourceTime: this.getDisplayTime() + AUTO_DELAY,
 			sourceSkill: "ATTACK",
 			aspect: Aspect.Physical,
-			basePotency: 100, // TODO
+			basePotency: autoPotencyAmount,
 			snapshotTime: this.getDisplayTime(),
 			description: "auto-attack",
 			// For now, assume that autos always hit the first available boss.
 			targetList: [1],
 			falloff: undefined,
 		});
+		if (this.hasResourceAvailable("TINCTURE")) {
+			potency.addModifiers(Modifiers.Tincture);
+		}
+		potency.addModifiers(...this.jobSpecificAutoPotencyModifiers());
+		// TODO:auto account for job-specific damage buffs
 		// Create a fake ActionNode for damage tracking purposes.
 		const autoNode = skillNode("ATTACK");
 		autoNode.applicationTime = this.time;
@@ -525,6 +533,65 @@ export class GameState {
 		controller.reportAutoTick(this.time);
 		// Assume all effects are resolved on snapshot rather than on application.
 		this.jobSpecificOnAutoAttack();
+	}
+
+	/**
+	 * The auto-attack delay for this job, determined by its highest-ilvl equippable weapon.
+	 * For the most part, this is the same for all weapons; the only notable exception where it
+	 * could be relevant is Q40, where PLDs can equip a Garuda EX weapon that gets ilvl synced but
+	 * has a shorter AA delay, increasing Oath Gauge generation.
+	 *
+	 * If a job has an active haste buff, the returned value should change to reflect it.
+	 *
+	 * All jobs have a different base value, but we return a default value so healers/casters can
+	 * ignore it.
+	 */
+	jobSpecificAutoAttackDelay(): number {
+		// copied from ama's sim code
+		const WEAPON_DELAYS = {
+			PLD: 2.24,
+			WAR: 3.36,
+			DRK: 2.96,
+			GNB: 2.8,
+			DRG: 2.8,
+			RPR: 3.2,
+			MNK: 2.56,
+			SAM: 2.64,
+			NIN: 2.56,
+			VPR: 2.64,
+			BRD: 3.04,
+			MCH: 2.64,
+			DNC: 3.12,
+			BLM: 3.28,
+			SMN: 3.12,
+			RDM: 3.44,
+			PCT: 2.96,
+			WHM: 3.44,
+			SCH: 3.12,
+			AST: 3.2,
+			SGE: 2.8,
+			BLU: 2.5, // ???
+			NEVER: 2.5,
+		};
+		// I choose not to care about rounding/flooring
+		// until we become forced to care about rounding/flooring
+		return (WEAPON_DELAYS[this.job] * (100 - this.jobSpecificAutoReduction())) / 100;
+	}
+
+	jobSpecificAutoReduction(): number {
+		// I'm deliberately too lazy to code this + potency modifiers for casters and healers.
+		// Maybe someday we'll care about it for SCH/SMN.
+		return 0;
+	}
+
+	jobSpecificAutoBasePotency(): number {
+		// Copied from xivgear:
+		// https://github.com/xiv-gear-planner/gear-planner/blob/505398e19a45cc0304a7746e4acd3e694051b908/packages/xivmath/src/xivconstants.ts#L113-L120
+		return this.job === "BRD" || this.job === "MCH" ? 80 : 90;
+	}
+
+	jobSpecificAutoPotencyModifiers(): PotencyModifier[] {
+		return [];
 	}
 
 	getStatusDuration(rscType: ResourceKey): number {
@@ -892,7 +959,7 @@ export class GameState {
 		}
 
 		// calculate reccuring delay
-		const autoDelay = reccuringDelay ?? this.autoAttackDelay;
+		const autoDelay = reccuringDelay ?? this.jobSpecificAutoAttackDelay();
 
 		let initDelay = 0;
 		if (initialDelay === -1) {
@@ -919,7 +986,9 @@ export class GameState {
 		const currentTimer = this.findAutoAttackTimerInQueue();
 		if (this.resources.get("AUTOS_ENGAGED").availableAmount() === 0) {
 			// toggle autos ON
-			this.startAutoAttackTimer(currentTimer === -1 ? this.autoAttackDelay : currentTimer);
+			this.startAutoAttackTimer(
+				currentTimer === -1 ? this.jobSpecificAutoAttackDelay() : currentTimer,
+			);
 		} else {
 			// toggle autos OFF
 			this.resources.get("AUTOS_ENGAGED").consume(1);
@@ -968,7 +1037,7 @@ export class GameState {
 		// autos helper constants
 		const hasCast = capturedCastTime !== 0;
 		const autosEngaged = this.resources.get("AUTOS_ENGAGED").available(1);
-		const recurringAutoDelay = this.autoAttackDelay; // <<---- placeholder for changing auto attack speed
+		const recurringAutoDelay = this.jobSpecificAutoAttackDelay();
 		const currentDelay = this.findAutoAttackTimerInQueue();
 		const startsAutos = skill.startsAuto; // <<---  for spells starting autos
 
@@ -1325,7 +1394,7 @@ export class GameState {
 		// by default abilities dont start autos
 
 		const autosEngaged = this.resources.get("AUTOS_ENGAGED").available(1);
-		const recurringAutoDelay = this.autoAttackDelay; // <<---- placeholder for changing auto attack speed
+		const recurringAutoDelay = this.jobSpecificAutoAttackDelay();
 		const currentDelay = this.findAutoAttackTimerInQueue();
 		// Abilities with startsAuto explicitly set to false should not begin auto-attacks, even if they do potency.
 		const startsAutos =
