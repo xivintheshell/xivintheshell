@@ -93,7 +93,8 @@ const ACTION_TD_STYLE: CSSProperties = {
 const TR_STYLE: CSSProperties = {
 	width: "100%",
 	height: "1.6em",
-	scrollMarginTop: "1.6em", // Prevent elements from being covered by the fixed header row
+	scrollMarginTop: "2.1em", // Prevent elements from being covered by the fixed header row
+	scrollMarginBottom: "0.5em", // Show a tiny bit of the subsequent element to indicate the end of the selection
 	userSelect: "none",
 	outline: "none",
 };

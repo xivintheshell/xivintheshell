@@ -39,7 +39,11 @@ import {
 } from "./Localization";
 import { setEditingMarkerValues } from "./TimelineMarkers";
 import { getThemeColors, ThemeColors, ColorThemeContext } from "./ColorTheme";
-import { scrollEditorToFirstSelected, updateInvalidStatus } from "./TimelineEditor";
+import {
+	scrollEditorToFirstSelected,
+	scrollEditorToLastSelected,
+	updateInvalidStatus,
+} from "./TimelineEditor";
 import { bossIsUntargetable } from "../Controller/DamageStatistics";
 import {
 	updateTimelineView,
@@ -1028,11 +1032,24 @@ function drawSkills(params: {
 							// If we're doing a click+drag box, this skill was already selected,
 							// and there's no need to re-select it.
 							if (!info.bgSelecting) {
+								const originalStartIndex = controller.record.selectionStartIndex;
+								const originalEndIndex = controller.record.selectionEndIndex;
 								controller.timeline.onClickTimelineAction(
 									icon.elem.actionIndex,
 									info.shiftKey,
 								);
-								scrollEditorToFirstSelected();
+								const newStartIndex = controller.record.selectionStartIndex;
+								const newEndIndex = controller.record.selectionEndIndex;
+								if (
+									(newStartIndex === originalStartIndex &&
+										newEndIndex !== originalEndIndex) ||
+									(newStartIndex === originalEndIndex &&
+										(newEndIndex ?? 0) > (originalEndIndex ?? 0))
+								) {
+									scrollEditorToLastSelected();
+								} else {
+									scrollEditorToFirstSelected();
+								}
 							}
 						}
 					},
