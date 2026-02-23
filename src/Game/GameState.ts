@@ -891,10 +891,10 @@ export class GameState {
 	/**
 	 * add recurring auto attack event with an initial delay
 	 */
-	addRecurringAutoAttackEvent(initialDelay: number, recurringDelay: number) {
-		const autoAttackEvent = (initialDelay: number, recurringDelay: number) => {
+	addRecurringAutoAttackEvent(initialDelay: number) {
+		const autoAttackEvent = (initialDelay: number) => {
 			const event = new Event("aa tick", initialDelay, () => {
-				let nextAutoDelay = recurringDelay;
+				let nextAutoDelay = this.jobSpecificAutoAttackDelay();
 				if (this.resources.get("AUTOS_ENGAGED").available(1) && this.isInCombat()) {
 					// If the boss is untargetable, then do not trigger the auto-attack event.
 					// Instead, store the auto until the untargetable event ends.
@@ -907,12 +907,12 @@ export class GameState {
 						nextAutoDelay = controller.timeline.nextTargetableAfter(now) - now;
 					}
 				}
-				this.addEvent(autoAttackEvent(nextAutoDelay, recurringDelay));
+				this.addEvent(autoAttackEvent(nextAutoDelay));
 			});
 			event.addTag(EventTag.AutoTick);
 			return event;
 		};
-		this.addEvent(autoAttackEvent(initialDelay, recurringDelay));
+		this.addEvent(autoAttackEvent(initialDelay));
 	}
 
 	/**
