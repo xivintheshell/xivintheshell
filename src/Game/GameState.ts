@@ -968,7 +968,7 @@ export class GameState {
 			initDelay = initialDelay ?? autoDelay;
 		}
 		// start reccuring event with a delay
-		this.addRecurringAutoAttackEvent(initDelay, autoDelay);
+		this.addRecurringAutoAttackEvent(initDelay);
 	}
 
 	// removes current auto attack timer
