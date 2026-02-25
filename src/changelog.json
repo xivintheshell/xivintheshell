@@ -1,5 +1,11 @@
 [
 	{
+		"date": "2/25/26",
+		"changes": [
+			"[DRK] Fixed a bug where Blood Weapon did not trigger on spells."
+		]
+	},
+	{
 		"date": "2/22/26",
 		"changes": [
 			"Fixed a bug where clicking an element in the visual timeline would sometimes not scroll the Timeline Editor table far enough."
