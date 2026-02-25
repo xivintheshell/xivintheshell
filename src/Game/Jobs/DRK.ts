@@ -274,7 +274,11 @@ const makeDRKSpell = (
 ): Spell<DRKState> => {
 	return makeSpell("DRK", name, unlockLevel, {
 		...params,
-		onConfirm: combineEffects(params.onConfirm, (state) => state.processComboStatus(name)),
+		onConfirm: combineEffects(
+			params.onConfirm,
+			(state) => state.bloodWeaponConfirm(params.applicationDelay),
+			(state) => state.processComboStatus(name),
+		),
 		recastTime: (state) => state.config.adjustedGCD(), // sps
 		jobPotencyModifiers: (state) =>
 			state.hasResourceAvailable("DARKSIDE") ? [Modifiers.Darkside] : [],
