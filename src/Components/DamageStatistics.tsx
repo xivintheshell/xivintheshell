@@ -201,6 +201,8 @@ function DamageStatsSettings() {
 		const str = getCachedValue("tinctureBuffPercentage");
 		if (str !== null) {
 			setTinctureBuffPercentage(str);
+		} else {
+			controller.setTinctureBuffPercentage(parseFloat(tinctureBuffPercentageStr));
 		}
 	}, []);
 
