@@ -2,7 +2,8 @@
 	{
 		"date": "2/25/26",
 		"changes": [
-			"[DRK] Fixed a bug where Blood Weapon did not trigger on spells."
+			"[DRK] Fixed a bug where Blood Weapon did not trigger on spells.",
+			"Fixed a bug where damage increase from tinctures would sometimes not show."
 		]
 	},
 	{
