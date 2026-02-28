@@ -1,5 +1,11 @@
 [
 	{
+		"date": "2/28/26",
+		"changes": [
+			"[RPR] Fixed a bug where Plentiful Harvest's potency was incorrectly increased by Immortal Sacrifice."
+		]
+	},
+	{
 		"date": "2/25/26",
 		"changes": [
 			"[DRK] Fixed a bug where Blood Weapon did not trigger on spells.",
