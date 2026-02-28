@@ -543,7 +543,7 @@ const makeRPRWeaponskill = (
 
 			if (name === "PLENTIFUL_HARVEST" && state.hasResourceAvailable("IMMORTAL_SACRIFICE")) {
 				for (
-					let i = 0;
+					let i = 1; // Game only applies extra potency for the 2nd+ stack.
 					i < state.resources.get("IMMORTAL_SACRIFICE").availableAmount();
 					i++
 				) {
