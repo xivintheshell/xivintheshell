@@ -14,13 +14,13 @@ it(
 		time: 36.793,
 		lastDamageApplicationTime: 35.653,
 		totalPotency: {
-			applied: 9311.178000000004,
+			applied: 9311.178,
 		},
 		gcdSkills: {
 			applied: 15,
 		},
 		mainTableSummary: {
-			totalPotencyWithoutPot: 9311.178000000004,
+			totalPotencyWithoutPot: 9311.178,
 		},
 	}),
 );

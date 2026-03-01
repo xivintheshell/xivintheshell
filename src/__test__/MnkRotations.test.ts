@@ -118,7 +118,7 @@ it(
 
 it(
 	"does fewer autos without RoW",
-	testWithConfig({animationLock: 0.7}, () => {
+	testWithConfig({ animationLock: 0.7 }, () => {
 		applySkill("DRAGON_KICK");
 		controller.step(0.7); // pretend we cast RoW to keep timings consistent with the last test
 		controller.step(4); // wait for some autos
@@ -158,15 +158,15 @@ it(
 		time: 24.862 + 10,
 		lastDamageApplicationTime: 24.862 + 10,
 		totalPotency: {
-			applied: 15720.610019449196,
-			pending: 114.57449999999996,
+			applied: 15720.61,
+			pending: 114.57,
 		},
 		gcdSkills: {
 			applied: 15,
 			pending: 0,
 		},
 		mainTableSummary: {
-			totalPotencyWithoutPot: 14624.601869860364,
+			totalPotencyWithoutPot: 14624.6,
 		},
 	}),
 );

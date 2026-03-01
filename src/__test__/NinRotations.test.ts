@@ -336,9 +336,9 @@ it(
 	"fits expected gcds in kunai's bane in opener",
 	testDamageFromTimeline("nin_4th_gcd_opener.txt", {
 		time: 25.317 + 10,
-		lastDamageApplicationTime: 25.08267 + 10,
+		lastDamageApplicationTime: 25.083 + 10,
 		totalPotency: {
-			applied: 17390.402800000018,
+			applied: 17390.4,
 			pending: 1002.67,
 		},
 		gcdSkills: {
@@ -346,7 +346,7 @@ it(
 			pending: 1,
 		},
 		mainTableSummary: {
-			totalPotencyWithoutPot: 16175.879999999994,
+			totalPotencyWithoutPot: 16175.88,
 		},
 	}),
 );
