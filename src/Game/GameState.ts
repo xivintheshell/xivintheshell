@@ -517,10 +517,9 @@ export class GameState {
 			potency.addModifiers(Modifiers.Tincture);
 		}
 		potency.addModifiers(...this.jobSpecificAutoPotencyModifiers());
-		// TODO:auto account for job-specific damage buffs
 		// Create a fake ActionNode for damage tracking purposes.
 		const autoNode = skillNode("ATTACK");
-		autoNode.applicationTime = this.time;
+		autoNode.applicationTime = this.time + AUTO_DELAY;
 		autoNode.addPotency(potency);
 		this.fakeAutoActionNodes.push(autoNode);
 		this.addEvent(

@@ -622,8 +622,8 @@ export class Timeline {
 	}
 
 	// Returns the first targetable timestamp after the provided `displayTime`. That is,
-	// if we're currently in an untargetable marker, then returns the end of that marker.
-	// If we are not currently in an untargetable marker, then returns `displayTime`.
+	// if we're currently in an untargetable marker, then this returns the end of that marker.
+	// If we are not currently in an untargetable marker, then this returns `displayTime`.
 	nextTargetableAfter(displayTime: number): number {
 		for (const m of this.#untargetableMarkers) {
 			if (m.time > displayTime) {
