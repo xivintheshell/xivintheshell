@@ -625,7 +625,7 @@ export class Timeline {
 	// if we're currently in an untargetable marker, then this returns the end of that marker.
 	// If we are not currently in an untargetable marker, then this returns `displayTime`.
 	nextTargetableAfter(displayTime: number): number {
-		for (const m of this.#untargetableMarkers) {
+		for (const m of this.#untargetableMarkers.toSorted((a, b) => a.time - b.time)) {
 			if (m.time > displayTime) {
 				return displayTime;
 			}

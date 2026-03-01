@@ -139,7 +139,7 @@ export class DNCState extends GameState {
 					: technicalBonus === 3
 						? Modifiers.TripleTechnicalFinish
 						: technicalBonus === 2
-							? Modifiers.SingleTechnicalFinish
+							? Modifiers.DoubleTechnicalFinish
 							: Modifiers.SingleTechnicalFinish;
 			mods.push(modifier);
 		}
