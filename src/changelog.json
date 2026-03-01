@@ -2,8 +2,8 @@
 	{
 		"date": "2/28/26",
 		"changes": [
-			"[BETA] Auto-attack potencies are now tracked for all melee, physical ranged, and tank jobs.",
-			"[BETA] Auto-attacks are now automatically delayed during untargetable windows."
+			"Auto-attack potencies are now tracked for all melee, physical ranged, and tank jobs.",
+			"Auto-attacks are now automatically delayed during untargetable windows."
 		],
 		"changes_zh": [
 			"新增了防护、近战、远程物理职业计算自动攻击威力的功能。",
