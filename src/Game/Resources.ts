@@ -521,7 +521,8 @@ ALL_JOBS.forEach((job) => {
 	makeResource(job, "SPRINT", 1, { timeout: 10 });
 	makeResource(job, "PARTY_SIZE", 8, { default: 8 });
 	makeResource(job, "AUTOS_ENGAGED", 1, { default: 0 });
-	makeResource(job, "STORED_AUTO", 1, { default: 0 });
+	// Setting STORED_AUTO ensures combat begins with an auto-attack
+	makeResource(job, "STORED_AUTO", 1, { default: 1 });
 });
 
 MELEE_JOBS.forEach((job) => {

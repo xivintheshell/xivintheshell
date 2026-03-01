@@ -217,7 +217,11 @@ it(
 	"WM waits for combat after a weaponskill",
 	testWithConfig(
 		{
-			countdown: 0,
+			// We start at t=-5 because Stormbite has an application delay of 1.29 seconds,
+			// while auto-attacks have a delay of 0.53 seconds. XIV in the Shell will automatically
+			// withhold auto-attacks until the fight has begun, or if the used skill's delay is long
+			// enough, when that delay ends.
+			countdown: 5,
 		},
 		() => {
 			(["STORMBITE", "WANDERERS_MINUET"] as ActionKey[]).forEach(applySkill);
@@ -233,7 +237,7 @@ it(
 	"WM waits for combat after an ability",
 	testWithConfig(
 		{
-			countdown: 0,
+			countdown: 5,
 		},
 		() => {
 			(["HEARTBREAK_SHOT", "STORMBITE", "WANDERERS_MINUET"] as ActionKey[]).forEach(
@@ -253,8 +257,8 @@ it(
 		time: 0.733 + 5,
 		lastDamageApplicationTime: -0.313 + 5,
 		totalPotency: {
-			applied: 461.95,
-			pending: 0,
+			applied: 545.66,
+			pending: 84.27,
 		},
 		gcdSkills: {
 			applied: 2,
@@ -269,8 +273,8 @@ it(
 		time: 42.4 + 5,
 		lastDamageApplicationTime: 41.37 + 5,
 		totalPotency: {
-			applied: 575,
-			pending: 375,
+			applied: 1775,
+			pending: 455,
 		},
 		gcdSkills: {
 			applied: 2,

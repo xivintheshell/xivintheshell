@@ -8,7 +8,12 @@ import { TraitKey } from "../Data";
 import { MNKActionKey, MNKCooldownKey, MNKResourceKey } from "../Data/Jobs/MNK";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
-import { Modifiers, makePositionalModifier, PotencyModifierType } from "../Potency";
+import {
+	Modifiers,
+	makePositionalModifier,
+	PotencyModifierType,
+	PotencyModifier,
+} from "../Potency";
 import {
 	getResourceInfo,
 	ResourceInfo,
@@ -207,6 +212,29 @@ export class MNKState extends GameState {
 
 	override get statusPropsGenerator(): StatusPropsGenerator<MNKState> {
 		return new MNKStatusPropsGenerator(this);
+	}
+
+	override jobSpecificAutoPotencyModifiers(): PotencyModifier[] {
+		const mods: PotencyModifier[] = [];
+		if (this.hasResourceAvailable("RIDDLE_OF_FIRE")) {
+			mods.push(Modifiers.RiddleOfFire);
+		}
+		if (this.hasResourceAvailable("BROTHERHOOD")) {
+			mods.push(Modifiers.Brotherhood);
+		}
+		return mods;
+	}
+
+	override jobSpecificAutoReduction(): number {
+		// I choose not to care about order of operations
+		// until we become forced to care about order of operations
+		return (
+			100 -
+			(((this.hasResourceAvailable("RIDDLE_OF_WIND") ? 0.5 : 1) *
+				(100 - this.inherentSpeedModifier())) /
+				100) *
+				100
+		);
 	}
 }
 

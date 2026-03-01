@@ -555,8 +555,29 @@ export function calculateDamageStats(props: {
 	};
 	if (mode === DamageStatisticsMode.Selected) {
 		ctl.record.iterateSelected(processNodeFn);
+		if (ctl.includeAutoAttackDamage) {
+			// Try to find all auto nodes that snapshotted within the selected range.
+			let startTime = ctl.record.selectionStart?.tmp_startLockTime;
+			let endTime = ctl.record.selectionEnd?.tmp_endLockTime;
+			if (startTime !== undefined && endTime !== undefined) {
+				startTime -= ctl.gameConfig.countdown;
+				endTime -= ctl.gameConfig.countdown;
+				for (const autoNode of ctl.game.fakeAutoActionNodes) {
+					if (autoNode.snapshotTime !== undefined && autoNode.snapshotTime > endTime) {
+						break;
+					}
+					if (autoNode.snapshotTime !== undefined && autoNode.snapshotTime > startTime) {
+						processNodeFn(autoNode);
+					}
+				}
+			}
+		}
 	} else {
 		ctl.record.iterateAll(processNodeFn);
+		// Insert auto-attack damage explicitly when summarizing the whole table.
+		if (ctl.includeAutoAttackDamage) {
+			ctl.game.fakeAutoActionNodes.forEach(processNodeFn);
+		}
 	}
 
 	dotTables.forEach((table, dotName) => {

@@ -1,6 +1,5 @@
 // Skill and state declarations for PLD
 
-import { controller } from "../../Controller/Controller";
 import { BuffType } from "../Common";
 import {
 	makeRequiescatModifier,
@@ -182,8 +181,11 @@ export class PLDState extends GameState {
 	}
 
 	override jobSpecificOnAutoAttack(): void {
-		controller.reportAutoTick(this.time, "auto");
 		this.resources.get("OATH_GAUGE").gain(5);
+	}
+
+	override jobSpecificAutoPotencyModifiers(): PotencyModifier[] {
+		return this.hasResourceAvailable("FIGHT_OR_FLIGHT") ? [Modifiers.FightOrFlight] : [];
 	}
 
 	isSpellInstant(name: ActionKey) {

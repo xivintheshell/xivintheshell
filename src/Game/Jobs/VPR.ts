@@ -147,6 +147,14 @@ export class VPRState extends GameState {
 		return new VPRStatusPropsGenerator(this);
 	}
 
+	override jobSpecificAutoPotencyModifiers(): PotencyModifier[] {
+		return this.hasResourceAvailable("HUNTERS_INSTINCT") ? [Modifiers.HuntersInstinct] : [];
+	}
+
+	override jobSpecificAutoReduction(): number {
+		return this.getSwiftscaledModifier();
+	}
+
 	getSwiftscaledModifier(): number {
 		return this.hasResourceAvailable("SWIFTSCALED") ? this.inherentSpeedModifier() : 0;
 	}

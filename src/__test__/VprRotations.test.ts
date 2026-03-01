@@ -301,10 +301,10 @@ it(
 it(
 	"fits expected gcds in pot in opener",
 	testDamageFromTimeline("vpr_100_opener.txt", {
-		time: 42.317 + 5,
-		lastDamageApplicationTime: 41.93 + 5,
+		time: 42.01667 + 5,
+		lastDamageApplicationTime: 41.62967 + 5,
 		totalPotency: {
-			applied: 17190.28,
+			applied: 19138.24,
 			pending: 187.0,
 		},
 		gcdSkills: {
@@ -312,8 +312,8 @@ it(
 			pending: 0,
 		},
 		mainTableSummary: {
-			totalPotencyWithoutPot: 16129.0,
-			totalPotPotency: 1061.28,
+			totalPotencyWithoutPot: 17974,
+			totalPotPotency: 1164.24,
 		},
 	}),
 );

@@ -302,6 +302,7 @@ export type ThemeColors = {
 		untargetableDamageMark: string;
 		mpTickMark: string;
 		warningMark: string;
+		autoTickMark: string;
 		lucidTickMark: string;
 		countdown: string;
 		markerAlpha: string;
@@ -575,6 +576,7 @@ const DARK_THEME_COLORS: ThemeColors = {
 		untargetableDamageMark: "#7f7f7f",
 		mpTickMark: "#32525e",
 		warningMark: "#9d7103",
+		autoTickMark: "#c9664d",
 		lucidTickMark: "#56b3d5",
 		countdown: "rgba(15, 15, 15, 0.4)",
 		markerAlpha: "4f",
@@ -828,6 +830,7 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		untargetableDamageMark: "#7f7f7f",
 		mpTickMark: "#b6dfea",
 		warningMark: "#ffbb29",
+		autoTickMark: "#d68176",
 		lucidTickMark: "#88cae0",
 		countdown: "rgba(0, 0, 0, 0.1)",
 		markerAlpha: "7f",

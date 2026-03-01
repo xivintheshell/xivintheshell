@@ -14,6 +14,14 @@ export const COMMON_ACTIONS = ensureRecord<ActionData>()({
 		name: "Sprint",
 		label: { zh: "疾跑", ja: "スプリント" },
 	},
+	ATTACK: {
+		name: "Attack",
+		// **Most** jobs use the action with ID 7 to represent auto-attacks. However, we don't want
+		// autos to show up in log imports, since this action should not be entered explicitly
+		// when constructing a timeline.
+		// This skill name exists only to make damage calculation/display code simpler.
+		label: { zh: "攻击", ja: "攻撃" },
+	},
 });
 
 export const COMMON_COOLDOWNS = ensureRecord<CooldownData>()({

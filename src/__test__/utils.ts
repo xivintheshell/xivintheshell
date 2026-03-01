@@ -159,15 +159,20 @@ export type ShortDamageEntry = {
 	targetCount?: number;
 };
 
-export const compareDamageTables = (expectedDamageEntries: Array<ShortDamageEntry>) => {
+export const compareDamageTables = (
+	expectedDamageEntries: Array<ShortDamageEntry>,
+	includeAutos: boolean = false,
+) => {
 	const actualDamageEntries = [];
 	for (const entry of damageData.mainTable) {
-		actualDamageEntries.push({
-			skillName: entry.skillName,
-			displayedModifiers: entry.displayedModifiers,
-			hitCount: entry.hitCount,
-			targetCount: entry.targetCount,
-		});
+		if (includeAutos || entry.skillName !== "ATTACK") {
+			actualDamageEntries.push({
+				skillName: entry.skillName,
+				displayedModifiers: entry.displayedModifiers,
+				hitCount: entry.hitCount,
+				targetCount: entry.targetCount,
+			});
+		}
 	}
 	// sz: whatever version of node i'm on apparently doesn't support Set.difference/symmetricDifference,
 	// so we instead just sort the two arrays and do an equality check

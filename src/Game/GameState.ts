@@ -36,7 +36,7 @@ import {
 
 import { controller } from "../Controller/Controller";
 import { MAX_ABILITY_TARGETS } from "../Controller/Common";
-import { ActionNode } from "../Controller/Record";
+import { skillNode, ActionNode } from "../Controller/Record";
 import {
 	Modifiers,
 	Potency,
@@ -101,7 +101,6 @@ export class GameState {
 	eventsQueue: Event[];
 	skillsList: SkillsList<GameState>;
 	displayedSkills: DisplayedSkills;
-	private autoAttackDelay: number; // auto attack delay
 
 	overTimeEffectGroups: OverTimeRegistrationGroup[] = [];
 	dotResources: ResourceKey[] = [];
@@ -118,6 +117,7 @@ export class GameState {
 	#exclusiveHots: Map<ResourceKey, ResourceKey[]> = new Map();
 	autoStartTimes: number[];
 	autoStopTimes: number[];
+	fakeAutoActionNodes: ActionNode[] = [];
 
 	constructor(config: GameConfig) {
 		this.config = config;
@@ -197,8 +197,6 @@ export class GameState {
 		// SKILLS (instantiated once, read-only later)
 		this.skillsList = new SkillsList(this);
 		this.displayedSkills = new DisplayedSkills(this.job, config.level);
-
-		this.autoAttackDelay = 2.5; // defaults to 2.5
 
 		// Tracked for compatibility with sleeposim
 		this.autoStartTimes = [];
@@ -494,8 +492,106 @@ export class GameState {
 	jobSpecificOnAutoAttack() {}
 
 	private onAutoAttack() {
-		// TODO: HANDLE AUTO ATTACK POTENCY
+		// Auto-attacks have a universal application delay of 0.53s.
+		// This value is also currently hardcoded in RoleActions.ts
+		const AUTO_DELAY = 0.53;
+		const autoPotencyAmount = this.config.adjustedOvertimePotency(
+			this.jobSpecificAutoBasePotency(),
+			// Assume that we only care about auto-attacks for melee/ranged/tanks. If we ever
+			// need to model it for casters, then we need to account for sps here.
+			"sks",
+		);
+		const potency = new Potency({
+			config: this.config,
+			sourceTime: this.getDisplayTime() + AUTO_DELAY,
+			sourceSkill: "ATTACK",
+			aspect: Aspect.Physical,
+			basePotency: autoPotencyAmount,
+			snapshotTime: this.getDisplayTime(),
+			description: "auto-attack",
+			// For now, assume that autos always hit the first available boss.
+			targetList: [1],
+			falloff: undefined,
+		});
+		if (this.hasResourceAvailable("TINCTURE")) {
+			potency.addModifiers(Modifiers.Tincture);
+		}
+		potency.addModifiers(...this.jobSpecificAutoPotencyModifiers());
+		// Create a fake ActionNode for damage tracking purposes.
+		const autoNode = skillNode("ATTACK");
+		autoNode.applicationTime = this.time + AUTO_DELAY;
+		autoNode.addPotency(potency);
+		this.fakeAutoActionNodes.push(autoNode);
+		this.addEvent(
+			new Event("aa applied", AUTO_DELAY, () => {
+				controller.resolvePotency(potency);
+				if (!this.hasResourceAvailable("IN_COMBAT")) {
+					this.resources.get("IN_COMBAT").gain(1);
+				}
+			}),
+		);
+		controller.reportAutoTick(this.time);
+		// Assume all effects are resolved on snapshot rather than on application.
 		this.jobSpecificOnAutoAttack();
+	}
+
+	/**
+	 * The auto-attack delay for this job, determined by its highest-ilvl equippable weapon.
+	 * For the most part, this is the same for all weapons; the only notable exception where it
+	 * could be relevant is Q40, where PLDs can equip a Garuda EX weapon that gets ilvl synced but
+	 * has a shorter AA delay, increasing Oath Gauge generation.
+	 *
+	 * If a job has an active haste buff, the returned value should change to reflect it.
+	 *
+	 * All jobs have a different base value, but we return a default value so healers/casters can
+	 * ignore it.
+	 */
+	jobSpecificAutoAttackDelay(): number {
+		// copied from ama's sim code
+		const WEAPON_DELAYS = {
+			PLD: 2.24,
+			WAR: 3.36,
+			DRK: 2.96,
+			GNB: 2.8,
+			DRG: 2.8,
+			RPR: 3.2,
+			MNK: 2.56,
+			SAM: 2.64,
+			NIN: 2.56,
+			VPR: 2.64,
+			BRD: 3.04,
+			MCH: 2.64,
+			DNC: 3.12,
+			BLM: 3.28,
+			SMN: 3.12,
+			RDM: 3.44,
+			PCT: 2.96,
+			WHM: 3.44,
+			SCH: 3.12,
+			AST: 3.2,
+			SGE: 2.8,
+			BLU: 2.5, // ???
+			NEVER: 2.5,
+		};
+		// I choose not to care about rounding/flooring
+		// until we become forced to care about rounding/flooring
+		return (WEAPON_DELAYS[this.job] * (100 - this.jobSpecificAutoReduction())) / 100;
+	}
+
+	jobSpecificAutoReduction(): number {
+		// I'm deliberately too lazy to code this + potency modifiers for casters and healers.
+		// Maybe someday we'll care about it for SCH/SMN.
+		return 0;
+	}
+
+	jobSpecificAutoBasePotency(): number {
+		// Copied from xivgear:
+		// https://github.com/xiv-gear-planner/gear-planner/blob/505398e19a45cc0304a7746e4acd3e694051b908/packages/xivmath/src/xivconstants.ts#L113-L120
+		return this.job === "BRD" || this.job === "MCH" ? 80 : 90;
+	}
+
+	jobSpecificAutoPotencyModifiers(): PotencyModifier[] {
+		return [];
 	}
 
 	getStatusDuration(rscType: ResourceKey): number {
@@ -795,19 +891,28 @@ export class GameState {
 	/**
 	 * add recurring auto attack event with an initial delay
 	 */
-	addRecurringAutoAttackEvent(initialDelay: number, recurringDelay: number) {
-		const autoAttackEvent = (initialDelay: number, recurringDelay: number) => {
+	addRecurringAutoAttackEvent(initialDelay: number) {
+		const autoAttackEvent = (initialDelay: number) => {
 			const event = new Event("aa tick", initialDelay, () => {
+				let nextAutoDelay = this.jobSpecificAutoAttackDelay();
 				if (this.resources.get("AUTOS_ENGAGED").available(1) && this.isInCombat()) {
-					// do an auto
-					this.onAutoAttack();
+					// If the boss is untargetable, then do not trigger the auto-attack event.
+					// Instead, store the auto until the untargetable event ends.
+					// We assume that changing the untargetable track will force a re-simulation,
+					// so this will always be reliable.
+					const now = this.getDisplayTime();
+					if (!controller.timeline.duringUntargetable(now)) {
+						this.onAutoAttack();
+					} else {
+						nextAutoDelay = controller.timeline.nextTargetableAfter(now) - now;
+					}
 				}
-				this.addEvent(autoAttackEvent(recurringDelay, recurringDelay));
+				this.addEvent(autoAttackEvent(nextAutoDelay));
 			});
 			event.addTag(EventTag.AutoTick);
 			return event;
 		};
-		this.addEvent(autoAttackEvent(initialDelay, recurringDelay));
+		this.addEvent(autoAttackEvent(initialDelay));
 	}
 
 	/**
@@ -854,8 +959,7 @@ export class GameState {
 		}
 
 		// calculate reccuring delay
-		const defaultAutoDelay = 3;
-		const autoDelay = reccuringDelay ? reccuringDelay : defaultAutoDelay;
+		const autoDelay = reccuringDelay ?? this.jobSpecificAutoAttackDelay();
 
 		let initDelay = 0;
 		if (initialDelay === -1) {
@@ -864,7 +968,7 @@ export class GameState {
 			initDelay = initialDelay ?? autoDelay;
 		}
 		// start reccuring event with a delay
-		this.addRecurringAutoAttackEvent(initDelay, autoDelay);
+		this.addRecurringAutoAttackEvent(initDelay);
 	}
 
 	// removes current auto attack timer
@@ -882,7 +986,9 @@ export class GameState {
 		const currentTimer = this.findAutoAttackTimerInQueue();
 		if (this.resources.get("AUTOS_ENGAGED").availableAmount() === 0) {
 			// toggle autos ON
-			this.startAutoAttackTimer(currentTimer === -1 ? 3 : currentTimer);
+			this.startAutoAttackTimer(
+				currentTimer === -1 ? this.jobSpecificAutoAttackDelay() : currentTimer,
+			);
 		} else {
 			// toggle autos OFF
 			this.resources.get("AUTOS_ENGAGED").consume(1);
@@ -931,7 +1037,7 @@ export class GameState {
 		// autos helper constants
 		const hasCast = capturedCastTime !== 0;
 		const autosEngaged = this.resources.get("AUTOS_ENGAGED").available(1);
-		const recurringAutoDelay = this.autoAttackDelay; // <<---- placeholder for changing auto attack speed
+		const recurringAutoDelay = this.jobSpecificAutoAttackDelay();
 		const currentDelay = this.findAutoAttackTimerInQueue();
 		const startsAutos = skill.startsAuto; // <<---  for spells starting autos
 
@@ -982,12 +1088,26 @@ export class GameState {
 				}
 			} else {
 				// AUTOS OUT OF COMBAT
-
 				if (startsAutos) {
-					const aaDelay =
-						capturedCastTime +
-						(currentDelay === -1 ? recurringAutoDelay : currentDelay);
-					this.startAutoAttackTimer(aaDelay, recurringAutoDelay, capturedCastTime);
+					// If we're out of combat, perform an auto  with timing depending on
+					// 1. Application delay of this ability (to simulate macro pulling)
+					// 2. t=0 (in case users deliberately want to weave something that requires starting combat)
+					const displayTime = this.getDisplayTime();
+					const applicationDelay =
+						skill.applicationDelay +
+						(capturedCastTime > 0
+							? capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime)
+							: 0);
+					const applicationTime = displayTime + applicationDelay;
+					const initialDelay =
+						applicationTime < 0
+							? applicationDelay
+							: Math.min(applicationDelay, -displayTime) + Debug.epsilon;
+					this.startAutoAttackTimer(
+						initialDelay + recurringAutoDelay,
+						recurringAutoDelay,
+						initialDelay,
+					);
 				}
 			}
 		} else {
@@ -1274,7 +1394,7 @@ export class GameState {
 		// by default abilities dont start autos
 
 		const autosEngaged = this.resources.get("AUTOS_ENGAGED").available(1);
-		const recurringAutoDelay = this.autoAttackDelay; // <<---- placeholder for changing auto attack speed
+		const recurringAutoDelay = this.jobSpecificAutoAttackDelay();
 		const currentDelay = this.findAutoAttackTimerInQueue();
 		// Abilities with startsAuto explicitly set to false should not begin auto-attacks, even if they do potency.
 		const startsAutos =
@@ -1282,8 +1402,20 @@ export class GameState {
 
 		if (startsAutos) {
 			if (!this.isInCombat()) {
-				const aaDelay = currentDelay === -1 ? recurringAutoDelay : currentDelay;
-				this.startAutoAttackTimer(aaDelay, recurringAutoDelay, undefined);
+				// If we're out of combat, perform an auto  with timing depending on
+				// 1. Application delay of this ability (to simulate macro pulling)
+				// 2. t=0 (in case users deliberately want to weave something that requires starting combat)
+				const displayTime = this.getDisplayTime();
+				const applicationTime = displayTime + skill.applicationDelay;
+				const initialDelay =
+					applicationTime < 0
+						? skill.applicationDelay
+						: Math.min(skill.applicationDelay, -displayTime) + Debug.epsilon;
+				this.startAutoAttackTimer(
+					recurringAutoDelay + initialDelay,
+					recurringAutoDelay,
+					initialDelay,
+				);
 			} else {
 				if (!autosEngaged) {
 					// start autos with current delay

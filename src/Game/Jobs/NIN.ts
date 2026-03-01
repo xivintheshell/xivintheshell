@@ -131,6 +131,24 @@ export class NINState extends GameState {
 		return new NINStatusPropsGenerator(this);
 	}
 
+	override jobSpecificAutoPotencyModifiers(): PotencyModifier[] {
+		const mods: PotencyModifier[] = [];
+		if (this.debuffs.hasAny("DOKUMORI")) {
+			mods.push(Modifiers.Dokumori);
+		}
+		if (this.debuffs.hasAny("TRICK_ATTACK")) {
+			mods.push(Modifiers.TrickAttack);
+		}
+		if (this.debuffs.hasAny("KUNAIS_BANE")) {
+			mods.push(Modifiers.KunaisBane);
+		}
+		return mods;
+	}
+
+	override jobSpecificAutoReduction(): number {
+		return this.inherentSpeedModifier();
+	}
+
 	stackRaijuReady() {
 		const rsc = this.resources.get("RAIJU_READY");
 		rsc.gain(1);

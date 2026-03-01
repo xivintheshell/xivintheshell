@@ -109,6 +109,10 @@ export class RPRState extends GameState {
 		}
 	}
 
+	override jobSpecificAutoPotencyModifiers(): PotencyModifier[] {
+		return this.debuffs.hasAny("DEATHS_DESIGN") ? [Modifiers.DeathsDesign] : [];
+	}
+
 	refreshDeathsDesign(targetNumber: number) {
 		const dd = this.debuffs.get("DEATHS_DESIGN", targetNumber);
 

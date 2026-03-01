@@ -147,6 +147,12 @@ export class DRGState extends GameState {
 		}
 	}
 
+	override jobSpecificAutoPotencyModifiers(): PotencyModifier[] {
+		const mods: PotencyModifier[] = [];
+		this.pushUniversalModifiers(mods);
+		return mods;
+	}
+
 	// applies modifiers that affect all skills
 	pushUniversalModifiers(modifiers: PotencyModifier[]) {
 		if (this.hasResourceAvailable("POWER_SURGE")) {

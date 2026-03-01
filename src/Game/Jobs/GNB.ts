@@ -136,6 +136,10 @@ export class GNBState extends GameState {
 		}
 	}
 
+	override jobSpecificAutoPotencyModifiers(): PotencyModifier[] {
+		return this.hasResourceAvailable("NO_MERCY") ? [Modifiers.NoMercy] : [];
+	}
+
 	// handle all 4 GNB combo abilities and combo states
 	fixGNBComboState(skillName: ActionKey) {
 		// HANDLE AOE DIFFERENTLY
