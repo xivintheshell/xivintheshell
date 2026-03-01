@@ -76,6 +76,83 @@ it(
 );
 
 it(
+	"receives auto-attack haste from RoW",
+	testWithConfig({}, () => {
+		applySkill("DRAGON_KICK");
+		applySkill("RIDDLE_OF_WIND");
+		controller.step(4); // wait for some autos
+		applySkill("RIDDLE_OF_FIRE");
+		controller.step(4); // these autos are enhanced by RoF's damage buff
+		compareDamageTables(
+			[
+				{
+					skillName: "ATTACK",
+					displayedModifiers: [],
+					hitCount: 4,
+				},
+				{
+					skillName: "ATTACK",
+					displayedModifiers: [PotencyModifierType.RIDDLE_OF_FIRE],
+					hitCount: 4,
+				},
+				{
+					skillName: "DRAGON_KICK",
+					displayedModifiers: [],
+					hitCount: 1,
+				},
+				{
+					skillName: "RIDDLE_OF_WIND",
+					displayedModifiers: [],
+					hitCount: 1,
+				},
+				{
+					skillName: "RIDDLE_OF_FIRE",
+					displayedModifiers: [],
+					hitCount: 1,
+				},
+			],
+			true,
+		);
+	}),
+);
+
+it(
+	"does fewer autos without RoW",
+	testWithConfig({animationLock: 0.7}, () => {
+		applySkill("DRAGON_KICK");
+		controller.step(0.7); // pretend we cast RoW to keep timings consistent with the last test
+		controller.step(4); // wait for some autos
+		applySkill("RIDDLE_OF_FIRE");
+		controller.step(4); // these autos are enhanced by RoF's damage buff
+		compareDamageTables(
+			[
+				{
+					skillName: "ATTACK",
+					displayedModifiers: [],
+					hitCount: 3,
+				},
+				{
+					skillName: "ATTACK",
+					displayedModifiers: [PotencyModifierType.RIDDLE_OF_FIRE],
+					hitCount: 2,
+				},
+				{
+					skillName: "DRAGON_KICK",
+					displayedModifiers: [],
+					hitCount: 1,
+				},
+				{
+					skillName: "RIDDLE_OF_FIRE",
+					displayedModifiers: [],
+					hitCount: 1,
+				},
+			],
+			true,
+		);
+	}),
+);
+
+it(
 	"fits expected gcds in rof and bh in opener",
 	testDamageFromTimeline("mnk_100_solar_lunar.txt", {
 		time: 24.862 + 10,

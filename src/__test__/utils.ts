@@ -161,11 +161,11 @@ export type ShortDamageEntry = {
 
 export const compareDamageTables = (
 	expectedDamageEntries: Array<ShortDamageEntry>,
-	skipAutos: boolean = true,
+	includeAutos: boolean = false,
 ) => {
 	const actualDamageEntries = [];
 	for (const entry of damageData.mainTable) {
-		if (!skipAutos || entry.skillName !== "ATTACK") {
+		if (includeAutos || entry.skillName !== "ATTACK") {
 			actualDamageEntries.push({
 				skillName: entry.skillName,
 				displayedModifiers: entry.displayedModifiers,
