@@ -279,6 +279,10 @@ export class ActionNode {
 		return new ActionNode(this.info, this.legacyWaitDuration);
 	}
 
+	get snapshotTime(): number | undefined {
+		return this.#potency?.snapshotTime;
+	}
+
 	addBuff(rsc: BuffType) {
 		this.#capturedBuffs.add(rsc);
 	}
@@ -288,12 +292,12 @@ export class ActionNode {
 	}
 
 	hasPartyBuff(): boolean {
-		const snapshotTime = this.#potency?.snapshotTime;
+		const snapshotTime = this.snapshotTime;
 		return snapshotTime !== undefined && controller.game.getPartyBuffs(snapshotTime).size > 0;
 	}
 
 	getPartyBuffs(): BuffType[] {
-		const snapshotTime = this.#potency?.snapshotTime;
+		const snapshotTime = this.snapshotTime;
 		return snapshotTime ? [...controller.game.getPartyBuffs(snapshotTime).keys()] : [];
 	}
 

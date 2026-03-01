@@ -250,6 +250,18 @@ function DamageStatsSettings() {
 				controller.setUntargetableMask(val);
 			}}
 		/>
+		<Checkbox
+			uniqueName="autoAttackDamage"
+			label={
+				<span>
+					{localize({
+						en: "include damage from auto-attacks",
+						zh: "计算自动攻击的威力",
+					})}
+				</span>
+			}
+			onChange={(val) => controller.setIncludeAutoAttackDamage(val)}
+		/>
 	</div>;
 }
 

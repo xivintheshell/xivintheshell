@@ -493,6 +493,7 @@ export class GameState {
 
 	private onAutoAttack() {
 		// Auto-attacks have a universal application delay of 0.53s.
+		// This value is also currently hardcoded in RoleActions.ts
 		const AUTO_DELAY = 0.53;
 		const autoPotencyAmount = this.config.adjustedOvertimePotency(
 			this.jobSpecificAutoBasePotency(),
@@ -523,7 +524,7 @@ export class GameState {
 		autoNode.addPotency(potency);
 		this.fakeAutoActionNodes.push(autoNode);
 		this.addEvent(
-			new Event("aa applied", 0.53, () => {
+			new Event("aa applied", AUTO_DELAY, () => {
 				controller.resolvePotency(potency);
 				if (!this.hasResourceAvailable("IN_COMBAT")) {
 					this.resources.get("IN_COMBAT").gain(1);

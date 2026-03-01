@@ -311,7 +311,7 @@ makeResourceAbility(ALL_JOBS, "SPRINT", 1, "cd_SPRINT", {
 
 // Fake auto-attack ability that is special-case hidden from the UI. Should never be constructable.
 makeAbility(ALL_JOBS, "ATTACK", 1, "NEVER", {
-	applicationDelay: 0,
+	applicationDelay: 0.53,
 });
 
 //#endregion

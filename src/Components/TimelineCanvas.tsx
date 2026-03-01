@@ -424,7 +424,7 @@ function drawAutoTickMarks(params: MarkerDrawParams<AutoTickMarkElem>) {
 	const colors = viewInfo.colors;
 	const scale = viewInfo.renderingProps.scale;
 	ctx.lineWidth = 1;
-	ctx.strokeStyle = colors.pld.ironWillColor;
+	ctx.strokeStyle = colors.timeline.autoTickMark;
 	ctx.beginPath();
 	elems.forEach((tick) => {
 		const x = originX + StaticFn.positionFromTimeAndScale(tick.displayTime, scale);
@@ -513,6 +513,15 @@ function drawPotencyMarks(params: MarkerDrawParams<PotencyMarkElem>) {
 	const { colors, renderingProps } = viewInfo;
 	const scale = renderingProps.scale;
 	elems.forEach((mark) => {
+		// If the mark represents an auto-attack and auto indicators are disabled, do not draw
+		// damage events for autos.
+		const isAutoAttack =
+			mark.type === ElemType.DamageMark &&
+			mark.potencyInfos.length > 0 &&
+			mark.potencyInfos[0].sourceSkill === "ATTACK";
+		if (!renderingProps.drawOptions.drawAutoAttackIndicators && isAutoAttack) {
+			return;
+		}
 		// Only consider untargetable for damage marks
 		const untargetable =
 			mark.type === ElemType.DamageMark && bossIsUntargetable(mark.displayTime);
@@ -536,7 +545,9 @@ function drawPotencyMarks(params: MarkerDrawParams<PotencyMarkElem>) {
 			default:
 				ctx.fillStyle = untargetable
 					? colors.timeline.untargetableDamageMark
-					: colors.timeline.damageMark;
+					: isAutoAttack
+						? colors.timeline.autoTickMark
+						: colors.timeline.damageMark;
 				time += localize({ en: "damage potency", zh: "伤害威力" });
 		}
 

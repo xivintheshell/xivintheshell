@@ -138,6 +138,7 @@ class Controller {
 	game;
 	#tinctureBuffPercentage = 0;
 	#untargetableMask = true;
+	#includeAutoAttackDamage = true;
 	#lastDamageApplicationTime;
 
 	// todo: should probably move these items to somewhere else: in Record maybe?
@@ -2418,6 +2419,16 @@ class Controller {
 
 	setImageExportConfig(newConfig: ImageExportConfig) {
 		this.imageExportConfig = newConfig;
+	}
+
+	setIncludeAutoAttackDamage(val: boolean): void {
+		this.#includeAutoAttackDamage = val;
+		this.displayCurrentState();
+		updateTimelineView();
+	}
+
+	get includeAutoAttackDamage(): boolean {
+		return this.#includeAutoAttackDamage;
 	}
 }
 export const controller = new Controller();
