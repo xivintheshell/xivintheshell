@@ -1893,8 +1893,7 @@ class Controller {
 		meta.push("stats = " + JSON.stringify(statsDict));
 		const downtimeWindows = this.timeline
 			.getUntargetableMarkers()
-			// append a comma to every window so python recognizes the tuple
-			.map((marker) => `(${marker.time}, ${marker.time + marker.duration}),`);
+			.map((marker) => `(${marker.time}, ${marker.time + marker.duration})`);
 		if (downtimeWindows.length > 0) {
 			// Add a dummy empty element before joining to make sure we always get a trailing comma
 			// to allow for parsing as a python tuple
