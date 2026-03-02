@@ -79,7 +79,7 @@ export function FightMarkersEn() {
 		</p>
 		<img
 			src="assets/ManualScreenshots/targetabilityupdate.png"
-			alt="FFLogs filter expression input showing type=&quot;targetabilityupdate&quot;"
+			alt='FFLogs filter expression input showing type="targetabilityupdate"'
 			loading="lazy"
 			decoding="async"
 		/>
@@ -209,7 +209,7 @@ export function FightMarkersZh() {
 		</p>
 		<img
 			src="assets/ManualScreenshots/targetabilityupdate.png"
-			alt="FFLogs 筛选表达式输入 type=&quot;targetabilityupdate&quot;"
+			alt='FFLogs 筛选表达式输入 type="targetabilityupdate"'
 			loading="lazy"
 			decoding="async"
 		/>
