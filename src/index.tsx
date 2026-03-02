@@ -12,6 +12,8 @@ import { getCachedColorTheme, getThemeColors } from "./Components/ColorTheme";
 // decreases the main bundle size from ~1400 KiB to 176 KiB.
 // The manual page is almost entirely text, so this has a very substantial impact on
 // initial load time on the first visit (subsequent visits should get cached).
+// TODO: we can reduce chunk sizes even further by code splitting between the Chinese and English
+// text versions. If we ever fully add Japanese, this will probably become necessary.
 // @ts-expect-error there's some stupid stuff with name resolution I don't want to deal with
 const Manual = React.lazy(() => import("./Manual/Manual"));
 

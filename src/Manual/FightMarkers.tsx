@@ -79,7 +79,7 @@ export function FightMarkersEn() {
 		</p>
 		<img
 			src="assets/ManualScreenshots/targetabilityupdate.png"
-			alt='FFLogs filter expression input showing type="targetabilityupdate"'
+			alt='The FFLogs "Events" tab with a filter expression showing type="targetabilityupdate"'
 			loading="lazy"
 			decoding="async"
 		/>
@@ -209,7 +209,7 @@ export function FightMarkersZh() {
 		</p>
 		<img
 			src="assets/ManualScreenshots/targetabilityupdate.png"
-			alt='FFLogs 筛选表达式输入 type="targetabilityupdate"'
+			alt='FFLogs “事件”标签页中显示为 type="targetabilityupdate" 的筛选表达式。'
 			loading="lazy"
 			decoding="async"
 		/>
