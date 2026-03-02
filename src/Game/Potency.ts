@@ -846,6 +846,11 @@ export class Potency {
 		targetCount: number,
 		modifiers: PotencyModifier[],
 	): number {
+		if (targetCount === 0) {
+			// An ability that hits 0 targets should never do damage.
+			// This special case is necessary for some targeted debuff math.
+			return 0;
+		}
 		let totalDamageFactor = 1;
 		let totalAdditiveAmount = 0;
 		let totalCritBonus = 0;

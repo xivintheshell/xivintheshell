@@ -364,6 +364,7 @@ makeASTSpell("COMBUST_II", 46, {
 			skillName: "COMBUST_II",
 			tickPotency: 60,
 			speedStat: "sps",
+			modifiers: state.hasResourceAvailable("DIVINATION") ? [Modifiers.Divination] : [],
 		});
 	},
 	onApplication: (state, node) => state.applyDoT("COMBUST_II", node),
@@ -384,6 +385,7 @@ makeASTSpell("COMBUST_III", 72, {
 			skillName: "COMBUST_III",
 			tickPotency: state.hasTraitUnlocked("MAGICK_MASTERY_HEALER") ? 70 : 65,
 			speedStat: "sps",
+			modifiers: state.hasResourceAvailable("DIVINATION") ? [Modifiers.Divination] : [],
 		});
 	},
 	onApplication: (state, node) => state.applyDoT("COMBUST_III", node),

@@ -222,3 +222,20 @@ it(
 		);
 	}),
 );
+
+// Fixes a bug where debuff modifiers on DoTs weren't applied correctly if there's
+it(
+	"counts chain strat modifier correctly",
+	testDamageFromTimeline("sch_chain_dot.txt", {
+		time: 62.89 + 10,
+		lastDamageApplicationTime: 59.931 + 10,
+		totalPotency: {
+			applied: 1809.71,
+			pending: 0,
+		},
+		gcdSkills: {
+			applied: 2,
+			pending: 0,
+		},
+	}),
+);
