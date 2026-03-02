@@ -96,7 +96,14 @@ const LanguageContext = createContext("en");
 export function Screenshot(props: { id: string | number; name: string; alt?: string }) {
 	const lang = useContext(LanguageContext);
 	const path = `${props.id}_${colorTheme === "Dark" ? "D" : "L"}_${lang === "zh" ? "Z" : "E"}_${props.name}.jpg`;
-	return <img src={`assets/ManualScreenshots/${path}`} alt={props.alt} />;
+	return (
+		<img
+			src={`assets/ManualScreenshots/${path}`}
+			alt={props.alt}
+			loading="lazy"
+			decoding="async"
+		/>
+	);
 }
 
 export default function Manual(props: { language?: string }) {

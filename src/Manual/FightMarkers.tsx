@@ -77,7 +77,12 @@ export function FightMarkersEn() {
 			You can find these timings for a particular FFLogs report with the
 			`type="targetabilityupdate"` filter, as shown below.
 		</p>
-		<img src="assets/ManualScreenshots/targetabilityupdate.png" />
+		<img
+			src="assets/ManualScreenshots/targetabilityupdate.png"
+			alt="FFLogs filter expression input showing type=&quot;targetabilityupdate&quot;"
+			loading="lazy"
+			decoding="async"
+		/>
 		<p>
 			Presets take time to create, and the languages in which they are available depend on the
 			work of the community members that create them. If you're interested in submitting
@@ -202,7 +207,12 @@ export function FightMarkersZh() {
 			Filter Expression 中输入type="targetabilityupdate"
 			进行过滤，自行查询该场战斗的实际阶段切换时间。
 		</p>
-		<img src="assets/ManualScreenshots/targetabilityupdate.png" />
+		<img
+			src="assets/ManualScreenshots/targetabilityupdate.png"
+			alt="FFLogs 筛选表达式输入 type=&quot;targetabilityupdate&quot;"
+			loading="lazy"
+			decoding="async"
+		/>
 		<p>
 			时间轴预设制作耗时且依赖社区多语言贡献。如果你愿意提交某场战斗的时间轴标记，请随时联系我们！
 		</p>
