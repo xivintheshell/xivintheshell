@@ -5,9 +5,32 @@ import "./Style/normalize.css";
 import "./Style/style.css";
 import Main from "./Components/Main";
 import { getCachedValue } from "./Controller/Common";
-// TODO code split/do dynamic import for manual page?
-// main must be imported first to ensure proper initialization
-import Manual from "./Manual/Manual";
+import { DEFAULT_FONTS } from "./Components/Common";
+import { getCachedColorTheme, getThemeColors } from "./Components/ColorTheme";
+
+// To reduce the size of the bundle, we lazy-load the manual page. At the time of writing, this
+// decreases the main bundle size from ~1400 KiB to 176 KiB.
+// The manual page is almost entirely text, so this has a very substantial impact on
+// initial load time on the first visit (subsequent visits should get cached).
+// @ts-expect-error there's some stupid stuff with name resolution I don't want to deal with
+const Manual = React.lazy(() => import("./Manual/Manual"));
+
+function ManualFallback() {
+	const colors = getThemeColors(getCachedColorTheme());
+	return <div
+		style={{
+			height: "100vh",
+			width: "100%",
+			marginBlock: "1em",
+			marginInline: "1em",
+			backgroundColor: colors.background,
+			color: colors.text,
+			fontFamily: DEFAULT_FONTS,
+		}}
+	>
+		<h2>{getCachedValue("language") === "zh" ? "加载中..." : "Loading..."}</h2>
+	</div>;
+}
 
 const root = createRoot(document.getElementById("root") as HTMLDivElement);
 
@@ -21,12 +44,22 @@ const keys = Array.from(searchParams.keys());
 // build because of a bunch of babel middleware plugins. As such, we manually route the manual
 // page here.
 const pathname = window.location.pathname;
-if (pathname === "/manual" || pathname === "/manual/") {
-	root.render(<Manual language={getCachedValue("language") ?? undefined} />);
-} else if (pathname === "/manual_en" || pathname === "/manual_en/") {
-	root.render(<Manual language={"en"} />);
-} else if (pathname === "/manual_zh" || pathname === "/manual_zh/") {
-	root.render(<Manual language={"zh"} />);
+if (pathname.startsWith("/manual")) {
+	root.render(
+		<React.Suspense fallback={<ManualFallback />}>
+			<Manual
+				language={
+					pathname === "/manual" || pathname === "/manual/"
+						? (getCachedValue("language") ?? undefined)
+						: pathname === "/manual_en" || pathname === "/manual_en/"
+							? "en"
+							: pathname === "/manual_zh" || pathname === "/manual_zh/"
+								? "zh"
+								: undefined
+				}
+			/>
+		</React.Suspense>,
+	);
 } else {
 	root.render(<Main command={keys.length > 0 ? keys[0] : undefined} />);
 }

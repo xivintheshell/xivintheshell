@@ -17,6 +17,15 @@ export default defineConfig({
 	},
 	build: {
 		outDir: "build",
+		rollupOptions: {
+			output: {
+				manualChunks(id) {
+					if (id.includes("/Manual/")) {
+						return "manual";
+					}
+				},
+			},
+		},
 	},
 	// Compatibility with migration from jest
 	test: {
