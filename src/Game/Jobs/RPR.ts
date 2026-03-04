@@ -965,7 +965,7 @@ makeRPRAbility("LEMURES_SLICE", 86, "cd_LEMURES_SLICE", {
 
 makeRPRAbility("SACRIFICIUM", 92, "cd_SACRIFICIUM", {
 	isPhysical: false,
-	potency: 600,
+	potency: 700,
 	startOnHotbar: false,
 	falloff: 0.2,
 	applicationDelay: 0.76,
@@ -994,7 +994,7 @@ makeRPRWeaponskill("VOID_REAPING", 80, {
 	startOnHotbar: false,
 	potency: [
 		["NEVER", 460],
-		["MELEE_MASTERY_III_RPR", 540],
+		["MELEE_MASTERY_III_RPR", 560],
 	],
 	aspect: Aspect.Physical,
 	recastTime: 1.5,
@@ -1019,7 +1019,7 @@ makeRPRWeaponskill("CROSS_REAPING", 80, {
 	startOnHotbar: false,
 	potency: [
 		["NEVER", 460],
-		["MELEE_MASTERY_III_RPR", 540],
+		["MELEE_MASTERY_III_RPR", 560],
 	],
 	aspect: Aspect.Physical,
 	recastTime: 1.5,
@@ -1196,7 +1196,7 @@ makeRPRWeaponskill("EXECUTIONERS_GUILLOTINE", 96, {
 
 makeRPRWeaponskill("GRIM_REAPING", 80, {
 	startOnHotbar: false,
-	potency: 200,
+	potency: 220,
 	recastTime: 1.5,
 	falloff: 0,
 	applicationDelay: 0.8,
