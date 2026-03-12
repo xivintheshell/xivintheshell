@@ -1,5 +1,11 @@
 [
 	{
+		"date": "3/11/26",
+		"changes": [
+			"Fixed a bug where AST card party buff markers were inaccurate for melee and tank classes."
+		]
+	},
+	{
 		"date": "3/3/26",
 		"changes": [
 			"Updated for patch 7.45."
