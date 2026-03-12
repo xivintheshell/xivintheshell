@@ -1,6 +1,7 @@
+import { controller } from "../Controller/Controller";
 import { MarkerColor } from "../Components/ColorTheme";
 import { BuffType } from "./Common";
-import { ShellJob } from "./Data/Jobs";
+import { ShellJob, JOBS } from "./Data/Jobs";
 
 export class BuffInfo {
 	readonly name: BuffType;
@@ -36,8 +37,10 @@ export const buffInfos = [
 	new BuffInfo(BuffType.BattleLitany, MarkerColor.Blue, 20, 1, 0.1, 0, "DRG"),
 	new BuffInfo(BuffType.BattleVoice, MarkerColor.Orange, 20, 1, 0, 0.2, "BRD"),
 	new BuffInfo(BuffType.Brotherhood, MarkerColor.Orange, 20, 1.05, 0, 0, "MNK"),
-	new BuffInfo(BuffType.Card_TheBalance, MarkerColor.Red, 15, 1.03, 0, 0, "AST"),
-	new BuffInfo(BuffType.Card_TheSpear, MarkerColor.Blue, 15, 1.06, 0, 0, "AST"),
+	// Damage increase for AST cards are placeholder values; they're updated dynamically based on
+	// the active job.
+	new BuffInfo(BuffType.Card_TheBalance, MarkerColor.Red, 15, 1, 0, 0, "AST"),
+	new BuffInfo(BuffType.Card_TheSpear, MarkerColor.Blue, 15, 1, 0, 0, "AST"),
 	new BuffInfo(BuffType.ChainStratagem, MarkerColor.Grey, 20, 1, 0.1, 0, "SCH"),
 	new BuffInfo(BuffType.Devilment, MarkerColor.Green, 20, 1, 0.2, 0.2, "DNC"),
 	new BuffInfo(BuffType.Divination, MarkerColor.Yellow, 20, 1.06, 0, 0, "AST"),
@@ -67,6 +70,29 @@ export class Buff {
 	constructor(name: BuffType) {
 		this.name = name;
 		let info = buffInfosMap.get(name);
+		// Special case for AST cards, since their bonus depends on the active job.
+		const isActiveJobMelee = ["TANK", "MELEE"].includes(JOBS[controller.game.job].role);
+		if (name === BuffType.Card_TheBalance) {
+			info = new BuffInfo(
+				BuffType.Card_TheBalance,
+				MarkerColor.Red,
+				15,
+				isActiveJobMelee ? 1.06 : 1.03,
+				0,
+				0,
+				"AST",
+			);
+		} else if (name === BuffType.Card_TheSpear) {
+			info = new BuffInfo(
+				BuffType.Card_TheSpear,
+				MarkerColor.Blue,
+				15,
+				isActiveJobMelee ? 1.03 : 1.06,
+				0,
+				0,
+				"AST",
+			);
+		}
 		if (!info) {
 			info = buffInfos[0];
 			console.error("Buff info not found!");
