@@ -1,4 +1,5 @@
 import {
+	damageData,
 	rotationTestSetup,
 	rotationTestTeardown,
 	makeTestWithConfigFn,
@@ -329,6 +330,49 @@ it.fails(
 				hitCount: 1,
 			},
 		]);
+	}),
+);
+
+it(
+	"consumes kassatsu with doton",
+	testWithConfig({}, () => {
+		(["KASSATSU", "JIN", "TEN", "CHI", "DOTON"] as ActionKey[]).forEach(applySkill);
+		controller.step(20);
+		compareDamageTables([
+			{
+				skillName: "DOTON",
+				displayedModifiers: [], // Modifiers don't appear in the damage table
+				hitCount: 1,
+			},
+			{
+				skillName: "KASSATSU",
+				displayedModifiers: [],
+				hitCount: 1,
+			},
+			{
+				skillName: "TEN",
+				displayedModifiers: [],
+				hitCount: 1,
+			},
+			{
+				skillName: "CHI",
+				displayedModifiers: [],
+				hitCount: 1,
+			},
+			{
+				skillName: "JIN",
+				displayedModifiers: [],
+				hitCount: 1,
+			},
+		]);
+		const dotonTable = damageData.dotTables.get("DOTON")?.get(1);
+		expect(dotonTable?.tableRows.length).toBe(1);
+		expect(dotonTable?.tableRows[0].displayedModifiers).toStrictEqual([
+			PotencyModifierType.KASSATSU,
+		]);
+		expect(dotonTable?.tableRows[0].baseDotPotency).toBeCloseTo(80);
+		expect(dotonTable?.tableRows[0].potencyWithoutPot).toBeCloseTo(728);
+		expect(dotonTable?.summary.totalPotencyWithoutPot).toBeCloseTo(728);
 	}),
 );
 

@@ -103,7 +103,6 @@ function expandDoTNode(node: ActionNode, dotName: ResourceKey, targetNumber: num
 
 	for (let i = 0; i < entry.initialHitCalculationModifiers.length; i++) {
 		const source = entry.initialHitCalculationModifiers[i].source;
-		// DoTs should show if they are cast under BLM's Enochian, SAM's Fugetsu, or GNB's No Mercy
 		if (
 			[
 				PotencyModifierType.ENO,
@@ -122,6 +121,7 @@ function expandDoTNode(node: ActionNode, dotName: ResourceKey, targetNumber: num
 				// Don't add cards, since we assume the AST is not carding themselves
 				PotencyModifierType.DIVINATION,
 				PotencyModifierType.CHAIN_STRAT,
+				PotencyModifierType.KASSATSU,
 			].includes(source)
 		) {
 			entry.displayedModifiers.push(source);
