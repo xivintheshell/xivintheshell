@@ -2,7 +2,7 @@
 // This includes authorization and GraphQL queries against the fflogs v2 API.
 // See docs for details: https://www.fflogs.com/api/docs
 import React, { useEffect, useContext, useState, useRef, CSSProperties } from "react";
-import { Dialog } from "@base-ui-components/react/dialog";
+import { Dialog } from "@base-ui/react/dialog";
 import { FaXmark } from "react-icons/fa6";
 import { ImportLog } from "../../Controller/UndoStack";
 import { controller } from "../../Controller/Controller";
@@ -169,7 +169,9 @@ function* applyImportedActions(
 		// Note that the sim node name may not match the expected skill name because state may
 		// become invalid (e.g. Paradox becoming B1/F1 because of MP tick shenanigans breaking
 		// earlier spells).
-		console.assert(simNode.info.type === ActionType.Skill && simNode.tmp_startLockTime);
+		console.assert(
+			simNode.info.type === ActionType.Skill && simNode.tmp_startLockTime !== undefined,
+		);
 		const expectedTimestamp = simNode.tmp_startLockTime! - cd;
 		const prevNode = controller.record.actions[recordIndex - 1];
 		const prevLockEndTimestamp = prevNode.tmp_endLockTime! - cd;

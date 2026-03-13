@@ -1,5 +1,7 @@
+// vite-plugin-inspect is useful for dev build profiling, but at time of writing does not
+// support vite 8, so it'll need tob e manually reinstalled
 // import Inspect from "vite-plugin-inspect";
-import react from "@vitejs/plugin-react-swc";
+import react from "@vitejs/plugin-react";
 
 // @ts-expect-error
 import { defineConfig } from "vite";

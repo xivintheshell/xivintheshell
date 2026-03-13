@@ -1,5 +1,5 @@
 import React from "react";
-import { Separator } from "@base-ui-components/react/separator";
+import { Separator } from "@base-ui/react/separator";
 import { HELP_QQ_GROUP } from "../Components/IntroSection";
 import { getCachedColorTheme, getThemeColors } from "../Components/ColorTheme";
 import {
