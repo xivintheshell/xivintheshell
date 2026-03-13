@@ -133,13 +133,13 @@ export class NINState extends GameState {
 
 	override jobSpecificAutoPotencyModifiers(): PotencyModifier[] {
 		const mods: PotencyModifier[] = [];
-		if (this.debuffs.hasAny("DOKUMORI")) {
+		if (this.debuffs.hasAnyActive("DOKUMORI")) {
 			mods.push(Modifiers.Dokumori);
 		}
-		if (this.debuffs.hasAny("TRICK_ATTACK")) {
+		if (this.debuffs.hasAnyActive("TRICK_ATTACK")) {
 			mods.push(Modifiers.TrickAttack);
 		}
-		if (this.debuffs.hasAny("KUNAIS_BANE")) {
+		if (this.debuffs.hasAnyActive("KUNAIS_BANE")) {
 			mods.push(Modifiers.KunaisBane);
 		}
 		return mods;

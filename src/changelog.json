@@ -1,5 +1,11 @@
 [
 	{
+		"date": "3/12/26",
+		"changes": [
+			"[NIN][RPR] Fixed a bug where auto-attacks were incorrectly affected by damaging debuffs in certain scenarios."
+		]
+	},
+	{
 		"date": "3/11/26",
 		"changes": [
 			"Fixed a bug where AST card party buff markers were inaccurate for melee and tank classes."
