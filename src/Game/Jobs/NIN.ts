@@ -783,6 +783,8 @@ makeWeaponskill("NIN", "DOTON_CHI", 70, {
 	falloff: 0,
 	validateAttempt: DOTON_TCJ_CONDITION,
 	jobTargetPotencyModifiers: targetPotencyModifiers,
+	jobPotencyModifiers: (state) =>
+		state.hasResourceAvailable("KASSATSU") ? [Modifiers.Kassatsu] : [],
 	onConfirm: combineEffects(
 		(state, node) => {
 			state.addDoTPotencies({
@@ -791,6 +793,7 @@ makeWeaponskill("NIN", "DOTON_CHI", 70, {
 				skillName: "DOTON",
 				tickPotency: 80,
 				speedStat: "sks",
+				modifiers: state.hasResourceAvailable("KASSATSU") ? [Modifiers.Kassatsu] : [],
 			});
 		},
 		(state: NINState) => state.pushMudra(2, true),
@@ -1027,6 +1030,8 @@ makeWeaponskill("NIN", "DOTON", 45, {
 	falloff: 0,
 	replaceIf: getReplaceList("DOTON"),
 	validateAttempt: NINJUTSU_REPLACE_LIST.find((item) => item.newSkill === "DOTON")!.condition,
+	jobPotencyModifiers: (state) =>
+		state.hasResourceAvailable("KASSATSU") ? [Modifiers.Kassatsu] : [],
 	onConfirm: combineEffects(
 		(state, node) => {
 			state.addDoTPotencies({
@@ -1035,12 +1040,12 @@ makeWeaponskill("NIN", "DOTON", 45, {
 				skillName: "DOTON",
 				tickPotency: 80,
 				speedStat: "sks",
+				modifiers: state.hasResourceAvailable("KASSATSU") ? [Modifiers.Kassatsu] : [],
 			});
 		},
 		(state: NINState) => state.clearMudraInfo(),
 	),
 	onApplication: dotonApply,
-	// Kassatsu does not affect doton
 });
 
 const HAS_RAIJU = (state: Readonly<NINState>) => state.hasResourceAvailable("RAIJU_READY");

@@ -2,7 +2,8 @@
 	{
 		"date": "3/12/26",
 		"changes": [
-			"[NIN][RPR] Fixed a bug where auto-attacks were incorrectly affected by damaging debuffs in certain scenarios."
+			"[NIN][RPR] Fixed a bug where auto-attacks were incorrectly affected by damaging debuffs in certain scenarios.",
+			"[NIN] Fixed a bug where Doton's potency was not affected by Kassatsu."
 		]
 	},
 	{
