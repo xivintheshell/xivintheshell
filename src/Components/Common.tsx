@@ -1,6 +1,6 @@
 import React, { ChangeEvent, CSSProperties, ReactNode, useEffect, useState, useRef } from "react";
 import { localize } from "./Localization";
-import { Tooltip } from "@base-ui-components/react/tooltip";
+import { Tooltip } from "@base-ui/react/tooltip";
 import { getCurrentThemeColors } from "./ColorTheme";
 import { Debug } from "../Game/Common";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
@@ -837,32 +837,34 @@ export function Help(props: {
 	// Manually set open/closed state instead of using Tooltip.Trigger to ensure it goes away
 	// after mousing off the (?) icon.
 	const [open, setOpen] = useState(false);
-	return <Tooltip.Root delay={0} open={open}>
-		<span
-			id={`help-${props.topic}`}
-			className="help-icon global-help-tooltip"
-			style={style}
-			data-tooltip-offset={4}
-			onMouseEnter={() => {
-				const now = Date.now();
-				if (now - lastMouseEnter.current > HELP_MOUSEOVER_HYSTERESIS_MS) {
-					setOpen(true);
-				}
-				lastMouseEnter.current = now;
-			}}
-			onMouseLeave={() => setOpen(false)}
-		>
-			<span style={{ position: "relative", top: -1, color: "white" }}>&#63;</span>
-		</span>
-		<Tooltip.Portal
-			container={props.container ?? document.getElementById("globalHelpTooltipAnchor")}
-		>
-			<Tooltip.Positioner
-				className="tooltip-positioner"
-				anchor={document.getElementById(`help-${props.topic}`)}
+	return <Tooltip.Provider delay={0}>
+		<Tooltip.Root open={open}>
+			<span
+				id={`help-${props.topic}`}
+				className="help-icon global-help-tooltip"
+				style={style}
+				data-tooltip-offset={4}
+				onMouseEnter={() => {
+					const now = Date.now();
+					if (now - lastMouseEnter.current > HELP_MOUSEOVER_HYSTERESIS_MS) {
+						setOpen(true);
+					}
+					lastMouseEnter.current = now;
+				}}
+				onMouseLeave={() => setOpen(false)}
 			>
-				<Tooltip.Popup className="help-tooltip tooltip">{props.content}</Tooltip.Popup>
-			</Tooltip.Positioner>
-		</Tooltip.Portal>
-	</Tooltip.Root>;
+				<span style={{ position: "relative", top: -1, color: "white" }}>&#63;</span>
+			</span>
+			<Tooltip.Portal
+				container={props.container ?? document.getElementById("globalHelpTooltipAnchor")}
+			>
+				<Tooltip.Positioner
+					className="tooltip-positioner"
+					anchor={document.getElementById(`help-${props.topic}`)}
+				>
+					<Tooltip.Popup className="help-tooltip tooltip">{props.content}</Tooltip.Popup>
+				</Tooltip.Positioner>
+			</Tooltip.Portal>
+		</Tooltip.Root>
+	</Tooltip.Provider>;
 }

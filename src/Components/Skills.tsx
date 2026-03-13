@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState, FormEvent } from "react";
-import { Tooltip } from "@base-ui-components/react/tooltip";
+import { Tooltip } from "@base-ui/react/tooltip";
 import { Clickable, ContentNode, Help, parseTime, ValueChangeEvent } from "./Common";
 import { Debug, SkillReadyStatus, SkillUnavailableReason } from "../Game/Common";
 import { controller } from "../Controller/Controller";
@@ -448,8 +448,8 @@ function SkillButton(props: SkillButtonProps) {
 			content={icon}
 		/>
 	</span>;
-	return <Tooltip.Root delay={0} hoverable={false}>
-		<Tooltip.Trigger render={tooltipTrigger} />
+	return <Tooltip.Root disableHoverablePopup={true}>
+		<Tooltip.Trigger delay={0} render={tooltipTrigger} />
 		<Tooltip.Portal container={document.getElementById("skillsWindowAnchor")}>
 			<Tooltip.Positioner sideOffset={3} side="top" className="tooltip-positioner">
 				<Tooltip.Popup className="info-tooltip tooltip">{skillDescription}</Tooltip.Popup>
