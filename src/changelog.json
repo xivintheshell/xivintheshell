@@ -2,7 +2,7 @@
 	{
 		"date": "3/15/26",
 		"changes": [
-			"When multiple skills are selected, changing targets in the timeline editor table will now change targets for all selected skills.",
+			"When multiple skills are selected, changing targets in the timeline editor table will now change targets for all selected skills."
 		],
 		"changes_zh": [
 			"时间轴编辑器现支持同时编辑多个选中技能的目标。"
