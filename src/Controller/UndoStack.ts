@@ -92,7 +92,7 @@ export abstract class TimelineInteraction {
 }
 
 function maybePluralActions(n: number): string {
-	return n > 0 ? "actions" : "action";
+	return n === 1 ? "action" : "actions";
 }
 
 // === BASIC SINGLE-TIMELINE INTERACTIONS ===
@@ -118,9 +118,7 @@ export class AddNode extends TimelineInteraction {
 }
 
 export class EditNode extends TimelineInteraction {
-	oldNode: ActionNode;
-	newNode: ActionNode;
-	index: number;
+	edits: { index: number; oldNode: ActionNode; newNode: ActionNode }[];
 
 	constructor(newNode: ActionNode, index: number) {
 		super({
@@ -128,20 +126,30 @@ export class EditNode extends TimelineInteraction {
 			zh: `修改技能`,
 		});
 		controller.record.selectSingle(index);
-		this.oldNode = controller.record.getFirstSelection()!;
-		console.assert(this.oldNode !== undefined);
-		this.newNode = newNode;
-		this.index = index;
+		const oldNode = controller.record.getFirstSelection()!;
+		console.assert(oldNode !== undefined);
+		this.edits = [{ index, oldNode, newNode }];
+	}
+
+	static bulk(edits: { index: number; oldNode: ActionNode; newNode: ActionNode }[]): EditNode {
+		const n = edits.length;
+		const instance = Object.create(EditNode.prototype) as EditNode;
+		instance.message = {
+			en: `edit ${n} ${maybePluralActions(n)}`,
+			zh: `修改${n}个技能`,
+		};
+		instance.edits = edits;
+		return instance;
 	}
 
 	override undo() {
-		controller.record.replaceNode(this.oldNode, this.index);
+		this.edits.forEach((edit) => controller.record.replaceNode(edit.oldNode, edit.index));
 		controller.autoSave();
 		updateInvalidStatus();
 	}
 
 	override redo() {
-		controller.record.replaceNode(this.newNode, this.index);
+		this.edits.forEach((edit) => controller.record.replaceNode(edit.newNode, edit.index));
 		controller.autoSave();
 		updateInvalidStatus();
 	}

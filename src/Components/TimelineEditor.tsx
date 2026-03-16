@@ -31,6 +31,7 @@ import {
 } from "./Timeline";
 import { getSkill } from "../Game/Skills";
 import { SkillReadyStatus } from "../Game/Common";
+import type { ActionKey } from "../Game/Data";
 
 // about 0.25
 const HIGHLIGHT_ALPHA_HEX = "3f";
@@ -565,11 +566,113 @@ export function TimelineEditor() {
 			}
 			return <div style={applyTextStyle}>{selectedInfo}</div>;
 		} else {
-			return <div style={applyTextStyle}>
+			// Multiple actions selected. If the current selection start is a skill, then allow
+			// the target selector to apply changes to all selected skills.
+			// If the first selection is not a skill, then we don't need to do anything special.
+			const fallbackSelectorMessage = <div style={applyTextStyle}>
 				{localize({
 					en: `${selectionLength} actions selected.`,
 					zh: `选中${selectionLength}个技能。`,
 				})}
+			</div>;
+			if (record.getFirstSelection()?.info.type !== ActionType.Skill) {
+				return fallbackSelectorMessage;
+			}
+			const startIdx = record.selectionStartIndex!;
+			const selectedNodes = record.getSelected().actions;
+
+			// Identify which selected skills support target editing.
+			const editableSkills: {
+				offset: number;
+				skillName: ActionKey;
+				isSingleTarget: boolean;
+			}[] = [];
+			let allSingleTarget = true;
+			for (let offset = 0; offset < selectedNodes.length; offset++) {
+				const node = selectedNodes[offset];
+				if (node.info.type === ActionType.Skill) {
+					const skillName = node.info.skillName;
+					const skill = getSkill(controller.game.job, skillName);
+					const showTargetSelector =
+						skill?.potencyFn(controller.game) > 0 ||
+						skill?.savesTargets ||
+						controller.game.dotSkills.includes(skillName);
+					if (showTargetSelector) {
+						const isSingleTarget = skill.falloff === undefined && !skill.savesTargets;
+						allSingleTarget = allSingleTarget && isSingleTarget;
+						editableSkills.push({
+							offset,
+							skillName,
+							isSingleTarget,
+						});
+					}
+				}
+			}
+			if (editableSkills.length === 0) {
+				return fallbackSelectorMessage;
+			}
+			const localizedSkillName = localizeSkillName(editableSkills[0].skillName);
+			const otherCount = selectedNodes.length - 1;
+			const header = <>
+				<b>{localizedSkillName}</b>{" "}
+				{otherCount > 0 &&
+					localize({
+						en: ` (and ${otherCount} other ${otherCount === 1 ? "action" : "actions"})`,
+						zh: `（及另外${otherCount}个技能）`,
+					})}
+			</>;
+			// Show the target state of the first editable skill only. Edits to this list will propagate to
+			// all other selected skills that support multi-target selection.
+			const firstTargets = selectedNodes[editableSkills[0].offset].targetList;
+			const displayedSelected = Array(MAX_ABILITY_TARGETS).fill(false);
+			firstTargets.forEach((t) => {
+				displayedSelected[t - 1] = true;
+			});
+			const displayedPrimary = firstTargets.length > 0 ? firstTargets[0] - 1 : 0;
+
+			// TODO: share more code with the single-target version
+			return <div style={applyTextStyle}>
+				{header}
+				<br />
+				<TargetSelector
+					style={{ marginBlock: "5px" }}
+					primaryOnly={allSingleTarget}
+					selected={displayedSelected}
+					primary={displayedPrimary}
+					onAnySelectionChange={(newPrimary: number, selectArray: boolean[]) =>
+						doRecordEdit((record) => {
+							const multiTargets = [newPrimary + 1];
+							selectArray.forEach((flag, i) => {
+								if (flag && i !== newPrimary) multiTargets.push(i + 1);
+							});
+
+							const edits = editableSkills.map(
+								({ offset, skillName, isSingleTarget }) => {
+									const absIdx = startIdx + offset;
+									return {
+										index: absIdx,
+										oldNode: record.actions[absIdx],
+										newNode: skillNode(
+											skillName,
+											isSingleTarget ? [newPrimary + 1] : multiTargets,
+										),
+									};
+								},
+							);
+
+							const editNode = EditNode.bulk(edits);
+							controller.undoStack.push(editNode);
+							editNode.redo();
+							return edits[0].index;
+						})
+					}
+				/>
+				<div>
+					{localize({
+						en: "Edits to selected targets will apply to all selected skills.",
+						zh: "对选中目标的编辑将应用于所有选中的技能。",
+					})}
+				</div>
 			</div>;
 		}
 	};
@@ -1041,7 +1144,7 @@ export function TimelineEditor() {
 							width: "100%",
 						}}
 					>
-						<div style={{ height: "30%" }}>{skillPropertiesSection()}</div>
+						<div style={{ height: "33%" }}>{skillPropertiesSection()}</div>
 						<hr
 							style={{
 								marginLeft: "5px",
@@ -1049,7 +1152,7 @@ export function TimelineEditor() {
 								borderTop: ("1px solid " + colors.bgHighContrast) as string,
 							}}
 						/>
-						<div style={{ height: "60%" }}>{applySection()}</div>
+						<div style={{ height: "57%" }}>{applySection()}</div>
 					</div>,
 					defaultSize: 40,
 					fullBorder: true,
