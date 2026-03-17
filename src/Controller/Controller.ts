@@ -2104,7 +2104,8 @@ class Controller {
 		if (
 			skill?.potencyFn(controller.game) === 0 &&
 			!skill?.savesTargets &&
-			!controller.game.dotSkills.includes(skillName)
+			!controller.game.dotSkills.includes(skillName) &&
+			skillName !== "CHAIN_STRATAGEM" // TODO move this logic somewhere common, since it's repeated a few times
 		) {
 			return [];
 		}

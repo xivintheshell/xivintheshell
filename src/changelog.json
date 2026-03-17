@@ -1,5 +1,11 @@
 [
 	{
+		"date": "3/17/26",
+		"changes": [
+			"[SCH] Fixed a bug where Chain Stratagem could not select a new target."
+		]
+	},
+	{
 		"date": "3/15/26",
 		"changes": [
 			"When multiple skills are selected, changing targets in the timeline editor table will now change targets for all selected skills."

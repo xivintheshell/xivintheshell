@@ -494,7 +494,8 @@ export function TimelineEditor() {
 				const showTargetSelector =
 					skill?.potencyFn(controller.game) > 0 ||
 					skill?.savesTargets ||
-					controller.game.dotSkills.includes(skillName);
+					controller.game.dotSkills.includes(skillName) ||
+					skillName === "CHAIN_STRATAGEM";
 				selectedInfo = <>
 					<b>{localizeSkillName(skillName)}</b> @ {useTimeString}
 					<br />
@@ -596,7 +597,8 @@ export function TimelineEditor() {
 					const showTargetSelector =
 						skill?.potencyFn(controller.game) > 0 ||
 						skill?.savesTargets ||
-						controller.game.dotSkills.includes(skillName);
+						controller.game.dotSkills.includes(skillName) ||
+						skillName === "CHAIN_STRATAGEM";
 					if (showTargetSelector) {
 						const isSingleTarget = skill.falloff === undefined && !skill.savesTargets;
 						allSingleTarget = allSingleTarget && isSingleTarget;
