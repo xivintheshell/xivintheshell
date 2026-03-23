@@ -1,5 +1,11 @@
 [
 	{
+		"date": "3/23/26",
+		"changes": [
+			"[MNK] Fixed a bug where Fire's Rumination fell off too early."
+		]
+	},
+	{
 		"date": "3/17/26",
 		"changes": [
 			"[SCH] Fixed a bug where Chain Stratagem could not select a new target."

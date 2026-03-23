@@ -76,7 +76,7 @@ makeMNKResource("RIDDLE_OF_EARTH", 1, { timeout: 10 });
 makeMNKResource("EARTHS_RESOLVE", 1, { timeout: 15 });
 makeMNKResource("EARTHS_RUMINATION", 1, { timeout: 30 });
 makeMNKResource("RIDDLE_OF_FIRE", 1, { timeout: 20.72 });
-makeMNKResource("FIRES_RUMINATION", 1, { timeout: 20, warnOnTimeout: true });
+makeMNKResource("FIRES_RUMINATION", 1, { timeout: 20.72, warnOnTimeout: true });
 makeMNKResource("BROTHERHOOD", 1, { timeout: 20 });
 makeMNKResource("MEDITATIVE_BROTHERHOOD", 1, { timeout: 20 });
 makeMNKResource("RIDDLE_OF_WIND", 1, { timeout: 15.78 });
