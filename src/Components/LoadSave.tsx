@@ -1,15 +1,31 @@
 import React, { useContext } from "react";
-import { Columns, FileFormat, LoadJsonFromFileOrUrl, SaveToFile } from "./Common";
+import { Columns, FileFormat, LoadJsonFromFileOrUrl, SaveToFile, SaveToFileProps } from "./Common";
 import { FflogsImportFlow } from "./FFLogs/ImportInterface";
 import { controller } from "../Controller/Controller";
 import { FileType } from "../Controller/Common";
 import { ImportTimelineFile } from "../Controller/UndoStack";
-import { localize } from "./Localization";
+import { localize, LocalizedContent } from "./Localization";
 import { ImageExport } from "./ImageExport";
 import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
 import { getThemeField, ColorThemeContext } from "./ColorTheme";
 
 type Fixme = any;
+
+function ExportItem(props: { blurb: LocalizedContent; saveToFileProps: SaveToFileProps }) {
+	const colors = useContext(ColorThemeContext);
+	return <>
+		<p>{localize(props.blurb)}</p>
+		<div
+			style={{
+				marginLeft: 5,
+				paddingLeft: 10,
+				borderLeft: ("1px solid " + getThemeField(colors, "bgHighContrast")) as string,
+			}}
+		>
+			{SaveToFile(props.saveToFileProps)}
+		</div>
+	</>;
+}
 
 export function LoadSave() {
 	const colors = useContext(ColorThemeContext);
@@ -37,50 +53,65 @@ export function LoadSave() {
 		zh: "导出战斗到文件",
 	});
 	const textExportContent = <div>
-		<p>
-			{localize({
+		<ExportItem
+			blurb={{
 				en: "for sharing and importing:",
 				zh: "用于分享和导入：",
-			})}
-		</p>
-		<SaveToFile
-			fileFormat={FileFormat.Json}
-			getContentFn={() => {
-				return controller.record.serialized();
 			}}
-			filename={"fight"}
-			displayName={localize({
-				en: "txt format",
-				zh: "txt格式",
-			})}
+			saveToFileProps={{
+				fileFormat: FileFormat.Json,
+				getContentFn: () => {
+					return controller.record.serialized();
+				},
+				filename: "fight",
+				displayName: localize({
+					en: "txt format",
+					zh: "txt格式",
+				}),
+			}}
 		/>
-		<p>
-			{localize({
+		<ExportItem
+			blurb={{
+				en: <span>for external tools like excel:</span>,
+				zh: <span>用于excel和另外外部工具：</span>,
+			}}
+			saveToFileProps={{
+				fileFormat: FileFormat.Csv,
+				getContentFn: () => {
+					return { body: controller.getActionsLogCsv() };
+				},
+				filename: "fight",
+				displayName: localize({
+					en: "csv format",
+					zh: "csv格式",
+				}),
+			}}
+		/>
+		<ExportItem
+			blurb={{
 				en: <span>
-					for external tools such as excel and{" "}
-					<a href={"https://github.com/Tischel/BLMInTheShell"}>Tischel's plugin</a>:
+					for <a href={"https://github.com/Tischel/BLMInTheShell"}>Tischel's plugin</a>:
 				</span>,
 				zh: <span>
-					用于excel，
-					<a href={"https://github.com/Tischel/BLMInTheShell"}>Tischel的插件</a>
-					等外部工具：
+					用于
+					<a href={"https://github.com/Tischel/BLMInTheShell"}>Tischel的插件</a>：
 				</span>,
-			})}
-		</p>
-		<SaveToFile
-			fileFormat={FileFormat.Csv}
-			getContentFn={() => {
-				return { body: controller.getActionsLogCsv() };
 			}}
-			filename={"fight"}
-			displayName={localize({
-				en: "csv format",
-				zh: "csv格式",
-			})}
+			saveToFileProps={{
+				fileFormat: FileFormat.Csv,
+				getContentFn: () => {
+					return { body: controller.getActionsLogCsv(true) };
+				},
+				filename: "fight",
+				displayName: localize({
+					en: "csv format",
+					zh: "csv格式",
+				}),
+			}}
 		/>
-		<p>
-			{/* google colab probably doesn't work in China, so just link to github instead */}
-			{localize({
+		<ExportItem
+			// google colab probably doesn't work in China, so just link to github instead
+			blurb={{
 				en: <span>
 					for use with{" "}
 					<a
@@ -99,16 +130,16 @@ export function LoadSave() {
 					</a>
 					：
 				</span>,
-			})}
-		</p>
-		<SaveToFile
-			fileFormat={FileFormat.Csv}
-			getContentFn={() => controller.getAmaSimCsv()}
-			filename={"fight"}
-			displayName={localize({
-				en: "csv format",
-				zh: "csv格式",
-			})}
+			}}
+			saveToFileProps={{
+				fileFormat: FileFormat.Csv,
+				getContentFn: () => controller.getAmaSimCsv(),
+				filename: "fight",
+				displayName: localize({
+					en: "csv format",
+					zh: "csv格式",
+				}),
+			}}
 		/>
 	</div>;
 	const textImportTitle = localize({

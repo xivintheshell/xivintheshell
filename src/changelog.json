@@ -1,5 +1,14 @@
 [
 	{
+		"date": "3/27/26",
+		"changes": [
+			"Updated CSV export for Tischel's striking dummy plugin to use action IDs instead of names."
+		],
+		"changes_zh": [
+			"更新了Tischel的木人插件的CSV导出功能，现已改用技能ID代替技能名称。"
+		]
+	},
+	{
 		"date": "3/23/26",
 		"changes": [
 			"[MNK] Fixed a bug where Fire's Rumination fell off too early."
