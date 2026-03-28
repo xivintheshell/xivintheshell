@@ -147,6 +147,7 @@ class Controller {
 	#actionsLogCsv: {
 		time: number;
 		action: string;
+		actionId: number | undefined;
 		isGCD: number;
 		castTime: number;
 		targetList?: number[];
@@ -1233,6 +1234,7 @@ class Controller {
 			this.#actionsLogCsv.push({
 				time: this.game.getDisplayTime(),
 				action: ACTIONS[skillName].name,
+				actionId: ACTIONS[skillName].id,
 				isGCD: isGCD ? 1 : 0,
 				castTime: status.instantCast ? 0 : status.castTime,
 				targetList: node.targetList,
@@ -1557,6 +1559,7 @@ class Controller {
 					this.#actionsLogCsv.push({
 						time: this.game.getDisplayTime(),
 						action: skillName,
+						actionId: undefined,
 						isGCD: 0,
 						castTime: 0,
 						targetList: node.targetList,
@@ -1701,10 +1704,13 @@ class Controller {
 		return [["time", "damageSource", "potency"]].concat(csvRows as any[][]);
 	}
 
-	getActionsLogCsv(): any[][] {
-		const csvRows = this.#actionsLogCsv.map((row) => {
-			return [row.time, row.action, row.isGCD, row.castTime];
-		});
+	getActionsLogCsv(useActionID: boolean = false): any[][] {
+		const csvRows = this.#actionsLogCsv.map((row) => [
+			row.time,
+			useActionID ? (row.actionId ?? row.action) : row.action,
+			row.isGCD,
+			row.castTime,
+		]);
 		return [["time", "action", "isGCD", "castTime"]].concat(csvRows as any[][]);
 	}
 
@@ -2172,6 +2178,7 @@ class Controller {
 		this.#actionsLogCsv.push({
 			time: this.game.getDisplayTime(),
 			action: "Toggle buff: " + RESOURCES[buffName].name,
+			actionId: undefined,
 			isGCD: 0,
 			castTime: 0,
 			isDamaging: false,

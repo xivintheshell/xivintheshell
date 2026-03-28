@@ -99,7 +99,7 @@ export const enum FileFormat {
 	Png = "PNG",
 }
 
-type SaveToFileProps = {
+export type SaveToFileProps = {
 	getContentFn: () => object;
 	filename: string;
 	fileFormat: FileFormat;
