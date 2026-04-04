@@ -1,5 +1,11 @@
 [
 	{
+		"date": "4/4/26",
+		"changes": [
+			"[RDM] Fixed a bug where melee combo abilities did not consume Dualcast."
+		]
+	},
+	{
 		"date": "3/27/26",
 		"changes": [
 			"Updated CSV export for Tischel's striking dummy plugin to use action IDs instead of names."

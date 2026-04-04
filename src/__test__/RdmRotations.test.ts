@@ -175,6 +175,22 @@ it(
 	}),
 );
 
+it(
+	"cancels dualcast with melee combo and sprint",
+	testWithConfig({}, () => {
+		const state = controller.game as RDMState;
+		state.resources.get("WHITE_MANA").overrideCurrentValue(50);
+		state.resources.get("BLACK_MANA").overrideCurrentValue(50);
+		applySkill("JOLT_III");
+		expect(state.hasResourceAvailable("DUALCAST")).toBeTruthy();
+		applySkill("ENCHANTED_RIPOSTE");
+		expect(state.hasResourceAvailable("DUALCAST")).toBeFalsy();
+		applySkill("JOLT_III");
+		expect(state.hasResourceAvailable("DUALCAST")).toBeTruthy();
+		applySkill("SPRINT");
+	}),
+);
+
 // it("interrupts verstone if it falls off mid-cast")
 
 it(

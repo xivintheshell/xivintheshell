@@ -345,12 +345,13 @@ const makeMeleeGCD = (
 	const isPhysical = !name.toString().startsWith("ENCHANTED");
 	const onConfirm: EffectFn<RDMState> = combineEffects(
 		(state) => state.processComboStatus(name),
+		(state) => state.tryConsumeResource("DUALCAST"),
 		params.onConfirm,
 	);
 	return makeWeaponskill("RDM", name, unlockLevel, {
 		...params,
 		aspect: isPhysical ? Aspect.Physical : undefined,
-		onConfirm: onConfirm,
+		onConfirm,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = [];
 			if (!isPhysical) {
