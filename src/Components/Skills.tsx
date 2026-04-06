@@ -10,37 +10,41 @@ import { getCurrentThemeColors, getThemeColors, ColorThemeContext } from "./Colo
 import { TargetSelector } from "./TargetSelector";
 import { getSkillAssetPath } from "../Game/Skills";
 import { ActionKey, ACTIONS } from "../Game/Data";
+import { ShellJob } from "../Game/Data/Jobs";
 
-const skillIconImages = new Map();
+// keyed on concatenation of job __ skillName to avoid uniqueness issues
+const skillIconImages = new Map<string, HTMLImageElement>();
 
 const MISSING_PATH = "assets/Skills/General/Missing.png";
 
-export const getSkillIconImage = (skillName: ActionKey | string) => {
-	if (skillIconImages.has(skillName)) {
-		return skillIconImages.get(skillName);
+export function getSkillIconImage(job: ShellJob, skillName: ActionKey | string): HTMLImageElement {
+	const cacheKey = `${job}__${skillName}`;
+	if (skillIconImages.has(cacheKey)) {
+		return skillIconImages.get(cacheKey)!;
 	}
-	const assetIcon = `assets/Skills/${getSkillAssetPath(skillName)}`;
-	if (assetIcon) {
-		const imgObj = new Image();
-		imgObj.src = assetIcon;
-		imgObj.onerror = (e) => {
-			imgObj.src = MISSING_PATH;
-			console.error("failed to load skill image: " + assetIcon);
-			// de-register the handler to prevent infinite loops
-			imgObj.onerror = null;
-		};
-		imgObj.onload = () => updateTimelineView();
-		skillIconImages.set(skillName, imgObj);
-		return imgObj;
-	}
-	return undefined;
-};
+	const assetIcon = `assets/Skills/${getSkillAssetPath(job, skillName)}`;
+	const imgObj = new Image();
+	imgObj.src = assetIcon;
+	imgObj.onerror = (e) => {
+		imgObj.src = MISSING_PATH;
+		console.error("failed to load skill image: " + assetIcon);
+		// de-register the handler to prevent infinite loops
+		imgObj.onerror = null;
+	};
+	imgObj.onload = () => updateTimelineView();
+	skillIconImages.set(cacheKey, imgObj);
+	return imgObj;
+}
 
-export function SkillIconImage(props: { style: React.CSSProperties; skillName: ActionKey }) {
+export function SkillIconImage(props: {
+	style: React.CSSProperties;
+	activeJob: ShellJob;
+	skillName: ActionKey;
+}) {
 	// getSkillIconImage produces an image for timeline rendering, and thus shouldn't make a react component.
 	// In all other cases, we probably want an actual react component.
 	// These are also not memoized.
-	const assetIcon = `assets/Skills/${getSkillAssetPath(props.skillName)}`;
+	const assetIcon = `assets/Skills/${getSkillAssetPath(props.activeJob, props.skillName)}`;
 	const [didError, setDidError] = useState(false);
 	return <img
 		style={props.style}
@@ -202,6 +206,7 @@ type SkillButtonProps = {
 	cdProgress: number;
 	secondaryCdProgress?: number;
 	targetList: number[];
+	activeJob: ShellJob;
 };
 
 function SkillButton(props: SkillButtonProps) {
@@ -398,7 +403,11 @@ function SkillButton(props: SkillButtonProps) {
 		<div style={iconStyle}>
 			{" "}
 			{/* "overlay" layers */}
-			<SkillIconImage style={iconImgStyle} skillName={props.skillName} />
+			<SkillIconImage
+				style={iconImgStyle}
+				activeJob={props.activeJob}
+				skillName={props.skillName}
+			/>
 			<div
 				style={{
 					position: "absolute",
@@ -631,6 +640,7 @@ export function SkillsWindow() {
 					: 1
 			}
 			targetList={getTargetList()}
+			activeJob={controller.game.job}
 		/>;
 	});
 

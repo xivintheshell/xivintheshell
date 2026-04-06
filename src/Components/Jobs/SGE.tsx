@@ -54,7 +54,7 @@ export class SGEStatusPropsGenerator extends StatusPropsGenerator<SGEState> {
 			if (key === "KARDION") {
 				return [this.makeCommonTimerless(key, false)];
 			}
-			return this.makeTargetedTimers(key);
+			return this.makeCommonTimer(key);
 		});
 	}
 

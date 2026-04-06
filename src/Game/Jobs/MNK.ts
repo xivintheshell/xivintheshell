@@ -2,6 +2,7 @@
 
 import { MNKStatusPropsGenerator } from "../../Components/Jobs/MNK";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
+import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
 import { BuffType } from "../Common";
 import { TraitKey } from "../Data";
@@ -593,7 +594,11 @@ makeMNKWeaponskill("DRAGON_KICK", 50, {
 		nextForm: "raptor",
 	},
 	highlightIf: (state) => state.canDoForm("opo") && !state.hasResourceAvailable("OPO_OPOS_FURY"),
-	onConfirm: (state) => state.resources.get("OPO_OPOS_FURY").gain(1),
+	onConfirm: (state) => {
+		if (state.canDoForm("opo")) {
+			state.resources.get("OPO_OPOS_FURY").gain(1);
+		}
+	},
 });
 
 makeMNKWeaponskill("TWIN_SNAKES", 18, {
@@ -924,7 +929,18 @@ makeMNKWeaponskill("SIX_SIDED_STAR", 80, {
 
 makeMNKWeaponskill("FORM_SHIFT", 52, {
 	applicationDelay: 0,
-	onConfirm: (state) => state.setForm("formless"),
+	onConfirm: (state) => {
+		// Executing Form Shift under PB will not grant the Formless Fist buff.
+		if (!state.hasResourceAvailable("PERFECT_BALANCE")) {
+			state.setForm("formless");
+		} else {
+			controller.reportWarning({
+				kind: "custom",
+				en: "Formless Fist misses when used under the effect of Perfect Balance",
+				zh: "“震脚”状态下使用“无相身形”无效",
+			});
+		}
+	},
 });
 
 // Treat meditation as a GCD, even out of combat

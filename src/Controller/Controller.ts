@@ -1007,11 +1007,7 @@ class Controller {
 			this.#lastTickDuration = props.deltaTime;
 			const timeTicked = this.game.tick(
 				props.deltaTime,
-				props.prematureStopCondition
-					? props.prematureStopCondition
-					: () => {
-							return false;
-						},
+				props.prematureStopCondition ?? (() => false),
 			);
 
 			// If `waitKind` is defined, then create a new explicit wait node.
@@ -1186,6 +1182,10 @@ class Controller {
 					artificialWaitNode.tmp_startLockTime = preStartLockTime;
 					artificialWaitNode.tmp_endLockTime = this.game.time;
 					this.record.addActionNode(artificialWaitNode);
+					this.undoStack.push(new AddNode(artificialWaitNode, this.record.tailIndex));
+					if (!this.#skipViewUpdates) {
+						refreshTimelineEditor();
+					}
 				}
 				return status;
 			}

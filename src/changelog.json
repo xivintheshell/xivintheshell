@@ -1,5 +1,14 @@
 [
 	{
+		"date": "4/5/26",
+		"changes": [
+			"Fixed a bug where the undo button did not remove certain automatically-inserted time delays.",
+			"[MNK] Fixed a bug where Form Shift applied under the effect of Perfect Balance.",
+			"[SMN] Fixed a bug where Mountain Buster used the skill icon of BLU's Mountain Buster",
+			"[SGE] Fixed a bug where the duration of shield buffs like Eukrasian Diagnosis and Haimaton was not properly displayed."
+		]
+	},
+	{
 		"date": "4/4/26",
 		"changes": [
 			"[RDM] Fixed a bug where melee combo abilities did not consume Dualcast."
