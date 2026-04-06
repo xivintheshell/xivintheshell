@@ -1090,6 +1090,8 @@ class Controller {
 			// should just make the text static for all jobs)
 			if (jobChanged) {
 				setJob(props.job);
+				// Also propagate to the nested timeline object
+				this.timeline.slots[this.timeline.activeSlotIndex].job = props.job;
 			}
 		});
 
