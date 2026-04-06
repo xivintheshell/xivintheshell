@@ -257,9 +257,12 @@ export const skillIdMap = new Map<number, ActionKey>();
 // Because SCH's Energy Drain + Physick get clobbered by the SMN skills of the same name, we need
 // to hardcode the skill ID initialization here instead of in setSkill below.
 skillIdMap.set(SCH_ACTIONS.ENERGY_DRAIN.id, "ENERGY_DRAIN");
+skillIdMap.set(SMN_ACTIONS.ENERGY_DRAIN.id, "ENERGY_DRAIN");
 skillIdMap.set(SCH_ACTIONS.PHYSICK.id, "PHYSICK");
+skillIdMap.set(SMN_ACTIONS.PHYSICK.id, "PHYSICK");
 // SMN Mountain Buster gets clobbered by BLU Mountain Buster.
 skillIdMap.set(SMN_ACTIONS.MOUNTAIN_BUSTER.id, "MOUNTAIN_BUSTER");
+skillIdMap.set(BLU_ACTIONS.MOUNTAIN_BUSTER.id, "MOUNTAIN_BUSTER");
 // As of patch 7.4, RDM melee combo actions used under Manafication also have different IDs.
 skillIdMap.set(45960, "ENCHANTED_RIPOSTE");
 skillIdMap.set(45961, "ENCHANTED_ZWERCHHAU");
