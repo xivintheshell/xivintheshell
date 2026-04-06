@@ -686,6 +686,7 @@ function drawSkills(params: {
 	// otherwise, we still need a hover handler for damage info on skills in inactive timelines
 	// that are drawn with interactive=false
 	testInteraction: InteractionHandler;
+	slot: number;
 }): Map<number, Rect> {
 	const { ctx, viewInfo, timelineOriginX, timelineOriginY, elems, interactive, testInteraction } =
 		params;
@@ -881,7 +882,7 @@ function drawSkills(params: {
 		}
 
 		// skill icon
-		const img = getSkillIconImage(skill.skillName);
+		const img = getSkillIconImage(renderingProps.slots[params.slot].job, skill.skillName);
 		if (img) skillIcons.push({ elem: e, x: x, y: y });
 	});
 
@@ -953,7 +954,7 @@ function drawSkills(params: {
 	ctx.beginPath();
 	skillIcons.forEach((icon) => {
 		ctx.drawImage(
-			getSkillIconImage(icon.elem.skillName),
+			getSkillIconImage(renderingProps.slots[params.slot].job, icon.elem.skillName),
 			icon.x,
 			icon.y,
 			SKILL_ICON_SIZE_PX,
@@ -1459,6 +1460,7 @@ export function drawTimelines(params: {
 			...markDrawBase,
 			elems: (elemBins.get(ElemType.Skill) as SkillElem[]) ?? [],
 			interactive: isActiveSlot,
+			slot,
 		});
 		if (isActiveSlot) {
 			skillHitboxes = tempHitboxes;
@@ -1673,7 +1675,10 @@ function drawClickDragInteractions(params: {
 		const tmpAlpha = ctx.globalAlpha;
 		ctx.globalAlpha = 0.4;
 		ctx.drawImage(
-			getSkillIconImage(draggedSkillElem.skillName),
+			getSkillIconImage(
+				renderingProps.slots[renderingProps.activeSlotIndex].job,
+				draggedSkillElem.skillName,
+			),
 			mouseX,
 			mouseY,
 			SKILL_ICON_SIZE_PX,

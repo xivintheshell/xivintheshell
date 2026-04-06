@@ -57,7 +57,14 @@ function PresetLine(props: { line: Line }) {
 		// waits and other actions aren't rendered, but TODO maybe they should be
 		if (action.info.type === ActionType.Skill) {
 			const skillName = action.info.skillName;
-			icons.push(<SkillIconImage style={iconStyle} key={ctr} skillName={skillName} />);
+			icons.push(
+				<SkillIconImage
+					style={iconStyle}
+					key={ctr}
+					activeJob={controller.game.job}
+					skillName={skillName}
+				/>,
+			);
 			ctr++;
 		}
 	}

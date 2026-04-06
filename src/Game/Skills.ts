@@ -10,6 +10,7 @@ import { LimitBreakActionKey } from "./Data/Shared/LimitBreak";
 import { hasUnlockedTrait } from "../utilities";
 import { Data } from "./Data/Data";
 import { SMN_ACTIONS } from "./Data/Jobs/SMN";
+import { BLU_ACTIONS } from "./Data/Jobs/BLU";
 
 // all gapclosers have the same animation lock
 // from: https://nga.178.com/read.php?tid=21233094&rand=761
@@ -244,14 +245,14 @@ export type Skill<T extends GameState> =
 // the ShellJob and Skill<T>, so we'll just have to live with performing casts at certain locations.
 const skillMap: Map<ShellJob, Map<ActionKey, Skill<GameState>>> = new Map();
 export const discordEmoteSkillMap: Map<ShellJob, Map<string, ActionKey>> = new Map();
+// Track asset paths for all skills so we can load icons for multiple timelines
+const skillAssetPaths: Map<ShellJob, Map<ActionKey, string>> = new Map();
+const MISSING_ASSET_PATH = "General/Missing.png";
 ALL_JOBS.forEach((job) => {
 	skillMap.set(job, new Map());
+	skillAssetPaths.set(job, new Map());
 	discordEmoteSkillMap.set(job, new Map());
 });
-
-// Track asset paths for all skills so we can load icons for multiple timelines
-const skillAssetPaths: Map<ActionKey, string> = new Map();
-const MISSING_ASSET_PATH = "General/Missing.png";
 
 export const skillIdMap = new Map<number, ActionKey>();
 // Because SCH's Energy Drain + Physick get clobbered by the SMN skills of the same name, we need
@@ -322,8 +323,8 @@ export function getSkill<T extends GameState>(job: ShellJob, skillName: ActionKe
 	return skillMap.get(job)!.get(skillName)!;
 }
 
-export function getSkillAssetPath(skillName: ActionKey | string): string {
-	return skillAssetPaths.get(skillName as ActionKey) ?? MISSING_ASSET_PATH;
+export function getSkillAssetPath(job: ShellJob, skillName: ActionKey | string): string {
+	return skillAssetPaths.get(job)?.get(skillName as ActionKey) ?? MISSING_ASSET_PATH;
 }
 
 // Return true if the provided skill is valid for the job.
@@ -353,7 +354,35 @@ function setSkill<T extends GameState>(job: ShellJob, skillName: ActionKey, skil
 	if (label?.ja !== undefined) {
 		jaSkillNameMap.set(label.ja as string, skillName);
 	}
-	skillAssetPaths.set(skillName, skill.assetPath);
+
+	// Special case for tinctures: update the asset map to use a different image based on the role
+	if (skillName === "TINCTURE") {
+		let tinctureAssetPath = MISSING_ASSET_PATH;
+		switch (JOBS[job].role) {
+			case "TANK":
+			case "MELEE":
+				if (job === "NIN" || job === "VPR") {
+					tinctureAssetPath = "Role/Dexterity Tincture.png";
+				} else {
+					tinctureAssetPath = "Role/Strength Tincture.png";
+				}
+				break;
+			case "HEALER":
+				tinctureAssetPath = "Role/Mind Tincture.png";
+				break;
+			case "LIMITED":
+			case "CASTER":
+				tinctureAssetPath = "Role/Intelligence Tincture.png";
+				break;
+			case "RANGED":
+				tinctureAssetPath = "Role/Dexterity Tincture.png";
+				break;
+		}
+		skillAssetPaths.get(job)!.set("TINCTURE", tinctureAssetPath);
+	} else {
+		skillAssetPaths.get(job)!.set(skillName, skill.assetPath);
+	}
+
 	if (ACTIONS[skillName].id !== undefined) {
 		skillIdMap.set(ACTIONS[skillName].id, skillName);
 	}
@@ -909,6 +938,9 @@ export class DisplayedSkills {
 	#skills: ActionKey[];
 
 	constructor(job: ShellJob, level: LevelSync) {
+		// TODO: this path is currently somewhat hot (apparently run once for each simulated skill)
+		// While none of the operations are particularly intensive, we could potentially improve load
+		// times somewhat by avoiding this constructor's loops and branches.
 		this.#skills = [];
 		console.assert(skillMap.has(job), `No skill map found for job: ${job}`);
 		for (const skillInfo of skillMap.get(job)!.values()) {
@@ -926,29 +958,6 @@ export class DisplayedSkills {
 				this.#skills.push(getAutoReplacedSkillName(job, skillInfo.name, level));
 			}
 		}
-		// Special case for tinctures: update the asset map to use a different image based on the role
-		let tinctureAssetPath = skillAssetPaths.get("TINCTURE");
-		switch (JOBS[job].role) {
-			case "TANK":
-			case "MELEE":
-				if (job === "NIN" || job === "VPR") {
-					tinctureAssetPath = "Role/Dexterity Tincture.png";
-				} else {
-					tinctureAssetPath = "Role/Strength Tincture.png";
-				}
-				break;
-			case "HEALER":
-				tinctureAssetPath = "Role/Mind Tincture.png";
-				break;
-			case "LIMITED":
-			case "CASTER":
-				tinctureAssetPath = "Role/Intelligence Tincture.png";
-				break;
-			case "RANGED":
-				tinctureAssetPath = "Role/Dexterity Tincture.png";
-				break;
-		}
-		skillAssetPaths.set("TINCTURE", tinctureAssetPath);
 	}
 
 	// Get the list of skills to display in the current game state.

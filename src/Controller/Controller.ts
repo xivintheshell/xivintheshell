@@ -1125,12 +1125,12 @@ class Controller {
 		}
 	}
 
-	#fastForward(maxReplayTime: number) {
+	#fastForward(maxReplayTime: number): ActionNode | undefined {
 		let deltaTime: number = this.game.timeTillAnySkillAvailable();
 		if (maxReplayTime >= 0) {
 			deltaTime = Math.min(maxReplayTime - this.game.time, deltaTime);
 		}
-		this.#requestTick({ deltaTime });
+		return this.#requestTick({ deltaTime });
 	}
 
 	#useSkill(
@@ -1245,7 +1245,10 @@ class Controller {
 		if (overrideTickMode !== TickMode.RealTimeAutoPause) {
 			// In manual mode, directly fast-forward to the end of animation lock instead of animating.
 			// If we're in a historical replay, the end may be in the middle of the animation lock.
-			this.#fastForward(maxReplayTime);
+			const maybeFFNode = this.#fastForward(maxReplayTime);
+			if (maybeFFNode) {
+				this.undoStack.push(new AddNode(maybeFFNode, this.record.tailIndex));
+			}
 		}
 
 		// If this was called within a line load, do not refresh the timeline view

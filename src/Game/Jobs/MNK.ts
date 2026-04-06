@@ -2,6 +2,7 @@
 
 import { MNKStatusPropsGenerator } from "../../Components/Jobs/MNK";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
+import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
 import { BuffType } from "../Common";
 import { TraitKey } from "../Data";
