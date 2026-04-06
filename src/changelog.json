@@ -1,5 +1,11 @@
 [
 	{
+		"date": "4/6/26",
+		"changes": [
+			"Fixed a bug where skill images would not render after changing jobs."
+		]
+	},
+	{
 		"date": "4/5/26",
 		"changes": [
 			"Fixed a bug where the undo button did not remove certain automatically-inserted time delays.",

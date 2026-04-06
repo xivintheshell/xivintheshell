@@ -33,7 +33,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # ide
-.vscode
+# .vscode  # don't ignore vscode, since we configure a custom prettier plugin
 .cursor
 .idea
 *.clip
