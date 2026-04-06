@@ -32,6 +32,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# ide
+.vscode
+.cursor
 .idea
 *.clip
 

@@ -1007,11 +1007,7 @@ class Controller {
 			this.#lastTickDuration = props.deltaTime;
 			const timeTicked = this.game.tick(
 				props.deltaTime,
-				props.prematureStopCondition
-					? props.prematureStopCondition
-					: () => {
-							return false;
-						},
+				props.prematureStopCondition ?? () => false,
 			);
 
 			// If `waitKind` is defined, then create a new explicit wait node.
@@ -1125,12 +1121,12 @@ class Controller {
 		}
 	}
 
-	#fastForward(maxReplayTime: number): ActionNode | undefined {
+	#fastForward(maxReplayTime: number) {
 		let deltaTime: number = this.game.timeTillAnySkillAvailable();
 		if (maxReplayTime >= 0) {
 			deltaTime = Math.min(maxReplayTime - this.game.time, deltaTime);
 		}
-		return this.#requestTick({ deltaTime });
+		this.#requestTick({ deltaTime });
 	}
 
 	#useSkill(
@@ -1186,6 +1182,10 @@ class Controller {
 					artificialWaitNode.tmp_startLockTime = preStartLockTime;
 					artificialWaitNode.tmp_endLockTime = this.game.time;
 					this.record.addActionNode(artificialWaitNode);
+					this.undoStack.push(new AddNode(artificialWaitNode, this.record.tailIndex));
+					if (!this.#skipViewUpdates) {
+						refreshTimelineEditor();
+					}
 				}
 				return status;
 			}
@@ -1245,10 +1245,7 @@ class Controller {
 		if (overrideTickMode !== TickMode.RealTimeAutoPause) {
 			// In manual mode, directly fast-forward to the end of animation lock instead of animating.
 			// If we're in a historical replay, the end may be in the middle of the animation lock.
-			const maybeFFNode = this.#fastForward(maxReplayTime);
-			if (maybeFFNode) {
-				this.undoStack.push(new AddNode(maybeFFNode, this.record.tailIndex));
-			}
+			this.#fastForward(maxReplayTime);
 		}
 
 		// If this was called within a line load, do not refresh the timeline view
