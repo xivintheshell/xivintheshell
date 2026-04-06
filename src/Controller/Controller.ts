@@ -1007,7 +1007,7 @@ class Controller {
 			this.#lastTickDuration = props.deltaTime;
 			const timeTicked = this.game.tick(
 				props.deltaTime,
-				props.prematureStopCondition ?? () => false,
+				props.prematureStopCondition ?? (() => false),
 			);
 
 			// If `waitKind` is defined, then create a new explicit wait node.
