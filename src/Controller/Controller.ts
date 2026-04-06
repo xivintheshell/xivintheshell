@@ -1091,7 +1091,10 @@ class Controller {
 			if (jobChanged) {
 				setJob(props.job);
 				// Also propagate to the nested timeline object
-				this.timeline.slots[this.timeline.activeSlotIndex].job = props.job;
+				const tl = this.timeline;
+				if (tl.activeSlotIndex < tl.slots.length && tl.slots[tl.activeSlotIndex]) {
+					tl.slots[tl.activeSlotIndex].job = props.job;
+				}
 			}
 		});
 
