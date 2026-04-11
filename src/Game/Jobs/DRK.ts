@@ -17,7 +17,6 @@ import {
 	makeSpell,
 	makeWeaponskill,
 	MakeAbilityParams,
-	MOVEMENT_SKILL_ANIMATION_LOCK,
 	Spell,
 	StatePredicate,
 	Weaponskill,
@@ -740,7 +739,8 @@ makeDRKAbility("SHADOWBRINGER", 90, "cd_SHADOWBRINGER", {
 
 makeDRKAbility("SHADOWSTRIDE", 54, "cd_SHADOWSTRIDE", {
 	applicationDelay: 0.66,
-	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
+	// Despite being a gap-closer, Shadowstride does not have a longer animation lock than
+	// other oGCDs.
 	cooldown: 30,
 	maxCharges: 2,
 });

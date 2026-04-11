@@ -1,5 +1,11 @@
 [
 	{
+		"date": "4/11/26",
+		"changes": [
+			"[DRK] Reduced the animation lock of Shadowstride to match in-game values."
+		]
+	},
+	{
 		"date": "4/6/26",
 		"changes": [
 			"Fixed a bug where skill images would not render after changing jobs."
