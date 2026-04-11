@@ -17,7 +17,6 @@ import {
 	makeSpell,
 	makeWeaponskill,
 	MakeAbilityParams,
-	MOVEMENT_SKILL_ANIMATION_LOCK,
 	Spell,
 	StatePredicate,
 	Weaponskill,
