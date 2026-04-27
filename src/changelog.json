@@ -2,7 +2,8 @@
 	{
 		"date": "4/27/26",
 		"changes": [
-			"[NIN] Updated the application of Tenri Jindo to match its in-game value."
+			"[NIN] Updated the application of Tenri Jindo to match its in-game value.",
+			"[NIN] Fixed a bug where Armor Crush and Aeolian Edge gave Ninki when used without combo."
 		]
 	},
 	{

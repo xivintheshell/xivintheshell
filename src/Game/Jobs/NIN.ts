@@ -510,7 +510,11 @@ makeNINWeaponskill("AEOLIAN_EDGE", 26, {
 		location: "rear",
 	},
 	highlightIf: (state) => state.hasResourceExactly("NIN_COMBO_TRACKER", 2),
-	onConfirm: comboEndGainNinki,
+	onConfirm: (state) => {
+		if (state.hasResourceExactly("NIN_COMBO_TRACKER", 2)) {
+			comboEndGainNinki(state);
+		}
+	},
 	jobPotencyModifiers: (state) =>
 		state.tryConsumeResource("KAZEMATOI") ? [Modifiers.Kazematoi] : [],
 });
@@ -545,11 +549,12 @@ makeNINWeaponskill("ARMOR_CRUSH", 54, {
 		location: "flank",
 	},
 	highlightIf: (state) => state.hasResourceExactly("NIN_COMBO_TRACKER", 2),
-	onConfirm: combineEffects((state) => {
+	onConfirm: (state) => {
 		if (state.hasResourceExactly("NIN_COMBO_TRACKER", 2)) {
 			state.resources.get("KAZEMATOI").gain(2);
+			comboEndGainNinki(state);
 		}
-	}, comboEndGainNinki),
+	},
 });
 
 makeNINWeaponskill("DEATH_BLOSSOM", 38, {
