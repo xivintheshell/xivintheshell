@@ -1285,7 +1285,7 @@ makeNINResourceAbility("TEN_CHI_JIN", 70, "cd_TEN_CHI_JIN", {
 
 makeNINAbility("TENRI_JINDO", 100, "cd_TENRI_JINDO", {
 	startOnHotbar: false,
-	applicationDelay: 1.69,
+	applicationDelay: 0.35,
 	cooldown: 1,
 	potency: 1100,
 	falloff: 0,

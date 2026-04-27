@@ -1,8 +1,14 @@
 [
 	{
+		"date": "4/27/26",
+		"changes": [
+			"[NIN] Updated the application of Tenri Jindo to match its in-game value."
+		]
+	},
+	{
 		"date": "4/11/26",
 		"changes": [
-			"[DRK] Reduced the animation lock of Shadowstride to match in-game values."
+			"[DRK] Reduced the animation lock of Shadowstride to match its in-game value."
 		]
 	},
 	{
