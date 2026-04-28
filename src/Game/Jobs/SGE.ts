@@ -613,7 +613,7 @@ makeSGESpell("EUKRASIAN_DOSIS_III", 82, {
 			node,
 			effectName: "EUKRASIAN_DOSIS_III",
 			skillName: "EUKRASIAN_DOSIS_III",
-			tickPotency: 85,
+			tickPotency: 90,
 			speedStat: "sps",
 		});
 		state.tryConsumeResource("EUKRASIA");
@@ -683,7 +683,7 @@ makeSGESpell("PHLEGMA_II", 72, {
 });
 makeSGESpell("PHLEGMA_III", 82, {
 	startOnHotbar: false,
-	potency: 600,
+	potency: 690,
 	falloff: 0.5,
 	applicationDelay: 0.67,
 	manaCost: 400,
@@ -696,7 +696,7 @@ makeSGESpell("PHLEGMA_III", 82, {
 });
 
 makeSGEAbility("PSYCHE", 92, "cd_PSYCHE", {
-	potency: 600,
+	potency: 690,
 	falloff: 0.5,
 	applicationDelay: 2.1,
 	cooldown: 60,
