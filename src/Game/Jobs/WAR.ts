@@ -504,7 +504,7 @@ makeAbility_WAR("INNER_RELEASE", 70, "cd_INNER_RELEASE", {
 });
 
 makeWeaponskill_WAR("PRIMAL_REND", 90, {
-	potency: 700,
+	potency: 720,
 	applicationDelay: PRIMAL_REND_APPLICATION_DELAY,
 	falloff: 0.5,
 	animationLock: 1.2,
@@ -540,7 +540,7 @@ makeAbility_WAR("PRIMAL_WRATH", 96, "cd_PRIMAL_WRATH", {
 
 makeWeaponskill_WAR("PRIMAL_RUINATION", 100, {
 	startOnHotbar: false,
-	potency: 780,
+	potency: 800,
 	falloff: 0.5,
 	applicationDelay: 1.06,
 	validateAttempt: (state) => {
@@ -568,7 +568,7 @@ makeAbility_WAR("INFURIATE", 50, "cd_INFURIATE", {
 
 makeWeaponskill_WAR("INNER_CHAOS", 80, {
 	startOnHotbar: false,
-	potency: 660,
+	potency: 700,
 	applicationDelay: 0.94,
 	validateAttempt: (state) => {
 		return (

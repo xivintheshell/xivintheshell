@@ -654,7 +654,7 @@ makeSpell_SMN("RUBY_RITE", 72, {
 	basePotency: [
 		["NEVER", 480],
 		["RUIN_MASTERY_IV", 510],
-		["ARCANE_MASTERY", 580],
+		["ARCANE_MASTERY", 620],
 	],
 	baseCastTime: 2.8,
 	baseRecastTime: 3,
@@ -1175,7 +1175,7 @@ makeAbility_SMN("SUNFLARE", 100, "cd_ASTRAL_FLOW", {
 makeSpell_SMN("CRIMSON_CYCLONE", 86, {
 	basePotency: [
 		["NEVER", 430],
-		["ARCANE_MASTERY", 520],
+		["ARCANE_MASTERY", 560],
 	],
 	applicationDelay: 0.8,
 	replaceIf: ASTRAL_FLOW_REPLACE_LIST,
@@ -1192,7 +1192,7 @@ makeSpell_SMN("CRIMSON_CYCLONE", 86, {
 makeSpell_SMN("CRIMSON_STRIKE", 86, {
 	basePotency: [
 		["NEVER", 430],
-		["ARCANE_MASTERY", 520],
+		["ARCANE_MASTERY", 560],
 	],
 	applicationDelay: 0.76,
 	replaceIf: ASTRAL_FLOW_REPLACE_LIST,
@@ -1345,14 +1345,14 @@ makeSpell_SMN("RUIN_IV", 62, {
 	{
 		name: "PAINFLARE" as SMNActionKey,
 		level: 40,
-		potency: 150,
+		potency: 220,
 		applicationDelay: 0.44,
 		falloff: 0,
 	},
 	{
 		name: "NECROTIZE" as SMNActionKey,
 		level: 92,
-		potency: 460,
+		potency: 500,
 		applicationDelay: 0.71,
 		autoDowngrade: {
 			trait: "ENHANCED_FESTER",

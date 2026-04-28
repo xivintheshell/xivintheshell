@@ -717,7 +717,7 @@ makeGCD_SAM("MIDARE_SETSUGEKKA", 30, {
 	baseCastTime: 1.3,
 	basePotency: [
 		["NEVER", 620],
-		["WAY_OF_THE_SAMURAI_III", 640],
+		["WAY_OF_THE_SAMURAI_III", 680],
 	],
 	applicationDelay: 0.62,
 	jobPotencyModifiers: (state) => [Modifiers.AutoCrit],
@@ -803,7 +803,7 @@ makeGCD_SAM("KAESHI_SETSUGEKKA", 74, {
 	replaceIf: kaeshiReplaces,
 	basePotency: [
 		["NEVER", 620],
-		["WAY_OF_THE_SAMURAI_III", 640],
+		["WAY_OF_THE_SAMURAI_III", 680],
 	],
 	applicationDelay: 0.62,
 	jobPotencyModifiers: (state) => [Modifiers.AutoCrit],

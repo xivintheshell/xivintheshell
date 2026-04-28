@@ -877,7 +877,7 @@ makeRPRAbility("GLUTTONY", 76, "cd_GLUTTONY", {
 		},
 	],
 	isPhysical: false,
-	potency: 520,
+	potency: 560,
 	startOnHotbar: true,
 	falloff: 0.25,
 	applicationDelay: 1.06,
@@ -994,7 +994,7 @@ makeRPRWeaponskill("VOID_REAPING", 80, {
 	startOnHotbar: false,
 	potency: [
 		["NEVER", 460],
-		["MELEE_MASTERY_III_RPR", 560],
+		["MELEE_MASTERY_III_RPR", 580],
 	],
 	aspect: Aspect.Physical,
 	recastTime: 1.5,
@@ -1019,7 +1019,7 @@ makeRPRWeaponskill("CROSS_REAPING", 80, {
 	startOnHotbar: false,
 	potency: [
 		["NEVER", 460],
-		["MELEE_MASTERY_III_RPR", 560],
+		["MELEE_MASTERY_III_RPR", 580],
 	],
 	aspect: Aspect.Physical,
 	recastTime: 1.5,

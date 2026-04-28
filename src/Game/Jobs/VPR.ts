@@ -662,8 +662,8 @@ finishers.forEach(([name, applicationDelay, location, consumes, applies, replace
 makeVPRWeaponskill("HUNTERS_COIL", 65, {
 	replaceIf: HUNTERS_COIL_REPLACEMENTS,
 	applicationDelay: 0.982,
-	potency: 570,
-	positional: { potency: 620, location: "flank" },
+	potency: 630,
+	positional: { potency: 680, location: "flank" },
 	baseRecastTime: 3,
 	highlightIf: (state) => state.hasResourceAvailable("HUNTERS_COIL_READY"),
 	validateAttempt: (state) => state.hasResourceAvailable("HUNTERS_COIL_READY"),
@@ -685,8 +685,8 @@ makeVPRWeaponskill("HUNTERS_COIL", 65, {
 makeVPRWeaponskill("SWIFTSKINS_COIL", 65, {
 	replaceIf: SWIFTSKINS_COIL_REPLACEMENTS,
 	applicationDelay: 1.473,
-	potency: 570,
-	positional: { potency: 620, location: "rear" },
+	potency: 630,
+	positional: { potency: 680, location: "rear" },
 	baseRecastTime: 3,
 	highlightIf: (state) => state.hasResourceAvailable("SWIFTSKINS_COIL_READY"),
 	validateAttempt: (state) => state.hasResourceAvailable("SWIFTSKINS_COIL_READY"),
@@ -709,7 +709,7 @@ makeVPRWeaponskill("REAWAKEN", 90, {
 	replaceIf: REAWAKEN_REPLACEMENTS,
 	applicationDelay: 0.625,
 	potency: 750,
-	falloff: 0.8,
+	falloff: 0.75,
 	baseRecastTime: 2.2,
 	highlightIf: (state) =>
 		state.hasResourceAvailable("SERPENT_OFFERINGS", 50) ||
@@ -743,7 +743,7 @@ makeVPRWeaponskill("OUROBOROS", 96, {
 	replaceIf: REAWAKEN_REPLACEMENTS,
 	applicationDelay: 2.313,
 	potency: 1150,
-	falloff: 0.8,
+	falloff: 0.75,
 	baseRecastTime: 3,
 	highlightIf: (state) => state.hasResourceExactly("ANGUINE_TRIBUTE", 1),
 	onConfirm: (state) => state.cancelReawaken(),
@@ -751,7 +751,7 @@ makeVPRWeaponskill("OUROBOROS", 96, {
 
 makeVPRWeaponskill("VICEWINDER", 65, {
 	applicationDelay: 0.581,
-	potency: 500,
+	potency: 540,
 	secondaryCooldown: {
 		cdName: "cd_VICEWINDER",
 		cooldown: 40,
@@ -1171,7 +1171,7 @@ generations.forEach(([name, applicationDelay, replaceIf], i) => {
 		startOnHotbar: false,
 		applicationDelay,
 		potency: 420,
-		falloff: 0.8,
+		falloff: 0.75,
 		baseRecastTime: 2,
 		combo: {
 			resource: "REAWAKEN_COMBO",
@@ -1199,7 +1199,7 @@ legacies.forEach(([name, applicationDelay]) => {
 		applicationDelay,
 		cooldown: 1,
 		potency: 320,
-		falloff: 0.8,
+		falloff: 0.75,
 		highlightIf: (state) => true,
 		onConfirm: (state) => state.tryConsumeResource("LEGACY_READY", true),
 	});
