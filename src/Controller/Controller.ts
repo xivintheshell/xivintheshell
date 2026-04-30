@@ -1090,11 +1090,13 @@ class Controller {
 			// should just make the text static for all jobs)
 			if (jobChanged) {
 				setJob(props.job);
-				// Also propagate to the nested timeline object
-				const tl = this.timeline;
-				if (tl.activeSlotIndex < tl.slots.length && tl.slots[tl.activeSlotIndex]) {
-					tl.slots[tl.activeSlotIndex].job = props.job;
-				}
+			}
+			// Also propagate to the nested timeline object. This should run unconditionally, since
+			// our control flow structure is weird and the this.timeline.slots always initializes
+			// new entries with job BLM.
+			const tl = this.timeline;
+			if (tl.activeSlotIndex < tl.slots.length && tl.slots[tl.activeSlotIndex]) {
+				tl.slots[tl.activeSlotIndex].job = props.job;
 			}
 		});
 

@@ -1,5 +1,11 @@
 [
 	{
+		"date": "4/29/26",
+		"changes": [
+			"Fixed a bug where creating a new timeline without changing the configured job would incorrectly render skill icons."
+		]
+	},
+	{
 		"date": "4/28/26",
 		"changes": [
 			"Updated for patch 7.5."
