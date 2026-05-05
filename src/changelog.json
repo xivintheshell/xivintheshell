@@ -1,5 +1,14 @@
 [
 	{
+		"date": "5/5/26",
+		"changes": [
+			"The FFLogs import feature now accepts links from other site languages (de, fr, ja, and kr)."
+		],
+		"changes_zh": [
+			"FFLogs 导入功能现已支持其他语言站点（de、fr、ja、kr）的链接。"
+		]
+	},
+	{
 		"date": "4/29/26",
 		"changes": [
 			"Fixed a bug where creating a new timeline without changing the configured job would incorrectly render skill icons."

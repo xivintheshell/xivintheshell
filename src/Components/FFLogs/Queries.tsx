@@ -36,13 +36,14 @@ export function parseLogURL(urlString: string): ParsedLogQueryParams {
 			error: { en: "invalid URL", zh: "无效的网址" },
 		};
 	}
-	if (url.hostname !== "www.fflogs.com" && url.hostname !== "cn.fflogs.com") {
+	const fflogsDomains = ["www", "cn", "ja", "de", "fr", "kr"].map((it) => `${it}.fflogs.com`);
+	if (!fflogsDomains.includes(url.hostname)) {
 		return {
 			apiBaseUrl: "",
 			reportCode: "",
 			error: {
-				en: "must be a link to www.fflogs.com or cn.fflogs.com",
-				zh: "网址必须指向www.fflogs.com或cn.fflogs.com",
+				en: "must be a link to one of the following: " + fflogsDomains.join(", "),
+				zh: "网址必须指向" + fflogsDomains.join("、") + "之一",
 			},
 		};
 	}
