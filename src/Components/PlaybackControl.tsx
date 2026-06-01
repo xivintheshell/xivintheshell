@@ -546,7 +546,7 @@ export function TimeControl() {
 	const [cooldownDisplayMode, _setCooldownDisplayMode] = useState(
 		(settings?.cooldownDisplayMode ?? "center") as CooldownDisplayMode,
 	);
-	const [roundCooldownUp, _setRoundCooldownUp] = useState(settings?.roundCooldownUp ?? true);
+	const [roundCooldownUp, _setRoundCooldownUp] = useState(settings?.roundCooldownUp ?? false);
 
 	const saveSettings = (
 		timeScale: number,
@@ -596,7 +596,7 @@ export function TimeControl() {
 		if (newMode !== cooldownDisplayMode) {
 			_setCooldownDisplayMode(newMode);
 			controller.setCooldownDisplaySettings({
-				cooldownDisplayMode: "center",
+				cooldownDisplayMode: newMode,
 				roundCooldownUp,
 			});
 			saveSettings(timeScale, tickMode, newMode, roundCooldownUp);
@@ -616,6 +616,10 @@ export function TimeControl() {
 		controller.setTimeControlSettings({
 			tickMode,
 			timeScale,
+		});
+		controller.setCooldownDisplaySettings({
+			cooldownDisplayMode,
+			roundCooldownUp,
 		});
 	});
 	const radioStyle: React.CSSProperties = {
@@ -753,7 +757,8 @@ export function TimeControl() {
 		</div>
 		<Checkbox
 			uniqueName={"roundCooldownUp"}
-			label={localize({ en: "round cooldowns up", zh: "cd 数值向上取整" })}
+			label={localize({ en: "round cooldowns up", zh: "cd 小数值向上取整" })}
+			defaultChecked={roundCooldownUp}
 			onChange={(val) => setRoundCooldownUp(val)}
 		/>
 	</div>;

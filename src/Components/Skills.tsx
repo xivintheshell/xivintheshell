@@ -198,6 +198,13 @@ function ProgressCircleOutline(
 	</svg>;
 }
 
+function formatCooldownDisplaySeconds(seconds: number, roundCooldownUp: boolean): string {
+	// round to the nearest second or 100th of a second
+	return roundCooldownUp
+		? Math.round(seconds).toFixed(0)
+		: (Math.ceil(seconds * 100) / 100).toFixed(2);
+}
+
 type SkillButtonProps = {
 	highlight: boolean;
 	skillName: ActionKey;
@@ -371,6 +378,47 @@ function SkillButton(props: SkillButtonProps) {
 	} else {
 		stacksOverlay = <></>;
 	}
+	let cooldownOverlay: React.ReactNode = null;
+	const cooldownDisplayMode = controller.cooldownDisplayMode;
+	if (cooldownDisplayMode !== "disabled" && info.cooldownOverlaySeconds !== undefined) {
+		// Determine text size by the number of digits we must display
+		const formattedCooldown = formatCooldownDisplaySeconds(
+			info.cooldownOverlaySeconds,
+			controller.roundCooldownUp,
+		);
+		let fontSizePx = skillBoxPx / Math.max(formattedCooldown.length, 3) + 3;
+		// If we're in bottom left mode, size should be even smaller
+		if (cooldownDisplayMode === "bottomleft") {
+			fontSizePx *= 0.8;
+		}
+		const cooldownPositionStyle: React.CSSProperties =
+			cooldownDisplayMode === "center"
+				? {
+						position: "absolute",
+						top: "50%",
+						left: "50%",
+						transform: "translate(-50%, -50%)",
+					}
+				: {
+						position: "absolute",
+						bottom: 0,
+						left: 0,
+					};
+		cooldownOverlay = <span
+			style={{
+				...cooldownPositionStyle,
+				pointerEvents: "none",
+				zIndex: 3, // must render above shading circle
+				fontFamily: "XIVShell Defaults",
+				color: "white",
+				fontSize: `${fontSizePx}px`,
+				textShadow: "0 0 4px black, 0 0 8px black",
+				textAlign: "center",
+			}}
+		>
+			{formattedCooldown}
+		</span>;
+	}
 	const progressShadeCircle = <ProgressCircleDark
 		diameter={38}
 		progress={props.cdProgress}
@@ -430,6 +478,7 @@ function SkillButton(props: SkillButtonProps) {
 					props.secondaryCdProgress > 1 - Debug.epsilon ||
 					secondaryOutline}
 			</div>
+			{cooldownOverlay}
 			<div
 				style={{
 					// skill icon overlay
@@ -489,6 +538,7 @@ export type SkillButtonViewInfo = {
 	highlight: boolean;
 	llCovered: boolean;
 	usedAt: number;
+	cooldownOverlaySeconds?: number;
 };
 
 export let updateSkillButtons = (statusList: SkillButtonViewInfo[]) => {};

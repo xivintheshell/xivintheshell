@@ -184,7 +184,7 @@ class Controller {
 		this.queuedPastes = 0;
 		this.tickMode = TickMode.RealTimeAutoPause;
 		this.cooldownDisplayMode = "center";
-		this.roundCooldownUp = true;
+		this.roundCooldownUp = false;
 
 		this.timeline = new Timeline();
 		this.timeline.reset();
@@ -1045,8 +1045,14 @@ class Controller {
 		cooldownDisplayMode: CooldownDisplayMode;
 		roundCooldownUp: boolean;
 	}) {
+		const changed =
+			this.cooldownDisplayMode !== props.cooldownDisplayMode ||
+			this.roundCooldownUp !== props.roundCooldownUp;
 		this.cooldownDisplayMode = props.cooldownDisplayMode;
 		this.roundCooldownUp = props.roundCooldownUp;
+		if (changed) {
+			this.updateSkillButtons(this.game);
+		}
 	}
 
 	setConfigAndRestart(
