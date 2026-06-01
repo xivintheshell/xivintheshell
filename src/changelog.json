@@ -1,5 +1,14 @@
 [
 	{
+		"date": "5/31/26",
+		"changes": [
+			"Ability cooldowns are now shown on the hotbar by default. You can adjust their display in the Control panel to the right of the hotbar."
+		],
+		"changes_zh": [
+			"技能栏现在默认显示冷却时间。您可在其右侧的控制设置面板中修改显示设置。"
+		]
+	},
+	{
 		"date": "5/5/26",
 		"changes": [
 			"The FFLogs import feature now accepts links from other site languages (de, fr, ja, and kr)."

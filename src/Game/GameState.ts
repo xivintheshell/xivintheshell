@@ -2153,6 +2153,18 @@ export class GameState {
 		const secondaryMaxStacks = secondaryCd?.maxStacks() ?? 0;
 		// conditions that make the skills show proc
 		const highlight = skill.highlightIf(this);
+		// Hotbar requires additional information to determine whether to display cooldown text over skill buttons.
+		// We display times for GCDs with a secondary cooldown, and cooldowns for oGCDs.
+		let cooldownOverlaySeconds: number | undefined;
+		if (timeTillSecondaryReady !== undefined && timeTillSecondaryReady > Debug.epsilon) {
+			cooldownOverlaySeconds = timeTillSecondaryReady;
+		} else if (timeTillAvailable > Debug.epsilon) {
+			const isGcdSkillWithoutSecondary =
+				(skill.kind === "spell" || skill.kind === "weaponskill") && !skill.secondaryCd;
+			if (!isGcdSkillWithoutSecondary) {
+				cooldownOverlaySeconds = timeTillAvailable;
+			}
+		}
 		return {
 			skillName: skill.name,
 			status,
@@ -2171,6 +2183,7 @@ export class GameState {
 			highlight,
 			llCovered,
 			usedAt: this.getDisplayTime(),
+			cooldownOverlaySeconds,
 		};
 	}
 
