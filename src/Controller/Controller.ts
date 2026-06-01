@@ -98,6 +98,8 @@ type Fixme = any;
 
 const STANDARD_TICK_KEY = "stdtick";
 
+export type CooldownDisplayMode = "disabled" | "bottomleft" | "center";
+
 export interface PotencyLogCsv {
 	time: number;
 	source: string;
@@ -125,6 +127,8 @@ type ReplayResult = {
 
 class Controller {
 	timeScale;
+	cooldownDisplayMode: CooldownDisplayMode;
+	roundCooldownUp: boolean;
 	shouldLoop: boolean;
 	tickMode;
 	timeline;
@@ -179,6 +183,8 @@ class Controller {
 		this.shouldLoop = false;
 		this.queuedPastes = 0;
 		this.tickMode = TickMode.RealTimeAutoPause;
+		this.cooldownDisplayMode = "center";
+		this.roundCooldownUp = true;
 
 		this.timeline = new Timeline();
 		this.timeline.reset();
@@ -1033,6 +1039,14 @@ class Controller {
 		this.timeScale = props.timeScale;
 		this.tickMode = props.tickMode;
 		this.shouldLoop = false;
+	}
+
+	setCooldownDisplaySettings(props: {
+		cooldownDisplayMode: CooldownDisplayMode;
+		roundCooldownUp: boolean;
+	}) {
+		this.cooldownDisplayMode = props.cooldownDisplayMode;
+		this.roundCooldownUp = props.roundCooldownUp;
 	}
 
 	setConfigAndRestart(

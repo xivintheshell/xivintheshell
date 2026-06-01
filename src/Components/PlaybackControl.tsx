@@ -1,19 +1,26 @@
 import React, { useEffect, useReducer, useContext, useState, Dispatch } from "react";
-import { controller } from "../Controller/Controller";
+import { controller, CooldownDisplayMode } from "../Controller/Controller";
 import {
 	ButtonIndicator,
+	Checkbox,
 	Clickable,
 	ContentNode,
 	Expandable,
 	Help,
 	Input,
+	RadioSet,
 	ValueChangeEvent,
 } from "./Common";
 import { ConfigApply } from "../Controller/UndoStack";
 import { getCachedValue, setCachedValue, ShellVersion, TickMode } from "../Controller/Common";
 import { LevelSync, ProcMode } from "../Game/Common";
 import { getAllResources, getResourceInfo, ResourceOverrideData } from "../Game/Resources";
-import { localize, localizeConfigField, localizeResourceType } from "./Localization";
+import {
+	localize,
+	localizeConfigField,
+	LocalizedContent,
+	localizeResourceType,
+} from "./Localization";
 import {
 	getThemeColors,
 	getCurrentThemeColors,
@@ -517,9 +524,14 @@ export function ConfigSummary(props: { job: ShellJob; dirty: boolean }) {
 type TimeControlState = {
 	timeScale: number;
 	tickMode: TickMode;
+	cooldownDisplayMode: CooldownDisplayMode;
+	roundCooldownUp: boolean;
 };
 
 export function TimeControl() {
+	const header = (c: LocalizedContent) => <div style={{ marginBottom: 5 }}>
+		<b>{localize(c)}</b>
+	</div>;
 	const loadSettings = () => {
 		const str = getCachedValue("playbackSettings");
 		if (str) {
@@ -531,11 +543,22 @@ export function TimeControl() {
 	const settings = loadSettings();
 	const [timeScale, _setTimeScale] = useState(settings?.tickMode ?? 1);
 	const [tickMode, _setTickMode] = useState(settings?.timeScale ?? TickMode.Manual);
+	const [cooldownDisplayMode, _setCooldownDisplayMode] = useState(
+		(settings?.cooldownDisplayMode ?? "center") as CooldownDisplayMode,
+	);
+	const [roundCooldownUp, _setRoundCooldownUp] = useState(settings?.roundCooldownUp ?? true);
 
-	const saveSettings = (timeScale: number, tickMode: TickMode) => {
+	const saveSettings = (
+		timeScale: number,
+		tickMode: TickMode,
+		cooldownDisplayMode: CooldownDisplayMode,
+		roundCooldownUp: boolean,
+	) => {
 		const str = JSON.stringify({
 			tickMode,
 			timeScale,
+			cooldownDisplayMode,
+			roundCooldownUp,
 		});
 		setCachedValue("playbackSettings", str);
 	};
@@ -549,7 +572,7 @@ export function TimeControl() {
 				tickMode: numVal,
 				timeScale,
 			});
-			saveSettings(timeScale, numVal);
+			saveSettings(timeScale, numVal, cooldownDisplayMode, roundCooldownUp);
 		}
 	};
 
@@ -561,8 +584,32 @@ export function TimeControl() {
 				tickMode,
 				timeScale: numVal,
 			});
-			saveSettings(numVal, timeScale);
+			saveSettings(numVal, tickMode, cooldownDisplayMode, roundCooldownUp);
 		}
+	};
+
+	const setCooldownDisplayMode = (val: string) => {
+		let newMode: CooldownDisplayMode = "center";
+		if (["center", "bottomleft", "disabled"].includes(val)) {
+			newMode = val as CooldownDisplayMode;
+		}
+		if (newMode !== cooldownDisplayMode) {
+			_setCooldownDisplayMode(newMode);
+			controller.setCooldownDisplaySettings({
+				cooldownDisplayMode: "center",
+				roundCooldownUp,
+			});
+			saveSettings(timeScale, tickMode, newMode, roundCooldownUp);
+		}
+	};
+
+	const setRoundCooldownUp = (val: boolean) => {
+		_setRoundCooldownUp(val);
+		controller.setCooldownDisplaySettings({
+			cooldownDisplayMode,
+			roundCooldownUp: val,
+		});
+		saveSettings(timeScale, tickMode, cooldownDisplayMode, val);
 	};
 
 	useEffect(() => {
@@ -581,6 +628,7 @@ export function TimeControl() {
 		marginRight: "0.5em",
 	};
 	return <div>
+		{header({ en: "Playback", zh: "回放设计" })}
 		<p>
 			<label style={tickModeOptionStyle}>
 				<input
@@ -675,6 +723,38 @@ export function TimeControl() {
 				</span>
 			}
 			onChange={setTimeScale}
+		/>
+		<br />
+		{header({ en: "Cooldown Display", zh: "cd 时间显示" })}
+		<div style={{ marginBlock: "10px" }}>
+			<RadioSet
+				selected={cooldownDisplayMode}
+				uniqueName={"cooldownDisplay"}
+				onChange={(val) => setCooldownDisplayMode(val)}
+				// TODO localization, help tooltips and explanations
+				options={[
+					[
+						"disabled",
+						// eslint-disable-next-line react/jsx-key
+						<span>{localize({ en: "disabled", zh: "关闭" })}</span>,
+					],
+					[
+						"bottomleft",
+						// eslint-disable-next-line react/jsx-key
+						<span>{localize({ en: "bottom left", zh: "居中" })}</span>,
+					],
+					[
+						"center",
+						// eslint-disable-next-line react/jsx-key
+						<span>{localize({ en: "center", zh: "左下" })}</span>,
+					],
+				]}
+			/>
+		</div>
+		<Checkbox
+			uniqueName={"roundCooldownUp"}
+			label={localize({ en: "round cooldowns up", zh: "cd 数值向上取整" })}
+			onChange={(val) => setRoundCooldownUp(val)}
 		/>
 	</div>;
 }
