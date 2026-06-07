@@ -61,7 +61,7 @@ export const RPR_ACTIONS = ensureRecord<ActionData>()({
 	PLENTIFUL_HARVEST: {
 		id: 24385,
 		name: "Plentiful Harvest",
-		label: { zh: "阴冷收割" },
+		label: { zh: "大丰收" },
 	},
 	HARVEST_MOON: {
 		id: 24388,

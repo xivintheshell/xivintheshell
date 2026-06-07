@@ -1,5 +1,14 @@
 [
 	{
+		"date": "6/7/26",
+		"changes": [
+			"[RPR] (Chinese-only) Fixed Plentiful Harvest using the incorrect ability name."
+		],
+		"changes_zh": [
+			"【钐镰客】修正了【大丰收】技能的错误名称。"
+		]
+	},
+	{
 		"date": "5/31/26",
 		"changes": [
 			"Ability cooldowns are now shown on the hotbar by default. You can adjust their display in the Control panel to the right of the hotbar."
