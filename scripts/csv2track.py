@@ -14,28 +14,31 @@
 # This script will add any cast that has a value in the "Track" column to the timeline.
 # "Begin Cast" events are applied with their duration + 0.3s (to account for an FFLogs limitation),
 # and "Cast" events are given a 0s duration. The duration "x.xx sec" at the end of ability names is automatically removed.
+#
+# To automatically adjust all event timestamps by a number of seconds, pass a value to the --offset
+# flag of this script. For example, `--offset 3` subtracts 3 seconds from all timestamps.
 
+import argparse
 from collections import defaultdict
 import csv
 import json
 import sys
 
-
 # https://github.com/miyehn/ffxiv-blm-rotation/blob/ac26a23c6f620a9c549ccf814e86b65ca7b210bf/src/Components/ColorTheme.tsx#L11
 COLOR_MAP = {
     "red": "#f64141",
-	"orange": "#e89b5f",
-	"yellow": "#ffd535",
-	"green": "#50c53d",
-	"cyan": "#53e5e5",
-	"blue": "#217ff5",
-	"purple": "#9755ef",
-	"pink": "#ee79ee",
-	"grey": "#6f6f6f"
+    "orange": "#e89b5f",
+    "yellow": "#ffd535",
+    "green": "#50c53d",
+    "cyan": "#53e5e5",
+    "blue": "#217ff5",
+    "purple": "#9755ef",
+    "pink": "#ee79ee",
+    "grey": "#6f6f6f",
 }
 
 
-def parse_csv(src, dst):
+def parse_csv(src, dst, global_offset):
     # https://github.com/miyehn/ffxiv-blm-rotation/blob/ac26a23c6f620a9c549ccf814e86b65ca7b210bf/src/Controller/Timeline.ts#L560
     # combined marker file has the form
     # { "fileType": "MarkerTracksCombined", "tracks": <individual track object> }
@@ -77,7 +80,9 @@ def parse_csv(src, dst):
                 toks = ability.split()
                 ability = " ".join(toks[:-2])
                 cast_duration = float(toks[-2])
-                if (cast_duration > 0 and track_id != -1) and not ("No Adjust" in row and row["No Adjust"]):
+                if (cast_duration > 0 and track_id != -1) and not (
+                    "No Adjust" in row and row["No Adjust"]
+                ):
                     # For some reason, logs usually report casts as 0.3s too short.
                     # Add 0.3s to compensate (except for manually-added untargetable durations.)
                     cast_duration += 0.3
@@ -100,7 +105,7 @@ def parse_csv(src, dst):
                 color_hex_str = COLOR_MAP[color_str]
             tracks[track_id].append(
                 {
-                    "time": ts_sec,
+                    "time": ts_sec - float(global_offset),
                     "markerType": "Info" if track_id != -1 else "Untargetable",
                     "duration": cast_duration,
                     "description": description,
@@ -110,22 +115,30 @@ def parse_csv(src, dst):
             )
 
     with open(dst, "w") as outfile:
-        json.dump({
-            "fileType": "MarkerTracksCombined",
-            "tracks": [
-                {
-                    "fileType": "MarkerTrackIndividual",
-                    "track": i,
-                    "markers": track,
-                }
-                for i, track in sorted(tracks.items())
-            ]
-        }, outfile)
+        json.dump(
+            {
+                "fileType": "MarkerTracksCombined",
+                "tracks": [
+                    {
+                        "fileType": "MarkerTrackIndividual",
+                        "track": i,
+                        "markers": track,
+                    }
+                    for i, track in sorted(tracks.items())
+                ],
+            },
+            outfile,
+        )
     print(f"wrote {dst}")
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print(f"Usage: {sys.argv[0]} INPUT_CSV OUTPUT_JSON")
-        sys.exit(1)
-    parse_csv(sys.argv[1], sys.argv[2])
+    parser = argparse.ArgumentParser(
+        prog="csv2track",
+        description="Track generator for XIV in the Shell",
+    )
+    parser.add_argument("input_csv")
+    parser.add_argument("output_json")
+    parser.add_argument("--offset", default=0)
+    args = parser.parse_args()
+    parse_csv(args.input_csv, args.output_json, args.offset)

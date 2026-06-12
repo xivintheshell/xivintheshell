@@ -69,6 +69,7 @@ function mm(
 
 // When adding a new fight, add  its metadata to this map, and add its label to the appropriate track category list.
 export const TRACK_META_MAP: Map<string, MarkerTrackMeta> = new Map([
+	["dmu_en_full", mm("DMU", "ultimate", "en", "shanzhe", true)],
 	["m9s", mm("M9S", "savage", "en", "shanzhe")],
 	["m9s_zh", mm("M9S", "savage", "zh", ["shanzhe", "鱼卡"])],
 	["m10s", mm("M10S", "savage", "en", "shanzhe")],
@@ -137,6 +138,7 @@ export const RECENT_CONTENT_TRACKS = [
 	"m12s_p1_zh",
 	"m12s_p2_zh",
 	"final_verse_q40",
+	"dmu_en_full",
 	"fru_en_full",
 	"fru_zh",
 ];
