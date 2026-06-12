@@ -1,5 +1,11 @@
 [
 	{
+		"date": "6/12/26",
+		"changes": [
+			"Added English-language tracks for Dancing Mad (Ultimate)."
+		]
+	},
+	{
 		"date": "6/7/26",
 		"changes": [
 			"[RPR] (Chinese-only) Fixed Plentiful Harvest using the incorrect ability name."
