@@ -1,5 +1,14 @@
 [
 	{
+		"date": "6/15/26",
+		"changes": [
+			"Added Chinese-language tracks for P1/P2 of Dancing Mad (Ultimate)."
+		],
+		"changes_zh": [
+			"增加了【绝妖星乱舞】P1/P2的中文版轨道。"
+		]
+	},
+	{
 		"date": "6/14/26",
 		"changes": [
 			"Added English-language tracks for P3 of Dancing Mad (Ultimate)."
