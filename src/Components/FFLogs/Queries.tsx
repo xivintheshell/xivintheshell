@@ -382,7 +382,6 @@ export async function queryPlayerEvents(
 		return cacheValue;
 	}
 	const data = await fetchQuery(params.apiBaseUrl, PLAYER_EVENT_QUERY, params);
-	// TODO check/pair calculateddamage instances to identify multi-target abilities
 	// TODO manual buff toggles
 	const actor: any = Object.values(data.reportData.report.playerDetails.data.playerDetails)
 		.flat()
@@ -533,7 +532,9 @@ export async function queryPlayerEvents(
 		const key =
 			skillIdMap.get(id) ??
 			// Assume all other really high IDs (like 34600430) are tincture usages
-			(id > 34000000 ? "TINCTURE" : "NEVER");
+			// I have no idea where precise IDs are stored, so I've decided to just cut this range
+			// off at 34603670 (g4 mind pot) to not accidentally catch foods
+			(id > 34000000 && id <= 34603670 ? "TINCTURE" : "NEVER");
 		if (key === "NEVER") {
 			console.error("unknown action id", id);
 		}
