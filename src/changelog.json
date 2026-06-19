@@ -1,5 +1,16 @@
 [
 	{
+		"date": "6/19/26",
+		"changes": [
+			"Added English-language tracks for P4 of Dancing Mad (Ultimate).",
+			"Fixed a bug where food usages in FFLogs imports were treated as tincture usages."
+		],
+		"changes_zh": [
+			"增加了【绝妖星乱舞】P1/P2的英文版轨道（P3和P4中文版还在翻译中）。",
+			"修复了 FFLogs 导入数据时将食物当成爆发药处理的错误。"
+		]
+	},
+	{
 		"date": "6/15/26",
 		"changes": [
 			"Added Chinese-language tracks for P1/P2 of Dancing Mad (Ultimate)."
