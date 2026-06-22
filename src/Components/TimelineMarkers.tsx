@@ -11,6 +11,7 @@ import {
 	parseTime,
 	RadioSet,
 	SaveToFile,
+	StaticFn,
 } from "./Common";
 import { controller } from "../Controller/Controller";
 import {
@@ -192,7 +193,8 @@ function TrackSetDisplay(props: TrackDisplayProps) {
 		{phasedTracks?.map(({ offset, label, fileName }, i) => {
 			let offsetStr = offsetMap.get(fileName);
 			if (!offsetStr?.length) {
-				offsetStr = offset.toString();
+				// If reading the offset from the default track bundle, format it w/ minutes
+				offsetStr = StaticFn.displayTime(offset, 3);
 			}
 			if (fileName === undefined) {
 				console.error("missing fileName for phase", label, "of", props.fileName);
@@ -212,7 +214,7 @@ function TrackSetDisplay(props: TrackDisplayProps) {
 							setOffsetMap(newMap);
 						}}
 						width={8}
-						placeholder={offset.toString()}
+						placeholder={offsetStr}
 					/>
 				</div>
 				<div style={{ gridRow: i + 1, gridColumn: 2 }}>
