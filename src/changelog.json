@@ -1,5 +1,11 @@
 [
 	{
+		"date": "6/24/26",
+		"changes": [
+			"[PCT] Fixed a bug where Hammer Motif and Starry Sky Motif had their cast time reduced by Hyperphantasia."
+		]
+	},
+	{
 		"date": "6/22/26",
 		"changes": [
 			"Added English-language tracks for P5 of DMU. I (shanzhe) still refuse to abbreviate it as UMAD."

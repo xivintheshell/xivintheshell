@@ -83,7 +83,14 @@ const HYPERPHANTASIA_SKILLS: PCTActionKey[] = [
 	"STAR_PRISM",
 ];
 
-const MOTIFS: ActionKey[] = ["POM_MOTIF", "WING_MOTIF", "CLAW_MOTIF", "MAW_MOTIF"];
+const MOTIFS: ActionKey[] = [
+	"POM_MOTIF",
+	"WING_MOTIF",
+	"CLAW_MOTIF",
+	"MAW_MOTIF",
+	"HAMMER_MOTIF",
+	"STARRY_SKY_MOTIF",
+];
 
 const HAMMER_COMBO: ActionKey[] = ["HAMMER_BRUSH", "HAMMER_STAMP", "POLISHING_HAMMER"];
 
