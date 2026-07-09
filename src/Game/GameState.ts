@@ -1805,7 +1805,15 @@ export class GameState {
 						targetNumber,
 					]);
 					effectGap = 0;
+					// Prune the overridden DoT's unresolved ticks for this target immediately.
+					// Its potency objects are shared across targets, so if we defer this to the
+					// next tick (as handleOverTimeTick does on expiry), a still-active lower-indexed
+					// target may resolve the shared potency with this target still in its target
+					// list, granting an extra phantom tick.
+					const removeBuff = this.debuffs.get(removeEffect, targetNumber);
+					removeBuff.node?.removeUnresolvedOvertimePotencies(kind, targetNumber);
 					this.tryRemoveDebuff(removeEffect, targetNumber);
+					removeBuff.node = undefined;
 				});
 
 				if (effectBuff.availableAmountIncludingDisabled() > 0) {
@@ -1817,7 +1825,10 @@ export class GameState {
 					}
 					// Always enable the DoT buff in case it was previously toggled off
 					effectBuff.enabled = true;
-					effectBuff.node.removeUnresolvedOvertimePotencies(kind);
+					// Only prune this target's ticks from the old node: an AoE DoT shares its
+					// potency objects across all targets, so omitting the target here would wipe
+					// future ticks for targets that weren't overwritten.
+					effectBuff.node.removeUnresolvedOvertimePotencies(kind, targetNumber);
 					node.setOverTimeOverrideAmount(
 						effectName,
 						node.getOverTimeOverrideAmount(effectName, kind, targetNumber) +
