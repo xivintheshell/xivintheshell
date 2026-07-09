@@ -4,12 +4,14 @@
 		"changes": [
 			"Fixed a bug where importing a fight from a file with a different job would not properly render skill icons.",
 			"Fixed a bug where overwriting a multi-target DoT on a subset of its targets would incorrectly drop the DoT's damage on the other targets.",
-			"Fixed a bug where overwriting a multi-target DoT with a mutually-exclusive single-target DoT could add an extra tick of damage to the overwritten DoT."
+			"Fixed a bug where overwriting a multi-target DoT with a mutually-exclusive single-target DoT could add an extra tick of damage to the overwritten DoT.",
+			"Added Chinese-language tracks for P3/P4/P5 of Dancing Mad (Ultimate)."
 		],
 		"changes_zh": [
 			"修复了从文件导入与当前职业不同的战斗时，技能图标无法正常显示的问题。",
 			"修复了在部分目标上覆盖多目标持续伤害（DoT）时，会错误地移除其他目标上该DoT伤害的问题。",
-			"修复了用互斥的单目标DoT覆盖多目标DoT时，可能会给被覆盖的DoT多计算一跳伤害的问题。"
+			"修复了用互斥的单目标DoT覆盖多目标DoT时，可能会给被覆盖的DoT多计算一跳伤害的问题。",
+			"增加了【绝妖星乱舞】P3/P4/P5的中文版轨道。"
 		]
 	},
 	{
