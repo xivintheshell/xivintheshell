@@ -512,7 +512,7 @@ it(
 		time: 24.983 + 5,
 		lastDamageApplicationTime: 22.931 + 5,
 		totalPotency: {
-			applied: 1890.45,
+			applied: 1838.79,
 			pending: 749.12,
 		},
 		gcdSkills: {
@@ -520,7 +520,7 @@ it(
 			pending: 0,
 		},
 		mainTableSummary: {
-			totalPotencyWithoutPot: 1890.45,
+			totalPotencyWithoutPot: 1838.79,
 		},
 		dotTables: new Map([
 			[
@@ -571,14 +571,56 @@ it(
 						2,
 						{
 							summary: {
-								totalTicks: 4,
+								totalTicks: 3,
 								maxTicks: 8,
 								cumulativeGap: 2.633,
 								cumulativeOverride: 0,
-								totalPotencyWithoutPot: 333.65,
+								totalPotencyWithoutPot: 281.99,
 							},
 						},
 					],
+				]),
+			],
+		]),
+	}),
+);
+
+// Regression test for two multi-target DoT overwrite bugs, using distinct target groups:
+//  - Group 1 (targets 1,2,3): HIGH_THUNDER_II on [3,1,2], then HIGH_THUNDER_II on [3] only.
+//    Overwriting a subset of an AoE DoT must not drop ticks for the untouched targets, so
+//    targets 1 and 2 keep full coverage (8 ticks), matching the never-overwritten targets.
+//    Previously, a bug made it so the second application on [3] only would cut short the DoT
+//    calculation on [1] and [2], though debuffs were still preserved correctly.
+//  - Group 2 (targets 4,5,6): HIGH_THUNDER_II on [6,4,5], then single-target HIGH_THUNDER on [6].
+//    Overwriting a *non-least* target with a mutually-exclusive DoT must not grant an extra
+//    phantom tick, so target 6 resolves 1 HIGH_THUNDER_II tick (previously 2). Previous tests only
+//    exercised partial overwrites on the lowest number target.
+//  - Group 3 (targets 7,8,9): same as group 2 but overwrites the *least* target [7]. This case
+//    always worked, so it serves as a control (target 7 resolves 2 HIGH_THUNDER_II ticks).
+// Targets 4, 5, 8, 9 are never overwritten and represent full DoT coverage.
+it(
+	"loads: dot_bug_example.txt",
+	testDamageFromTimeline("dot_bug_example.txt", {
+		dotTables: new Map([
+			[
+				"HIGH_THUNDER_II",
+				new Map([
+					[1, { summary: { totalTicks: 8, totalPotencyWithoutPot: 540.309 } }],
+					[2, { summary: { totalTicks: 8, totalPotencyWithoutPot: 540.309 } }],
+					[3, { summary: { totalTicks: 9, totalPotencyWithoutPot: 718.972 } }],
+					[4, { summary: { totalTicks: 8, totalPotencyWithoutPot: 540.309 } }],
+					[5, { summary: { totalTicks: 8, totalPotencyWithoutPot: 540.309 } }],
+					[6, { summary: { totalTicks: 1, totalPotencyWithoutPot: 178.664 } }],
+					[7, { summary: { totalTicks: 2, totalPotencyWithoutPot: 230.327 } }],
+					[8, { summary: { totalTicks: 8, totalPotencyWithoutPot: 540.309 } }],
+					[9, { summary: { totalTicks: 8, totalPotencyWithoutPot: 540.309 } }],
+				]),
+			],
+			[
+				"HIGH_THUNDER",
+				new Map([
+					[6, { summary: { totalTicks: 10 } }],
+					[7, { summary: { totalTicks: 10 } }],
 				]),
 			],
 		]),

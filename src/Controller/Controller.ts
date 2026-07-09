@@ -475,6 +475,14 @@ class Controller {
 			// apply resource overrides
 			this.#applyResourceOverrides(this.gameConfig);
 
+			// Propagate the loaded job to the nested timeline object, since the active slot may
+			// otherwise retain a stale job (slots default to BLM) and render skill icons for the
+			// wrong job. See also setConfigAndRestart, which does the same for config changes.
+			const tl = this.timeline;
+			if (tl.activeSlotIndex >= 0 && tl.activeSlotIndex < tl.slots.length) {
+				tl.slots[tl.activeSlotIndex].job = gameConfig.job;
+			}
+
 			// now add the actions
 			const line = Line.deserialize(content.actions);
 			const replayResult = this.#replay({ line: line, replayMode: ReplayMode.Exact });
