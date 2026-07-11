@@ -26,6 +26,12 @@ export interface ParsedLogQueryParams {
 	error?: LocalizedContent;
 }
 
+export interface TargetabilityQueryParams {
+	apiBaseUrl: string;
+	reportCode: ReportCode;
+	fightID: FightID;
+}
+
 export function parseLogURL(urlString: string): ParsedLogQueryParams {
 	// Clicking a fight from the FFLogs web UI adds the ID as a hash instead of a search param.
 	const url = URL.parse(urlString.replace("#", "?"))!;
@@ -220,6 +226,19 @@ query GetPlayerEvents($reportCode: String, $fightID: Int, $playerID: Int) {
 	}
 }`;
 
+const TARGETABILITY_UPDATE_QUERY = `
+query GetTargetability($reportCode: String, $fightID: Int) {
+	reportData {
+		report(code: $reportCode) {
+			events(fightIDs: [$fightID], filterExpression: "type=\\"targetabilityupdate\\"") {
+				data
+				nextPageTimestamp
+			}
+		}
+	}
+}
+`;
+
 async function fetchQuery(apiBaseUrl: string, query: string, variables: any): Promise<any> {
 	const options = {
 		method: "POST",
@@ -239,10 +258,10 @@ async function fetchQuery(apiBaseUrl: string, query: string, variables: any): Pr
 		.then((response) => response.json())
 		.then((blob) => {
 			if (blob.error !== undefined) {
-				throw new Error(blob.error);
+				throw new Error(JSON.stringify(blob.error));
 			}
 			if (blob.errors !== undefined) {
-				throw new Error(blob.errors);
+				throw new Error(JSON.stringify(blob.errors));
 			}
 			return blob.data;
 		});
@@ -611,4 +630,22 @@ export async function queryPlayerEvents(
 		castQueryCache.get(params.reportCode)!.get(params.fightID)!.set(params.playerID, state);
 	}
 	return state;
+}
+
+/**
+ * Issue a GraphQL query given the fight report ID and fight index ID.
+ * Returns a list of targetabilityupdate events..
+ */
+// TODO bundle this in with the player event query so we can do a single pass (may require more complex
+// filter expression)
+// TODO make this return type something structured
+export async function queryTargetabilityEvents(
+	params: TargetabilityQueryParams,
+): Promise<string[]> {
+	const data = await fetchQuery(params.apiBaseUrl, TARGETABILITY_UPDATE_QUERY, params);
+	const updateEvents: any[] = data.reportData.report.events.data;
+	return updateEvents.map(
+		(evt) =>
+			`${evt.sourceID}: ${evt.targetable === 1 ? "targetable" : "untargetable"} @ ${evt.timestamp}`,
+	);
 }

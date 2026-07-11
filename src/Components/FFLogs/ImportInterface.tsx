@@ -42,6 +42,7 @@ import {
 	queryLastFightID,
 	queryPlayerEvents,
 	queryPlayerList,
+	queryTargetabilityEvents,
 } from "./Queries";
 
 const TR_STYLE: CSSProperties = {
@@ -71,7 +72,7 @@ interface ApplyImportProgress {
  * Yields a snapshot of processing progress, but it should generally be fast enough to not be relevant.
  * Upon completion, returns a list of invalid actions in the finished timeline.
  *
- * This function can take a bit of time run because adding nodes invokes controller methods that may
+ * This function can take a bit of time to run because adding nodes invokes controller methods that may
  * trigger re-renders, and we need to splice in wait/jump nodes in the middle.
  * For most logs, there should not be very many node insertions, but in degenerate cases where
  * a log is very very off and many jumps need to be added, things may go wrong.
@@ -123,7 +124,7 @@ function* applyImportedActions(
 			? targetUseTime - castLength + GameConfig.getSlidecastWindow(castLength)
 			: targetUseTime;
 	toInsert.unshift(jumpToTimestampNode(jumpTargetTime));
-	console.log("initial jump time:", targetUseTime);
+	// console.log("initial jump time:", targetUseTime);
 	// If the target use time is before countdown begins, then set the countdown to the floor of that duration
 	if (-jumpTargetTime > controller.gameConfig.countdown) {
 		controller.setConfigAndRestart({
@@ -321,16 +322,21 @@ enum LogImportFlowState {
 export function FflogsImportFlow() {
 	const [dialogOpen, _setDialogOpen] = useState<boolean>(
 		// The dialog should be opened upon returning from the FFLogs auth flow.
-		new URLSearchParams(window.location.search).has("code"),
+		// new URLSearchParams(window.location.search).has("code"),
+		// TODO testing
+		true,
 	);
 	const handleStyle: React.CSSProperties = {};
 	const lightMode = useContext(ColorThemeContext) === "Light";
 	const colors = getCurrentThemeColors();
 
 	const [resetOnImport, setResetOnImport] = useState(true);
+	const [importMarkers, setImportMarkers] = useState(false);
 	const dialogRef = useRef<HTMLDivElement | null>(null);
 
-	const [logLink, setLogLink] = useState("");
+	const [logLink, setLogLink] = useState(
+		"https://www.fflogs.com/reports/FpX7P1YzHVkMamcf?fight=18",
+	); // useState(""); TODO testing
 	const [flowState, _setFlowState] = useState<LogImportFlowState>(
 		LogImportFlowState.AWAITING_AUTH,
 	);
@@ -339,6 +345,7 @@ export function FflogsImportFlow() {
 		if (flowState === LogImportFlowState.IMPORT_DONE) {
 			setImportProgress(null);
 			setResetOnImport(true);
+			setImportMarkers(false);
 			setInvalidActions([]);
 		}
 		if (
@@ -361,6 +368,9 @@ export function FflogsImportFlow() {
 				LogImportFlowState.AWAITING_LOG_LINK,
 				LogImportFlowState.CHOOSE_FIGHT,
 				LogImportFlowState.CHOOSE_PLAYER,
+				// Need these two states to remember log link when importing marker tracks
+				LogImportFlowState.ADJUSTING_CONFIG,
+				LogImportFlowState.PROCESSING_IMPORT,
 			].includes(newFlowState)
 		) {
 			logInfo.current = undefined;
@@ -745,6 +755,7 @@ export function FflogsImportFlow() {
 	// TODO add back arrow
 	// TODO populate stat fields + level that aren't inferred
 	const needsForceReset = () => controller.gameConfig.job !== intermediateImportState?.job;
+	const isMarkerImportAvailable = true; // TODO set this based on some hardcoded list?
 	const configHelp = <Help
 		container={dialogRef}
 		topic="fflogsConfigReset"
@@ -792,6 +803,22 @@ export function FflogsImportFlow() {
 			</span>,
 			zh: <span>
 				<i>从logs导入的技能将被添加到当前时间轴末尾。</i>
+			</span>,
+		})}
+	/>;
+	const importMarkersHelp = <Help
+		container={dialogRef}
+		topic="fflogsConfigResetActive"
+		content={localize({
+			en: <span>
+				<i>
+					When checked, markers for this fight will automatically be imported according to
+					the phase timings found in this log. **This will overwrite any currently-set
+					markers.** This feature is only available for certain fights.
+				</i>
+			</span>,
+			zh: <span>
+				<i>TODO</i>
 			</span>,
 		})}
 	/>;
@@ -901,6 +928,25 @@ export function FflogsImportFlow() {
 				{resetOnImport ? resetActiveHelp : resetInactiveHelp}
 			</div>
 		)}
+		{isMarkerImportAvailable ? (
+			<div>
+				<input
+					className="shellCheckbox"
+					type="checkbox"
+					onChange={(e) => {
+						setImportMarkers(e.currentTarget.checked);
+					}}
+					checked={importMarkers}
+				/>
+				<span>
+					{localize({
+						en: "Import marker timings from log",
+						zh: "TODO",
+					})}{" "}
+				</span>
+				{importMarkersHelp}
+			</div>
+		) : undefined}
 		<div className="buttonHolder">
 			<button
 				style={confirmButtonStyle}
@@ -912,13 +958,20 @@ export function FflogsImportFlow() {
 							resetOnImport || needsForceReset(),
 						);
 						// We use a dummy setTimeout to ensure we transition the UI to the processing screen.
-						setTimeout(() => {
+						setTimeout(async () => {
 							let iter = gen.next();
 							while (!iter.done) {
 								setImportProgress({ ...iter.value });
 								iter = gen.next();
 							}
 							setInvalidActions(iter.value);
+							// Import markers if necessary
+							if (importMarkers) {
+								// TODO hook this up to actual display state
+								// @ts-expect-error too lazy to type check
+								const evts = await queryTargetabilityEvents(logInfo.current);
+								console.log(evts);
+							}
 							setFlowState(LogImportFlowState.IMPORT_DONE);
 						}, 0);
 					} else {
