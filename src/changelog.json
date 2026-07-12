@@ -1,5 +1,14 @@
 [
 	{
+		"date": "7/12/26",
+		"changes": [
+			"The skill cooldown overlay now always shows the time until the skill's next stack is available, and no longer counts animation lock time."
+		],
+		"changes_zh": [
+			"技能冷却显示现已始终对应下一个充能的剩余时间，且不再计入动作后摇。"
+		]
+	},
+	{
 		"date": "7/8/26",
 		"changes": [
 			"Fixed a bug where importing a fight from a file with a different job would not properly render skill icons.",

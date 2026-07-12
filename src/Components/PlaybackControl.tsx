@@ -735,7 +735,6 @@ export function TimeControl() {
 				selected={cooldownDisplayMode}
 				uniqueName={"cooldownDisplay"}
 				onChange={(val) => setCooldownDisplayMode(val)}
-				// TODO localization, help tooltips and explanations
 				options={[
 					[
 						"disabled",
@@ -745,12 +744,12 @@ export function TimeControl() {
 					[
 						"bottomleft",
 						// eslint-disable-next-line react/jsx-key
-						<span>{localize({ en: "bottom left", zh: "居中" })}</span>,
+						<span>{localize({ en: "bottom left", zh: "左下" })}</span>,
 					],
 					[
 						"center",
 						// eslint-disable-next-line react/jsx-key
-						<span>{localize({ en: "center", zh: "左下" })}</span>,
+						<span>{localize({ en: "center", zh: "居中" })}</span>,
 					],
 				]}
 			/>

@@ -2169,11 +2169,11 @@ export class GameState {
 		let cooldownOverlaySeconds: number | undefined;
 		if (timeTillSecondaryReady !== undefined && timeTillSecondaryReady > Debug.epsilon) {
 			cooldownOverlaySeconds = timeTillSecondaryReady;
-		} else if (timeTillAvailable > Debug.epsilon) {
+		} else if (timeTillNextStackReady > Debug.epsilon) {
 			const isGcdSkillWithoutSecondary =
 				(skill.kind === "spell" || skill.kind === "weaponskill") && !skill.secondaryCd;
 			if (!isGcdSkillWithoutSecondary) {
-				cooldownOverlaySeconds = timeTillAvailable;
+				cooldownOverlaySeconds = timeTillNextStackReady;
 			}
 		}
 		return {
