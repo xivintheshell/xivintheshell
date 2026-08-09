@@ -264,6 +264,7 @@ export class BLMState extends GameState {
 		);
 
 		let multiplier = 1;
+		// For some reason, occult aspected spells get cast reduction but not damage multipliers/MP regen...
 		if (
 			(aspect === Aspect.Fire && this.getIceStacks() === 3) ||
 			(aspect === Aspect.Ice && this.getFireStacks() === 3)

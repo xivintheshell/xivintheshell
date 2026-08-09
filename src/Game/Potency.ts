@@ -123,6 +123,8 @@ export const enum PotencyModifierType {
 	PROTRACTION,
 
 	PHANTOM,
+	PHANTOM_HITS_WEAKNESS,
+	PHANTOM_LIBRA,
 	PHANTOM_KICK_1,
 	PHANTOM_KICK_2,
 	PHANTOM_KICK_3,
@@ -662,9 +664,20 @@ export const Modifiers = {
 		potencyFactor: 1.1,
 	} as PotencyMultiplier,
 	Phantom: {
-		kind: "multiplier",
+		kind: "critDirect",
 		source: PotencyModifierType.PHANTOM,
-		potencyFactor: 0, // TODO figure out if using a multiplier is actually a reasonable way to model things
+		critBonus: 0,
+		dhBonus: 0,
+	} as CritDirectMultiplier,
+	PhantomHitsWeakness: {
+		kind: "multiplier",
+		source: PotencyModifierType.PHANTOM_HITS_WEAKNESS,
+		potencyFactor: 1.3,
+	} as PotencyMultiplier,
+	PhantomHitsLibra: {
+		kind: "multiplier",
+		source: PotencyModifierType.PHANTOM_LIBRA,
+		potencyFactor: 1.4,
 	} as PotencyMultiplier,
 	PhantomKick1: {
 		kind: "multiplier",

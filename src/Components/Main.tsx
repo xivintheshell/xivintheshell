@@ -6,7 +6,7 @@ import { StatusDisplay } from "./StatusDisplay";
 import { controller } from "../Controller/Controller";
 import "react-tabs/style/react-tabs.css";
 import { SkillSequencePresets } from "./SkillSequencePresets";
-import { HELP_CHANNEL_URL, IntroSection } from "./IntroSection";
+import { IntroSection } from "./IntroSection";
 import { getLastChangeDate } from "./Changelog";
 import { localize, localizeDate, SelectLanguage } from "./Localization";
 import { SocialLinks } from "./SocialLinks";
@@ -26,9 +26,8 @@ import {
 	getCachedValue,
 	setCachedValue,
 	containsEwCacheContent,
-	isBetaSite,
 } from "../Controller/Common";
-import { JOBS, ShellJob } from "../Game/Data/Jobs";
+import { ShellJob } from "../Game/Data/Jobs";
 import { clearPKCEAuthState } from "./FFLogs/Auth";
 
 export let setJob = (job: ShellJob) => {};
@@ -110,8 +109,6 @@ function PSA(props: { hidden?: boolean; color?: string; children: React.ReactNod
 		{props.children}
 	</div>;
 }
-
-const betaPrefix = isBetaSite ? "[BETA] " : "";
 
 export default class Main extends React.Component<{ command?: string }> {
 	controlRegionRef: React.RefObject<HTMLDivElement | null>;
@@ -218,7 +215,6 @@ export default class Main extends React.Component<{ command?: string }> {
 		} else {
 			borderColor = "2px solid " + colors.accent;
 		}
-		const liStyle = { marginBottom: "5px" };
 		const mainControlRegion = <div
 			style={{ flex: 7, display: "inline-block", position: "relative" }}
 		>

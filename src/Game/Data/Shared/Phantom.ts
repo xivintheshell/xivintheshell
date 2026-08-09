@@ -75,6 +75,21 @@ export const PHANTOM_ACTIONS = ensureRecord<ActionData>()({
 	STEADFAST_STANCE: { name: "Steadfast Stance" },
 	MESMERIZE: { name: "Mesmerize" },
 
+	// Black Mage
+	OCCULT_FIRE_III: { name: "Occult Fire III" },
+	OCCULT_BLIZZARD_III: { name: "Occult Blizzard III" },
+	OCCULT_THUNDER_III: { name: "Occult Thunder III" },
+	OCCULT_FLARE: { name: "Occult Flare" },
+
+	// Summoner
+	HELLFIRE: { name: "Hellfire" },
+	JUDGMENT_BOLT: { name: "Judgment Bolt" },
+	THUNDERSTORM: { name: "Thunderstorm" },
+	MEGAFLARE: { name: "Megaflare" },
+
+	// Freelancer
+	WISDOM_ON_THE_WINDS: { name: "Wisdom on the Winds" },
+
 	// Receiving external buffs
 	APPLY_QUICK: {
 		name: "Apply Occult Quick",
@@ -90,49 +105,17 @@ export const PHANTOM_ACTIONS = ensureRecord<ActionData>()({
 export const PHANTOM_COOLDOWNS = ensureRecord<CooldownData>()({
 	NEVER: { name: "Never" },
 
-	cd_PHANTOM_KICK: { name: "cd_PhantomKick" },
-	cd_OCCULT_COUNTER: { name: "cd_OccultCounter" },
-	cd_OCCULT_CHAKRA: { name: "cd_OccultChakra" },
-
-	cd_SHIRAHADORI: {
-		name: "cd_Shirahadori",
-	},
-	cd_IAINUKI: {
-		name: "cd_Iainuki",
-	},
-	cd_ZENINAGE: {
-		name: "cd_Zeninage",
-	},
-
-	cd_OCCULT_COMET: {
-		name: "cd_OccultComet",
-	},
-	cd_OCCULT_MAGE_MASHER: {
-		name: "cd_OccultMageMasher",
-	},
-	cd_OCCULT_DISPEL: {
-		name: "cd_OccultDispel",
-	},
-	cd_OCCULT_QUICK: {
-		name: "cd_OccultQuick",
-	},
-
-	cd_PREDICT: {
-		name: "cd_Predict",
-	},
-	cd_PREDICTION: {
-		name: "cd_Prediction",
-	},
-	cd_PHANTOM_REJUVENATION: {
-		name: "cd_PhantomRejuvenation",
-	},
-	cd_INVULNERABILITY: {
-		name: "Invulnerability",
-	},
-	cd_DANCE: { name: "cd_Dance" },
+	// Phantom actions across different phantom jobs share common cooldowns,
+	// which become restricted when you swap jobs. This is relevant for ph. Freelancer.
+	// See pins in FOE #crescent-science for which abilities correspond to which cooldown groups.
+	cd_OC_GROUP_A: { name: "cd_OCGroupA" },
+	cd_OC_GROUP_B: { name: "cd_OCGroupB" },
+	cd_OC_GROUP_C: { name: "cd_OCGroupC" },
+	cd_OC_GROUP_D: { name: "cd_OCGroupD" },
+	cd_OC_GROUP_E: { name: "cd_OCGroupE" },
+	cd_OC_GROUP_F: { name: "cd_OCGroupF" },
+	cd_PREDICTION: { name: "cd_OCPrediction" },
 	cd_DANCE_GCD: { name: "cd_DanceGCD" },
-	cd_STEADFAST_STANCE: { name: "cd_SteadfastStance" },
-	cd_MESMERIZE: { name: "cd_Mesmerize" },
 
 	cd_APPLY_BUFF: { name: "cd_ApplyBuff" },
 });
@@ -177,6 +160,8 @@ export const PHANTOM_STATUSES = ensureRecord<ResourceData>()({
 	STEADFAST_STANCE: { name: "Steadfast Stance" },
 	ENAMORED: { name: "Enamored" },
 	MESMERIZED: { name: "Mesmerized" },
+	ELEMENTAL_WEAKNESS: { name: "Elemental Weakness" },
+	LIBRA: { name: "Libra" },
 });
 
 export type PhantomActions = typeof PHANTOM_ACTIONS;
