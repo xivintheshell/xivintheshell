@@ -42,6 +42,8 @@ export const rotationTestSetup = () => {
 			totalPotencyWithoutPot: 0,
 			totalPotPotency: 0,
 			totalPartyBuffPotency: 0,
+			totalPhantomPotency: 0,
+			totalPartyBuffPhantomPotency: 0,
 		},
 		dotTables: new Map(),
 		mode: DamageStatisticsMode.Normal,
