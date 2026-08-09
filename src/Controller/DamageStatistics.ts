@@ -224,9 +224,6 @@ function expandNode(node: ActionNode): ExpandedNode {
 					}
 				}
 			}
-			if (mainModifiers?.some((m) => m.source === PotencyModifierType.PHANTOM)) {
-				res.basePotency = 0;
-			}
 		}
 		return res;
 	} else {
@@ -490,8 +487,7 @@ export function calculateDamageStats(props: {
 				}).applied;
 
 				const entry = mainTable[q.mainTableIndex];
-				entry[isPhantom ? "phantomPotency" : "totalPotencyWithoutPot"] +=
-					potencyWithoutPot;
+				entry[isPhantom ? "phantomPotency" : "totalPotencyWithoutPot"] += potencyWithoutPot;
 				entry.potPotency += potencyWithPot - potencyWithoutPot;
 				entry[isPhantom ? "partyBuffPhantomPotency" : "partyBuffPotency"] +=
 					potencyWithPartyBuffs - potencyWithPot;

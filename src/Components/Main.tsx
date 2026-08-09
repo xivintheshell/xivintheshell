@@ -497,12 +497,14 @@ export default class Main extends React.Component<{ command?: string }> {
 												may not remain usable.
 											</div>
 											<div style={{ marginBottom: "10px" }}>
-												The following phantom jobs are currently supported:
-												Monk, Samurai, Oracle, and Dancer. There are
-												currently no plans to actively update this version
-												of the site or add more jobs, but bug reports and
-												additional data are welcome (@shanzhe in The Balance
-												or a field op Discord of your choice).
+												The following phantom jobs are currently supported:{" "}
+												<b>Monk</b>, <b>Samurai</b>, <b>Oracle</b>,{" "}
+												<b>Dancer</b>, <b>Black Mage</b>, <b>Summoner</b>,
+												and <b>Freelancer</b>. There are currently no plans
+												to actively update this version of the site or add
+												more jobs, but bug reports and additional data are
+												welcome (@shanzhe in The Balance or a field op
+												Discord of your choice).
 											</div>
 											<div style={{ marginBottom: "10px" }}>
 												This site is meant primarily as a tool for
@@ -514,8 +516,8 @@ export default class Main extends React.Component<{ command?: string }> {
 														potencies (math is complicated)
 													</li>
 													<li>
-														Job damage and trait buffs are not applied
-														to phantom actions
+														Certain job damage and trait buffs are not
+														applied to phantom actions
 													</li>
 													<li>Rounding errors in haste effects</li>
 													<li>

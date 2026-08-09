@@ -909,20 +909,19 @@ export class Potency {
 		let isAutoCDH = false;
 		let isAutoCrit = false;
 		let noCDH = false;
+		// Detect up front so later crit/DH modifiers are ignored regardless of order.
+		const isPhantom = modifiers.some((m) => m.source === PotencyModifierType.PHANTOM);
 
 		modifiers.forEach((m) => {
 			if (m.source === PotencyModifierType.POT)
 				totalDamageFactor *= props.tincturePotencyMultiplier;
 			else if (m.source === PotencyModifierType.AUTO_CDH) isAutoCDH = true;
 			else if (m.source === PotencyModifierType.AUTO_CRIT) isAutoCrit = true;
-			else if (
-				m.source === PotencyModifierType.NO_CDH ||
-				// phantom actions cannot crit/DH
-				m.source === PotencyModifierType.PHANTOM
-			)
-				noCDH = true;
+			else if (m.source === PotencyModifierType.NO_CDH) noCDH = true;
 			// handle calculation for ordinary crit/DH bonuses separate from autocrit/dh
-			else if (m.kind === "critDirect") {
+			// Phantom actions cannot crit/DH, so ignore those buffs entirely (including the
+			// PHANTOM marker itself, which is a critDirect with 0/0 bonuses).
+			else if (m.kind === "critDirect" && !isPhantom) {
 				totalCritBonus += m.critBonus;
 				totalDhBonus += m.dhBonus;
 			} else if (m.kind === "multiplier") totalDamageFactor *= m.potencyFactor;
@@ -933,7 +932,7 @@ export class Potency {
 			!(noCDH && (isAutoCDH || isAutoCrit)),
 			"skills that can't CDH cannot be auto-crit or auto-CDH",
 		);
-		if (noCDH) {
+		if (noCDH || isPhantom) {
 			isAutoCDH = false;
 			isAutoCrit = false;
 		}
@@ -943,7 +942,7 @@ export class Potency {
 			controller.game.getPartyBuffs(this.snapshotTime).forEach((buff) => {
 				if (buff.kind === "multiplier") {
 					totalDamageFactor *= buff.potencyFactor;
-				} else if (buff.kind === "critDirect") {
+				} else if (buff.kind === "critDirect" && !isPhantom) {
 					totalCritBonus += buff.critBonus;
 					totalDhBonus += buff.dhBonus;
 				}

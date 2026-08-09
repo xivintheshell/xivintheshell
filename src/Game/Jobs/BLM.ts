@@ -318,7 +318,7 @@ const retraceCondition = (state: Readonly<BLMState>) =>
 
 const paraCondition = (state: Readonly<BLMState>) => state.hasResourceAvailable("PARADOX");
 
-const getEnochianModifier = (state: Readonly<BLMState>) =>
+export const getEnochianModifier = (state: Readonly<BLMState>) =>
 	(state.hasTraitUnlocked("ENHANCED_ENOCHIAN_IV") && 1.27) ||
 	(state.hasTraitUnlocked("ENHANCED_ENOCHIAN_III") && 1.22) ||
 	(state.hasTraitUnlocked("ENHANCED_ENOCHIAN_II") && 1.15) ||
