@@ -214,6 +214,10 @@ export class CoolDown extends ResourceOrCooldown {
 	overrideTimeTillNextStack(newTime: number) {
 		this.#timeTillNextStackAvailable = newTime;
 	}
+	makeFullyAvailable() {
+		this.#timeTillNextStackAvailable = 0;
+		this.overrideCurrentValue(this.maxValue);
+	}
 	stacksAvailable(): number {
 		return super.availableAmount();
 	}

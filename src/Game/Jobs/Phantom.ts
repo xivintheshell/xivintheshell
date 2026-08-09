@@ -60,7 +60,7 @@ const makePhantomAbility = (
 		assetPath: "Phantom/" + PHANTOM_ACTIONS[name].name + ".png",
 		jobPotencyModifiers: (state) => {
 			const result = params.jobPotencyModifiers?.(state) ?? [];
-			result.push(Modifiers.Phantom, Modifiers.NoCDH);
+			result.push(Modifiers.Phantom);
 			return result;
 		},
 	});
@@ -103,7 +103,7 @@ const adjustCooldown = (
 	state: GameState,
 	baseCd: number,
 	cdName: PhantomCooldownKey,
-	stat: "sks" | "sps",
+	stat?: "sks" | "sps",
 ) => {
 	// Hack to dynamically adjust the cooldown of a weaponskill/spell to reflect haste and sps/sks.
 	// Fortunately, no phantom GCD cooldowns (currently) have stacks to worry about.
@@ -115,7 +115,9 @@ const adjustCooldown = (
 			cdName,
 			stat === "sks"
 				? state.config.adjustedSksGCD(baseCd, speedMod(state))
-				: state.config.adjustedGCD(baseCd, speedMod(state)),
+				: stat === "sps"
+					? state.config.adjustedGCD(baseCd, speedMod(state))
+					: baseCd,
 			1,
 			1,
 		),
@@ -138,7 +140,7 @@ const makePhantomWeaponskill = (
 		isInstantFn: (state) => !params.castTime,
 		jobPotencyModifiers: (state) => {
 			const result = params.jobPotencyModifiers?.(state) ?? [];
-			result.push(Modifiers.Phantom, Modifiers.NoCDH);
+			result.push(Modifiers.Phantom);
 			return result;
 		},
 		onExecute: (state) => {
@@ -174,7 +176,7 @@ const makePhantomSpell = (
 			(state.job === "RDM" && state.tryConsumeResource("DUALCAST")),
 		jobPotencyModifiers: (state) => {
 			const result = params.jobPotencyModifiers?.(state) ?? [];
-			result.push(Modifiers.Phantom, Modifiers.NoCDH);
+			result.push(Modifiers.Phantom);
 			return result;
 		},
 		onExecute: (state: GameState) => adjustCooldown(state, cd, cdName, "sps"),
@@ -186,7 +188,34 @@ const makePhantomSpell = (
 	});
 };
 
-makePhantomAbility("PHANTOM_KICK", "cd_PHANTOM_KICK", {
+// PSMN spells are unaffected by cat/recast time effects.
+const makePSMNSpell = (
+	name: PhantomActionKey,
+	cdName: PhantomCooldownKey,
+	cd: number,
+	params: Partial<MakeGCDParams<GameState>>,
+) => {
+	makeSpell(ALL_JOBS, name, 1, {
+		...params,
+		assetPath: "Phantom/" + PHANTOM_ACTIONS[name].name + ".png",
+		castTime: (state) => fnify(params.castTime, 0)(state),
+		recastTime: (state) => fnify(params.recastTime, 2.5)(state),
+		isInstantFn: (state) => false,
+		jobPotencyModifiers: (state) => {
+			const result = params.jobPotencyModifiers?.(state) ?? [];
+			result.push(Modifiers.Phantom);
+			return result;
+		},
+		onExecute: (state: GameState) => adjustCooldown(state, cd, cdName),
+		secondaryCooldown: {
+			cdName,
+			cooldown: cd,
+			maxCharges: 1,
+		},
+	});
+};
+
+makePhantomAbility("PHANTOM_KICK", "cd_OC_GROUP_A", {
 	cooldown: 30,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	potency: 100,
@@ -208,7 +237,7 @@ makePhantomAbility("PHANTOM_KICK", "cd_PHANTOM_KICK", {
 // 	assetPath: "Phantom/Counterstance.png",
 // });
 
-makePhantomAbility("OCCULT_CHAKRA", "cd_OCCULT_CHAKRA", {
+makePhantomAbility("OCCULT_CHAKRA", "cd_OC_GROUP_B", {
 	applicationDelay: 1, // anecdotal, need to check footage to be sure
 	cooldown: 90,
 	onApplication: (state) => {
@@ -217,18 +246,18 @@ makePhantomAbility("OCCULT_CHAKRA", "cd_OCCULT_CHAKRA", {
 	},
 });
 
-makePhantomAbility("SHIRAHADORI", "cd_SHIRAHADORI", {
+makePhantomAbility("SHIRAHADORI", "cd_OC_GROUP_D", {
 	cooldown: 30,
 	onApplication: (state) => state.gainStatus("SHIRAHADORI"),
 });
 
-makePhantomWeaponskill("IAINUKI", "cd_IAINUKI", 40, {
+makePhantomWeaponskill("IAINUKI", "cd_OC_GROUP_A", 40, {
 	castTime: 1.3,
 	potency: 500,
 	falloff: 0,
 });
 
-makePhantomWeaponskill("ZENINAGE", "cd_ZENINAGE", 120, {
+makePhantomWeaponskill("ZENINAGE", "cd_OC_GROUP_C", 120, {
 	potency: 1500,
 });
 
@@ -242,7 +271,7 @@ const PREDICTIONS: PhantomResourceKey[] = [
 const stopPredictions = (state: GameState) =>
 	PREDICTIONS.forEach((p) => state.tryConsumeResource(p));
 
-makePhantomSpell("PREDICT", "cd_PREDICT", 60, {
+makePhantomSpell("PREDICT", "cd_OC_GROUP_A", 60, {
 	// First prediction buff appears about 0.9s after casting predict
 	applicationDelay: 0.9,
 	onApplication: (state) => PREDICTIONS.forEach((p) => state.gainStatus(p)),
@@ -278,12 +307,12 @@ makePhantomAbility("BLESSING", "cd_PREDICTION", {
 	onConfirm: stopPredictions,
 });
 
-makePhantomAbility("PHANTOM_REJUVENATION", "cd_PHANTOM_REJUVENATION", {
+makePhantomAbility("PHANTOM_REJUVENATION", "cd_OC_GROUP_D", {
 	cooldown: 60,
 	onConfirm: (state) => state.gainStatus("PHANTOM_REJUVENATION"),
 });
 
-makePhantomAbility("INVULNERABILITY", "cd_INVULNERABILITY", {
+makePhantomAbility("INVULNERABILITY", "cd_OC_GROUP_C", {
 	cooldown: 180,
 	onConfirm: (state) => state.gainStatus("INVULNERABILITY"),
 });
@@ -297,7 +326,7 @@ const DANCES: PhantomResourceKey[] = [
 
 const stopDances = (state: GameState) => DANCES.forEach((d) => state.tryConsumeResource(d));
 
-makePhantomAbility("DANCE", "cd_DANCE", {
+makePhantomAbility("DANCE", "cd_OC_GROUP_A", {
 	// TODO verify application time
 	applicationDelay: 0.9,
 	cooldown: 30,
@@ -335,17 +364,66 @@ makePhantomWeaponskill("QUICKSTEP", "cd_DANCE_GCD", 1, {
 	onConfirm: (state) => state.gainStatus("QUICKSTEP"),
 });
 
-makePhantomAbility("STEADFAST_STANCE", "cd_STEADFAST_STANCE", {
+makePhantomAbility("STEADFAST_STANCE", "cd_OC_GROUP_B", {
 	cooldown: 60,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	onConfirm: (state) => state.gainStatus("STEADFAST_STANCE"),
 });
 
-makePhantomAbility("MESMERIZE", "cd_MESMERIZE", {
+makePhantomAbility("MESMERIZE", "cd_OC_GROUP_C", {
 	cooldown: 90,
 	onConfirm: (state) => {
 		state.gainStatus("MESMERIZED");
 		state.gainStatus("ENAMORED");
+	},
+});
+
+// TODO: cast time reduction in ice/fire
+(["OCCULT_FIRE_III", "OCCULT_BLIZZARD_III", "OCCULT_THUNDER_III"] as PhantomActionKey[]).forEach(
+	(key) =>
+		makePhantomSpell(key, "cd_OC_GROUP_A", 40, {
+			castTime: 1.5,
+			potency: 400,
+			jobPotencyModifiers: (state) => {
+				if (state.hasResourceAvailable("ELEMENTAL_WEAKNESS")) {
+					return state.hasResourceAvailable("LIBRA")
+						? [Modifiers.PhantomHitsLibra]
+						: [Modifiers.PhantomHitsWeakness];
+				}
+				return [];
+			},
+		}),
+);
+
+makePhantomSpell("OCCULT_FLARE", "cd_OC_GROUP_B", 60, { castTime: 2.3, potency: 500 });
+
+(["HELLFIRE", "JUDGMENT_BOLT", "THUNDERSTORM"] as PhantomActionKey[]).forEach((key) =>
+	makePSMNSpell(key, "cd_OC_GROUP_B", 40, {
+		castTime: 4,
+		potency: 600,
+		jobPotencyModifiers: (state) => {
+			if (state.hasResourceAvailable("ELEMENTAL_WEAKNESS")) {
+				return state.hasResourceAvailable("LIBRA")
+					? [Modifiers.PhantomHitsLibra]
+					: [Modifiers.PhantomHitsWeakness];
+			}
+			return [];
+		},
+	}),
+);
+
+makePSMNSpell("MEGAFLARE", "cd_OC_GROUP_C", 90, { castTime: 6, potency: 1000 });
+
+makePhantomAbility("WISDOM_ON_THE_WINDS", "cd_OC_GROUP_C", {
+	cooldown: 360,
+	onConfirm: (state) => {
+		// Wisdom on the Winds is known to not properly reset cooldowns for some job actions.
+		// If we ever get around to supporting it, I guess I'll just hard-code it.
+		state.cooldowns.forEach((cd, cdName) => {
+			if (!cdName.startsWith("cd_OC_GROUP")) {
+				cd.makeFullyAvailable();
+			}
+		});
 	},
 });
 
