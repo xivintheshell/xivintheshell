@@ -211,6 +211,9 @@ function expandNode(node: ActionNode): ExpandedNode {
 					}
 				}
 			}
+			if (mainModifiers?.some((m) => m.source === PotencyModifierType.PHANTOM)) {
+				res.basePotency = 0;
+			}
 		}
 		return res;
 	} else {
@@ -367,6 +370,8 @@ export function calculateDamageStats(props: {
 		totalPotencyWithoutPot: 0,
 		totalPotPotency: 0,
 		totalPartyBuffPotency: 0,
+		totalPhantomPotency: 0,
+		totalPartyBuffPhantomPotency: 0,
 	};
 
 	const dotTables: Map<ResourceKey, Map<number, DamageStatsDoTTrackingData>> = new Map();
@@ -417,8 +422,10 @@ export function calculateDamageStats(props: {
 						totalPotencyWithoutPot: 0,
 						showPotency: node.anyPotencies(),
 						potPotency: 0,
+						phantomPotency: 0,
 						potCount: 0,
 						partyBuffPotency: 0,
+						partyBuffPhantomPotency: 0,
 						falloff: q.expandedNode.falloff,
 						targetCount: q.expandedNode.targetList.length,
 					});
@@ -436,6 +443,15 @@ export function calculateDamageStats(props: {
 					return;
 				}
 
+				const isPhantom =
+					q.expandedNode.calculationModifiers.some(
+						(m) => m.source === PotencyModifierType.PHANTOM,
+					) || q.expandedNode.displayedModifiers.includes(PotencyModifierType.PHANTOM);
+				// Phantom potency is unaffected by pot, since it doesn't scale with main stat.
+				const tincturePotencyMultiplier = isPhantom
+					? 1
+					: ctl.getTincturePotencyMultiplier();
+
 				const potencyWithoutPot = node.getPotency({
 					tincturePotencyMultiplier: 1,
 					untargetable: bossIsUntargetable,
@@ -445,7 +461,7 @@ export function calculateDamageStats(props: {
 				}).applied;
 
 				const potencyWithPot = node.getPotency({
-					tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
+					tincturePotencyMultiplier,
 					untargetable: bossIsUntargetable,
 					includePartyBuffs: false,
 					excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT"),
@@ -453,20 +469,22 @@ export function calculateDamageStats(props: {
 				}).applied;
 
 				const potencyWithPartyBuffs = node.getPotency({
-					tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
+					tincturePotencyMultiplier,
 					untargetable: bossIsUntargetable,
 					includePartyBuffs: true,
 					excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT"),
 					includeSplash: true,
 				}).applied;
 
-				mainTable[q.mainTableIndex].totalPotencyWithoutPot += potencyWithoutPot;
-				mainTable[q.mainTableIndex].potPotency += potencyWithPot - potencyWithoutPot;
-				mainTable[q.mainTableIndex].partyBuffPotency +=
+				const entry = mainTable[q.mainTableIndex];
+				entry[isPhantom ? "phantomPotency" : "totalPotencyWithoutPot"] +=
+					potencyWithoutPot;
+				entry.potPotency += potencyWithPot - potencyWithoutPot;
+				entry[isPhantom ? "partyBuffPhantomPotency" : "partyBuffPotency"] +=
 					potencyWithPartyBuffs - potencyWithPot;
 
-				if (hit && node.hasBuff(BuffType.Tincture)) {
-					mainTable[q.mainTableIndex].potCount += 1;
+				if (hit && !isPhantom && node.hasBuff(BuffType.Tincture)) {
+					entry.potCount += 1;
 				}
 
 				// also get contrib of each skill
@@ -476,10 +494,13 @@ export function calculateDamageStats(props: {
 
 				// and main table total (only if checked)
 				if (checked) {
-					mainTableSummary.totalPotencyWithoutPot += potencyWithoutPot;
+					mainTableSummary[
+						isPhantom ? "totalPhantomPotency" : "totalPotencyWithoutPot"
+					] += potencyWithoutPot;
 					mainTableSummary.totalPotPotency += potencyWithPot - potencyWithoutPot;
-					mainTableSummary.totalPartyBuffPotency +=
-						potencyWithPartyBuffs - potencyWithPot;
+					mainTableSummary[
+						isPhantom ? "totalPartyBuffPhantomPotency" : "totalPartyBuffPotency"
+					] += potencyWithPartyBuffs - potencyWithPot;
 				}
 
 				// DoT table
@@ -517,7 +538,9 @@ export function calculateDamageStats(props: {
 									),
 									totalPotencyWithoutPot: 0,
 									totalPotPotency: 0,
+									totalPhantomPotency: 0,
 									totalPartyBuffPotency: 0,
+									totalPartyBuffPhantomPotency: 0,
 								},
 								lastDoT: undefined,
 							};
