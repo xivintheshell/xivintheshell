@@ -17,9 +17,11 @@ import {
 } from "../Skills";
 import { BRDResourceKey } from "../Data/Jobs/BRD";
 import { makeResource, CoolDown } from "../Resources";
-import { Modifiers } from "../Potency";
+import { Modifiers, PotencyModifier, PotencyModifierType } from "../Potency";
 import type { GameState } from "../GameState";
 import { BRDState } from "../Jobs/BRD";
+import { Aspect } from "../Common";
+import { BLMState, getEnochianModifier } from "./BLM";
 
 ALL_JOBS.forEach((job) => {
 	makeResource(job, "PHANTOM_KICK", 3, { timeout: 40 });
@@ -50,6 +52,33 @@ ALL_JOBS.forEach((job) => {
 	makeResource(job, "MESMERIZED", 1, { timeout: 100 });
 });
 
+export const addDamageModifiers = (
+	state: Readonly<GameState>,
+	mods: PotencyModifier[],
+	aspect?: Aspect,
+) => {
+	if (state.hasResourceAvailable("PHANTOM_KICK")) {
+		const kickStacks = state.resources.get("PHANTOM_KICK").availableAmount();
+		mods.push(
+			kickStacks === 3
+				? Modifiers.PhantomKick3
+				: kickStacks === 2
+					? Modifiers.PhantomKick2
+					: Modifiers.PhantomKick1,
+		);
+	}
+	if (state.job === "BLM" && aspect !== Aspect.Physical) {
+		if (state.hasResourceAvailable("ENOCHIAN")) {
+			mods.push({
+				kind: "multiplier",
+				source: PotencyModifierType.ENO,
+				potencyFactor: getEnochianModifier(state as BLMState),
+			});
+		}
+	}
+	// TODO add damage buffs for other jobs
+};
+
 const makePhantomAbility = (
 	name: PhantomActionKey,
 	cdName: PhantomCooldownKey,
@@ -61,6 +90,7 @@ const makePhantomAbility = (
 		jobPotencyModifiers: (state) => {
 			const result = params.jobPotencyModifiers?.(state) ?? [];
 			result.push(Modifiers.Phantom);
+			addDamageModifiers(state, result, params.aspect);
 			return result;
 		},
 	});
@@ -141,6 +171,7 @@ const makePhantomWeaponskill = (
 		jobPotencyModifiers: (state) => {
 			const result = params.jobPotencyModifiers?.(state) ?? [];
 			result.push(Modifiers.Phantom);
+			addDamageModifiers(state, result, params.aspect);
 			return result;
 		},
 		onExecute: (state) => {
@@ -171,15 +202,22 @@ const makePhantomSpell = (
 		recastTime: (state) =>
 			state.config.adjustedGCD(fnify(params.recastTime, 2.5)(state), speedMod(state)),
 		isInstantFn: (state) =>
-			state.tryConsumeResource("SWIFTCAST") ||
-			(state.job === "BLM" && state.tryConsumeResource("TRIPLECAST")) ||
-			(state.job === "RDM" && state.tryConsumeResource("DUALCAST")),
+			state.hasResourceAvailable("SWIFTCAST") ||
+			(state.job === "BLM" && state.hasResourceAvailable("TRIPLECAST")) ||
+			(state.job === "RDM" && state.hasResourceAvailable("DUALCAST")),
 		jobPotencyModifiers: (state) => {
 			const result = params.jobPotencyModifiers?.(state) ?? [];
 			result.push(Modifiers.Phantom);
+			addDamageModifiers(state, result, params.aspect);
 			return result;
 		},
 		onExecute: (state: GameState) => adjustCooldown(state, cd, cdName, "sps"),
+		onConfirm: (state, node) => {
+			params.onConfirm?.(state, node);
+			state.tryConsumeResource("SWIFTCAST") ||
+				(state.job === "BLM" && state.tryConsumeResource("TRIPLECAST", false)) ||
+				(state.job === "RDM" && state.tryConsumeResource("DUALCAST"));
+		},
 		secondaryCooldown: {
 			cdName,
 			cooldown: cd,
@@ -204,6 +242,7 @@ const makePSMNSpell = (
 		jobPotencyModifiers: (state) => {
 			const result = params.jobPotencyModifiers?.(state) ?? [];
 			result.push(Modifiers.Phantom);
+			addDamageModifiers(state, result);
 			return result;
 		},
 		onExecute: (state: GameState) => adjustCooldown(state, cd, cdName),
@@ -219,6 +258,7 @@ makePhantomAbility("PHANTOM_KICK", "cd_OC_GROUP_A", {
 	cooldown: 30,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	potency: 100,
+	aspect: Aspect.Physical,
 	falloff: 0,
 	onApplication: (state) =>
 		state.gainStatus("PHANTOM_KICK", state.resources.get("PHANTOM_KICK").availableAmount() + 1),
@@ -254,11 +294,13 @@ makePhantomAbility("SHIRAHADORI", "cd_OC_GROUP_D", {
 makePhantomWeaponskill("IAINUKI", "cd_OC_GROUP_A", 40, {
 	castTime: 1.3,
 	potency: 500,
+	aspect: Aspect.Physical,
 	falloff: 0,
 });
 
 makePhantomWeaponskill("ZENINAGE", "cd_OC_GROUP_C", 120, {
 	potency: 1500,
+	aspect: Aspect.Physical,
 });
 
 const PREDICTIONS: PhantomResourceKey[] = [
@@ -335,6 +377,7 @@ makePhantomAbility("DANCE", "cd_OC_GROUP_A", {
 
 makePhantomWeaponskill("PHANTOM_SWORD_DANCE", "cd_DANCE_GCD", 1, {
 	potency: 600,
+	aspect: Aspect.Physical,
 	validateAttempt: (state) => state.hasResourceAvailable("POISED_TO_SWORD_DANCE"),
 	onConfirm: stopDances,
 });
@@ -378,7 +421,7 @@ makePhantomAbility("MESMERIZE", "cd_OC_GROUP_C", {
 	},
 });
 
-// TODO: cast time reduction in ice/fire
+// TODO: cast time reduction in BLM ice/fire
 (["OCCULT_FIRE_III", "OCCULT_BLIZZARD_III", "OCCULT_THUNDER_III"] as PhantomActionKey[]).forEach(
 	(key) =>
 		makePhantomSpell(key, "cd_OC_GROUP_A", 40, {

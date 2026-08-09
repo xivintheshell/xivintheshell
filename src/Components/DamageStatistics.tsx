@@ -859,12 +859,13 @@ export class DamageStatistics extends React.Component {
 			tags.push(props.row.displayedModifiers.map((tag, i) => <BuffTag key={i} buff={tag} />));
 
 			const includeInStats = getSkillOrDotInclude(props.row.skillName);
+			const isPhantom = props.row.displayedModifiers.includes(PotencyModifierType.PHANTOM);
 
 			// include checkbox
 			const includeCheckboxes: React.ReactNode[] = [];
 			if (
 				!sameAsLast &&
-				props.row.basePotency > 0 &&
+				(props.row.basePotency > 0 || isPhantom) &&
 				!(props.row.skillName in LIMIT_BREAK_ACTIONS)
 			) {
 				includeCheckboxes.push(
@@ -940,7 +941,7 @@ export class DamageStatistics extends React.Component {
 
 			// target count node
 			let targetCountNode: React.ReactNode | undefined = undefined;
-			if (props.row.targetCount && props.row.basePotency > 0) {
+			if (props.row.targetCount && (props.row.basePotency > 0 || isPhantom)) {
 				targetCountNode = <span
 					style={{ textDecoration: includeInStats ? "none" : "line-through" }}
 				>
@@ -948,10 +949,11 @@ export class DamageStatistics extends React.Component {
 				</span>;
 			}
 
-			// potency
+			// potency / phantom potency (per-hit; mutually exclusive)
 			let potencyNode: React.ReactNode | undefined = undefined;
+			let phantomPerHitNode: React.ReactNode | undefined = undefined;
 			if (props.row.basePotency > 0 && !hidePotency(props.row.skillName)) {
-				potencyNode = <PotencyDisplay
+				const perHit = <PotencyDisplay
 					includeInStats={includeInStats}
 					basePotency={props.row.basePotency}
 					helpTopic={"mainTable-potencyCalc-" + props.key}
@@ -959,6 +961,11 @@ export class DamageStatistics extends React.Component {
 					falloff={props.row.falloff}
 					targetCount={props.row.targetCount}
 				/>;
+				if (isPhantom) {
+					phantomPerHitNode = perHit;
+				} else {
+					potencyNode = perHit;
+				}
 			}
 
 			// usage count node
@@ -982,38 +989,58 @@ export class DamageStatistics extends React.Component {
 				) : undefined}
 			</span>;
 
-			// total potency
+			// total / total phantom potency (mutually exclusive)
 			let totalPotencyNode: React.ReactNode | undefined = undefined;
+			let totalPhantomPotencyNode: React.ReactNode | undefined = undefined;
 			if (props.row.showPotency && !(props.row.skillName in LIMIT_BREAK_ACTIONS)) {
-				totalPotencyNode = <span
-					style={{ textDecoration: includeInStats ? "none" : "line-through" }}
-				>
-					{props.row.totalPotencyWithoutPot.toFixed(2)}
-					{props.row.potPotency > 0 ? (
-						<span
-							style={{
-								color: includeInStats
-									? colors.timeline.potCover
-									: colors.bgHighContrast,
-							}}
-						>
-							{" "}
-							+{props.row.potPotency.toFixed(2)}(
-							{localize({ en: "pot", zh: "爆发药" })})({props.row.potCount})
-						</span>
-					) : undefined}
-					{props.row.partyBuffPotency > 0 ? (
-						<span
-							style={{
-								color: includeInStats ? colors.accent : colors.bgHighContrast,
-							}}
-						>
-							{" "}
-							+{props.row.partyBuffPotency.toFixed(2)}(
-							{localize({ en: "party", zh: "团辅" })})
-						</span>
-					) : undefined}
-				</span>;
+				if (isPhantom) {
+					totalPhantomPotencyNode = <span
+						style={{ textDecoration: includeInStats ? "none" : "line-through" }}
+					>
+						{props.row.phantomPotency.toFixed(2)}
+						{props.row.partyBuffPhantomPotency > 0 ? (
+							<span
+								style={{
+									color: includeInStats ? colors.accent : colors.bgHighContrast,
+								}}
+							>
+								{" "}
+								+{props.row.partyBuffPhantomPotency.toFixed(2)}(
+								{localize({ en: "party", zh: "团辅" })})
+							</span>
+						) : undefined}
+					</span>;
+				} else {
+					totalPotencyNode = <span
+						style={{ textDecoration: includeInStats ? "none" : "line-through" }}
+					>
+						{props.row.totalPotencyWithoutPot.toFixed(2)}
+						{props.row.potPotency > 0 ? (
+							<span
+								style={{
+									color: includeInStats
+										? colors.timeline.potCover
+										: colors.bgHighContrast,
+								}}
+							>
+								{" "}
+								+{props.row.potPotency.toFixed(2)}(
+								{localize({ en: "pot", zh: "爆发药" })})({props.row.potCount})
+							</span>
+						) : undefined}
+						{props.row.partyBuffPotency > 0 ? (
+							<span
+								style={{
+									color: includeInStats ? colors.accent : colors.bgHighContrast,
+								}}
+							>
+								{" "}
+								+{props.row.partyBuffPotency.toFixed(2)}(
+								{localize({ en: "party", zh: "团辅" })})
+							</span>
+						) : undefined}
+					</span>;
+				}
 			}
 			const rowStyle: CSSProperties = {
 				textAlign: "left",
@@ -1025,12 +1052,14 @@ export class DamageStatistics extends React.Component {
 			}
 			return <div key={props.key} style={rowStyle}>
 				<div style={cell(3)}>{includeCheckboxes}</div>
-				<div style={cell(18)}>{skillNameNode}</div>
-				<div style={cell(8)}>{targetCountNode}</div>
-				<div style={cell(19)}>{tags}</div>
-				<div style={cell(14)}>{potencyNode}</div>
-				<div style={cell(8)}>{usageCountNode}</div>
-				<div style={cell(30)}>{totalPotencyNode}</div>
+				<div style={cell(15)}>{skillNameNode}</div>
+				<div style={cell(6)}>{targetCountNode}</div>
+				<div style={cell(12)}>{tags}</div>
+				<div style={cell(10)}>{potencyNode}</div>
+				<div style={cell(10)}>{phantomPerHitNode}</div>
+				<div style={cell(6)}>{usageCountNode}</div>
+				<div style={cell(19)}>{totalPotencyNode}</div>
+				<div style={cell(19)}>{totalPhantomPotencyNode}</div>
 			</div>;
 		};
 		const tableRows: React.ReactNode[] = [];
@@ -1091,29 +1120,39 @@ export class DamageStatistics extends React.Component {
 			</div>
 			<div style={{ outline: "1px solid " + colors.bgMediumContrast }}>
 				<div>
-					<div style={{ display: "inline-block", width: "21%" }}>
+					<div style={{ display: "inline-block", width: "18%" }}>
 						<span style={headerCellStyle}>
 							<b>{localize({ en: "skill", zh: "技能" })}</b>
 						</span>
 					</div>
-					<div style={{ display: "inline-block", width: "27%" }}>
+					<div style={{ display: "inline-block", width: "18%" }}>
 						<span style={headerCellStyle}>
 							<b>{localize({ en: "targets", zh: "目标数" })}</b>
 						</span>
 					</div>
-					<div style={{ display: "inline-block", width: "14%" }}>
+					<div style={{ display: "inline-block", width: "10%" }}>
 						<span style={headerCellStyle}>
 							<b>{localize({ en: "potency", zh: "单次威力" })}</b>
 						</span>
 					</div>
-					<div style={{ display: "inline-block", width: "8%" }}>
+					<div style={{ display: "inline-block", width: "10%" }}>
+						<span style={headerCellStyle}>
+							<b>{localize({ en: "ph. potency", zh: "幻影威力" })}</b>
+						</span>
+					</div>
+					<div style={{ display: "inline-block", width: "6%" }}>
 						<span style={headerCellStyle}>
 							<b>{localize({ en: "count", zh: "数量" })}</b>
 						</span>
 					</div>
-					<div style={{ display: "inline-block", width: "30%" }}>
+					<div style={{ display: "inline-block", width: "19%" }}>
 						<span style={headerCellStyle}>
 							<b>{localize({ en: "total", zh: "总威力" })}</b>
+						</span>
+					</div>
+					<div style={{ display: "inline-block", width: "19%" }}>
+						<span style={headerCellStyle}>
+							<b>{localize({ en: "total ph. potency", zh: "幻影总威力" })}</b>
 						</span>
 					</div>
 				</div>
@@ -1125,8 +1164,8 @@ export class DamageStatistics extends React.Component {
 						borderTop: "1px solid " + colors.bgMediumContrast,
 					}}
 				>
-					<div style={cell(70)} />
-					<div style={cell(30)}>
+					<div style={cell(62)} />
+					<div style={cell(19)}>
 						<span>
 							{this.data.mainTableSummary.totalPotencyWithoutPot.toFixed(2)}
 							{this.data.mainTableSummary.totalPotPotency > 0 ? (
@@ -1146,6 +1185,26 @@ export class DamageStatistics extends React.Component {
 									+{this.data.mainTableSummary.totalPartyBuffPotency.toFixed(2)}(
 									{localize({ en: "party", zh: "团辅" })})
 								</span>
+							) : undefined}
+						</span>
+					</div>
+					<div style={cell(19)}>
+						<span>
+							{this.data.mainTableSummary.totalPhantomPotency > 0 ||
+							this.data.mainTableSummary.totalPartyBuffPhantomPotency > 0 ? (
+								<>
+									{this.data.mainTableSummary.totalPhantomPotency.toFixed(2)}
+									{this.data.mainTableSummary.totalPartyBuffPhantomPotency > 0 ? (
+										<span style={{ color: colors.accent }}>
+											{" "}
+											+
+											{this.data.mainTableSummary.totalPartyBuffPhantomPotency.toFixed(
+												2,
+											)}
+											({localize({ en: "party", zh: "团辅" })})
+										</span>
+									) : undefined}
+								</>
 							) : undefined}
 						</span>
 					</div>
