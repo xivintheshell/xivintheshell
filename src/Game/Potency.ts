@@ -915,7 +915,12 @@ export class Potency {
 				totalDamageFactor *= props.tincturePotencyMultiplier;
 			else if (m.source === PotencyModifierType.AUTO_CDH) isAutoCDH = true;
 			else if (m.source === PotencyModifierType.AUTO_CRIT) isAutoCrit = true;
-			else if (m.source === PotencyModifierType.NO_CDH) noCDH = true;
+			else if (
+				m.source === PotencyModifierType.NO_CDH ||
+				// phantom actions cannot crit/DH
+				m.source === PotencyModifierType.PHANTOM
+			)
+				noCDH = true;
 			// handle calculation for ordinary crit/DH bonuses separate from autocrit/dh
 			else if (m.kind === "critDirect") {
 				totalCritBonus += m.critBonus;

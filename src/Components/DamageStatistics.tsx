@@ -36,8 +36,10 @@ export type DamageStatsMainTableEntry = {
 	totalPotencyWithoutPot: number;
 	showPotency: boolean;
 	potPotency: number;
+	phantomPotency: number;
 	potCount: number;
 	partyBuffPotency: number;
+	partyBuffPhantomPotency: number;
 	targetCount: number;
 	falloff: number;
 };
@@ -70,7 +72,9 @@ export interface DamageStatsDoTTableSummary {
 	dotCoverageTimeFraction: number;
 	totalPotencyWithoutPot: number;
 	totalPotPotency: number;
+	totalPhantomPotency: number;
 	totalPartyBuffPotency: number;
+	totalPartyBuffPhantomPotency: number;
 }
 
 export type SelectedStatisticsData = {
@@ -110,6 +114,8 @@ export type DamageStatisticsData = {
 		totalPotencyWithoutPot: number;
 		totalPotPotency: number;
 		totalPartyBuffPotency: number;
+		totalPhantomPotency: number;
+		totalPartyBuffPhantomPotency: number;
 	};
 	dotTables: Map<ResourceKey, Map<number, DamageStatsDoTTrackingData>>;
 	mode: DamageStatisticsMode;
@@ -574,6 +580,8 @@ export class DamageStatistics extends React.Component {
 			totalPotencyWithoutPot: 0,
 			totalPotPotency: 0,
 			totalPartyBuffPotency: 0,
+			totalPhantomPotency: 0,
+			totalPartyBuffPhantomPotency: 0,
 		},
 		dotTables: new Map(),
 		mode: DamageStatisticsMode.Normal,
