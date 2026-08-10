@@ -86,6 +86,19 @@ export interface OverTimePotencyProps {
 	targetModifiers?: Map<number, PotencyModifier[]>;
 }
 
+// TODO this should probably live somewhere better, but this prevents import cycles w/ ./Jobs/Phantom
+export function getKickModifier(state: Readonly<GameState>): PotencyModifier[] {
+	if (state.hasResourceAvailable("PHANTOM_KICK")) {
+		const kickStacks = state.resources.get("PHANTOM_KICK").availableAmount();
+		return kickStacks === 3
+			? [Modifiers.PhantomKick3]
+			: kickStacks === 2
+				? [Modifiers.PhantomKick2]
+				: [Modifiers.PhantomKick1];
+	}
+	return [];
+}
+
 // GameState := resources + events queue
 export class GameState {
 	config: GameConfig;
@@ -1252,17 +1265,7 @@ export class GameState {
 					if (this.hasResourceAvailable("TINCTURE")) {
 						potency.addModifiers(Modifiers.Tincture);
 					}
-					// TODO consolidate to function
-					// if (this.hasResourceAvailable("PHANTOM_KICK")) {
-					// 	const kickStacks = this.resources.get("PHANTOM_KICK").availableAmount();
-					// 	mods.push(
-					// 		kickStacks === 3
-					// 			? Modifiers.PhantomKick3
-					// 			: kickStacks === 2
-					// 				? Modifiers.PhantomKick2
-					// 				: Modifiers.PhantomKick1,
-					// 	);
-					// }
+					potency.addModifiers(...getKickModifier(this));
 					potency.addModifiers(...skill.jobPotencyModifiers(this));
 					potency.addTargetSpecificModifiers(skill.jobTargetPotencyModifiers(this, node));
 				}
@@ -1403,17 +1406,7 @@ export class GameState {
 			if (this.hasResourceAvailable("TINCTURE")) {
 				potency.addModifiers(Modifiers.Tincture);
 			}
-			// TODO consolidate to function
-			// if (this.hasResourceAvailable("PHANTOM_KICK")) {
-			// 	const kickStacks = this.resources.get("PHANTOM_KICK").availableAmount();
-			// 	mods.push(
-			// 		kickStacks === 3
-			// 			? Modifiers.PhantomKick3
-			// 			: kickStacks === 2
-			// 				? Modifiers.PhantomKick2
-			// 				: Modifiers.PhantomKick1,
-			// 	);
-			// }
+			potency.addModifiers(...getKickModifier(this));
 			potency.addModifiers(...skill.jobPotencyModifiers(this));
 			potency.addTargetSpecificModifiers(skill.jobTargetPotencyModifiers(this, node));
 			node.addPotency(potency);
