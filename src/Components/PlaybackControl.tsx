@@ -893,8 +893,7 @@ type ConfigFields = {
 	countdown: string;
 	randomSeed: string;
 	procMode: ProcMode;
-	// set only by xivgear/etro import
-	// for use with ama's combat sim
+	// tenacity is set only by xivgear/etro import
 	tenacity: string;
 	wd: string;
 	main: string;
@@ -1625,6 +1624,8 @@ export function Config() {
 
 	// Stats that use ConfigInputField directly, without any bells and whistles
 	const genericInputStats: (keyof ConfigFields)[] = [
+		"main",
+		"wd",
 		"criticalHit",
 		"directHit",
 		"determination",
