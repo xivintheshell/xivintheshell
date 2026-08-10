@@ -68,6 +68,10 @@ export function localizeConfigField(key: keyof ConfigData): string {
 			return localize({ en: "determination: ", zh: "信念：" }).toString();
 		case "piety":
 			return localize({ en: "piety: ", zh: "信仰：" }).toString();
+		case "main":
+			return localize({ en: "main stat: ", zh: "主属性：" }).toString();
+		case "wd":
+			return localize({ en: "weapon damage: ", zh: "武器伤害：" }).toString();
 		case "animationLock":
 			return localize({ en: "animation lock: ", zh: "能力技后摇：" }).toString();
 	}

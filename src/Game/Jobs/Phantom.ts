@@ -427,6 +427,7 @@ makePhantomAbility("MESMERIZE", "cd_OC_GROUP_C", {
 		makePhantomSpell(key, "cd_OC_GROUP_A", 40, {
 			castTime: 1.5,
 			potency: 400,
+			falloff: 0,
 			jobPotencyModifiers: (state) => {
 				if (state.hasResourceAvailable("ELEMENTAL_WEAKNESS")) {
 					return state.hasResourceAvailable("LIBRA")
@@ -438,12 +439,13 @@ makePhantomAbility("MESMERIZE", "cd_OC_GROUP_C", {
 		}),
 );
 
-makePhantomSpell("OCCULT_FLARE", "cd_OC_GROUP_B", 60, { castTime: 2.3, potency: 500 });
+makePhantomSpell("OCCULT_FLARE", "cd_OC_GROUP_B", 60, { castTime: 2.3, potency: 500, falloff: 0 });
 
 (["HELLFIRE", "JUDGMENT_BOLT", "THUNDERSTORM"] as PhantomActionKey[]).forEach((key) =>
 	makePSMNSpell(key, "cd_OC_GROUP_B", 40, {
 		castTime: 4,
 		potency: 600,
+		falloff: 0,
 		jobPotencyModifiers: (state) => {
 			if (state.hasResourceAvailable("ELEMENTAL_WEAKNESS")) {
 				return state.hasResourceAvailable("LIBRA")
@@ -455,7 +457,7 @@ makePhantomSpell("OCCULT_FLARE", "cd_OC_GROUP_B", 60, { castTime: 2.3, potency: 
 	}),
 );
 
-makePSMNSpell("MEGAFLARE", "cd_OC_GROUP_C", 90, { castTime: 6, potency: 1000 });
+makePSMNSpell("MEGAFLARE", "cd_OC_GROUP_C", 90, { castTime: 6, potency: 1000, falloff: 0 });
 
 makePhantomAbility("WISDOM_ON_THE_WINDS", "cd_OC_GROUP_C", {
 	cooldown: 360,

@@ -2,7 +2,7 @@ import { Debug, ProcMode, LevelSync, FIXED_BASE_CASTER_TAX } from "./Common";
 import { ResourceOverride, ResourceOverrideData } from "./Resources";
 import { getCachedValue, setCachedValue, ShellInfo, ShellVersion } from "../Controller/Common";
 import { XIVMath } from "./XIVMath";
-import { ShellJob } from "./Data/Jobs";
+import { JOBS, ShellJob } from "./Data/Jobs";
 import { CooldownKey, COOLDOWNS, ResourceKey, RESOURCES } from "./Data";
 
 export type ConfigData = {
@@ -15,9 +15,9 @@ export type ConfigData = {
 	directHit: number;
 	determination: number;
 	piety: number;
-	// TEN, WD, and main stat are hidden because they are not currently used for any purpose in XIV in
-	// the Shell itself.  They were requested by Caro for compatibility with Ama's Combat Sim
-	// export, and can be set either via xivgear import or by manually editing this file.
+	// TEN is not shown in the config UI (still used for tank damage calc / combat sim export).
+	// WD and main are used for expected damage and can be set via the config pane or gear import.
+	// On the main site these are implicitly set only via xivgear import for combat sim compatibility.
 	tenacity: number;
 	main: number;
 	wd: number;
@@ -499,6 +499,56 @@ export class GameConfig {
 
 	getOverrideStacks(rsc: ResourceKey): number | undefined {
 		return this.initialResourceOverrides.find((override) => override.type === rsc)?.stacks;
+	}
+
+	/**
+	 * Options for XIVMath.calculateExpectedDamage derived from the current job.
+	 * mainStatJobMod values are ClassJob primary-attribute modifiers.
+	 * traitMulti follows XivGear role templates (Maim and Mend / Increased Action Damage).
+	 */
+	getDamageCalcOptions(): {
+		mainStatJobMod: number;
+		isTank: boolean;
+		useCasterFormula: boolean;
+		traitMulti: number;
+		tenacity: number;
+	} {
+		const role = JOBS[this.job].role;
+		const isTank = role === "TANK";
+		const useCasterFormula = role === "HEALER" || role === "CASTER" || role === "LIMITED";
+
+		// ClassJob primary attribute modifiers (mainStatJobMod for WD formula)
+		// https://www.akhmorning.com/allagan-studies/modifiers/
+		const MAIN_STAT_JOB_MOD: Partial<Record<ShellJob, number>> = {
+			PLD: 100,
+			MNK: 110,
+			WAR: 105,
+			DRG: 115,
+			NIN: 110,
+			DRK: 105,
+			SAM: 112,
+			GNB: 100,
+			RPR: 115,
+			VPR: 110,
+		};
+
+		let traitMulti = 1;
+		if (this.job === "BLU") {
+			traitMulti = 1.5; // Maim and Mend V
+		} else if (role === "HEALER" || role === "CASTER") {
+			traitMulti = 1.3; // Maim and Mend II
+		} else if (role === "RANGED") {
+			traitMulti = 1.2; // Increased Action Damage II
+		}
+
+		return {
+			// casters, prange, healerse, and BLU all have a jobmod of 115
+			mainStatJobMod: MAIN_STAT_JOB_MOD[this.job] ?? 115,
+			isTank,
+			useCasterFormula,
+			traitMulti,
+			tenacity: this.tenacity,
+		};
 	}
 
 	savePartialConfig() {

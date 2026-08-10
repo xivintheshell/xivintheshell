@@ -147,7 +147,7 @@ export class XIVMath {
 		const mainStatMulti = XIVMath.#mainStatMulti(level, mainStat, isTank);
 		const wdMulti = XIVMath.#wdMulti(level, weaponDamage, options.mainStatJobMod);
 		const detMulti = options.autoDh
-			? flp(3, XIVMath.#detMult(level, det) + XIVMath.#autoDHBonus(level, dh))
+			? flp(XIVMath.#detMult(level, det) + XIVMath.#autoDHBonus(level, dh), 3)
 			: XIVMath.#detMult(level, det);
 		const tncMulti = XIVMath.#tenacityMulti(level, tenacity);
 		let spdMulti = 1;
@@ -162,7 +162,8 @@ export class XIVMath {
 		let stage1: number;
 		if (options.useCasterFormula) {
 			// Caster/healer: WD×pot floored first; AP×DET to 2dp
-			const apDet = flp(2, mainStatMulti * detMulti);
+			// Note: our flp(x, digits) argument order is the reverse of XivGear's flp(places, input).
+			const apDet = flp(mainStatMulti * detMulti, 2);
 			const basePotency = Math.floor(apDet * Math.floor(wdMulti * potency));
 			const afterTnc = Math.floor(basePotency * tncMulti);
 			stage1 = Math.floor(afterTnc * spdMulti);
