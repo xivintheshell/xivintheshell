@@ -360,6 +360,33 @@ export class ActionNode {
 		return res;
 	}
 
+	getDamage(props: {
+		tincturePotencyMultiplier: number;
+		untargetable: (t: number) => boolean;
+		includePartyBuffs: boolean;
+		includeSplash: boolean;
+		excludeDoT?: boolean;
+		targetNumber?: number;
+	}): { applied: number; snapshottedButPending: number } {
+		const res = {
+			applied: 0,
+			snapshottedButPending: 0,
+		};
+		if (this.#potency) {
+			this.recordDamage(props, this.#potency, res);
+		}
+
+		if (props.excludeDoT) {
+			return res;
+		}
+		this.#dotPotencies.forEach((pArr) => {
+			pArr.forEach((p) => {
+				this.recordDamage(props, p, res, true);
+			});
+		});
+		return res;
+	}
+
 	getHealingPotency(props: {
 		tincturePotencyMultiplier: number;
 		untargetable: (t: number) => boolean;
@@ -405,6 +432,30 @@ export class ActionNode {
 			record.applied += potency.getAmount(props);
 		} else if (!potency.hasResolved() && potency.hasSnapshotted()) {
 			record.snapshottedButPending += potency.getAmount(props);
+		}
+	}
+
+	private recordDamage(
+		props: {
+			tincturePotencyMultiplier: number;
+			untargetable: (t: number) => boolean;
+			includePartyBuffs: boolean;
+			includeSplash: boolean;
+			excludeDoT?: boolean;
+			targetNumber?: number;
+		},
+		potency: Potency,
+		record: { applied: number; snapshottedButPending: number },
+		isDot: boolean = false,
+	) {
+		if (props.targetNumber !== undefined && !potency.hasTarget(props.targetNumber)) {
+			return;
+		}
+		const amountProps = { ...props, isDot };
+		if (potency.hasHitBoss(props.untargetable)) {
+			record.applied += potency.getDamageAmount(amountProps);
+		} else if (!potency.hasResolved() && potency.hasSnapshotted()) {
+			record.snapshottedButPending += potency.getDamageAmount(amountProps);
 		}
 	}
 

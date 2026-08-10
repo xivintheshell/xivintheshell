@@ -886,6 +886,35 @@ export class Potency {
 		return totalAmount;
 	}
 
+	/**
+	 * Expected absolute damage for this potency, using the same modifiers as getAmount.
+	 */
+	getDamageAmount(props: {
+		tincturePotencyMultiplier: number;
+		includePartyBuffs: boolean;
+		includeSplash: boolean;
+		isDot?: boolean;
+	}): number {
+		const noDebuffTargetCount = this.targetCount - (this.#targetSpecificModifiers?.size ?? 0);
+		let totalAmount = this.#getDamageWithModifiers(
+			props,
+			this.targetList.length === 0 || !this.#targetSpecificModifiers?.has(this.targetList[0]),
+			noDebuffTargetCount,
+			this.#modifiers,
+		);
+		if (this.targetList.length === 0) {
+			return totalAmount;
+		}
+		const primary = this.targetList[0];
+		this.#targetSpecificModifiers?.forEach((modifiers, targetNumber) => {
+			totalAmount += this.#getDamageWithModifiers(props, targetNumber === primary, 1, [
+				...this.#modifiers,
+				...modifiers,
+			]);
+		});
+		return totalAmount;
+	}
+
 	#getAmountWithModifiers(
 		props: {
 			tincturePotencyMultiplier: number;
@@ -976,6 +1005,106 @@ export class Potency {
 					0,
 				);
 		}
+		if (props.includeSplash) {
+			const splashScalar = includesPrimary
+				? 1 + (1 - (this.falloff ?? 1)) * (targetCount - 1)
+				: (1 - (this.falloff ?? 1)) * targetCount;
+			amt *= splashScalar;
+		}
+		return amt;
+	}
+
+	#getDamageWithModifiers(
+		props: {
+			tincturePotencyMultiplier: number;
+			includePartyBuffs: boolean;
+			includeSplash: boolean;
+			isDot?: boolean;
+		},
+		includesPrimary: boolean,
+		targetCount: number,
+		modifiers: PotencyModifier[],
+	): number {
+		if (targetCount === 0) {
+			return 0;
+		}
+		let totalDamageFactor = 1;
+		let totalAdditiveAmount = 0;
+		let totalCritBonus = 0;
+		let totalDhBonus = 0;
+
+		let isAutoCDH = false;
+		let isAutoCrit = false;
+		let noCDH = false;
+		const isPhantom = modifiers.some((m) => m.source === PotencyModifierType.PHANTOM);
+
+		modifiers.forEach((m) => {
+			if (m.source === PotencyModifierType.POT)
+				totalDamageFactor *= props.tincturePotencyMultiplier;
+			else if (m.source === PotencyModifierType.AUTO_CDH) isAutoCDH = true;
+			else if (m.source === PotencyModifierType.AUTO_CRIT) isAutoCrit = true;
+			else if (m.source === PotencyModifierType.NO_CDH) noCDH = true;
+			else if (m.kind === "critDirect" && !isPhantom) {
+				totalCritBonus += m.critBonus;
+				totalDhBonus += m.dhBonus;
+			} else if (m.kind === "multiplier") totalDamageFactor *= m.potencyFactor;
+			else if (m.kind === "adder") totalAdditiveAmount += m.additiveAmount;
+		});
+		if (noCDH || isPhantom) {
+			isAutoCDH = false;
+			isAutoCrit = false;
+		}
+
+		if (props.includePartyBuffs && this.snapshotTime) {
+			controller.game.getPartyBuffs(this.snapshotTime).forEach((buff) => {
+				if (buff.kind === "multiplier") {
+					totalDamageFactor *= buff.potencyFactor;
+				} else if (buff.kind === "critDirect" && !isPhantom) {
+					totalCritBonus += buff.critBonus;
+					totalDhBonus += buff.dhBonus;
+				}
+			});
+		}
+		const base = this.base + totalAdditiveAmount;
+		const cfg = this.config;
+		const jobOpts = cfg.getDamageCalcOptions();
+
+		let critBonus = totalCritBonus;
+		let dhBonus = totalDhBonus;
+		if (noCDH) {
+			critBonus = -1;
+			dhBonus = -1;
+		} else if (isAutoCDH) {
+			critBonus = 1 + totalCritBonus;
+			dhBonus = 1 + totalDhBonus;
+		} else if (isAutoCrit) {
+			critBonus = 1 + totalCritBonus;
+		}
+
+		let amt = XIVMath.calculateExpectedDamage(
+			cfg.level,
+			isPhantom ? base * totalDamageFactor : base,
+			cfg.main,
+			cfg.wd,
+			cfg.determination,
+			cfg.criticalHit,
+			cfg.directHit,
+			{
+				...jobOpts,
+				damageFactor: isPhantom ? 1 : totalDamageFactor,
+				critBonus,
+				dhBonus,
+				autoDh: isAutoCDH,
+				isDot: props.isDot,
+				speed: props.isDot
+					? jobOpts.useCasterFormula
+						? cfg.spellSpeed
+						: cfg.skillSpeed
+					: undefined,
+				isPhantom,
+			},
+		);
+
 		if (props.includeSplash) {
 			const splashScalar = includesPrimary
 				? 1 + (1 - (this.falloff ?? 1)) * (targetCount - 1)

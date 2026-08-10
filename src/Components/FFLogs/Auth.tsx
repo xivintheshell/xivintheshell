@@ -15,9 +15,12 @@ const CLIENT_ID =
 					// in localStorage for each host.
 					window.location.host === "localhost:4173"
 					? "a0281237-7471-47d4-b33c-52a6cbaed4c1"
-					: // Any other domain has no key. If you're deploying a fork, you should generate your own key
+					// ...and also the occult crescent fork!
+					: (window.location.host === "localhost:3001" || window.location.host === "oc.xivintheshell.com")
+					? "019fea5e-6346-73a4-9f8c-cc6373e4bd71"
+						// Any other domain has no key. If you're deploying a fork, you should generate your own key
 						// and set it here.
-						"";
+						: "";
 
 const AUTH_ENDPOINT = "https://www.fflogs.com/oauth/authorize";
 const TOKEN_ENDPOINT = "https://www.fflogs.com/oauth/token";

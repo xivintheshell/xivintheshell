@@ -12,8 +12,72 @@ import {
 import { PotencyModifier, PotencyModifierType } from "../Game/Potency";
 import { ActionKey, ResourceKey } from "../Game/Data";
 import { LIMIT_BREAK_ACTIONS } from "../Game/Data/Shared/LimitBreak";
+import { XIVMath } from "../Game/XIVMath";
 
 // TODO autogenerate everything here
+
+/** Per-hit expected damage for the table's base potency column. */
+function computeBaseDamage(
+	basePotency: number,
+	modifiers: PotencyModifier[],
+	isPhantom: boolean,
+): number {
+	if (basePotency <= 0) {
+		return 0;
+	}
+	let totalDamageFactor = 1;
+	let totalAdditiveAmount = 0;
+	let totalCritBonus = 0;
+	let totalDhBonus = 0;
+	let isAutoCDH = false;
+	let isAutoCrit = false;
+	let noCDH = false;
+	modifiers.forEach((m) => {
+		if (m.source === PotencyModifierType.AUTO_CDH) isAutoCDH = true;
+		else if (m.source === PotencyModifierType.AUTO_CRIT) isAutoCrit = true;
+		else if (m.source === PotencyModifierType.NO_CDH) noCDH = true;
+		else if (m.kind === "critDirect" && !isPhantom) {
+			totalCritBonus += m.critBonus;
+			totalDhBonus += m.dhBonus;
+		} else if (m.kind === "multiplier") totalDamageFactor *= m.potencyFactor;
+		else if (m.kind === "adder") totalAdditiveAmount += m.additiveAmount;
+	});
+	if (noCDH || isPhantom) {
+		isAutoCDH = false;
+		isAutoCrit = false;
+	}
+	const base = basePotency + totalAdditiveAmount;
+	const cfg = ctl.gameConfig;
+	const jobOpts = cfg.getDamageCalcOptions();
+	let critBonus = totalCritBonus;
+	let dhBonus = totalDhBonus;
+	if (noCDH) {
+		critBonus = -1;
+		dhBonus = -1;
+	} else if (isAutoCDH) {
+		critBonus = 1 + totalCritBonus;
+		dhBonus = 1 + totalDhBonus;
+	} else if (isAutoCrit) {
+		critBonus = 1 + totalCritBonus;
+	}
+	return XIVMath.calculateExpectedDamage(
+		cfg.level,
+		isPhantom ? base * totalDamageFactor : base,
+		cfg.main,
+		cfg.wd,
+		cfg.determination,
+		cfg.criticalHit,
+		cfg.directHit,
+		{
+			...jobOpts,
+			damageFactor: isPhantom ? 1 : totalDamageFactor,
+			critBonus,
+			dhBonus,
+			autoDh: isAutoCDH,
+			isPhantom,
+		},
+	);
+}
 
 const AFUISkills = new Set<ActionKey>([
 	"BLIZZARD",
@@ -301,6 +365,7 @@ export function calculateSelectedStats(props: {
 		totalDuration: 0,
 		targetableDuration: 0,
 		potency: { applied: 0, pending: 0 },
+		damage: { applied: 0, pending: 0 },
 		gcdSkills: { applied: 0, pending: 0 },
 	};
 
@@ -337,9 +402,18 @@ export function calculateSelectedStats(props: {
 				excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT"),
 				includeSplash: true,
 			});
+			const d = node.getDamage({
+				tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
+				untargetable: bossIsUntargetable,
+				includePartyBuffs: true,
+				excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT"),
+				includeSplash: true,
+			});
 			if (checked) {
 				selected.potency.applied += p.applied;
 				selected.potency.pending += p.snapshottedButPending;
+				selected.damage.applied += d.applied;
+				selected.damage.pending += d.snapshottedButPending;
 			}
 		}
 	});
@@ -367,6 +441,7 @@ export function calculateDamageStats(props: {
 	// for dot table: as if prev and after don't exist?
 
 	const totalPotency = { applied: 0, pending: 0 };
+	const totalDamage = { applied: 0, pending: 0 };
 	const gcdSkills = { applied: 0, pending: 0 };
 
 	// has a list of entries, initially empty
@@ -382,6 +457,9 @@ export function calculateDamageStats(props: {
 		totalPartyBuffPotency: 0,
 		totalPhantomPotency: 0,
 		totalPartyBuffPhantomPotency: 0,
+		totalDamageWithoutPot: 0,
+		totalPotDamage: 0,
+		totalPartyBuffDamage: 0,
 	};
 
 	const dotTables: Map<ResourceKey, Map<number, DamageStatsDoTTrackingData>> = new Map();
@@ -404,8 +482,15 @@ export function calculateDamageStats(props: {
 				}
 			}
 
-			// potency
+			// potency + damage
 			const p = node.getPotency({
+				tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
+				untargetable: bossIsUntargetable,
+				includePartyBuffs: true,
+				includeSplash: true,
+				excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT"),
+			});
+			const d = node.getDamage({
 				tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 				untargetable: bossIsUntargetable,
 				includePartyBuffs: true,
@@ -415,26 +500,43 @@ export function calculateDamageStats(props: {
 			if (checked && !isLimitBreak) {
 				totalPotency.applied += p.applied;
 				totalPotency.pending += p.snapshottedButPending;
+				totalDamage.applied += d.applied;
+				totalDamage.pending += d.snapshottedButPending;
 			}
 
 			// main table
 			if (node.resolved()) {
 				const q = expandAndMatch(mainTable, node);
 				if (q.mainTableIndex < 0) {
+					const isPhantomRow =
+						q.expandedNode.calculationModifiers.some(
+							(m) => m.source === PotencyModifierType.PHANTOM,
+						) ||
+						q.expandedNode.displayedModifiers.includes(PotencyModifierType.PHANTOM);
 					// create an entry if doesn't have one already
 					mainTable.push({
 						skillName,
 						displayedModifiers: q.expandedNode.displayedModifiers,
 						basePotency: isLimitBreak ? 0 : q.expandedNode.basePotency,
+						baseDamage: isLimitBreak
+							? 0
+							: computeBaseDamage(
+									q.expandedNode.basePotency,
+									q.expandedNode.calculationModifiers,
+									isPhantomRow,
+								),
 						calculationModifiers: q.expandedNode.calculationModifiers,
 						usageCount: 0,
 						hitCount: 0,
 						totalPotencyWithoutPot: 0,
+						totalDamageWithoutPot: 0,
 						showPotency: node.anyPotencies(),
 						potPotency: 0,
+						potDamage: 0,
 						phantomPotency: 0,
 						potCount: 0,
 						partyBuffPotency: 0,
+						partyBuffDamage: 0,
 						partyBuffPhantomPotency: 0,
 						falloff: q.expandedNode.falloff,
 						targetCount: q.expandedNode.targetList.length,
@@ -486,11 +588,40 @@ export function calculateDamageStats(props: {
 					includeSplash: true,
 				}).applied;
 
+				const damageWithoutPot = node.getDamage({
+					tincturePotencyMultiplier: 1,
+					untargetable: bossIsUntargetable,
+					includePartyBuffs: false,
+					excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT"),
+					includeSplash: true,
+				}).applied;
+
+				const damageWithPot = node.getDamage({
+					tincturePotencyMultiplier,
+					untargetable: bossIsUntargetable,
+					includePartyBuffs: false,
+					excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT"),
+					includeSplash: true,
+				}).applied;
+
+				const damageWithPartyBuffs = node.getDamage({
+					tincturePotencyMultiplier,
+					untargetable: bossIsUntargetable,
+					includePartyBuffs: true,
+					excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT"),
+					includeSplash: true,
+				}).applied;
+
 				const entry = mainTable[q.mainTableIndex];
 				entry[isPhantom ? "phantomPotency" : "totalPotencyWithoutPot"] += potencyWithoutPot;
 				entry.potPotency += potencyWithPot - potencyWithoutPot;
 				entry[isPhantom ? "partyBuffPhantomPotency" : "partyBuffPotency"] +=
 					potencyWithPartyBuffs - potencyWithPot;
+
+				// Damage uses a single set of fields for both phantom and normal actions
+				entry.totalDamageWithoutPot += damageWithoutPot;
+				entry.potDamage += damageWithPot - damageWithoutPot;
+				entry.partyBuffDamage += damageWithPartyBuffs - damageWithPot;
 
 				if (hit && !isPhantom && node.hasBuff(BuffType.Tincture)) {
 					entry.potCount += 1;
@@ -510,6 +641,11 @@ export function calculateDamageStats(props: {
 					mainTableSummary[
 						isPhantom ? "totalPartyBuffPhantomPotency" : "totalPartyBuffPotency"
 					] += potencyWithPartyBuffs - potencyWithPot;
+
+					mainTableSummary.totalDamageWithoutPot += damageWithoutPot;
+					mainTableSummary.totalPotDamage += damageWithPot - damageWithoutPot;
+					mainTableSummary.totalPartyBuffDamage +=
+						damageWithPartyBuffs - damageWithPot;
 				}
 
 				// DoT table
@@ -660,13 +796,14 @@ export function calculateDamageStats(props: {
 	return {
 		time: ctl.game.time,
 		tinctureBuffPercentage: props.tinctureBuffPercentage,
-		totalPotency: totalPotency,
+		totalPotency,
+		totalDamage,
 		lastDamageApplicationTime: props.lastDamageApplicationTime,
 		countdown: ctl.gameConfig.countdown,
-		gcdSkills: gcdSkills,
-		mainTable: mainTable,
-		mainTableSummary: mainTableSummary,
+		gcdSkills,
+		mainTable,
+		mainTableSummary,
 		dotTables,
-		mode: mode,
+		mode,
 	};
 }
