@@ -972,7 +972,7 @@ export class Potency {
 			// accounted for as a multiplier on other potencies.
 			amt =
 				(base * totalDamageFactor) /
-				XIVMath.calculateDamage(
+				XIVMath.calculateExpectedPotency(
 					this.config.level,
 					this.config.criticalHit,
 					this.config.directHit,
@@ -1032,7 +1032,7 @@ export class Potency {
 
 	#calculateAutoCDHModifier(critBonus: number, dhBonus: number) {
 		const level = this.config.level;
-		const base = XIVMath.calculateDamage(
+		const base = XIVMath.calculateExpectedPotency(
 			level,
 			controller.gameConfig.criticalHit,
 			controller.gameConfig.directHit,
@@ -1041,7 +1041,7 @@ export class Potency {
 			critBonus,
 			dhBonus,
 		);
-		const buffed = XIVMath.calculateDamage(
+		const buffed = XIVMath.calculateExpectedPotency(
 			level,
 			controller.gameConfig.criticalHit,
 			controller.gameConfig.directHit,
@@ -1056,7 +1056,7 @@ export class Potency {
 
 	#calculateAutoCritModifier(critBonus: number, dhBonus: number) {
 		const level = this.config.level;
-		const base = XIVMath.calculateDamage(
+		const base = XIVMath.calculateExpectedPotency(
 			level,
 			controller.gameConfig.criticalHit,
 			controller.gameConfig.directHit,
@@ -1065,7 +1065,7 @@ export class Potency {
 			critBonus,
 			dhBonus,
 		);
-		const buffed = XIVMath.calculateDamage(
+		const buffed = XIVMath.calculateExpectedPotency(
 			level,
 			controller.gameConfig.criticalHit,
 			controller.gameConfig.directHit,
@@ -1084,8 +1084,8 @@ export class Potency {
 		const dhStat = this.config.directHit;
 		const det = this.config.determination;
 
-		const base = XIVMath.calculateDamage(level, critStat, dhStat, det, 1, 0, 0);
-		const buffed = XIVMath.calculateDamage(
+		const base = XIVMath.calculateExpectedPotency(level, critStat, dhStat, det, 1, 0, 0);
+		const buffed = XIVMath.calculateExpectedPotency(
 			level,
 			critStat,
 			dhStat,
