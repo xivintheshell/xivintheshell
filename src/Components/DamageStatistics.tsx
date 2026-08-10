@@ -206,9 +206,7 @@ function PotencyDisplay(props: {
 	</span>;
 }
 
-function DamageStatsSettings(props: {
-	onShowExpectedDamageChange: (show: boolean) => void;
-}) {
+function DamageStatsSettings(props: { onShowExpectedDamageChange: (show: boolean) => void }) {
 	const [tinctureBuffPercentageStr, setTinctureBuffPercentageStr] = useState("8");
 
 	const setTinctureBuffPercentage = (str: string) => {
@@ -1166,9 +1164,7 @@ export class DamageStatistics extends React.Component {
 				{showDamage ? undefined : <div style={cell(10)}>{phantomPerHitNode}</div>}
 				<div style={cell(showDamage ? 8 : 6)}>{usageCountNode}</div>
 				<div style={cell(showDamage ? 31 : 19)}>{totalPotencyNode}</div>
-				{showDamage ? undefined : (
-					<div style={cell(19)}>{totalPhantomPotencyNode}</div>
-				)}
+				{showDamage ? undefined : <div style={cell(19)}>{totalPhantomPotencyNode}</div>}
 			</div>;
 		};
 		const tableRows: React.ReactNode[] = [];
@@ -1254,17 +1250,17 @@ export class DamageStatistics extends React.Component {
 										content={
 											<>
 												<p>
-													The expected damage done by this attack. If numbers
-													appear unreasonable, make sure all combat stats
-													are correctly configured to the right of the
-													skill input window. These formulas have only
-													been tested for BLM (and have not been tested
-													very thoroughly), so use discretion when
+													The expected damage done by this attack. If
+													numbers appear unreasonable, make sure all
+													combat stats are correctly configured to the
+													right of the skill input window. These formulas
+													have only been tested for BLM (and have not been
+													tested very thoroughly), so use discretion when
 													choosing whether to trust them.
 												</p>
 												<p>
-													Calculations assume 24 phantom mastery and 26
-													OC special attribute.
+													Calculations assume 24 phantom mastery and 26 OC
+													special attribute.
 												</p>
 											</>
 										}

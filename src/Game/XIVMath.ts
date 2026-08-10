@@ -105,7 +105,7 @@ export class XIVMath {
 	/**
 	 * Convert action potency to expected damage, following XivGear's baseDamageFull floor chain
 	 * (physical vs caster) and then applying expected crit/DH.
-	 * 
+	 *
 	 * XivGear doesn't have a license in their repository, so linking the github is the best I can do.
 	 *
 	 * https://github.com/xiv-gear-planner/gear-planner/blob/master/packages/xivmath/src/xivmath.ts
@@ -156,7 +156,11 @@ export class XIVMath {
 				options.speed !== undefined,
 				"speed is required when calculating DoT expected damage",
 			);
-			spdMulti = XIVMath.overtimePotency(level, options.speed ?? XIVMath.getSubstatBase(level), 1);
+			spdMulti = XIVMath.overtimePotency(
+				level,
+				options.speed ?? XIVMath.getSubstatBase(level),
+				1,
+			);
 		}
 
 		let stage1: number;
@@ -208,12 +212,8 @@ export class XIVMath {
 	 * Random (±5%) is omitted for the expected value (equivalent to ×1).
 	 */
 	static #calculatePhantomExpectedDamage(potency: number): number {
-		const afterPotency = Math.floor(
-			(XIVMath.#PHANTOM_DAMAGE_SCALAR * potency) / 100,
-		);
-		const afterSpecial = Math.floor(
-			afterPotency * XIVMath.#PHANTOM_SPECIAL_ATTRIBUTE_MULTI,
-		);
+		const afterPotency = Math.floor((XIVMath.#PHANTOM_DAMAGE_SCALAR * potency) / 100);
+		const afterSpecial = Math.floor(afterPotency * XIVMath.#PHANTOM_SPECIAL_ATTRIBUTE_MULTI);
 		const afterMastery = Math.floor(afterSpecial * XIVMath.#PHANTOM_MASTERY_MULTI);
 		return afterMastery;
 	}

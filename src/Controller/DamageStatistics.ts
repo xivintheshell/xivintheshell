@@ -644,8 +644,7 @@ export function calculateDamageStats(props: {
 
 					mainTableSummary.totalDamageWithoutPot += damageWithoutPot;
 					mainTableSummary.totalPotDamage += damageWithPot - damageWithoutPot;
-					mainTableSummary.totalPartyBuffDamage +=
-						damageWithPartyBuffs - damageWithPot;
+					mainTableSummary.totalPartyBuffDamage += damageWithPartyBuffs - damageWithPot;
 				}
 
 				// DoT table
