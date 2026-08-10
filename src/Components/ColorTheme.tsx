@@ -921,6 +921,15 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.POISED, colors.vpr.vprComboTimer],
 		[PotencyModifierType.CHAIN_STRAT, colors.sch.chain],
 		[PotencyModifierType.NO_CDH, colors.timeline.untargetableDamageMark],
+		// Phantom / Occult Crescent modifiers — placeholder black until theme colors exist
+		[PotencyModifierType.PHANTOM, "#000000"],
+		[PotencyModifierType.PHANTOM_HITS_WEAKNESS, "#000000"],
+		[PotencyModifierType.PHANTOM_LIBRA, "#000000"],
+		[PotencyModifierType.PHANTOM_KICK_1, "#000000"],
+		[PotencyModifierType.PHANTOM_KICK_2, "#000000"],
+		[PotencyModifierType.PHANTOM_KICK_3, "#000000"],
+		[PotencyModifierType.QUICKER_STEP, "#000000"],
+		[PotencyModifierType.MESMERIZED, "#000000"],
 	]);
 	console.assert(
 		modifierColors.has(modifierType),

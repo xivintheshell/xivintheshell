@@ -312,9 +312,13 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.CHAIN_STRAT, { en: "chain stratagem", zh: "连环计" }],
 	[PotencyModifierType.NO_CDH, { en: "no crit/direct hit", zh: "必不直暴" }],
 	[PotencyModifierType.PHANTOM, { en: "phantom potency" }],
+	[PotencyModifierType.PHANTOM_HITS_WEAKNESS, { en: "elemental weakness" }],
+	[PotencyModifierType.PHANTOM_LIBRA, { en: "libra" }],
 	[PotencyModifierType.PHANTOM_KICK_1, { en: "phantom kick (1)" }],
 	[PotencyModifierType.PHANTOM_KICK_2, { en: "phantom kick (2)" }],
 	[PotencyModifierType.PHANTOM_KICK_3, { en: "phantom kick (3)" }],
+	[PotencyModifierType.QUICKER_STEP, { en: "quicker step" }],
+	[PotencyModifierType.MESMERIZED, { en: "mesmerized" }],
 ]);
 export function localizeModifierName(modifierType: PotencyModifierType): string {
 	console.assert(
@@ -406,9 +410,13 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.CHAIN_STRAT, { en: "CHAIN", zh: "连环计" }],
 	[PotencyModifierType.NO_CDH, { en: "NO CDH", zh: "必不直暴" }],
 	[PotencyModifierType.PHANTOM, { en: "PH" }],
+	[PotencyModifierType.PHANTOM_HITS_WEAKNESS, { en: "WEAK" }],
+	[PotencyModifierType.PHANTOM_LIBRA, { en: "LIBRA" }],
 	[PotencyModifierType.PHANTOM_KICK_1, { en: "PK1" }],
 	[PotencyModifierType.PHANTOM_KICK_2, { en: "PK2" }],
 	[PotencyModifierType.PHANTOM_KICK_3, { en: "PK3" }],
+	[PotencyModifierType.QUICKER_STEP, { en: "QS" }],
+	[PotencyModifierType.MESMERIZED, { en: "MESM" }],
 ]);
 export function localizeModifierTag(modifierType: PotencyModifierType): string {
 	console.assert(

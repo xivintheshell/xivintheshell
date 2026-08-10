@@ -18,7 +18,7 @@ import {
 import { BRDResourceKey } from "../Data/Jobs/BRD";
 import { makeResource, CoolDown } from "../Resources";
 import { Modifiers, PotencyModifier, PotencyModifierType } from "../Potency";
-import type { GameState } from "../GameState";
+import { getKickModifier, type GameState } from "../GameState";
 import { BRDState } from "../Jobs/BRD";
 import { Aspect } from "../Common";
 import { BLMState, getEnochianModifier } from "./BLM";
@@ -52,21 +52,12 @@ ALL_JOBS.forEach((job) => {
 	makeResource(job, "MESMERIZED", 1, { timeout: 100 });
 });
 
-export const addDamageModifiers = (
+const addDamageModifiers = (
 	state: Readonly<GameState>,
 	mods: PotencyModifier[],
 	aspect?: Aspect,
 ) => {
-	if (state.hasResourceAvailable("PHANTOM_KICK")) {
-		const kickStacks = state.resources.get("PHANTOM_KICK").availableAmount();
-		mods.push(
-			kickStacks === 3
-				? Modifiers.PhantomKick3
-				: kickStacks === 2
-					? Modifiers.PhantomKick2
-					: Modifiers.PhantomKick1,
-		);
-	}
+	mods.push(...getKickModifier(state));
 	if (state.job === "BLM" && aspect !== Aspect.Physical) {
 		if (state.hasResourceAvailable("ENOCHIAN")) {
 			mods.push({
@@ -79,6 +70,31 @@ export const addDamageModifiers = (
 	// TODO add damage buffs for other jobs
 };
 
+const adjustCooldown = (
+	state: GameState,
+	baseCd: number,
+	cdName: PhantomCooldownKey,
+	stat?: "sks" | "sps",
+) => {
+	// Hack to dynamically adjust the cooldown of a weaponskill/spell to reflect haste and sps/sks.
+	// Fortunately, no phantom GCD cooldowns (currently) have stacks to worry about.
+	// TODO is the formula for cooldowns rounded differently from GCDs?
+	// https://discord.com/channels/277897135515762698/1432854607989575782/1432854607989575782
+	// seems like to apply quick, we would just multiply by quick modifier and round before applying any other hastes
+	state.cooldowns.set(
+		new CoolDown(
+			cdName,
+			stat === "sks"
+				? state.config.adjustedSksGCD(baseCd, speedMod(state))
+				: stat === "sps"
+					? state.config.adjustedGCD(baseCd, speedMod(state))
+					: baseCd,
+			1,
+			1,
+		),
+	);
+};
+
 const makePhantomAbility = (
 	name: PhantomActionKey,
 	cdName: PhantomCooldownKey,
@@ -87,6 +103,7 @@ const makePhantomAbility = (
 	makeAbility(ALL_JOBS, name, 1, cdName, {
 		...params,
 		assetPath: "Phantom/" + PHANTOM_ACTIONS[name].name + ".png",
+		onExecute: (state) => adjustCooldown(state, params.cooldown!, cdName),
 		jobPotencyModifiers: (state) => {
 			const result = params.jobPotencyModifiers?.(state) ?? [];
 			result.push(Modifiers.Phantom);
@@ -127,31 +144,6 @@ const speedMod = (state: Readonly<GameState>) => {
 		}
 	}
 	return state.inherentSpeedModifier();
-};
-
-const adjustCooldown = (
-	state: GameState,
-	baseCd: number,
-	cdName: PhantomCooldownKey,
-	stat?: "sks" | "sps",
-) => {
-	// Hack to dynamically adjust the cooldown of a weaponskill/spell to reflect haste and sps/sks.
-	// Fortunately, no phantom GCD cooldowns (currently) have stacks to worry about.
-	// TODO is the formula for cooldowns rounded differently from GCDs?
-	// https://discord.com/channels/277897135515762698/1432854607989575782/1432854607989575782
-	// seems like to apply quick, we would just multiply by quick modifier and round before applying any other hastes
-	state.cooldowns.set(
-		new CoolDown(
-			cdName,
-			stat === "sks"
-				? state.config.adjustedSksGCD(baseCd, speedMod(state))
-				: stat === "sps"
-					? state.config.adjustedGCD(baseCd, speedMod(state))
-					: baseCd,
-			1,
-			1,
-		),
-	);
 };
 
 const makePhantomWeaponskill = (
@@ -261,7 +253,10 @@ makePhantomAbility("PHANTOM_KICK", "cd_OC_GROUP_A", {
 	aspect: Aspect.Physical,
 	falloff: 0,
 	onApplication: (state) =>
-		state.gainStatus("PHANTOM_KICK", state.resources.get("PHANTOM_KICK").availableAmount() + 1),
+		state.gainStatus(
+			"PHANTOM_KICK",
+			Math.min(3, state.resources.get("PHANTOM_KICK").availableAmount() + 1),
+		),
 });
 
 // makePhantomAbility("OCCULT_COUNTER", "cd_PHANTOM_KICK", {
