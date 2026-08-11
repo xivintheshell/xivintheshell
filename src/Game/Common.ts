@@ -158,6 +158,9 @@ export enum BuffType {
 
 	OccultQuick = "Occult Quick",
 	PhantomKick = "Phantom Kick",
+	HerosRime = "Hero's Rime",
+	OffensiveAria = "Offensive Aria",
+	BattleHigh = "Battle High",
 }
 
 export type Warning =
