@@ -51,7 +51,7 @@ import { Buff } from "./Buffs";
 import { SkillButtonViewInfo } from "../Components/Skills";
 import { ReactNode } from "react";
 import { localizeResourceType } from "../Components/Localization";
-import { ShellJob, HEALER_JOBS, CASTER_JOBS, JOBS, HEALERS } from "./Data/Jobs";
+import { ShellJob, HEALER_JOBS, CASTER_JOBS, JOBS, CASTERS, HEALERS } from "./Data/Jobs";
 import { ActionKey, CooldownKey, ResourceKey, RESOURCES, TraitKey } from "./Data";
 import { hasUnlockedTrait } from "../utilities";
 import { StatusPropsGenerator } from "../Components/StatusDisplay";
@@ -600,6 +600,10 @@ export class GameState {
 	jobSpecificAutoBasePotency(): number {
 		// Copied from xivgear:
 		// https://github.com/xiv-gear-planner/gear-planner/blob/505398e19a45cc0304a7746e4acd3e694051b908/packages/xivmath/src/xivconstants.ts#L113-L120
+		// TODO remove this hack to skip potencies for casters
+		if (this.job in CASTERS || this.job in HEALERS) {
+			return 0;
+		}
 		return this.job === "BRD" || this.job === "MCH" ? 80 : 90;
 	}
 
