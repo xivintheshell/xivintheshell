@@ -188,6 +188,10 @@ export class ASTState extends GameState {
 		}
 	}
 
+	override jobSpecificAutoPotencyModifiers(): PotencyModifier[] {
+		return this.hasResourceAvailable("DIVINATION") ? [Modifiers.Divination] : [];
+	}
+
 	override get statusPropsGenerator(): StatusPropsGenerator<ASTState> {
 		return new ASTStatusPropsGenerator(this);
 	}

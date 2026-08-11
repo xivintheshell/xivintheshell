@@ -19,9 +19,10 @@ import { BRDResourceKey } from "../Data/Jobs/BRD";
 import { makeResource, CoolDown } from "../Resources";
 import { Modifiers, PotencyModifier, PotencyModifierType } from "../Potency";
 import { getKickModifier, type GameState } from "../GameState";
-import { BRDState } from "../Jobs/BRD";
 import { Aspect } from "../Common";
 import { BLMState, getEnochianModifier } from "./BLM";
+import { BRDState } from "./BRD";
+
 
 ALL_JOBS.forEach((job) => {
 	makeResource(job, "PHANTOM_KICK", 3, { timeout: 40 });
@@ -58,16 +59,23 @@ const addDamageModifiers = (
 	aspect?: Aspect,
 ) => {
 	mods.push(...getKickModifier(state));
-	if (state.job === "BLM" && aspect !== Aspect.Physical) {
-		if (state.hasResourceAvailable("ENOCHIAN")) {
+	// RDM and BLM are the only jobs with conditional buffs on phantom actions
+	if (aspect !== Aspect.Physical) {
+		if (state.job === "BLM" && state.hasResourceAvailable("ENOCHIAN")) {
 			mods.push({
 				kind: "multiplier",
 				source: PotencyModifierType.ENO,
 				potencyFactor: getEnochianModifier(state as BLMState),
 			});
+			return;
+		}
+		if (state.job === "RDM" && state.hasResourceAvailable("EMBOLDEN")) {
+			mods.push(Modifiers.EmboldenMagic);
+			return;
 		}
 	}
-	// TODO add damage buffs for other jobs
+	// hacky addition of buffs for other jobs (not crit/DH mods allowed)
+	mods.push(...state.jobSpecificAutoPotencyModifiers().filter((mod) => mod.kind === "multiplier"));
 };
 
 const adjustCooldown = (
@@ -196,7 +204,8 @@ const makePhantomSpell = (
 		isInstantFn: (state) =>
 			state.hasResourceAvailable("SWIFTCAST") ||
 			(state.job === "BLM" && state.hasResourceAvailable("TRIPLECAST")) ||
-			(state.job === "RDM" && state.hasResourceAvailable("DUALCAST")),
+			(state.job === "RDM" && state.hasResourceAvailable("DUALCAST")) ||
+			(state.job === "PLD" && state.hasResourceAvailable("REQUIESCAT")),
 		jobPotencyModifiers: (state) => {
 			const result = params.jobPotencyModifiers?.(state) ?? [];
 			result.push(Modifiers.Phantom);
@@ -208,7 +217,8 @@ const makePhantomSpell = (
 			params.onConfirm?.(state, node);
 			state.tryConsumeResource("SWIFTCAST") ||
 				(state.job === "BLM" && state.tryConsumeResource("TRIPLECAST", false)) ||
-				(state.job === "RDM" && state.tryConsumeResource("DUALCAST"));
+				(state.job === "RDM" && state.tryConsumeResource("DUALCAST")) ||
+				(state.job === "PLD" && state.tryConsumeResource("REQUIESCAT"));
 		},
 		secondaryCooldown: {
 			cdName,
@@ -218,7 +228,7 @@ const makePhantomSpell = (
 	});
 };
 
-// PSMN spells are unaffected by cat/recast time effects.
+// PSMN spells are unaffected by cast/recast time effects.
 const makePSMNSpell = (
 	name: PhantomActionKey,
 	cdName: PhantomCooldownKey,
