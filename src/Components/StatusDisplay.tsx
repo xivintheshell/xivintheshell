@@ -1075,7 +1075,9 @@ export class StatusPropsGenerator<T extends GameState> {
 		// Include all phantom buffs here.
 		roleBuffViewProps.push(
 			...Object.keys(PHANTOM_STATUSES).map((rscType) =>
-				this.makeCommonTimer(rscType as ResourceKey),
+				rscType === "LIBRA" || rscType === "ELEMENTAL_WEAKNESS"
+					? this.makeCommonTimerless(rscType)
+					: this.makeCommonTimer(rscType as ResourceKey),
 			),
 		);
 

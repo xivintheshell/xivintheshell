@@ -56,6 +56,10 @@ export const buffInfos = [
 	new BuffInfo(BuffType.StarryMuse, MarkerColor.Purple, 20.5, 1.05, 0, 0, "PCT"),
 	new BuffInfo(BuffType.TechnicalFinish, MarkerColor.Blue, 20, 1.05, 0, 0, "DNC"),
 	new BuffInfo(BuffType.WanderersMinuet, MarkerColor.Green, 45, 1, 0.02, 0, "BRD"),
+	// Unique phantom stuff (hacked in as BLU since we'll never be BLU in OC)
+	new BuffInfo(BuffType.OffensiveAria, MarkerColor.Orange, 999, 1.04, 0, 0, "BLU"),
+	new BuffInfo(BuffType.HerosRime, MarkerColor.Red, 20, 1.1, 0, 0, "BLU"),
+	new BuffInfo(BuffType.BattleHigh, MarkerColor.Green, 20, 1, 0.5, 0.5, "BLU"),
 ];
 
 const buffInfosMap: Map<BuffType, BuffInfo> = new Map();

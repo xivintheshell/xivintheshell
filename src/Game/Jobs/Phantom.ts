@@ -15,14 +15,14 @@ import {
 	MakeGCDParams,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
 } from "../Skills";
-import { BRDResourceKey } from "../Data/Jobs/BRD";
 import { makeResource, CoolDown } from "../Resources";
 import { Modifiers, PotencyModifier, PotencyModifierType } from "../Potency";
 import { getKickModifier, type GameState } from "../GameState";
 import { Aspect } from "../Common";
+import { CASTERS, HEALERS } from "../Data/Jobs";
+import { BRDResourceKey } from "../Data/Jobs/BRD";
 import { BLMState, getEnochianModifier } from "./BLM";
 import { BRDState } from "./BRD";
-
 
 ALL_JOBS.forEach((job) => {
 	makeResource(job, "PHANTOM_KICK", 3, { timeout: 40 });
@@ -75,7 +75,9 @@ const addDamageModifiers = (
 		}
 	}
 	// hacky addition of buffs for other jobs (not crit/DH mods allowed)
-	mods.push(...state.jobSpecificAutoPotencyModifiers().filter((mod) => mod.kind === "multiplier"));
+	mods.push(
+		...state.jobSpecificAutoPotencyModifiers().filter((mod) => mod.kind === "multiplier"),
+	);
 };
 
 const adjustCooldown = (
@@ -202,10 +204,11 @@ const makePhantomSpell = (
 		recastTime: (state) =>
 			state.config.adjustedGCD(fnify(params.recastTime, 2.5)(state), speedMod(state)),
 		isInstantFn: (state) =>
-			state.hasResourceAvailable("SWIFTCAST") ||
-			(state.job === "BLM" && state.hasResourceAvailable("TRIPLECAST")) ||
-			(state.job === "RDM" && state.hasResourceAvailable("DUALCAST")) ||
-			(state.job === "PLD" && state.hasResourceAvailable("REQUIESCAT")),
+			(state.job in CASTERS || state.job in HEALERS) &&
+			(state.hasResourceAvailable("SWIFTCAST") ||
+				(state.job === "BLM" && state.hasResourceAvailable("TRIPLECAST")) ||
+				(state.job === "RDM" && state.hasResourceAvailable("DUALCAST")) ||
+				(state.job === "PLD" && state.hasResourceAvailable("REQUIESCAT"))),
 		jobPotencyModifiers: (state) => {
 			const result = params.jobPotencyModifiers?.(state) ?? [];
 			result.push(Modifiers.Phantom);
@@ -215,10 +218,12 @@ const makePhantomSpell = (
 		onExecute: (state: GameState) => adjustCooldown(state, cd, cdName, "sps"),
 		onConfirm: (state, node) => {
 			params.onConfirm?.(state, node);
-			state.tryConsumeResource("SWIFTCAST") ||
-				(state.job === "BLM" && state.tryConsumeResource("TRIPLECAST", false)) ||
-				(state.job === "RDM" && state.tryConsumeResource("DUALCAST")) ||
-				(state.job === "PLD" && state.tryConsumeResource("REQUIESCAT"));
+			if (state.job in CASTERS || state.job in HEALERS) {
+				state.tryConsumeResource("SWIFTCAST") ||
+					(state.job === "BLM" && state.tryConsumeResource("TRIPLECAST", false)) ||
+					(state.job === "RDM" && state.tryConsumeResource("DUALCAST")) ||
+					(state.job === "PLD" && state.tryConsumeResource("REQUIESCAT"));
+			}
 		},
 		secondaryCooldown: {
 			cdName,

@@ -9,6 +9,12 @@
 		]
 	},
 	{
+		"date": "8/11/26",
+		"changes": [
+			"[BETA] Added Occult Crescent mode, available only on oc.xivintheshell.com. See header box for details."
+		]
+	},
+	{
 		"date": "7/12/26",
 		"changes": [
 			"The skill cooldown overlay now always shows the time until the skill's next stack is available, and no longer counts animation lock time."

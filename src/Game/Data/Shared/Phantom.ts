@@ -178,8 +178,8 @@ export const PHANTOM_STATUSES = ensureRecord<ResourceData>()({
 	STEADFAST_STANCE: { name: "Steadfast Stance" },
 	ENAMORED: { name: "Enamored" },
 	MESMERIZED: { name: "Mesmerized" },
-	ELEMENTAL_WEAKNESS: { name: "Elemental Weakness" },
-	LIBRA: { name: "Libra" },
+	ELEMENTAL_WEAKNESS: { name: "Elemental Weakness", mayBeToggled: true },
+	LIBRA: { name: "Libra", mayBeToggled: true },
 });
 
 export type PhantomActions = typeof PHANTOM_ACTIONS;
