@@ -303,7 +303,7 @@ export class BRDState extends GameState {
 		return wanderers + mages + armys;
 	}
 
-	getJobPotencyModifiers(skillName: ActionKey): PotencyModifier[] {
+	getJobPotencyModifiers(skillName?: ActionKey): PotencyModifier[] {
 		const mods: PotencyModifier[] = [];
 
 		const modiferResources: { rscType: BRDResourceKey; mod: PotencyModifier }[] = [

@@ -120,6 +120,10 @@ export class PCTState extends GameState {
 		}
 	}
 
+	override jobSpecificAutoPotencyModifiers(): PotencyModifier[] {
+		return this.hasResourceAvailable("STARRY_MUSE") ? [Modifiers.Starry] : [];
+	}
+
 	override jobSpecificAddSpeedBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
 		if (
 			this.hasResourceAvailable("INSPIRATION") &&
