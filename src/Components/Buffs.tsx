@@ -79,6 +79,11 @@ buffIcons.set(BuffType.Dissipation, "Buffs/SCH/Dissipation.png");
 buffIcons.set(BuffType.Protraction, "Buffs/SCH/Protraction.png");
 buffIcons.set(BuffType.Recitation, "Buffs/SCH/Recitation.png");
 
+// Unique phantom stuff
+buffIcons.set(BuffType.OffensiveAria, "Buffs/Phantom/Offensive Aria.png");
+buffIcons.set(BuffType.HerosRime, "Buffs/Phantom/Hero's Rime.png");
+buffIcons.set(BuffType.BattleHigh, "Buffs/Phantom/Battle High.png");
+
 export const buffIconImages: Map<BuffType, HTMLImageElement> = new Map();
 buffIcons.forEach((path, skillName) => {
 	const imgObj = new Image();
