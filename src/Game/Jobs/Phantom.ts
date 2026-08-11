@@ -17,7 +17,7 @@ import {
 } from "../Skills";
 import { makeResource, CoolDown } from "../Resources";
 import { Modifiers, PotencyModifier, PotencyModifierType } from "../Potency";
-import { getKickModifier, type GameState } from "../GameState";
+import { type GameState } from "../GameState";
 import { Aspect } from "../Common";
 import { CASTERS, HEALERS } from "../Data/Jobs";
 import { BRDResourceKey } from "../Data/Jobs/BRD";
@@ -58,7 +58,6 @@ const addDamageModifiers = (
 	mods: PotencyModifier[],
 	aspect?: Aspect,
 ) => {
-	mods.push(...getKickModifier(state));
 	// RDM and BLM are the only jobs with conditional buffs on phantom actions
 	if (aspect !== Aspect.Physical) {
 		if (state.job === "BLM" && state.hasResourceAvailable("ENOCHIAN")) {
@@ -452,7 +451,7 @@ makePhantomAbility("MESMERIZE", "cd_OC_GROUP_C", {
 makePhantomSpell("OCCULT_FLARE", "cd_OC_GROUP_B", 60, { castTime: 2.3, potency: 500, falloff: 0 });
 
 (["HELLFIRE", "JUDGMENT_BOLT", "THUNDERSTORM"] as PhantomActionKey[]).forEach((key) =>
-	makePSMNSpell(key, "cd_OC_GROUP_B", 40, {
+	makePSMNSpell(key, "cd_OC_GROUP_B", 60, {
 		castTime: 4,
 		potency: 600,
 		falloff: 0,
