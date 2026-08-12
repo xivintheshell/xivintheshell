@@ -51,6 +51,7 @@ ALL_JOBS.forEach((job) => {
 	makeResource(job, "STEADFAST_STANCE", 1, { timeout: 30 });
 	makeResource(job, "ENAMORED", 1, { timeout: 4 });
 	makeResource(job, "MESMERIZED", 1, { timeout: 100 });
+	makeResource(job, "DRAIN_TOUCH", 1, { timeout: 6 });
 });
 
 const addDamageModifiers = (
@@ -467,6 +468,42 @@ makePhantomSpell("OCCULT_FLARE", "cd_OC_GROUP_B", 60, { castTime: 2.3, potency: 
 );
 
 makePSMNSpell("MEGAFLARE", "cd_OC_GROUP_C", 90, { castTime: 6, potency: 1000, falloff: 0 });
+
+makePhantomAbility("DRAIN_TOUCH", "cd_OC_GROUP_A", {
+	cooldown: 40,
+	potency: 150,
+	onConfirm: (state) => state.gainStatus("DRAIN_TOUCH"),
+});
+
+(["DEEP_FREEZE", "HELL_WIND", "CHAOS_DRIVE"] as PhantomActionKey[]).forEach((key) =>
+	makePhantomSpell(key, "cd_OC_GROUP_E", 40, {
+		castTime: 1.5,
+		potency: 300,
+		falloff: 0,
+		jobPotencyModifiers: (state) => {
+			const modifiers: PotencyModifier[] = [];
+			if (state.hasResourceAvailable("ELEMENTAL_WEAKNESS")) {
+				modifiers.push(
+					state.hasResourceAvailable("LIBRA")
+						? Modifiers.PhantomHitsLibra
+						: Modifiers.PhantomHitsWeakness,
+				);
+			}
+			if (state.hasResourceAvailable("DRAIN_TOUCH")) {
+				modifiers.push(Modifiers.DrainTouch);
+			}
+			return modifiers;
+		},
+	}),
+);
+
+makePhantomSpell("DOOMSDAY", "cd_OC_GROUP_C", 120, {
+	castTime: 1.5,
+	potency: 350,
+	falloff: 0,
+	jobPotencyModifiers: (state) =>
+		state.hasResourceAvailable("DRAIN_TOUCH") ? [Modifiers.DrainTouch] : [],
+});
 
 makePhantomAbility("WISDOM_ON_THE_WINDS", "cd_OC_GROUP_C", {
 	cooldown: 360,
