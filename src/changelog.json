@@ -11,7 +11,10 @@
 	{
 		"date": "8/11/26",
 		"changes": [
-			"[BETA] Added Occult Crescent mode, available only on oc.xivintheshell.com. See header box for details."
+			"[BETA][OC] Added Occult Crescent mode, available only on oc.xivintheshell.com. See header box for details.",
+			"[BETA][OC][BLM] Fixed a bug where Phantom Kick was not displayed as a separate modifier for Xenoglossy, Foul, and Paradox. This was a purely visual bug, and did not affect total damage calculations.",
+			"[BETA][OC] Fixed a bug where Libra and Elemental Weakness would disappear when toggled.",
+			"[BETA][OC] Added Phantom Necromancer."
 		]
 	},
 	{

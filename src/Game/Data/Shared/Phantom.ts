@@ -105,6 +105,13 @@ export const PHANTOM_ACTIONS = ensureRecord<ActionData>()({
 	THUNDERSTORM: { name: "Thunderstorm", id: 49083 },
 	MEGAFLARE: { name: "Megaflare", id: 49084 },
 
+	// Necromancer
+	DRAIN_TOUCH: { name: "Drain Touch", id: 49097 },
+	DEEP_FREEZE: { name: "Deep Freeze", id: 49098 },
+	HELL_WIND: { name: "Hell Wind", id: 49099 },
+	CHAOS_DRIVE: { name: "Chaos Drive", id: 49100 },
+	DOOMSDAY: { name: "Doomsday", id: 49101 },
+
 	// Freelancer
 	WISDOM_ON_THE_WINDS: { name: "Wisdom on the Winds", id: 49102 },
 
@@ -180,6 +187,7 @@ export const PHANTOM_STATUSES = ensureRecord<ResourceData>()({
 	MESMERIZED: { name: "Mesmerized" },
 	ELEMENTAL_WEAKNESS: { name: "Elemental Weakness", mayBeToggled: true },
 	LIBRA: { name: "Libra", mayBeToggled: true },
+	DRAIN_TOUCH: { name: "Drain Touch" },
 });
 
 export type PhantomActions = typeof PHANTOM_ACTIONS;

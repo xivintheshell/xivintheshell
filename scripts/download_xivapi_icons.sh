@@ -52,7 +52,7 @@ get_buff_icon() {
     fi
 }
 
-# get_buff_icon "Hide" "210607"
+get_buff_icon "Drain Touch" "229987"
 
 get_skill_icon "Occult Fire III" "064511"
 get_skill_icon "Occult Blizzard III" "064512"
@@ -63,3 +63,8 @@ get_skill_icon "Judgment Bolt" "064520"
 get_skill_icon "Thunderstorm" "064522"
 get_skill_icon "Megaflare" "064523"
 get_skill_icon "Wisdom on the Winds" "064600"
+get_skill_icon "Drain Touch" "064529"
+get_skill_icon "Deep Freeze" "064530"
+get_skill_icon "Hell Wind" "064531"
+get_skill_icon "Chaos Drive" "064532"
+get_skill_icon "Doomsday" "064533"

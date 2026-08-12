@@ -130,6 +130,7 @@ export const enum PotencyModifierType {
 	PHANTOM_KICK_3,
 	QUICKER_STEP,
 	MESMERIZED,
+	DRAIN_TOUCH,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -703,6 +704,11 @@ export const Modifiers = {
 		kind: "multiplier",
 		source: PotencyModifierType.MESMERIZED,
 		potencyFactor: 1.1,
+	} as PotencyMultiplier,
+	DrainTouch: {
+		kind: "multiplier",
+		source: PotencyModifierType.DRAIN_TOUCH,
+		potencyFactor: 1.3,
 	} as PotencyMultiplier,
 };
 
