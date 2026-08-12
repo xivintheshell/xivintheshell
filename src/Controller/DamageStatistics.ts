@@ -249,15 +249,14 @@ function expandNode(node: ActionNode): ExpandedNode {
 			res.targetList = node.targetList;
 			res.falloff = mainPotency.falloff ?? 1;
 			if (AFUISkills.has(skillName)) {
-				// for AF/UI skills, display the first modifier that's not enochian or pot
-				// (must be one of af123, ui123)
+				// for AF/UI skills, exclude eno/pot from displayed modifiers
+				// (must be one of af123, ui123, and potentially phantom kick)
 				res.basePotency = mainPotency.base;
 				res.calculationModifiers = mainModifiers!;
 				for (const modifier of res.calculationModifiers) {
 					const tag = modifier.source;
 					if (tag !== PotencyModifierType.ENO && tag !== PotencyModifierType.POT) {
 						res.displayedModifiers.push(tag);
-						break;
 					}
 				}
 			} else if (isDoTNode(node)) {
