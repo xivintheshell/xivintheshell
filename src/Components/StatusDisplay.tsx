@@ -1076,7 +1076,7 @@ export class StatusPropsGenerator<T extends GameState> {
 		roleBuffViewProps.push(
 			...Object.keys(PHANTOM_STATUSES).map((rscType) =>
 				rscType === "LIBRA" || rscType === "ELEMENTAL_WEAKNESS"
-					? this.makeCommonTimerless(rscType)
+					? this.makeToggleableTimerless(rscType)
 					: this.makeCommonTimer(rscType as ResourceKey),
 			),
 		);
