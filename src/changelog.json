@@ -9,6 +9,12 @@
 		]
 	},
 	{
+		"date": "8/12/26",
+		"changes": [
+			"[BETA][OC] Fixed a bug where Occult Chakra sometimes restored the incorrect amount of MP."
+		]
+	},
+	{
 		"date": "8/11/26",
 		"changes": [
 			"[BETA][OC] Added Occult Crescent mode, available only on oc.xivintheshell.com. See header box for details.",
