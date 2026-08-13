@@ -290,10 +290,7 @@ makePhantomAbility("PHANTOM_KICK", "cd_OC_GROUP_A", {
 makePhantomAbility("OCCULT_CHAKRA", "cd_OC_GROUP_B", {
 	applicationDelay: 1, // anecdotal, need to check footage to be sure
 	cooldown: 90,
-	onApplication: (state) => {
-		const mpResource = state.resources.get("MANA");
-		mpResource.gain(mpResource.availableAmount() < 3000 ? 7000 : 3000);
-	},
+	onApplication: (state) => state.resources.get("MANA").gain(7000),
 });
 
 makePhantomAbility("SHIRAHADORI", "cd_OC_GROUP_D", {
