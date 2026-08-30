@@ -42,7 +42,13 @@ import {
 	ALL_JOBS,
 	IMPLEMENTATION_LEVELS,
 } from "../Game/Data/Jobs";
-import { ResourceKey, CooldownKey, RESOURCES } from "../Game/Data";
+import {
+	ResourceKey,
+	CooldownKey,
+	RESOURCES,
+	getResourceCategory,
+	ResourceCategory,
+} from "../Game/Data";
 import { getGameState } from "../Game/Jobs";
 
 export let updateConfigDisplay = (config: SerializedConfig) => {};
@@ -130,6 +136,61 @@ export function ResourceOverrideDisplay(props: {
 	</div>;
 }
 
+// The order in which different types of resource overrides get displayed.
+const OVERRIDE_RESOURCE_CATEGORY_ORDER: ResourceCategory[] = [
+	"tracker",
+	"gauge",
+	"status",
+	"cooldown",
+];
+
+const OVERRIDE_RESOURCE_CATEGORY_LABELS: Record<ResourceCategory, LocalizedContent> = {
+	tracker: { en: "Trackers", zh: "追踪" },
+	gauge: { en: "Gauges", zh: "量谱" },
+	status: { en: "Statuses", zh: "状态" },
+	cooldown: { en: "Cooldowns", zh: "CD" },
+};
+
+function getAddableOverrideResourcesByCategory(
+	job: ShellJob,
+	overridden: Set<ResourceKey | CooldownKey>,
+): Record<ResourceCategory, (ResourceKey | CooldownKey)[]> {
+	const buckets: Record<ResourceCategory, (ResourceKey | CooldownKey)[]> = {
+		tracker: [],
+		gauge: [],
+		status: [],
+		cooldown: [],
+	};
+	for (const k of getAllResources(job).keys()) {
+		if (!overridden.has(k)) {
+			buckets[getResourceCategory(k)].push(k);
+		}
+	}
+	return buckets;
+}
+
+function getAddableOverrideResourcesInDisplayOrder(
+	job: ShellJob,
+	overridden: Set<ResourceKey | CooldownKey>,
+): (ResourceKey | CooldownKey)[] {
+	const byCategory = getAddableOverrideResourcesByCategory(job, overridden);
+	return OVERRIDE_RESOURCE_CATEGORY_ORDER.flatMap((category) => byCategory[category]);
+}
+
+// By default, the InCombat resource should be shown as overridable (it exists for every job,
+// and it is very frequently set). Afterwards, pick the first resource in display order to
+// override.
+function getDefaultOverrideResource(
+	job: ShellJob,
+	overrides: ResourceOverrideData[],
+): ResourceKey | CooldownKey {
+	const overridden = new Set(overrides.map((ov) => ov.type));
+	if (!overridden.has("IN_COMBAT")) {
+		return "IN_COMBAT";
+	}
+	return getAddableOverrideResourcesInDisplayOrder(job, overridden)[0] ?? "NEVER";
+}
+
 function ResourceOverrideSection(props: {
 	job: ShellJob;
 	initialResourceOverrides: ResourceOverrideData[];
@@ -162,16 +223,23 @@ function ResourceOverrideSection(props: {
 	// TODO pass from parent as optimization
 	const S = new Set(props.initialResourceOverrides.map((rsc) => rsc.type));
 	const resourceInfos = getAllResources(props.job);
-	// <option> elements for resources that can be overridden
-	const optionEntries: { rsc: ResourceKey | CooldownKey; isCoolDown: number }[] = resourceInfos
-		.entries()
-		.flatMap(([k, info]) => (S.has(k) ? [] : [{ rsc: k, isCoolDown: info.isCoolDown ? 1 : 0 }]))
-		.toArray();
-	const resourceOptions = optionEntries
-		.sort((a, b) => a.isCoolDown - b.isCoolDown)
-		.map((opt, i) => <option key={i} value={opt.rsc}>
-			{localizeResourceType(opt.rsc)}
-		</option>);
+	const byCategory = getAddableOverrideResourcesByCategory(props.job, S);
+	const resourceOptions = OVERRIDE_RESOURCE_CATEGORY_ORDER.flatMap((category) => {
+		const keys = byCategory[category];
+		if (keys.length === 0) {
+			return [];
+		}
+		return [
+			<optgroup
+				key={category}
+				label={localize(OVERRIDE_RESOURCE_CATEGORY_LABELS[category]) as string}
+			>
+				{keys.map((k) => <option key={k} value={k}>
+					{localizeResourceType(k)}
+				</option>)}
+			</optgroup>,
+		];
+	});
 
 	const rscType = props.selectedOverrideResource;
 	const info = resourceInfos.get(rscType);
@@ -1222,15 +1290,9 @@ export function Config() {
 	};
 	const [selectedOverrideResource, setSelectedOverrideResource] = useState<
 		ResourceKey | CooldownKey
-	>("NEVER");
+	>("IN_COMBAT");
 	const setFirstSelectedOverride = (overrides: ResourceOverrideData[]) => {
-		const S = new Set<ResourceKey | CooldownKey>(overrides.map((ov) => ov.type));
-		// TODO update ordering to something that's more intuitive?
-		const firstAddableRsc: ResourceKey | CooldownKey =
-			getAllResources(configFields.job)
-				.keys()
-				.find((rsc) => !S.has(rsc)) ?? "NEVER";
-		setSelectedOverrideResource(firstAddableRsc);
+		setSelectedOverrideResource(getDefaultOverrideResource(configFields.job, overrides));
 	};
 	const [jobOrLevelDirty, setJobOrLevelDirty] = useState(false);
 	// config field management
@@ -1258,13 +1320,14 @@ export function Config() {
 				// stats to whatever was stored by the controller.
 				if (action.job === controller.record.config?.job) {
 					Object.assign(newState, controller.gameConfig.serialized());
-					_setInitialResourceOverrides(controller.gameConfig.initialResourceOverrides);
+					const revertedOverrides = controller.gameConfig.initialResourceOverrides;
+					_setInitialResourceOverrides(revertedOverrides);
+					setSelectedOverrideResource(
+						getDefaultOverrideResource(action.job, revertedOverrides),
+					);
 				} else {
 					_setInitialResourceOverrides([]);
-					// need to duplicate some code to prevent a bootstrapping error
-					const firstAddableRsc: ResourceKey | CooldownKey =
-						getAllResources(action.job).keys().toArray()?.[0] ?? "NEVER";
-					setSelectedOverrideResource(firstAddableRsc);
+					setSelectedOverrideResource(getDefaultOverrideResource(action.job, []));
 					// Update stats from last saved timeline of this job.
 					Object.assign(newState, getSavedConfigPart(action.job));
 				}

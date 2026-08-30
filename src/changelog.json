@@ -1,5 +1,14 @@
 [
 	{
+		"date": "8/30/26",
+		"changes": [
+			"Separated resource overrides into separate sub-groups for trackers, gauges, statuses, and cooldowns."
+		],
+		"changes_zh": [
+			"将初始资源细分为“追踪”、“量谱”、“状态”、和“CD”四大分类。"
+		]
+	},
+	{
 		"date": "7/12/26",
 		"changes": [
 			"The skill cooldown overlay now always shows the time until the skill's next stack is available, and no longer counts animation lock time."
