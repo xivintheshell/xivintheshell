@@ -218,7 +218,12 @@ import {
 	ROLE_RESOURCES,
 	ROLE_TRAITS,
 } from "./Shared/Role";
-import { PHANTOM_ACTIONS, PHANTOM_COOLDOWNS, PHANTOM_RESOURCES } from "./Shared/Phantom";
+import {
+	PHANTOM_ACTIONS,
+	PHANTOM_COOLDOWNS,
+	PHANTOM_RESOURCES,
+	PHANTOM_STATUSES,
+} from "./Shared/Phantom";
 
 export const ACTIONS = {
 	...COMMON_ACTIONS,
@@ -378,6 +383,9 @@ export const STATUSES = {
 	...PCT_STATUSES,
 	// Limited
 	...BLU_STATUSES,
+
+	// Phantom
+	...PHANTOM_STATUSES,
 };
 
 export const TRACKERS = {
