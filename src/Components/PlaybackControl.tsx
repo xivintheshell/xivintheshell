@@ -52,6 +52,7 @@ import {
 	ResourceCategory,
 } from "../Game/Data";
 import { getGameState } from "../Game/Jobs";
+import { PhantomJob } from "../Game/Data/Shared/Phantom";
 
 export let updateConfigDisplay = (config: SerializedConfig) => {};
 
@@ -879,6 +880,7 @@ export function TimeControl() {
 // These are strings or string enums because their values are controlled by an <Input> field
 type ConfigFields = {
 	job: ShellJob;
+	phantomJob?: PhantomJob;
 	level: string;
 	spellSpeed: string;
 	skillSpeed: string;
@@ -1391,6 +1393,7 @@ export function Config() {
 	}
 	const [configFields, configFieldDispatch] = useReducer(configFieldReducer, {
 		job: "BLM" as ShellJob,
+		phantomJob: PhantomJob.Samurai,
 		level: `${LevelSync.lvl100}`,
 		spellSpeed: "0",
 		skillSpeed: "0",
@@ -1442,13 +1445,17 @@ export function Config() {
 		updateConfigDisplay = (config: SerializedConfig) => {
 			setShellVersion(config.shellVersion);
 			setInitialResourceOverrides(config.initialResourceOverrides);
-			configFieldDispatch({
-				...Object.fromEntries(
-					Object.entries(config).flatMap(([key, value]) =>
-						key !== "initialResourceOverrides" ? [[key, value.toString()]] : [],
-					),
+			const fields: Partial<ConfigFields> = Object.fromEntries(
+				Object.entries(config).flatMap(([key, value]) =>
+					key !== "initialResourceOverrides" && value !== undefined
+						? [[key, value.toString()]]
+						: [],
 				),
-			});
+			);
+			if (config.phantomJob === undefined) {
+				fields.phantomJob = undefined;
+			}
+			configFieldDispatch(fields);
 			setDirty(false);
 			clearImportedFields();
 			// Update resource override module
@@ -1486,6 +1493,27 @@ export function Config() {
 				},
 			)}
 		</select>
+		<div style={{ marginTop: 8 }}>
+			<span>{localize({ en: "phantom job: ", zh: "辅助职业：" })}</span>
+			<select
+				style={{ outline: "none" }}
+				value={configFields.phantomJob ?? ""}
+				onChange={(e) =>
+					configFieldDispatch({
+						phantomJob:
+							e.target.value === "" ? undefined : (e.target.value as PhantomJob),
+					})
+				}
+			>
+				{Object.entries(PhantomJob).map(([name, value]) => <option
+					key={value}
+					value={value}
+				>
+					{name}
+				</option>)}
+				<option value="">{localize({ en: "(none)", zh: "（无）" })}</option>
+			</select>
+		</div>
 	</div>;
 
 	const { gcdStr: spsGcdPreview, taxedGcdStr: taxedSpsGcdPreview } = getGcdTaxPreview(
@@ -1578,7 +1606,7 @@ export function Config() {
 			];
 			if (
 				numericFields
-					.map((field) => isNaN(parseFloat(configFields[field].toString())))
+					.map((field) => isNaN(parseFloat(configFields[field]!.toString())))
 					.some((x) => x)
 			) {
 				window.alert("Some config fields are not numbers!");
@@ -1594,13 +1622,14 @@ export function Config() {
 				// @ts-expect-error too onerous to manually specify every field in a way that type-checks with fromEntries
 				{
 					job: configFields.job,
+					phantomJob: configFields.phantomJob,
 					randomSeed: seed.trim(),
 					procMode: configFields.procMode,
 					initialResourceOverrides, // info only
 					...Object.fromEntries(
 						numericFields.map((field) => [
 							field,
-							parseFloat(configFields[field].toString()),
+							parseFloat(configFields[field]!.toString()),
 						]),
 					),
 				},
@@ -1622,6 +1651,26 @@ export function Config() {
 		}
 	};
 
+	const resetStatsToDefaults = () => {
+		const defaults = makeDefaultConfig(
+			configFields.job,
+			parseInt(configFields.level) as LevelSync,
+		);
+		// Only reset combat stat fields, not fps/anim lock etc.
+		configFieldDispatch({
+			main: defaults.main.toString(),
+			wd: defaults.wd.toString(),
+			spellSpeed: defaults.spellSpeed.toString(),
+			skillSpeed: defaults.skillSpeed.toString(),
+			criticalHit: defaults.criticalHit.toString(),
+			directHit: defaults.directHit.toString(),
+			determination: defaults.determination.toString(),
+			piety: defaults.piety.toString(),
+			tenacity: defaults.tenacity.toString(),
+		});
+		clearImportedFields();
+	};
+
 	// Stats that use ConfigInputField directly, without any bells and whistles
 	const genericInputStats: (keyof ConfigFields)[] = [
 		"main",
@@ -1638,9 +1687,9 @@ export function Config() {
 		name={key}
 		// @ts-expect-error ConfigFields and ConfigData don't directly overlap
 		description={localizeConfigField(key)}
-		initial={configFields[key].toString()}
+		initial={configFields[key]!.toString()}
 		dispatch={configFieldDispatch}
-		imported={importedFields[key]}
+		imported={importedFields[key] ?? false}
 		removeImportedField={(key) => removeImportedField(key)}
 	/>);
 
@@ -1856,6 +1905,17 @@ export function Config() {
 			setOverrideStacks={setOverrideStacks}
 			setOverrideEnabled={setOverrideEnabled}
 		/>
+		<div style={{ marginTop: 8, marginBottom: 8 }}>
+			<button
+				type="button"
+				onClick={(e) => {
+					e.preventDefault();
+					resetStatsToDefaults();
+				}}
+			>
+				{localize({ en: "reset stats to defaults", zh: "重置属性为默认值" })}
+			</button>
+		</div>
 	</div>;
 
 	return <div style={{ marginBottom: 20 }}>

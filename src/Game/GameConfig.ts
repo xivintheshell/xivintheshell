@@ -8,7 +8,7 @@ import { PhantomJob } from "./Data/Shared/Phantom";
 
 export type ConfigData = {
 	job: ShellJob;
-	phantomJob?: PhantomJob; // added by phantom job fork
+	phantomJob?: PhantomJob; // added by phantom job fork. left undefined for base site timelines
 	shellVersion: ShellVersion;
 	level: LevelSync;
 	spellSpeed: number;
@@ -209,6 +209,7 @@ const JOB_DEFAULT_FIELDS: { [Property in ShellJob]: DynamicConfigPart } = {
 export function makeDefaultConfig(job: ShellJob, level: LevelSync = LevelSync.lvl100): ConfigData {
 	return {
 		job,
+		phantomJob: PhantomJob.Samurai, // in OC, start everyone on pSAM by default
 		shellVersion: ShellInfo.version,
 		level: level ?? (job === "BLU" ? LevelSync.lvl80 : LevelSync.lvl100),
 		...JOB_DEFAULT_FIELDS[job],
@@ -249,6 +250,7 @@ export type SerializedConfig = ConfigData & {
 
 export class GameConfig {
 	readonly job: ShellJob;
+	readonly phantomJob?: PhantomJob;
 	readonly shellVersion = ShellInfo.version;
 	readonly level: LevelSync;
 	readonly wd: number;
@@ -272,6 +274,7 @@ export class GameConfig {
 
 	constructor(props: {
 		job: ShellJob;
+		phantomJob?: PhantomJob;
 		shellVersion: ShellVersion;
 		level: LevelSync;
 		wd?: number;
@@ -294,6 +297,7 @@ export class GameConfig {
 		casterTax?: number; // legacy
 	}) {
 		this.job = props.job;
+		this.phantomJob = props.phantomJob;
 		this.shellVersion = props.shellVersion;
 		const defaultConfig = DEFAULT_CONFIG;
 		this.level = props.level ?? defaultConfig.level;
@@ -484,6 +488,7 @@ export class GameConfig {
 	serialized() {
 		return {
 			job: this.job,
+			phantomJob: this.phantomJob,
 			shellVersion: this.shellVersion,
 			level: this.level,
 			wd: this.wd,
