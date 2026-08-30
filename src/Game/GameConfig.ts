@@ -4,9 +4,11 @@ import { getCachedValue, setCachedValue, ShellInfo, ShellVersion } from "../Cont
 import { XIVMath } from "./XIVMath";
 import { JOBS, ShellJob } from "./Data/Jobs";
 import { CooldownKey, COOLDOWNS, ResourceKey, RESOURCES } from "./Data";
+import { PhantomJob } from "./Data/Shared/Phantom";
 
 export type ConfigData = {
 	job: ShellJob;
+	phantomJob?: PhantomJob; // added by phantom job fork
 	shellVersion: ShellVersion;
 	level: LevelSync;
 	spellSpeed: number;
@@ -31,7 +33,7 @@ export type ConfigData = {
 	initialResourceOverrides: ResourceOverrideData[];
 };
 
-const CURRENT_BIS_WD = 152;
+const CURRENT_BIS_WD = 139;
 
 // These fields should (and initialResourceOverrides) should change every time the job changes,
 // while remaining fields are kept the same.
@@ -49,218 +51,138 @@ export type DynamicConfigPart = {
 	[Property in DynamicConfigField]: number;
 };
 
-const TANK_MAIN = 5882;
-const OTHER_MAIN = 5925;
+const OTHER_MAIN = 5440;
+
+// https://xivgear.app/?page=sl|46a9d9dc-19b2-43b6-b04b-303a051ac2cc
+const TANK_OC_BIS: DynamicConfigPart = {
+	main: 5370,
+	spellSpeed: 420,
+	skillSpeed: 420,
+	criticalHit: 2781,
+	directHit: 420,
+	determination: 2557,
+	piety: 440,
+	tenacity: 1040,
+};
+
+// https://xivgear.app/?page=sl|3496a0c0-71a8-416a-b5d4-c1b31fe52e2a
+const HEALER_OC_BIS: DynamicConfigPart = {
+	main: OTHER_MAIN,
+	spellSpeed: 712,
+	skillSpeed: 420,
+	criticalHit: 3055,
+	directHit: 420,
+	determination: 2134,
+	piety: 917,
+	tenacity: 420,
+};
+
+// https://xivgear.app/?page=sl|2e79c852-353b-4f15-85da-766b73156f03
+const MAIMING_OC_BIS: DynamicConfigPart = {
+	main: OTHER_MAIN,
+	spellSpeed: 420,
+	skillSpeed: 420,
+	criticalHit: 2597,
+	directHit: 1512,
+	determination: 2269,
+	piety: 420,
+	tenacity: 420,
+};
+
+const SCOUTING_OC_BIS: DynamicConfigPart = {
+	main: OTHER_MAIN,
+	spellSpeed: 420,
+	skillSpeed: 420,
+	criticalHit: 2816,
+	directHit: 1368,
+	determination: 2194,
+	piety: 420,
+	tenacity: 420,
+};
 
 const PRANGE_2_5_BIS: DynamicConfigPart = {
 	main: OTHER_MAIN,
 	spellSpeed: 420,
 	skillSpeed: 420,
-	criticalHit: 3387,
-	directHit: 1935,
-	determination: 2407,
+	criticalHit: 2781,
+	directHit: 1606,
+	determination: 1991,
 	piety: 440,
 	tenacity: 420,
 };
 
-// BiS sets updated for patch 7.3
+const CASTING_OC_2_48_BIS: DynamicConfigPart = {
+	main: OTHER_MAIN,
+	spellSpeed: 528,
+	skillSpeed: 420,
+	criticalHit: 3385,
+	directHit: 1423,
+	determination: 2001,
+	piety: 440,
+	tenacity: 420,
+};
+
+const CASTING_OC_2_5_BIS: DynamicConfigPart = {
+	main: OTHER_MAIN,
+	spellSpeed: 420,
+	skillSpeed: 420,
+	criticalHit: 3385,
+	directHit: 1423,
+	determination: 2109,
+	piety: 440,
+	tenacity: 420,
+};
+
+// BiS sets with full +3 and OC accessories
 // These should only be applied the first time the user loads the site, or switches to a given job
 const JOB_DEFAULT_FIELDS: { [Property in ShellJob]: DynamicConfigPart } = {
-	DRK: {
-		main: TANK_MAIN,
-		spellSpeed: 420,
-		skillSpeed: 420,
-		criticalHit: 3404,
-		directHit: 1068,
-		determination: 2883,
-		piety: 440,
-		tenacity: 794,
-	},
-	GNB: {
-		main: TANK_MAIN,
-		spellSpeed: 420,
-		skillSpeed: 420,
-		criticalHit: 3404,
-		directHit: 1068,
-		determination: 2883,
-		piety: 440,
-		tenacity: 794,
-	},
-	PLD: {
-		main: TANK_MAIN,
-		spellSpeed: 420,
-		skillSpeed: 420,
-		criticalHit: 3242,
-		directHit: 1230,
-		determination: 2883,
-		piety: 440,
-		tenacity: 794,
-	},
-	WAR: {
-		main: TANK_MAIN,
-		spellSpeed: 420,
-		skillSpeed: 420,
-		criticalHit: 3404,
-		directHit: 1068,
-		determination: 2883,
-		piety: 440,
-		tenacity: 794,
-	},
-	AST: {
-		// "2.46 Spero Dedes"
-		main: OTHER_MAIN,
-		spellSpeed: 704,
-		skillSpeed: 420,
-		criticalHit: 3427,
-		directHit: 1230,
-		determination: 2510,
-		piety: 718,
-		tenacity: 420,
-	},
-	SCH: {
-		// 2.40
-		main: OTHER_MAIN,
-		spellSpeed: 1221,
-		skillSpeed: 420,
-		criticalHit: 3484,
-		directHit: 852,
-		determination: 2314,
-		piety: 718,
-		tenacity: 420,
-	},
-	SGE: {
-		// 2.46 min piety
-		main: OTHER_MAIN,
-		spellSpeed: 704,
-		skillSpeed: 420,
-		criticalHit: 3427,
-		directHit: 1230,
-		determination: 2510,
-		piety: 718,
-		tenacity: 420,
-	},
-	WHM: {
-		// 2.46 min piety
-		main: OTHER_MAIN,
-		spellSpeed: 704,
-		skillSpeed: 420,
-		criticalHit: 3427,
-		directHit: 1230,
-		determination: 2510,
-		piety: 718,
-		tenacity: 420,
-	},
-	DRG: {
-		main: OTHER_MAIN,
-		spellSpeed: 420,
-		skillSpeed: 420,
-		criticalHit: 3425,
-		directHit: 1996,
-		determination: 2308,
-		piety: 440,
-		tenacity: 420,
-	},
+	DRK: TANK_OC_BIS,
+	GNB: TANK_OC_BIS,
+	PLD: TANK_OC_BIS,
+	WAR: TANK_OC_BIS,
+	AST: HEALER_OC_BIS,
+	SCH: HEALER_OC_BIS,
+	SGE: HEALER_OC_BIS,
+	WHM: HEALER_OC_BIS,
+	DRG: MAIMING_OC_BIS,
 	MNK: {
-		// 1.94
+		// 1.96
+		// https://xivgear.app/?page=sl|3c30ba7a-132f-4238-893d-e20b2e381d22
 		main: OTHER_MAIN,
 		spellSpeed: 420,
-		skillSpeed: 968,
-		criticalHit: 3487,
-		directHit: 1685,
-		determination: 2009,
+		skillSpeed: 781,
+		criticalHit: 2746,
+		directHit: 1353,
+		determination: 1918,
 		piety: 440,
 		tenacity: 420,
 	},
-	NIN: {
-		// 2.12
-		main: OTHER_MAIN,
-		spellSpeed: 420,
-		skillSpeed: 420,
-		criticalHit: 3378,
-		directHit: 1981,
-		determination: 2370,
-		piety: 440,
-		tenacity: 420,
-	},
+	NIN: SCOUTING_OC_BIS,
 	RPR: {
-		// 2.49
-		main: OTHER_MAIN,
-		spellSpeed: 420,
-		skillSpeed: 474,
-		criticalHit: 3425,
-		directHit: 1942,
-		determination: 2308,
-		piety: 440,
-		tenacity: 420,
+		...MAIMING_OC_BIS,
+		determination: 2161,
+		skillSpeed: 528, // 2.48
 	},
 	SAM: {
 		// 2.14
+		// https://xivgear.app/?page=sl|102422af-03bf-4bad-9815-4a3c592561fa
 		main: OTHER_MAIN,
 		spellSpeed: 420,
-		skillSpeed: 690,
-		criticalHit: 3425,
-		directHit: 2045,
-		determination: 1989,
+		skillSpeed: 781,
+		criticalHit: 2746,
+		directHit: 1353,
+		determination: 1918,
 		piety: 440,
 		tenacity: 420,
 	},
-	VPR: {
-		// 2.12
-		main: OTHER_MAIN,
-		spellSpeed: 420,
-		skillSpeed: 420,
-		criticalHit: 3378,
-		directHit: 1981,
-		determination: 2370,
-		piety: 440,
-		tenacity: 420,
-	},
+	VPR: SCOUTING_OC_BIS,
 	DNC: PRANGE_2_5_BIS,
 	BRD: PRANGE_2_5_BIS,
 	MCH: PRANGE_2_5_BIS,
-	BLM: {
-		main: OTHER_MAIN,
-		spellSpeed: 978,
-		skillSpeed: 420,
-		criticalHit: 3456,
-		directHit: 1764,
-		determination: 1951,
-		piety: 440,
-		tenacity: 420,
-	},
-	RDM: {
-		// 2.48
-		main: OTHER_MAIN,
-		spellSpeed: 528,
-		skillSpeed: 420,
-		criticalHit: 3399,
-		directHit: 1872,
-		determination: 2350,
-		piety: 440,
-		tenacity: 420,
-	},
-	SMN: {
-		// 2.48
-		main: OTHER_MAIN,
-		spellSpeed: 528,
-		skillSpeed: 420,
-		criticalHit: 3399,
-		directHit: 1872,
-		determination: 2350,
-		piety: 440,
-		tenacity: 420,
-	},
-	PCT: {
-		// 7.2 2.5 GCD bis https://xivgear.app/?page=sl%7Cc48f85d8-9b93-4f96-bfc4-1e0e30e98a8c
-		main: OTHER_MAIN,
-		spellSpeed: 420,
-		skillSpeed: 420,
-		criticalHit: 3399,
-		directHit: 1764,
-		determination: 2566,
-		piety: 440,
-		tenacity: 420,
-	},
+	BLM: CASTING_OC_2_48_BIS,
+	RDM: CASTING_OC_2_5_BIS,
+	SMN: CASTING_OC_2_48_BIS,
+	PCT: CASTING_OC_2_5_BIS,
 	BLU: {
 		// lv80 2.20
 		main: 1701,
@@ -542,7 +464,7 @@ export class GameConfig {
 		}
 
 		return {
-			// casters, prange, healerse, and BLU all have a jobmod of 115
+			// casters, prange, healers, and BLU all have a jobmod of 115
 			mainStatJobMod: MAIN_STAT_JOB_MOD[this.job] ?? 115,
 			isTank,
 			useCasterFormula,
