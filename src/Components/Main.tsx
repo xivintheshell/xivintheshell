@@ -504,17 +504,17 @@ export default class Main extends React.Component<{ command?: string }> {
 												The following phantom jobs are currently supported:{" "}
 												<b>Monk</b>, <b>Samurai</b>, <b>Oracle</b>,{" "}
 												<b>Dancer</b>, <b>Black Mage</b>, <b>Summoner</b>,
-												and <b>Freelancer</b>. There are currently no plans
-												to update this version of the site long-term (my
-												personal developer time budget is going towards 8.0
-												prep), but bug reports and additional data are
-												always welcome (@shanzhe in The Balance or a field
-												op Discord of your choice).
+												<b>Necromancer</b>, and <b>Freelancer</b>. There are
+												currently no plans to update this version of the
+												site long-term (my personal developer time budget is
+												going towards 8.0 prep), but bug reports and
+												additional data are always welcome (@shanzhe in The
+												Balance or a field op Discord of your choice).
 											</div>
 											<div style={{ marginBottom: "10px" }}>
 												This site may contain inaccuracies, specially errors
 												in damage calculation, or incorrect application
-												delays on phantom actions).
+												delays on phantom actions.
 											</div>
 											<div style={{ marginBottom: "10px" }}>
 												If you need to do precise math with phantom

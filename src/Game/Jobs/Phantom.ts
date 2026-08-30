@@ -3,6 +3,7 @@ import {
 	PhantomActionKey,
 	PhantomCooldownKey,
 	PhantomResourceKey,
+	PhantomJob,
 	PHANTOM_ACTIONS,
 } from "../Data/Shared/Phantom";
 import {
@@ -23,6 +24,7 @@ import { CASTERS, HEALERS } from "../Data/Jobs";
 import { BRDResourceKey } from "../Data/Jobs/BRD";
 import { BLMState, getEnochianModifier } from "./BLM";
 import { BRDState } from "./BRD";
+import { ActionKey } from "../Data";
 
 ALL_JOBS.forEach((job) => {
 	makeResource(job, "PHANTOM_KICK", 3, { timeout: 40 });
@@ -105,11 +107,15 @@ const adjustCooldown = (
 	);
 };
 
+export const PJOB_ABILITY_MAP = new Map<ActionKey, PhantomJob>();
+
 const makePhantomAbility = (
 	name: PhantomActionKey,
 	cdName: PhantomCooldownKey,
+	pjob: PhantomJob,
 	params: Partial<MakeAbilityParams<GameState>>,
 ) => {
+	PJOB_ABILITY_MAP.set(name, pjob);
 	makeAbility(ALL_JOBS, name, 1, cdName, {
 		...params,
 		assetPath: "Phantom/" + PHANTOM_ACTIONS[name].name + ".png",
@@ -160,8 +166,10 @@ const makePhantomWeaponskill = (
 	name: PhantomActionKey,
 	cdName: PhantomCooldownKey,
 	cd: number,
+	pjob: PhantomJob,
 	params: Partial<MakeGCDParams<GameState>>,
 ) => {
+	PJOB_ABILITY_MAP.set(name, pjob);
 	makeWeaponskill(ALL_JOBS, name, 1, {
 		...params,
 		assetPath: "Phantom/" + PHANTOM_ACTIONS[name].name + ".png",
@@ -194,8 +202,10 @@ const makePhantomSpell = (
 	name: PhantomActionKey,
 	cdName: PhantomCooldownKey,
 	cd: number,
+	pjob: PhantomJob,
 	params: Partial<MakeGCDParams<GameState>>,
 ) => {
+	PJOB_ABILITY_MAP.set(name, pjob);
 	makeSpell(ALL_JOBS, name, 1, {
 		...params,
 		assetPath: "Phantom/" + PHANTOM_ACTIONS[name].name + ".png",
@@ -240,6 +250,7 @@ const makePSMNSpell = (
 	cd: number,
 	params: Partial<MakeGCDParams<GameState>>,
 ) => {
+	PJOB_ABILITY_MAP.set(name, PhantomJob.Summoner);
 	makeSpell(ALL_JOBS, name, 1, {
 		...params,
 		assetPath: "Phantom/" + PHANTOM_ACTIONS[name].name + ".png",
@@ -261,7 +272,7 @@ const makePSMNSpell = (
 	});
 };
 
-makePhantomAbility("PHANTOM_KICK", "cd_OC_GROUP_A", {
+makePhantomAbility("PHANTOM_KICK", "cd_OC_GROUP_A", PhantomJob.Monk, {
 	cooldown: 30,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	potency: 100,
@@ -274,38 +285,39 @@ makePhantomAbility("PHANTOM_KICK", "cd_OC_GROUP_A", {
 		),
 });
 
-// makePhantomAbility("OCCULT_COUNTER", "cd_PHANTOM_KICK", {
-// 	cooldown: 30,
-// 	potency: 150,
-// 	falloff: 0,
-// 	highlightIf: (state) => state.hasResourceAvailable("COUNTERSTANCE"),
-// 	validateAttempt: (state) => state.hasResourceAvailable("COUNTERSTANCE"),
-// });
+makePhantomAbility("OCCULT_COUNTER", "cd_OC_GROUP_E", PhantomJob.Monk, {
+	cooldown: 30,
+	potency: 150,
+	falloff: 0,
+	// For simplicity, assume that a parry is always available, and that users would know when
+	// it's possible to use in an actual fight.
+	highlightIf: (state) => true,
+});
 
-// makePhantomWeaponskill("COUNTERSTANCE", 1, {
-// 	onApplication: (state) => state.gainStatus("COUNTERSTANCE"),
-// 	assetPath: "Phantom/Counterstance.png",
-// });
+makePhantomWeaponskill("COUNTERSTANCE", "cd_OC_GROUP_F", 1, PhantomJob.Monk, {
+	onApplication: (state) => state.gainStatus("COUNTERSTANCE"),
+	assetPath: "Phantom/Counterstance.png",
+});
 
-makePhantomAbility("OCCULT_CHAKRA", "cd_OC_GROUP_B", {
+makePhantomAbility("OCCULT_CHAKRA", "cd_OC_GROUP_B", PhantomJob.Monk, {
 	applicationDelay: 1, // anecdotal, need to check footage to be sure
 	cooldown: 90,
 	onApplication: (state) => state.resources.get("MANA").gain(7000),
 });
 
-makePhantomAbility("SHIRAHADORI", "cd_OC_GROUP_D", {
+makePhantomAbility("SHIRAHADORI", "cd_OC_GROUP_D", PhantomJob.Samurai, {
 	cooldown: 30,
 	onApplication: (state) => state.gainStatus("SHIRAHADORI"),
 });
 
-makePhantomWeaponskill("IAINUKI", "cd_OC_GROUP_A", 40, {
+makePhantomWeaponskill("IAINUKI", "cd_OC_GROUP_A", 40, PhantomJob.Samurai, {
 	castTime: 1.3,
 	potency: 500,
 	aspect: Aspect.Physical,
 	falloff: 0,
 });
 
-makePhantomWeaponskill("ZENINAGE", "cd_OC_GROUP_C", 120, {
+makePhantomWeaponskill("ZENINAGE", "cd_OC_GROUP_C", 120, PhantomJob.Samurai, {
 	potency: 1500,
 	aspect: Aspect.Physical,
 });
@@ -320,13 +332,13 @@ const PREDICTIONS: PhantomResourceKey[] = [
 const stopPredictions = (state: GameState) =>
 	PREDICTIONS.forEach((p) => state.tryConsumeResource(p));
 
-makePhantomSpell("PREDICT", "cd_OC_GROUP_A", 60, {
+makePhantomSpell("PREDICT", "cd_OC_GROUP_A", 60, PhantomJob.Oracle, {
 	// First prediction buff appears about 0.9s after casting predict
 	applicationDelay: 0.9,
 	onApplication: (state) => PREDICTIONS.forEach((p) => state.gainStatus(p)),
 });
 
-makePhantomAbility("PHANTOM_JUDGMENT", "cd_OC_GROUP_E", {
+makePhantomAbility("PHANTOM_JUDGMENT", "cd_OC_GROUP_E", PhantomJob.Oracle, {
 	cooldown: 1,
 	potency: 400,
 	falloff: 0,
@@ -334,7 +346,7 @@ makePhantomAbility("PHANTOM_JUDGMENT", "cd_OC_GROUP_E", {
 	onConfirm: stopPredictions,
 });
 
-makePhantomAbility("CLEANSING", "cd_OC_GROUP_E", {
+makePhantomAbility("CLEANSING", "cd_OC_GROUP_E", PhantomJob.Oracle, {
 	cooldown: 1,
 	potency: 500,
 	falloff: 0,
@@ -342,7 +354,7 @@ makePhantomAbility("CLEANSING", "cd_OC_GROUP_E", {
 	onConfirm: stopPredictions,
 });
 
-makePhantomAbility("STARFALL", "cd_OC_GROUP_E", {
+makePhantomAbility("STARFALL", "cd_OC_GROUP_E", PhantomJob.Oracle, {
 	cooldown: 1,
 	potency: 1000,
 	falloff: 0,
@@ -350,18 +362,18 @@ makePhantomAbility("STARFALL", "cd_OC_GROUP_E", {
 	onConfirm: stopPredictions,
 });
 
-makePhantomAbility("BLESSING", "cd_OC_GROUP_E", {
+makePhantomAbility("BLESSING", "cd_OC_GROUP_E", PhantomJob.Oracle, {
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable("PREDICTION_OF_BLESSING"),
 	onConfirm: stopPredictions,
 });
 
-makePhantomAbility("PHANTOM_REJUVENATION", "cd_OC_GROUP_D", {
+makePhantomAbility("PHANTOM_REJUVENATION", "cd_OC_GROUP_D", PhantomJob.Oracle, {
 	cooldown: 60,
 	onConfirm: (state) => state.gainStatus("PHANTOM_REJUVENATION"),
 });
 
-makePhantomAbility("INVULNERABILITY", "cd_OC_GROUP_C", {
+makePhantomAbility("INVULNERABILITY", "cd_OC_GROUP_C", PhantomJob.Oracle, {
 	cooldown: 180,
 	onConfirm: (state) => state.gainStatus("INVULNERABILITY"),
 });
@@ -375,33 +387,33 @@ const DANCES: PhantomResourceKey[] = [
 
 const stopDances = (state: GameState) => DANCES.forEach((d) => state.tryConsumeResource(d));
 
-makePhantomAbility("DANCE", "cd_OC_GROUP_A", {
+makePhantomAbility("DANCE", "cd_OC_GROUP_A", PhantomJob.Dancer, {
 	// TODO verify application time
 	applicationDelay: 0.9,
 	cooldown: 30,
 	onConfirm: (state) => DANCES.forEach((d) => state.gainStatus(d)),
 });
 
-makePhantomWeaponskill("PHANTOM_SWORD_DANCE", "cd_OC_GROUP_F", 1, {
+makePhantomWeaponskill("PHANTOM_SWORD_DANCE", "cd_OC_GROUP_F", 1, PhantomJob.Dancer, {
 	potency: 600,
 	aspect: Aspect.Physical,
 	validateAttempt: (state) => state.hasResourceAvailable("POISED_TO_SWORD_DANCE"),
 	onConfirm: stopDances,
 });
 
-makePhantomWeaponskill("TEMPTING_TANGO", "cd_OC_GROUP_F", 1, {
+makePhantomWeaponskill("TEMPTING_TANGO", "cd_OC_GROUP_F", 1, PhantomJob.Dancer, {
 	potency: 400,
 	validateAttempt: (state) => state.hasResourceAvailable("TEMPTED_TO_TANGO"),
 	onConfirm: stopDances,
 });
 
-makePhantomWeaponskill("JITTERBUG", "cd_OC_GROUP_F", 1, {
+makePhantomWeaponskill("JITTERBUG", "cd_OC_GROUP_F", 1, PhantomJob.Dancer, {
 	potency: 400,
 	validateAttempt: (state) => state.hasResourceAvailable("JITTERBUGGED"),
 	onConfirm: stopDances,
 });
 
-makePhantomWeaponskill("MYSTERY_WALTZ", "cd_OC_GROUP_F", 1, {
+makePhantomWeaponskill("MYSTERY_WALTZ", "cd_OC_GROUP_F", 1, PhantomJob.Dancer, {
 	potency: 400,
 	validateAttempt: (state) => state.hasResourceAvailable("WILLING_TO_WALTZ"),
 	onConfirm: (state) => {
@@ -410,17 +422,17 @@ makePhantomWeaponskill("MYSTERY_WALTZ", "cd_OC_GROUP_F", 1, {
 	},
 });
 
-makePhantomWeaponskill("QUICKSTEP", "cd_OC_GROUP_F", 1, {
+makePhantomWeaponskill("QUICKSTEP", "cd_OC_GROUP_F", 1, PhantomJob.Dancer, {
 	onConfirm: (state) => state.gainStatus("QUICKSTEP"),
 });
 
-makePhantomAbility("STEADFAST_STANCE", "cd_OC_GROUP_B", {
+makePhantomAbility("STEADFAST_STANCE", "cd_OC_GROUP_B", PhantomJob.Dancer, {
 	cooldown: 60,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	onConfirm: (state) => state.gainStatus("STEADFAST_STANCE"),
 });
 
-makePhantomAbility("MESMERIZE", "cd_OC_GROUP_C", {
+makePhantomAbility("MESMERIZE", "cd_OC_GROUP_C", PhantomJob.Dancer, {
 	cooldown: 90,
 	onConfirm: (state) => {
 		state.gainStatus("MESMERIZED");
@@ -431,7 +443,7 @@ makePhantomAbility("MESMERIZE", "cd_OC_GROUP_C", {
 // TODO: cast time reduction in BLM ice/fire
 (["OCCULT_FIRE_III", "OCCULT_BLIZZARD_III", "OCCULT_THUNDER_III"] as PhantomActionKey[]).forEach(
 	(key) =>
-		makePhantomSpell(key, "cd_OC_GROUP_A", 40, {
+		makePhantomSpell(key, "cd_OC_GROUP_A", 40, PhantomJob.BlackMage, {
 			castTime: 1.5,
 			potency: 400,
 			falloff: 0,
@@ -446,7 +458,11 @@ makePhantomAbility("MESMERIZE", "cd_OC_GROUP_C", {
 		}),
 );
 
-makePhantomSpell("OCCULT_FLARE", "cd_OC_GROUP_B", 60, { castTime: 2.3, potency: 500, falloff: 0 });
+makePhantomSpell("OCCULT_FLARE", "cd_OC_GROUP_B", 60, PhantomJob.BlackMage, {
+	castTime: 2.3,
+	potency: 500,
+	falloff: 0,
+});
 
 (["HELLFIRE", "JUDGMENT_BOLT", "THUNDERSTORM"] as PhantomActionKey[]).forEach((key) =>
 	makePSMNSpell(key, "cd_OC_GROUP_B", 60, {
@@ -466,14 +482,14 @@ makePhantomSpell("OCCULT_FLARE", "cd_OC_GROUP_B", 60, { castTime: 2.3, potency: 
 
 makePSMNSpell("MEGAFLARE", "cd_OC_GROUP_C", 90, { castTime: 6, potency: 1000, falloff: 0 });
 
-makePhantomAbility("DRAIN_TOUCH", "cd_OC_GROUP_A", {
+makePhantomAbility("DRAIN_TOUCH", "cd_OC_GROUP_A", PhantomJob.Necromancer, {
 	cooldown: 40,
 	potency: 150,
 	onConfirm: (state) => state.gainStatus("DRAIN_TOUCH"),
 });
 
 (["DEEP_FREEZE", "HELL_WIND", "CHAOS_DRIVE"] as PhantomActionKey[]).forEach((key) =>
-	makePhantomSpell(key, "cd_OC_GROUP_E", 40, {
+	makePhantomSpell(key, "cd_OC_GROUP_E", 40, PhantomJob.Necromancer, {
 		castTime: 1.5,
 		potency: 300,
 		falloff: 0,
@@ -494,7 +510,7 @@ makePhantomAbility("DRAIN_TOUCH", "cd_OC_GROUP_A", {
 	}),
 );
 
-makePhantomSpell("DOOMSDAY", "cd_OC_GROUP_C", 120, {
+makePhantomSpell("DOOMSDAY", "cd_OC_GROUP_C", 120, PhantomJob.Necromancer, {
 	castTime: 1.5,
 	potency: 350,
 	falloff: 0,
@@ -502,7 +518,7 @@ makePhantomSpell("DOOMSDAY", "cd_OC_GROUP_C", 120, {
 		state.hasResourceAvailable("DRAIN_TOUCH") ? [Modifiers.DrainTouch] : [],
 });
 
-makePhantomAbility("WISDOM_ON_THE_WINDS", "cd_OC_GROUP_C", {
+makePhantomAbility("WISDOM_ON_THE_WINDS", "cd_OC_GROUP_C", PhantomJob.Freelancer, {
 	cooldown: 360,
 	onConfirm: (state) => {
 		// Wisdom on the Winds is known to not properly reset cooldowns for some job actions.
@@ -521,7 +537,7 @@ makePhantomAbility("WISDOM_ON_THE_WINDS", "cd_OC_GROUP_C", {
 //     onApplication: (state) => state.gainStatus("OCCULT_QUICK"),
 // });
 
-makePhantomAbility("APPLY_ETHER", "cd_APPLY_BUFF", {
+makePhantomAbility("APPLY_ETHER", "cd_APPLY_BUFF", PhantomJob.Freelancer, {
 	animationLock: FAKE_SKILL_ANIMATION_LOCK,
 	cooldown: FAKE_SKILL_ANIMATION_LOCK,
 	onApplication: (state) => state.resources.get("MANA").gain(10_000),
