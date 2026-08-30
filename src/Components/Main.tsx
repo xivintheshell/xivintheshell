@@ -503,7 +503,7 @@ export default class Main extends React.Component<{ command?: string }> {
 											<div style={{ marginBottom: "10px" }}>
 												The following phantom jobs are currently supported:{" "}
 												<b>Monk</b>, <b>Samurai</b>, <b>Oracle</b>,{" "}
-												<b>Dancer</b>, <b>Black Mage</b>, <b>Summoner</b>,
+												<b>Dancer</b>, <b>Black Mage</b>, <b>Summoner</b>,{" "}
 												<b>Necromancer</b>, and <b>Freelancer</b>. There are
 												currently no plans to update this version of the
 												site long-term (my personal developer time budget is
