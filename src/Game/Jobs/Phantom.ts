@@ -326,7 +326,7 @@ makePhantomSpell("PREDICT", "cd_OC_GROUP_A", 60, {
 	onApplication: (state) => PREDICTIONS.forEach((p) => state.gainStatus(p)),
 });
 
-makePhantomAbility("PHANTOM_JUDGMENT", "cd_PREDICTION", {
+makePhantomAbility("PHANTOM_JUDGMENT", "cd_OC_GROUP_E", {
 	cooldown: 1,
 	potency: 400,
 	falloff: 0,
@@ -334,7 +334,7 @@ makePhantomAbility("PHANTOM_JUDGMENT", "cd_PREDICTION", {
 	onConfirm: stopPredictions,
 });
 
-makePhantomAbility("CLEANSING", "cd_PREDICTION", {
+makePhantomAbility("CLEANSING", "cd_OC_GROUP_E", {
 	cooldown: 1,
 	potency: 500,
 	falloff: 0,
@@ -342,7 +342,7 @@ makePhantomAbility("CLEANSING", "cd_PREDICTION", {
 	onConfirm: stopPredictions,
 });
 
-makePhantomAbility("STARFALL", "cd_PREDICTION", {
+makePhantomAbility("STARFALL", "cd_OC_GROUP_E", {
 	cooldown: 1,
 	potency: 1000,
 	falloff: 0,
@@ -350,7 +350,7 @@ makePhantomAbility("STARFALL", "cd_PREDICTION", {
 	onConfirm: stopPredictions,
 });
 
-makePhantomAbility("BLESSING", "cd_PREDICTION", {
+makePhantomAbility("BLESSING", "cd_OC_GROUP_E", {
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable("PREDICTION_OF_BLESSING"),
 	onConfirm: stopPredictions,
@@ -382,26 +382,26 @@ makePhantomAbility("DANCE", "cd_OC_GROUP_A", {
 	onConfirm: (state) => DANCES.forEach((d) => state.gainStatus(d)),
 });
 
-makePhantomWeaponskill("PHANTOM_SWORD_DANCE", "cd_DANCE_GCD", 1, {
+makePhantomWeaponskill("PHANTOM_SWORD_DANCE", "cd_OC_GROUP_F", 1, {
 	potency: 600,
 	aspect: Aspect.Physical,
 	validateAttempt: (state) => state.hasResourceAvailable("POISED_TO_SWORD_DANCE"),
 	onConfirm: stopDances,
 });
 
-makePhantomWeaponskill("TEMPTING_TANGO", "cd_DANCE_GCD", 1, {
+makePhantomWeaponskill("TEMPTING_TANGO", "cd_OC_GROUP_F", 1, {
 	potency: 400,
 	validateAttempt: (state) => state.hasResourceAvailable("TEMPTED_TO_TANGO"),
 	onConfirm: stopDances,
 });
 
-makePhantomWeaponskill("JITTERBUG", "cd_DANCE_GCD", 1, {
+makePhantomWeaponskill("JITTERBUG", "cd_OC_GROUP_F", 1, {
 	potency: 400,
 	validateAttempt: (state) => state.hasResourceAvailable("JITTERBUGGED"),
 	onConfirm: stopDances,
 });
 
-makePhantomWeaponskill("MYSTERY_WALTZ", "cd_DANCE_GCD", 1, {
+makePhantomWeaponskill("MYSTERY_WALTZ", "cd_OC_GROUP_F", 1, {
 	potency: 400,
 	validateAttempt: (state) => state.hasResourceAvailable("WILLING_TO_WALTZ"),
 	onConfirm: (state) => {
@@ -410,7 +410,7 @@ makePhantomWeaponskill("MYSTERY_WALTZ", "cd_DANCE_GCD", 1, {
 	},
 });
 
-makePhantomWeaponskill("QUICKSTEP", "cd_DANCE_GCD", 1, {
+makePhantomWeaponskill("QUICKSTEP", "cd_OC_GROUP_F", 1, {
 	onConfirm: (state) => state.gainStatus("QUICKSTEP"),
 });
 
