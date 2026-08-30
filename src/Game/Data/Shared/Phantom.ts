@@ -139,8 +139,6 @@ export const PHANTOM_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_OC_GROUP_D: { name: "cd_OCGroupD" },
 	cd_OC_GROUP_E: { name: "cd_OCGroupE" },
 	cd_OC_GROUP_F: { name: "cd_OCGroupF" },
-	cd_PREDICTION: { name: "cd_OCPrediction" },
-	cd_DANCE_GCD: { name: "cd_DanceGCD" },
 
 	cd_APPLY_BUFF: { name: "cd_ApplyBuff" },
 });
