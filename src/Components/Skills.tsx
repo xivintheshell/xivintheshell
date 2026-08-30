@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, useSyncExternalStore, FormEvent } from "react";
+import React, { useContext, useEffect, useState, useSyncExternalStore, FormEvent, ReactElement } from "react";
 import { Tooltip } from "@base-ui/react/tooltip";
 import { Clickable, ContentNode, Help, parseTime, ValueChangeEvent } from "./Common";
 import { Debug, SkillReadyStatus, SkillUnavailableReason } from "../Game/Common";
@@ -12,6 +12,7 @@ import { TargetSelector } from "./TargetSelector";
 import { getSkillAssetPath } from "../Game/Skills";
 import { ActionKey, ACTIONS } from "../Game/Data";
 import { ShellJob } from "../Game/Data/Jobs";
+import { PJOB_ABILITY_MAP } from "../Game/Jobs/Phantom";
 
 // keyed on concatenation of job __ skillName to avoid uniqueness issues
 const skillIconImages = new Map<string, HTMLImageElement>();
@@ -732,6 +733,38 @@ export function SkillsWindow() {
 			/>;
 		})}
 	</div>);
+
+	// Phantom actions aren't bindable to hotbars (for now), and need to be special-cased.
+	const phSkillButtons: ReactElement[] = [];
+	statusList.forEach((info, i) => {
+		const skillName = info.skillName;
+		if (!PJOB_ABILITY_MAP.has(skillName)) {
+			return;
+		}
+
+		const readyAsideFromCd = info
+			? !info.status.unavailableReasons.some(
+					(reason) => reason !== SkillUnavailableReason.Blocked,
+				)
+			: false;
+		const button = <SkillButton
+			key={i}
+			highlight={info ? info.highlight : false}
+			skillName={skillName}
+			ready={info ? info.status.ready() : false}
+			readyAsideFromCd={readyAsideFromCd}
+			cdProgress={info ? 1 - info.timeTillNextStackReady / info.cdRecastTime : 1}
+			secondaryCdProgress={
+				info
+					? info.secondaryCdRecastTime && info.timeTillSecondaryReady
+						? 1 - info.timeTillSecondaryReady / info.secondaryCdRecastTime
+						: 1
+					: 1
+			}
+			activeJob={controller.game.job}
+		/>;
+		phSkillButtons.push(button);
+	});
 
 	const waitUntilHelp = <Help
 		topic="waitUntilInputFormat"

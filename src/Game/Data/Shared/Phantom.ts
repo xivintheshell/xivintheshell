@@ -2,6 +2,17 @@
 import { ensureRecord } from "../../../utilities";
 import { ActionData, CooldownData, ResourceData } from "../types";
 
+export enum PhantomJob {
+	Monk = "MNK",
+	Samurai = "SAM",
+	Oracle = "ORC",
+	Dancer = "DNC",
+	BlackMage = "BLM",
+	Summoner = "SMN",
+	Necromancer = "NEC",
+	Freelancer = "FRL",
+}
+
 export const PHANTOM_ACTIONS = ensureRecord<ActionData>()({
 	// Phantom Monk
 	PHANTOM_KICK: {
