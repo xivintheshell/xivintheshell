@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useContext, useState, Dispatch } from "react";
+import React, { useEffect, useReducer, useContext, useState, Dispatch, ReactElement } from "react";
 import { controller, CooldownDisplayMode } from "../Controller/Controller";
 import {
 	ButtonIndicator,
@@ -42,7 +42,13 @@ import {
 	ALL_JOBS,
 	IMPLEMENTATION_LEVELS,
 } from "../Game/Data/Jobs";
-import { ResourceKey, CooldownKey, RESOURCES } from "../Game/Data";
+import {
+	ResourceKey,
+	CooldownKey,
+	RESOURCES,
+	getResourceCategory,
+	ResourceCategory,
+} from "../Game/Data";
 import { getGameState } from "../Game/Jobs";
 
 export let updateConfigDisplay = (config: SerializedConfig) => {};
@@ -162,16 +168,64 @@ function ResourceOverrideSection(props: {
 	// TODO pass from parent as optimization
 	const S = new Set(props.initialResourceOverrides.map((rsc) => rsc.type));
 	const resourceInfos = getAllResources(props.job);
-	// <option> elements for resources that can be overridden
-	const optionEntries: { rsc: ResourceKey | CooldownKey; isCoolDown: number }[] = resourceInfos
-		.entries()
-		.flatMap(([k, info]) => (S.has(k) ? [] : [{ rsc: k, isCoolDown: info.isCoolDown ? 1 : 0 }]))
-		.toArray();
-	const resourceOptions = optionEntries
-		.sort((a, b) => a.isCoolDown - b.isCoolDown)
-		.map((opt, i) => <option key={i} value={opt.rsc}>
-			{localizeResourceType(opt.rsc)}
-		</option>);
+	const RESOURCE_CATEGORY_LABELS: Record<ResourceCategory, LocalizedContent> = {
+		tracker: { en: "Trackers", zh: "追踪" },
+		gauge: { en: "Gauges", zh: "量谱" },
+		status: { en: "Statuses", zh: "状态" },
+		cooldown: { en: "Cooldowns", zh: "CD" },
+	};
+	const trackers: ReactElement[] = [];
+	const gauges: ReactElement[] = [];
+	const statuses: ReactElement[] = [];
+	const cds: ReactElement[] = [];
+	resourceInfos
+		.keys()
+		// TODO: if ever this becomes a computational bottleneck, we can take advantage of the fact
+		// that different resource types are declared contiguously and avoid doing as many calls to
+		// getResourceCategory. Presumably this is a level of micro-optimization we don't need though.
+		.forEach((k) => {
+			if (!S.has(k)) {
+				const category = getResourceCategory(k);
+				const rscArray =
+					category === "tracker"
+						? trackers
+						: category === "gauge"
+							? gauges
+							: category === "status"
+								? statuses
+								: cds;
+				rscArray.push(
+					<option key={k} value={k}>
+						{localizeResourceType(k)}
+					</option>,
+				);
+			}
+		});
+	const resourceOptions = [
+		trackers ? (
+			<optgroup key="tracker" label={localize(RESOURCE_CATEGORY_LABELS["tracker"]) as string}>
+				{trackers}
+			</optgroup>
+		) : undefined,
+		gauges ? (
+			<optgroup key="gauge" label={localize(RESOURCE_CATEGORY_LABELS["gauge"]) as string}>
+				{gauges}
+			</optgroup>
+		) : undefined,
+		statuses ? (
+			<optgroup key="status" label={localize(RESOURCE_CATEGORY_LABELS["status"]) as string}>
+				{statuses}
+			</optgroup>
+		) : undefined,
+		cds ? (
+			<optgroup
+				key="cooldown"
+				label={localize(RESOURCE_CATEGORY_LABELS["cooldown"]) as string}
+			>
+				{cds}
+			</optgroup>
+		) : undefined,
+	];
 
 	const rscType = props.selectedOverrideResource;
 	const info = resourceInfos.get(rscType);
