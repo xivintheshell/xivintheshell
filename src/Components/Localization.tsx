@@ -74,6 +74,8 @@ export function localizeConfigField(key: keyof ConfigData): string {
 			return localize({ en: "weapon damage: ", zh: "武器伤害：" }).toString();
 		case "animationLock":
 			return localize({ en: "animation lock: ", zh: "能力技后摇：" }).toString();
+		case "phantomJob":
+			return localize({ en: "phantom job: ", zh: "辅助职业：" }).toString();
 	}
 	return key;
 }
