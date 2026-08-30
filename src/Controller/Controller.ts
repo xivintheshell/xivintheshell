@@ -90,6 +90,8 @@ import { ActionKey, ACTIONS, ResourceKey, RESOURCES } from "../Game/Data";
 import { getGameState } from "../Game/Jobs";
 import { getSkill } from "../Game/Skills";
 import { localizeSkillName } from "../Components/Localization";
+import { PhantomJob } from "../Game/Data/Shared/Phantom";
+import { PJOB_ABILITY_MAP } from "../Game/Jobs/Phantom";
 
 // Ensure role actions are imported after job-specific ones to protect hotbar ordering
 import "../Game/Jobs/RoleActions";
@@ -1009,6 +1011,14 @@ class Controller {
 		updateSkillButtons(
 			this.game.displayedSkills
 				.getCurrentSkillNames(this.game)
+				.filter((skillName: ActionKey) => {
+					const phantomJob = PJOB_ABILITY_MAP.get(skillName);
+					return (
+						phantomJob === undefined ||
+						phantomJob === PhantomJob.Freelancer ||
+						phantomJob === this.gameConfig.phantomJob
+					);
+				})
 				.map((skillName: ActionKey) => game.getSkillAvailabilityStatus(skillName)),
 		);
 	}
@@ -1069,6 +1079,7 @@ class Controller {
 	setConfigAndRestart(
 		props: {
 			job: ShellJob;
+			phantomJob?: PhantomJob;
 			level: LevelSync;
 			main: number;
 			wd: number;

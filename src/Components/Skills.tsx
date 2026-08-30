@@ -805,6 +805,12 @@ export function SkillsWindow() {
 				}
 			`}</style>
 			{skillButtons}
+			{phSkillButtons.length > 0 && <div style={{ marginBlock: 8, fontWeight: "bold" }}>
+				<div style={{ marginBottom: 5 }}>
+					{localize({ en: "Phantom Actions", zh: "辅助技能" })}
+				</div>
+				<div>{phSkillButtons}</div>
+			</div>}
 			<div style={{ margin: "10px 0" }}>
 				{localize({
 					en: "# of targets hit",
