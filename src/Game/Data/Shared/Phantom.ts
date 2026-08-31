@@ -5,7 +5,10 @@ import { ActionData, CooldownData, ResourceData } from "../types";
 export enum PhantomJob {
 	Monk = "MNK",
 	Samurai = "SAM",
+	Berserker = "BZK",
+	Ranger = "RNG",
 	Oracle = "ORC",
+	MysticKnight = "MYK",
 	Dancer = "DNC",
 	BlackMage = "BLM",
 	Summoner = "SMN",
@@ -44,6 +47,30 @@ export const PHANTOM_ACTIONS = ensureRecord<ActionData>()({
 	ZENINAGE: {
 		name: "Zeninage",
 		id: 41606,
+	},
+
+	// Berserker
+	RAGE: {
+		name: "Rage",
+		id: 41592,
+	},
+	DEADLY_BLOW: {
+		name: "Deadly Blow",
+		id: 41593,
+	},
+
+	// Ranger
+	PHANTOM_AIM: {
+		name: "Phantom Aim",
+		id: 41599,
+	},
+	OCCULT_FEATHERFOOT: {
+		name: "Occult Featherfoot",
+		id: 41600,
+	},
+	OCCULT_UNICORN: {
+		name: "Occult Unicorn",
+		id: 41602,
 	},
 
 	// Time Mage
@@ -93,6 +120,13 @@ export const PHANTOM_ACTIONS = ensureRecord<ActionData>()({
 		name: "Invulnerability",
 		id: 41644,
 	},
+
+	// Mystic Knight
+	SUNDERING_SPELLBLADE: { name: "Sundering Spellblade", id: 46591 },
+	MAGIC_SHELL: { name: "Magic Shell", id: 46592 },
+	POP_MAGIC_SHELL: { name: "Pop Magic Shell" },
+	HOLY_SPELLBLADE: { name: "Holy Spellblade", id: 46593 },
+	BLAZING_SPELLBLADE: { name: "Blazing Spellblade", id: 46594 },
 
 	// Dancer
 	DANCE: { name: "Dance", id: 46598 },
@@ -164,6 +198,9 @@ export const PHANTOM_STATUSES = ensureRecord<ResourceData>()({
 	OCCULT_MAGE_MASHER: {
 		name: "Occult Mage Masher",
 	},
+	PENT_UP_RAGE: {
+		name: "Pent-up Rage",
+	},
 	FALSE_PREDICTION: {
 		name: "False Prediction",
 	},
@@ -185,6 +222,11 @@ export const PHANTOM_STATUSES = ensureRecord<ResourceData>()({
 	INVULNERABILITY: {
 		name: "Invulnerability",
 	},
+	MAGIC_SHELL: { name: "Magic Shell", mayNotBeCanceled: true },
+	HONED_SPELLBLADE: { name: "Honed Spellblade" },
+	BLAZING_SPELLBLADE: { name: "Blazing Spellblade" },
+	DEADLY_PHANTOM_AIM: { name: "Deadly Phantom Aim" },
+	OCCULT_UNICORN: { name: "Occult Unicorn" },
 	POISED_TO_SWORD_DANCE: { name: "Poised to Sword Dance" },
 	TEMPTED_TO_TANGO: { name: "Tempted to Tango" },
 	JITTERBUGGED: { name: "Jitterbugged" },

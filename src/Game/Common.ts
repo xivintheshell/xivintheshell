@@ -161,6 +161,7 @@ export enum BuffType {
 	HerosRime = "Hero's Rime",
 	OffensiveAria = "Offensive Aria",
 	BattleHigh = "Battle High",
+	DeadlyPhantomAim = "Deadly Phantom Aim",
 }
 
 export type Warning =
