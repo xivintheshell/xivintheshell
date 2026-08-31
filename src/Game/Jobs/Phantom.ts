@@ -423,6 +423,7 @@ makePhantomAbility("INVULNERABILITY", "cd_OC_GROUP_C", PhantomJob.Oracle, {
 // MYSTIC KNIGHT
 makePhantomWeaponskill("SUNDERING_SPELLBLADE", "cd_OC_GROUP_A", 30, PhantomJob.MysticKnight, {
 	potency: 200,
+	aspect: Aspect.Physical,
 	jobPotencyModifiers: (state) =>
 		state.hasResourceAvailable("HONED_SPELLBLADE") ? [Modifiers.HonedSpellblade] : [],
 	onConfirm: (state) => state.tryConsumeResource("HONED_SPELLBLADE"),
@@ -467,6 +468,7 @@ makePhantomAbility("POP_MAGIC_SHELL", "cd_APPLY_BUFF", PhantomJob.MysticKnight, 
 
 makePhantomWeaponskill("HOLY_SPELLBLADE", "cd_OC_GROUP_A", 30, PhantomJob.MysticKnight, {
 	potency: 300,
+	aspect: Aspect.Physical,
 	jobPotencyModifiers: (state) =>
 		state.hasResourceAvailable("HONED_SPELLBLADE") ? [Modifiers.HonedSpellblade] : [],
 	onConfirm: (state) => state.tryConsumeResource("HONED_SPELLBLADE"),
@@ -474,6 +476,7 @@ makePhantomWeaponskill("HOLY_SPELLBLADE", "cd_OC_GROUP_A", 30, PhantomJob.Mystic
 
 makePhantomWeaponskill("BLAZING_SPELLBLADE", "cd_OC_GROUP_A", 30, PhantomJob.MysticKnight, {
 	potency: 200,
+	aspect: Aspect.Physical,
 	jobPotencyModifiers: (state) =>
 		state.hasResourceAvailable("HONED_SPELLBLADE") ? [Modifiers.HonedSpellblade] : [],
 	onConfirm: (state) => state.tryConsumeResource("HONED_SPELLBLADE"),
