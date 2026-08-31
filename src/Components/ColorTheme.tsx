@@ -932,6 +932,14 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.DRAIN_TOUCH, colors.text],
 		[PotencyModifierType.DEADLY_PHANTOM_AIM, colors.text],
 		[PotencyModifierType.HONED_SPELLBLADE, colors.text],
+		[PotencyModifierType.BELL_1, colors.text],
+		[PotencyModifierType.BELL_2, colors.text],
+		[PotencyModifierType.BELL_3, colors.text],
+		[PotencyModifierType.BELL_4, colors.text],
+		[PotencyModifierType.BELL_5, colors.text],
+		[PotencyModifierType.BELL_6, colors.text],
+		[PotencyModifierType.BELL_7, colors.text],
+		[PotencyModifierType.BELL_8, colors.text],
 	]);
 	console.assert(
 		modifierColors.has(modifierType),

@@ -87,6 +87,17 @@ export interface OverTimePotencyProps {
 }
 
 // TODO this should probably live somewhere better, but this prevents import cycles w/ ./Jobs/Phantom
+const bellModifiersByStack = [
+	Modifiers.Bell1,
+	Modifiers.Bell2,
+	Modifiers.Bell3,
+	Modifiers.Bell4,
+	Modifiers.Bell5,
+	Modifiers.Bell6,
+	Modifiers.Bell7,
+	Modifiers.Bell8,
+];
+
 export function getPhantomDamageModifiers(state: Readonly<GameState>): PotencyModifier[] {
 	// assume all pjob self-buffs are mutually exclusive because i'm lazy
 	if (state.hasResourceAvailable("PHANTOM_KICK")) {
@@ -100,9 +111,24 @@ export function getPhantomDamageModifiers(state: Readonly<GameState>): PotencyMo
 	if (state.hasResourceAvailable("DEADLY_PHANTOM_AIM")) {
 		return [Modifiers.DeadlyPhantomAim];
 	}
+	if (state.hasResourceAvailable("BATTLES_CLANGOR")) {
+		const bellStacks = state.resources.get("BATTLES_CLANGOR").availableAmount();
+		return [bellModifiersByStack[bellStacks - 1]];
+	}
 	// deliberately skipping MYK Blazing Blade, as it's presumed to always be active
 	return [];
 }
+
+const bellBuffTypesByStack = [
+	BuffType.BattlesClangor1,
+	BuffType.BattlesClangor2,
+	BuffType.BattlesClangor3,
+	BuffType.BattlesClangor4,
+	BuffType.BattlesClangor5,
+	BuffType.BattlesClangor6,
+	BuffType.BattlesClangor7,
+	BuffType.BattlesClangor8,
+];
 
 export function addPhantomDamageBuffCovers(state: Readonly<GameState>, node: ActionNode): void {
 	if (state.hasResourceAvailable("PHANTOM_KICK")) {
@@ -111,6 +137,10 @@ export function addPhantomDamageBuffCovers(state: Readonly<GameState>, node: Act
 	}
 	if (state.hasResourceAvailable("DEADLY_PHANTOM_AIM")) {
 		node.addBuff(BuffType.DeadlyPhantomAim);
+	}
+	if (state.hasResourceAvailable("BATTLES_CLANGOR")) {
+		const bellStacks = state.resources.get("BATTLES_CLANGOR").availableAmount();
+		node.addBuff(bellBuffTypesByStack[bellStacks - 1]);
 	}
 }
 

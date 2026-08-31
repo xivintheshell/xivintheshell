@@ -769,6 +769,17 @@ function drawSkills(params: {
 		[BuffType.Dissipation, { color: colors.sch.dissipation, showImage: true }],
 		[BuffType.Protraction, { color: colors.sch.protraction, showImage: true }],
 		[BuffType.Recitation, { color: colors.sch.recitation, showImage: true }],
+		[BuffType.HerosRime, { color: colors.rdm.whiteMana, showImage: true }],
+		[BuffType.OccultQuick, { color: colors.timeline.buffCover, showImage: true }],
+		[BuffType.DeadlyPhantomAim, { color: colors.resources.cdhTag, showImage: true }],
+		[BuffType.BattlesClangor1, { color: colors.rpr.soulGaugeLow, showImage: true }],
+		[BuffType.BattlesClangor2, { color: colors.rpr.soulGaugeLow, showImage: true }],
+		[BuffType.BattlesClangor3, { color: colors.rpr.soulGaugeLow, showImage: true }],
+		[BuffType.BattlesClangor4, { color: colors.rpr.soulGaugeLow, showImage: true }],
+		[BuffType.BattlesClangor5, { color: colors.rpr.soulGaugeLow, showImage: true }],
+		[BuffType.BattlesClangor6, { color: colors.rpr.soulGaugeLow, showImage: true }],
+		[BuffType.BattlesClangor7, { color: colors.rpr.soulGaugeLow, showImage: true }],
+		[BuffType.BattlesClangor8, { color: colors.rpr.soulGaugeLow, showImage: true }],
 	]);
 
 	const covers: Map<BuffType, Rect[]> = new Map();
