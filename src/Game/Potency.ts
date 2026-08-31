@@ -131,6 +131,8 @@ export const enum PotencyModifierType {
 	QUICKER_STEP,
 	MESMERIZED,
 	DRAIN_TOUCH,
+	DEADLY_PHANTOM_AIM,
+	HONED_SPELLBLADE,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -710,6 +712,17 @@ export const Modifiers = {
 		source: PotencyModifierType.DRAIN_TOUCH,
 		potencyFactor: 1.3,
 	} as PotencyMultiplier,
+	DeadlyPhantomAim: {
+		kind: "critDirect",
+		source: PotencyModifierType.DEADLY_PHANTOM_AIM,
+		critBonus: 0.5,
+		dhBonus: 0.5,
+	} as CritDirectMultiplier,
+	HonedSpellblade: {
+		kind: "adder",
+		source: PotencyModifierType.HONED_SPELLBLADE,
+		additiveAmount: 100,
+	} as PotencyAdder,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {

@@ -501,15 +501,47 @@ export default class Main extends React.Component<{ command?: string }> {
 												</i>
 											</div>
 											<div style={{ marginBottom: "10px" }}>
-												The following phantom jobs are currently supported:{" "}
-												<b>Monk</b>, <b>Samurai</b>, <b>Oracle</b>,{" "}
-												<b>Dancer</b>, <b>Black Mage</b>, <b>Summoner</b>,{" "}
-												<b>Necromancer</b>, and <b>Freelancer</b>. There are
-												currently no plans to update this version of the
-												site long-term (my personal developer time budget is
-												going towards 8.0 prep), but bug reports and
-												additional data are always welcome (@shanzhe in The
-												Balance or a field op Discord of your choice).
+												The following phantom jobs are currently supported:
+												<ul style={{ columns: 3, width: "40%" }}>
+													<li>
+														<b>Monk</b>
+													</li>
+													<li>
+														<b>Samurai</b>
+													</li>
+													<li>
+														<b>Berserker</b>
+													</li>
+													<li>
+														<b>Ranger</b>
+													</li>
+													<li>
+														<b>Oracle</b>
+													</li>
+													<li>
+														<b>Mystic Knight</b>
+													</li>
+													<li>
+														<b>Dancer</b>
+													</li>
+													<li>
+														<b>Black Mage</b>
+													</li>
+													<li>
+														<b>Summoner</b>
+													</li>
+													<li>
+														<b>Necromancer</b>
+													</li>
+													<li>
+														<b>Freelancer</b>
+													</li>
+												</ul>
+												There are currently no plans to update this version
+												of the site long-term (my personal developer time
+												budget is going towards 8.0 prep), but bug reports
+												and additional data are always welcome (@shanzhe in
+												The Balance or a field op Discord of your choice).
 											</div>
 											<div style={{ marginBottom: "10px" }}>
 												This site may contain inaccuracies, specially errors

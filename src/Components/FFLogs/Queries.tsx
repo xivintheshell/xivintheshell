@@ -130,6 +130,7 @@ const BUFF_IDS = {
 	THIRD_EYE: 1001232,
 	CREST_OF_TIME_BORROWED: 1002596,
 	COLD_FOG: 1002493,
+	MAGIC_SHELL: 1004788,
 };
 
 const POP_MAP = new Map<ActionKey, ActionKey>([
@@ -501,6 +502,10 @@ export async function queryPlayerEvents(
 				if (abilityGameID === BUFF_IDS.COLD_FOG) {
 					popToAdd = "POP_COLD_FOG";
 				}
+			}
+			// Phantom Mystic Knight (can pop on any target)
+			if (abilityGameID === BUFF_IDS.MAGIC_SHELL) {
+				popToAdd = "POP_MAGIC_SHELL";
 			}
 			// TODO deal with SGE shields
 			// TODO deal with floor effects like paint lines and ley lines

@@ -16,7 +16,7 @@ import {
 	MakeGCDParams,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
 } from "../Skills";
-import { makeResource, CoolDown } from "../Resources";
+import { makeResource, CoolDown, getResourceInfo, ResourceInfo } from "../Resources";
 import { Modifiers, PotencyModifier, PotencyModifierType } from "../Potency";
 import { type GameState } from "../GameState";
 import { Aspect } from "../Common";
@@ -33,17 +33,22 @@ ALL_JOBS.forEach((job) => {
 
 	makeResource(job, "SHIRAHADORI", 1, { timeout: 4 });
 	makeResource(job, "OCCULT_MAGE_MASHER", 1, { timeout: 60 });
+	makeResource(job, "PENT_UP_RAGE", 1, { timeout: 15 });
+	makeResource(job, "DEADLY_PHANTOM_AIM", 1, { timeout: 30 });
+	makeResource(job, "OCCULT_UNICORN", 1, { timeout: 30 });
 	makeResource(job, "FALSE_PREDICTION", 1, { timeout: 20 }); // TODO check duration
-	// TODO figure out how to properly handle predictions
 	// judgement + blessing are available for 3s
 	// cleansing + starfall are available for 5s
-	// for now, we just pretend all of them are available for 5 + 5 + 3 + 3 = 16s
+	// for simplicity, we just pretend all of them are available for 5 + 5 + 3 + 3 = 16s
 	makeResource(job, "PREDICTION_OF_JUDGMENT", 1, { timeout: 16 });
 	makeResource(job, "PREDICTION_OF_CLEANSING", 1, { timeout: 16 });
 	makeResource(job, "PREDICTION_OF_BLESSING", 1, { timeout: 16 });
 	makeResource(job, "PREDICTION_OF_STARFALL", 1, { timeout: 16 });
 	makeResource(job, "PHANTOM_REJUVENATION", 1, { timeout: 20 });
 	makeResource(job, "INVULNERABILITY", 1, { timeout: 8 });
+	makeResource(job, "MAGIC_SHELL", 1, { timeout: 60 });
+	makeResource(job, "HONED_SPELLBLADE", 1, { timeout: 30 });
+	makeResource(job, "BLAZING_SPELLBLADE", 1, { timeout: 70 });
 	makeResource(job, "POISED_TO_SWORD_DANCE", 1, { timeout: 30 });
 	makeResource(job, "TEMPTED_TO_TANGO", 1, { timeout: 30 });
 	makeResource(job, "JITTERBUGGED", 1, { timeout: 30 });
@@ -272,6 +277,7 @@ const makePSMNSpell = (
 	});
 };
 
+// MONK
 makePhantomAbility("PHANTOM_KICK", "cd_OC_GROUP_A", PhantomJob.Monk, {
 	cooldown: 30,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
@@ -305,6 +311,7 @@ makePhantomAbility("OCCULT_CHAKRA", "cd_OC_GROUP_B", PhantomJob.Monk, {
 	onApplication: (state) => state.resources.get("MANA").gain(7000),
 });
 
+// SAMURAI
 makePhantomAbility("SHIRAHADORI", "cd_OC_GROUP_D", PhantomJob.Samurai, {
 	cooldown: 30,
 	onApplication: (state) => state.gainStatus("SHIRAHADORI"),
@@ -322,6 +329,41 @@ makePhantomWeaponskill("ZENINAGE", "cd_OC_GROUP_C", 120, PhantomJob.Samurai, {
 	aspect: Aspect.Physical,
 });
 
+// BERSERKER
+makePhantomAbility("RAGE", "cd_OC_GROUP_B", PhantomJob.Berserker, {
+	cooldown: 60,
+	potency: 0, // TODO
+	aspect: Aspect.Physical,
+	// 10s + some animation lock
+	animationLock: 10.5,
+	applicationDelay: 0.5,
+	onApplication: (state) => state.gainStatus("PENT_UP_RAGE"),
+});
+
+makePhantomWeaponskill("DEADLY_BLOW", "cd_OC_GROUP_A", 30, PhantomJob.Berserker, {
+	potency: 0, // TODO
+	aspect: Aspect.Physical,
+	onConfirm: (state) => state.tryConsumeResource("PENT_UP_RAGE"),
+});
+
+// RANGER
+makePhantomAbility("PHANTOM_AIM", "cd_OC_GROUP_A", PhantomJob.Ranger, {
+	cooldown: 120,
+	applicationDelay: 0.5,
+	onApplication: (state) => state.gainStatus("DEADLY_PHANTOM_AIM"),
+});
+
+makePhantomAbility("OCCULT_FEATHERFOOT", "cd_OC_GROUP_E", PhantomJob.Ranger, {
+	cooldown: 10,
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
+});
+
+makePhantomAbility("OCCULT_UNICORN", "cd_OC_GROUP_C", PhantomJob.Ranger, {
+	cooldown: 120,
+	onApplication: (state) => state.gainStatus("OCCULT_UNICORN"),
+});
+
+// ORACLE
 const PREDICTIONS: PhantomResourceKey[] = [
 	"PREDICTION_OF_BLESSING",
 	"PREDICTION_OF_STARFALL",
@@ -378,6 +420,67 @@ makePhantomAbility("INVULNERABILITY", "cd_OC_GROUP_C", PhantomJob.Oracle, {
 	onConfirm: (state) => state.gainStatus("INVULNERABILITY"),
 });
 
+// MYSTIC KNIGHT
+makePhantomWeaponskill("SUNDERING_SPELLBLADE", "cd_OC_GROUP_A", 30, PhantomJob.MysticKnight, {
+	potency: 200,
+	jobPotencyModifiers: (state) =>
+		state.hasResourceAvailable("HONED_SPELLBLADE") ? [Modifiers.HonedSpellblade] : [],
+	onConfirm: (state) => state.tryConsumeResource("HONED_SPELLBLADE"),
+});
+
+makePhantomAbility("MAGIC_SHELL", "cd_OC_GROUP_D", PhantomJob.MysticKnight, {
+	cooldown: 60,
+	replaceIf: [
+		{
+			newSkill: "POP_MAGIC_SHELL",
+			condition: (state) => state.hasResourceAvailable("MAGIC_SHELL"),
+		},
+	],
+	onApplication: (state) => {
+		state.gainStatus("MAGIC_SHELL");
+		state.resources.get("MAGIC_SHELL").removeTimer();
+		state.resources.addResourceEvent({
+			rscType: "MAGIC_SHELL",
+			name: "trigger honed spellblade on magic shell expiry",
+			delay: (getResourceInfo(state.job, "MAGIC_SHELL") as ResourceInfo).maxTimeout,
+			fnOnRsc: () => {
+				if (state.hasResourceAvailable("MAGIC_SHELL")) {
+					state.gainStatus("HONED_SPELLBLADE");
+				}
+				state.tryConsumeResource("MAGIC_SHELL");
+			},
+		});
+	},
+});
+
+makePhantomAbility("POP_MAGIC_SHELL", "cd_APPLY_BUFF", PhantomJob.MysticKnight, {
+	startOnHotbar: false,
+	animationLock: FAKE_SKILL_ANIMATION_LOCK,
+	cooldown: FAKE_SKILL_ANIMATION_LOCK,
+	validateAttempt: (state) => state.hasResourceAvailable("MAGIC_SHELL"),
+	highlightIf: (state) => state.hasResourceAvailable("MAGIC_SHELL"),
+	onConfirm: (state) => {
+		state.tryConsumeResource("MAGIC_SHELL");
+		state.gainStatus("HONED_SPELLBLADE");
+	},
+});
+
+makePhantomWeaponskill("HOLY_SPELLBLADE", "cd_OC_GROUP_A", 30, PhantomJob.MysticKnight, {
+	potency: 300,
+	jobPotencyModifiers: (state) =>
+		state.hasResourceAvailable("HONED_SPELLBLADE") ? [Modifiers.HonedSpellblade] : [],
+	onConfirm: (state) => state.tryConsumeResource("HONED_SPELLBLADE"),
+});
+
+makePhantomWeaponskill("BLAZING_SPELLBLADE", "cd_OC_GROUP_A", 30, PhantomJob.MysticKnight, {
+	potency: 200,
+	jobPotencyModifiers: (state) =>
+		state.hasResourceAvailable("HONED_SPELLBLADE") ? [Modifiers.HonedSpellblade] : [],
+	onConfirm: (state) => state.tryConsumeResource("HONED_SPELLBLADE"),
+	onApplication: (state) => state.gainStatus("BLAZING_SPELLBLADE"),
+});
+
+// DANCER
 const DANCES: PhantomResourceKey[] = [
 	"POISED_TO_SWORD_DANCE",
 	"TEMPTED_TO_TANGO",
@@ -440,6 +543,7 @@ makePhantomAbility("MESMERIZE", "cd_OC_GROUP_C", PhantomJob.Dancer, {
 	},
 });
 
+// BLACK MAGE
 // TODO: cast time reduction in BLM ice/fire
 (["OCCULT_FIRE_III", "OCCULT_BLIZZARD_III", "OCCULT_THUNDER_III"] as PhantomActionKey[]).forEach(
 	(key) =>
@@ -464,6 +568,7 @@ makePhantomSpell("OCCULT_FLARE", "cd_OC_GROUP_B", 60, PhantomJob.BlackMage, {
 	falloff: 0,
 });
 
+// SUMMONER
 (["HELLFIRE", "JUDGMENT_BOLT", "THUNDERSTORM"] as PhantomActionKey[]).forEach((key) =>
 	makePSMNSpell(key, "cd_OC_GROUP_B", 60, {
 		castTime: 4,
@@ -482,6 +587,7 @@ makePhantomSpell("OCCULT_FLARE", "cd_OC_GROUP_B", 60, PhantomJob.BlackMage, {
 
 makePSMNSpell("MEGAFLARE", "cd_OC_GROUP_C", 90, { castTime: 6, potency: 1000, falloff: 0 });
 
+// NECROMANCER
 makePhantomAbility("DRAIN_TOUCH", "cd_OC_GROUP_A", PhantomJob.Necromancer, {
 	cooldown: 40,
 	potency: 150,
@@ -518,6 +624,7 @@ makePhantomSpell("DOOMSDAY", "cd_OC_GROUP_C", 120, PhantomJob.Necromancer, {
 		state.hasResourceAvailable("DRAIN_TOUCH") ? [Modifiers.DrainTouch] : [],
 });
 
+// FREELANCER
 makePhantomAbility("WISDOM_ON_THE_WINDS", "cd_OC_GROUP_C", PhantomJob.Freelancer, {
 	cooldown: 360,
 	onConfirm: (state) => {
