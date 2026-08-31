@@ -59,6 +59,14 @@ get_buff_icon "Honed Spellblade" "229964"
 get_buff_icon "Blazing Spellblade" "229965"
 get_buff_icon "Deadly Phantom Aim" "229908"
 get_buff_icon "Occult Unicorn" "229956"
+get_buff_icon "Battle's Clangor" "218192"
+get_buff_icon "Battle's Clangor" "218193" 2
+get_buff_icon "Battle's Clangor" "218194" 3
+get_buff_icon "Battle's Clangor" "218195" 4
+get_buff_icon "Battle's Clangor" "218196" 5
+get_buff_icon "Battle's Clangor" "218197" 6
+get_buff_icon "Battle's Clangor" "218198" 7
+get_buff_icon "Battle's Clangor" "218199" 8
 
 get_skill_icon "Occult Fire III" "064511"
 get_skill_icon "Occult Blizzard III" "064512"
@@ -83,3 +91,4 @@ get_skill_icon "Blazing Spellblade" "064579"
 get_skill_icon "Phantom Aim" "064772"
 get_skill_icon "Occult Featherfoot" "064773"
 get_skill_icon "Occult Unicorn" "064775"
+get_skill_icon "Battle Bell" "064784"

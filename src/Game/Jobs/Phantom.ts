@@ -59,6 +59,7 @@ ALL_JOBS.forEach((job) => {
 	makeResource(job, "ENAMORED", 1, { timeout: 4 });
 	makeResource(job, "MESMERIZED", 1, { timeout: 100 });
 	makeResource(job, "DRAIN_TOUCH", 1, { timeout: 6 });
+	makeResource(job, "BATTLES_CLANGOR", 8, { timeout: 30 });
 });
 
 const addDamageModifiers = (
@@ -123,7 +124,7 @@ const makePhantomAbility = (
 	PJOB_ABILITY_MAP.set(name, pjob);
 	makeAbility(ALL_JOBS, name, 1, cdName, {
 		...params,
-		assetPath: "Phantom/" + PHANTOM_ACTIONS[name].name + ".png",
+		assetPath: params.assetPath ?? "Phantom/" + PHANTOM_ACTIONS[name].name + ".png",
 		onExecute: (state) => adjustCooldown(state, params.cooldown!, cdName),
 		jobPotencyModifiers: (state) => {
 			const result = params.jobPotencyModifiers?.(state) ?? [];
@@ -651,4 +652,15 @@ makePhantomAbility("APPLY_ETHER", "cd_APPLY_BUFF", PhantomJob.Freelancer, {
 	animationLock: FAKE_SKILL_ANIMATION_LOCK,
 	cooldown: FAKE_SKILL_ANIMATION_LOCK,
 	onApplication: (state) => state.resources.get("MANA").gain(10_000),
+});
+
+makePhantomAbility("GAIN_BATTLES_CLANGOR", "cd_APPLY_BUFF", PhantomJob.Freelancer, {
+	animationLock: FAKE_SKILL_ANIMATION_LOCK,
+	cooldown: FAKE_SKILL_ANIMATION_LOCK,
+	assetPath: "Phantom/Battle Bell.png",
+	onApplication: (state) =>
+		state.gainStatus(
+			"BATTLES_CLANGOR",
+			Math.min(8, state.resources.get("BATTLES_CLANGOR").availableAmount() + 1),
+		),
 });

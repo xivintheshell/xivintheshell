@@ -170,6 +170,7 @@ export const PHANTOM_ACTIONS = ensureRecord<ActionData>()({
 	APPLY_QUICKER_STEP: {
 		name: "Apply Quicker Step",
 	},
+	GAIN_BATTLES_CLANGOR: { name: "Gain Battle's Clangor" },
 });
 
 export const PHANTOM_COOLDOWNS = ensureRecord<CooldownData>()({
@@ -239,6 +240,7 @@ export const PHANTOM_STATUSES = ensureRecord<ResourceData>()({
 	ELEMENTAL_WEAKNESS: { name: "Elemental Weakness", mayBeToggled: true },
 	LIBRA: { name: "Libra", mayBeToggled: true },
 	DRAIN_TOUCH: { name: "Drain Touch" },
+	BATTLES_CLANGOR: { name: "Battle's Clangor", maximumStacks: 8 },
 });
 
 export type PhantomActions = typeof PHANTOM_ACTIONS;

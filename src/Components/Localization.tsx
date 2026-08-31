@@ -324,6 +324,14 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.DRAIN_TOUCH, { en: "drain touch" }],
 	[PotencyModifierType.DEADLY_PHANTOM_AIM, { en: "deadly phantom aim" }],
 	[PotencyModifierType.HONED_SPELLBLADE, { en: "honed spellblade" }],
+	[PotencyModifierType.BELL_1, { en: "bell (1)" }],
+	[PotencyModifierType.BELL_2, { en: "bell (2)" }],
+	[PotencyModifierType.BELL_3, { en: "bell (3)" }],
+	[PotencyModifierType.BELL_4, { en: "bell (4)" }],
+	[PotencyModifierType.BELL_5, { en: "bell (5)" }],
+	[PotencyModifierType.BELL_6, { en: "bell (6)" }],
+	[PotencyModifierType.BELL_7, { en: "bell (7)" }],
+	[PotencyModifierType.BELL_8, { en: "bell (8)" }],
 ]);
 export function localizeModifierName(modifierType: PotencyModifierType): string {
 	console.assert(
@@ -425,6 +433,14 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.DRAIN_TOUCH, { en: "DT" }],
 	[PotencyModifierType.DEADLY_PHANTOM_AIM, { en: "DPA" }],
 	[PotencyModifierType.HONED_SPELLBLADE, { en: "HSB" }],
+	[PotencyModifierType.BELL_1, { en: "B1" }],
+	[PotencyModifierType.BELL_2, { en: "B2" }],
+	[PotencyModifierType.BELL_3, { en: "B3" }],
+	[PotencyModifierType.BELL_4, { en: "B4" }],
+	[PotencyModifierType.BELL_5, { en: "B5" }],
+	[PotencyModifierType.BELL_6, { en: "B6" }],
+	[PotencyModifierType.BELL_7, { en: "B7" }],
+	[PotencyModifierType.BELL_8, { en: "B8" }],
 ]);
 export function localizeModifierTag(modifierType: PotencyModifierType): string {
 	console.assert(

@@ -133,6 +133,14 @@ export const enum PotencyModifierType {
 	DRAIN_TOUCH,
 	DEADLY_PHANTOM_AIM,
 	HONED_SPELLBLADE,
+	BELL_1,
+	BELL_2,
+	BELL_3,
+	BELL_4,
+	BELL_5,
+	BELL_6,
+	BELL_7,
+	BELL_8,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -723,6 +731,46 @@ export const Modifiers = {
 		source: PotencyModifierType.HONED_SPELLBLADE,
 		additiveAmount: 100,
 	} as PotencyAdder,
+	Bell1: {
+		kind: "multiplier",
+		source: PotencyModifierType.BELL_1,
+		potencyFactor: 1.05,
+	} as PotencyMultiplier,
+	Bell2: {
+		kind: "multiplier",
+		source: PotencyModifierType.BELL_2,
+		potencyFactor: 1.1,
+	} as PotencyMultiplier,
+	Bell3: {
+		kind: "multiplier",
+		source: PotencyModifierType.BELL_3,
+		potencyFactor: 1.15,
+	} as PotencyMultiplier,
+	Bell4: {
+		kind: "multiplier",
+		source: PotencyModifierType.BELL_4,
+		potencyFactor: 1.2,
+	} as PotencyMultiplier,
+	Bell5: {
+		kind: "multiplier",
+		source: PotencyModifierType.BELL_5,
+		potencyFactor: 1.25,
+	} as PotencyMultiplier,
+	Bell6: {
+		kind: "multiplier",
+		source: PotencyModifierType.BELL_6,
+		potencyFactor: 1.3,
+	} as PotencyMultiplier,
+	Bell7: {
+		kind: "multiplier",
+		source: PotencyModifierType.BELL_7,
+		potencyFactor: 1.35,
+	} as PotencyMultiplier,
+	Bell8: {
+		kind: "multiplier",
+		source: PotencyModifierType.BELL_8,
+		potencyFactor: 1.4,
+	} as PotencyMultiplier,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {
