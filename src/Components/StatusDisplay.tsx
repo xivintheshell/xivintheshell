@@ -15,7 +15,7 @@ import { JOBS } from "../Game/Data/Jobs";
 import { ResourceKey, RESOURCES } from "../Game/Data";
 import { ROLE_RESOURCES } from "../Game/Data/Shared/Role";
 import { LIMIT_BREAK_RESOURCES } from "../Game/Data/Shared/LimitBreak";
-import { PHANTOM_STATUSES } from "../Game/Data/Shared/Phantom";
+import { PHANTOM_STATUSES, PhantomJob } from "../Game/Data/Shared/Phantom";
 
 type StatusResourceLocksViewProps = {
 	gcdReady: boolean;
@@ -1072,14 +1072,23 @@ export class StatusPropsGenerator<T extends GameState> {
 			);
 		}
 
-		// Include all phantom buffs here.
-		roleBuffViewProps.push(
-			...Object.keys(PHANTOM_STATUSES).map((rscType) =>
-				rscType === "LIBRA" || rscType === "ELEMENTAL_WEAKNESS"
-					? this.makeToggleableTimerless(rscType)
-					: this.makeCommonTimer(rscType as ResourceKey),
-			),
-		);
+		// Libra and elemental weakness should be shown only for relevant phantom jobs.
+		const pj = this.state.config.phantomJob;
+		if (pj !== undefined) {
+			roleBuffViewProps.push(
+				...Object.keys(PHANTOM_STATUSES).flatMap((rscType) =>
+					rscType === "LIBRA" || rscType === "ELEMENTAL_WEAKNESS"
+						? [
+								PhantomJob.BlackMage,
+								PhantomJob.Summoner,
+								PhantomJob.Necromancer,
+							].includes(pj)
+							? [this.makeToggleableTimerless(rscType)]
+							: []
+						: [this.makeCommonTimer(rscType as ResourceKey)],
+				),
+			);
+		}
 
 		// All jobs should include Tincture and Sprint
 		roleBuffViewProps.push(this.makeCommonTimer("TINCTURE"), this.makeCommonTimer("SPRINT"));

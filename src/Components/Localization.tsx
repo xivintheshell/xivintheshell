@@ -321,6 +321,9 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.PHANTOM_KICK_3, { en: "phantom kick (3)" }],
 	[PotencyModifierType.QUICKER_STEP, { en: "quicker step" }],
 	[PotencyModifierType.MESMERIZED, { en: "mesmerized" }],
+	[PotencyModifierType.DRAIN_TOUCH, { en: "drain touch" }],
+	[PotencyModifierType.DEADLY_PHANTOM_AIM, { en: "deadly phantom aim" }],
+	[PotencyModifierType.HONED_SPELLBLADE, { en: "honed spellblade" }],
 ]);
 export function localizeModifierName(modifierType: PotencyModifierType): string {
 	console.assert(
@@ -419,6 +422,9 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.PHANTOM_KICK_3, { en: "PK3" }],
 	[PotencyModifierType.QUICKER_STEP, { en: "QS" }],
 	[PotencyModifierType.MESMERIZED, { en: "MESM" }],
+	[PotencyModifierType.DRAIN_TOUCH, { en: "DT" }],
+	[PotencyModifierType.DEADLY_PHANTOM_AIM, { en: "DPA" }],
+	[PotencyModifierType.HONED_SPELLBLADE, { en: "HSB" }],
 ]);
 export function localizeModifierTag(modifierType: PotencyModifierType): string {
 	console.assert(

@@ -87,7 +87,8 @@ export interface OverTimePotencyProps {
 }
 
 // TODO this should probably live somewhere better, but this prevents import cycles w/ ./Jobs/Phantom
-export function getKickModifier(state: Readonly<GameState>): PotencyModifier[] {
+export function getPhantomDamageModifiers(state: Readonly<GameState>): PotencyModifier[] {
+	// assume all pjob self-buffs are mutually exclusive because i'm lazy
 	if (state.hasResourceAvailable("PHANTOM_KICK")) {
 		const kickStacks = state.resources.get("PHANTOM_KICK").availableAmount();
 		return kickStacks === 3
@@ -96,7 +97,21 @@ export function getKickModifier(state: Readonly<GameState>): PotencyModifier[] {
 				? [Modifiers.PhantomKick2]
 				: [Modifiers.PhantomKick1];
 	}
+	if (state.hasResourceAvailable("DEADLY_PHANTOM_AIM")) {
+		return [Modifiers.DeadlyPhantomAim];
+	}
+	// deliberately skipping MYK Blazing Blade, as it's presumed to always be active
 	return [];
+}
+
+export function addPhantomDamageBuffCovers(state: Readonly<GameState>, node: ActionNode): void {
+	if (state.hasResourceAvailable("PHANTOM_KICK")) {
+		// too lazy to distinguish stacks
+		node.addBuff(BuffType.PhantomKick);
+	}
+	if (state.hasResourceAvailable("DEADLY_PHANTOM_AIM")) {
+		node.addBuff(BuffType.DeadlyPhantomAim);
+	}
 }
 
 // GameState := resources + events queue
@@ -1269,7 +1284,7 @@ export class GameState {
 					if (this.hasResourceAvailable("TINCTURE")) {
 						potency.addModifiers(Modifiers.Tincture);
 					}
-					potency.addModifiers(...getKickModifier(this));
+					potency.addModifiers(...getPhantomDamageModifiers(this));
 					potency.addModifiers(...skill.jobPotencyModifiers(this));
 					potency.addTargetSpecificModifiers(skill.jobTargetPotencyModifiers(this, node));
 				}
@@ -1279,10 +1294,7 @@ export class GameState {
 				if (this.hasResourceAvailable("TINCTURE") && !node.hasBuff(BuffType.Tincture)) {
 					node.addBuff(BuffType.Tincture);
 				}
-				if (this.hasResourceAvailable("PHANTOM_KICK")) {
-					// too lazy to distinguish stacks
-					node.addBuff(BuffType.PhantomKick);
-				}
+				addPhantomDamageBuffCovers(this, node);
 
 				this.jobSpecificAddDamageBuffCovers(node, skill);
 			}
@@ -1410,7 +1422,7 @@ export class GameState {
 			if (this.hasResourceAvailable("TINCTURE")) {
 				potency.addModifiers(Modifiers.Tincture);
 			}
-			potency.addModifiers(...getKickModifier(this));
+			potency.addModifiers(...getPhantomDamageModifiers(this));
 			potency.addModifiers(...skill.jobPotencyModifiers(this));
 			potency.addTargetSpecificModifiers(skill.jobTargetPotencyModifiers(this, node));
 			node.addPotency(potency);
@@ -1483,10 +1495,7 @@ export class GameState {
 			}
 			this.jobSpecificAddDamageBuffCovers(node, skill);
 		}
-		if (this.hasResourceAvailable("PHANTOM_KICK")) {
-			// too lazy to distinguish stacks
-			node.addBuff(BuffType.PhantomKick);
-		}
+		addPhantomDamageBuffCovers(this, node);
 
 		if (healingPotencyNumber > 0) {
 			// tincture
@@ -2009,17 +2018,7 @@ export class GameState {
 			mods.push(Modifiers.Tincture);
 			props.node.addBuff(BuffType.Tincture);
 		}
-		// TODO consolidate to function
-		if (this.hasResourceAvailable("PHANTOM_KICK")) {
-			const kickStacks = this.resources.get("PHANTOM_KICK").availableAmount();
-			mods.push(
-				kickStacks === 3
-					? Modifiers.PhantomKick3
-					: kickStacks === 2
-						? Modifiers.PhantomKick2
-						: Modifiers.PhantomKick1,
-			);
-		}
+		mods.push(...getPhantomDamageModifiers(this));
 
 		const effectDuration = duration ?? this.getStatusDuration(props.effectName);
 		const isGroundTargeted =
