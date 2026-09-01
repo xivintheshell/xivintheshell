@@ -1,3 +1,4 @@
+import { CooldownKey } from "../Data";
 import { ALL_JOBS } from "../Data/Jobs";
 import {
 	PhantomActionKey,
@@ -724,13 +725,44 @@ makePhantomSpell("DOOMSDAY", "cd_OC_GROUP_C", 120, PhantomJob.Necromancer, {
 });
 
 // FREELANCER
+// Wisdom On the Winds cannot reset
+// - consumables
+// - non-job/role CDs (i.e. sprint)
+// - phantom action CDs
+// - any GCD recasts
+// these are a small enough selection that we can just blacklist them here
+const WISDOM_CANNOT_RESET: CooldownKey[] = [
+	"cd_GCD",
+	"cd_SPRINT",
+	"cd_TINCTURE",
+	// SGE: Phlegma, Pneuma
+	"cd_PNEUMA",
+	"cd_PHLEGMA",
+	// AST: Macrocosmos
+	"cd_MACROCOSMOS",
+	// GNB: Gnashing Fang, Double Down
+	"cd_GNASHING_FANG",
+	"cd_DOUBLE_DOWN",
+	// DNC: steps
+	"cd_STANDARD_STEP",
+	"cd_TECHNICAL_STEP",
+	// MCH: tools
+	"cd_DRILL",
+	"cd_CHAINSAW",
+	"cd_AIR_ANCHOR",
+	// RPR: Soul Slice
+	"cd_SOUL_SLICE",
+	// VPR: Vicewinder
+	"cd_VICEWINDER",
+	// SMN: demi
+	"cd_DEMI_SUMMON",
+];
+
 makePhantomAbility("WISDOM_ON_THE_WINDS", "cd_OC_GROUP_C", PhantomJob.Freelancer, {
 	cooldown: 360,
 	onConfirm: (state) => {
-		// Wisdom on the Winds is known to not properly reset cooldowns for some job actions.
-		// If we ever get around to supporting it, I guess I'll just hard-code it.
 		state.cooldowns.forEach((cd, cdName) => {
-			if (!cdName.startsWith("cd_OC_GROUP")) {
+			if (!cdName.startsWith("cd_OC_GROUP") && !WISDOM_CANNOT_RESET.includes(cdName)) {
 				cd.makeFullyAvailable();
 			}
 		});
