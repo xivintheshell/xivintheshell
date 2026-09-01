@@ -1,11 +1,36 @@
 [
 	{
+		"date": "8/31/26",
+		"changes": [
+			"[BETA][OC] Added Phantom Berserker, Ranger, and Mystic Knight. Deadly Blow has no associated damage calculation (please do the math yourself). Blazing Blade's passive damage increase is ignored.",
+			"[BETA][OC] Libra and elemental weakness are now only displayed for jobs where it is relevant.",
+			"[BETA][OC] Added a universal action for gaining stacks of Battle Bell.",
+			"[BETA][OC] Added a buff marker for Vigilance.",
+			"[BETA][OC] Restricted the skills that Wisdom on the Winds can reset."
+		]
+	},
+	{
 		"date": "8/30/26",
 		"changes": [
 			"Separated resource overrides into separate sub-groups for trackers, gauges, statuses, and cooldowns."
 		],
 		"changes_zh": [
 			"将初始资源细分为“追踪”、“量谱”、“状态”、和“CD”四大分类。"
+		]
+	},
+	{
+		"date": "8/12/26",
+		"changes": [
+			"[BETA][OC] Fixed a bug where Occult Chakra sometimes restored the incorrect amount of MP."
+		]
+	},
+	{
+		"date": "8/11/26",
+		"changes": [
+			"[BETA][OC] Added Occult Crescent mode, available only on oc.xivintheshell.com. See header box for details.",
+			"[BETA][OC][BLM] Fixed a bug where Phantom Kick was not displayed as a separate modifier for Xenoglossy, Foul, and Paradox. This was a purely visual bug, and did not affect total damage calculations.",
+			"[BETA][OC] Fixed a bug where Libra and Elemental Weakness would disappear when toggled.",
+			"[BETA][OC] Added Phantom Necromancer."
 		]
 	},
 	{

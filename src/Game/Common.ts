@@ -155,6 +155,22 @@ export enum BuffType {
 	Dissipation = "Dissipation",
 	Protraction = "Protraction",
 	Recitation = "Recitation",
+
+	OccultQuick = "Occult Quick",
+	PhantomKick = "Phantom Kick",
+	HerosRime = "Hero's Rime",
+	OffensiveAria = "Offensive Aria",
+	BattleHigh = "Battle High",
+	Vigilance = "Vigilance",
+	DeadlyPhantomAim = "Deadly Phantom Aim",
+	BattlesClangor1 = "Battle's Clangor",
+	BattlesClangor2 = "Battle's Clangor2",
+	BattlesClangor3 = "Battle's Clangor3",
+	BattlesClangor4 = "Battle's Clangor4",
+	BattlesClangor5 = "Battle's Clangor5",
+	BattlesClangor6 = "Battle's Clangor6",
+	BattlesClangor7 = "Battle's Clangor7",
+	BattlesClangor8 = "Battle's Clangor8",
 }
 
 export type Warning =

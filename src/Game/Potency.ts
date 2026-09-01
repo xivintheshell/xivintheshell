@@ -121,6 +121,26 @@ export const enum PotencyModifierType {
 	FEY_ILLUMINATION,
 	DISSIPATION,
 	PROTRACTION,
+
+	PHANTOM,
+	PHANTOM_HITS_WEAKNESS,
+	PHANTOM_LIBRA,
+	PHANTOM_KICK_1,
+	PHANTOM_KICK_2,
+	PHANTOM_KICK_3,
+	QUICKER_STEP,
+	MESMERIZED,
+	DRAIN_TOUCH,
+	DEADLY_PHANTOM_AIM,
+	HONED_SPELLBLADE,
+	BELL_1,
+	BELL_2,
+	BELL_3,
+	BELL_4,
+	BELL_5,
+	BELL_6,
+	BELL_7,
+	BELL_8,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -654,6 +674,103 @@ export const Modifiers = {
 		source: PotencyModifierType.PROTRACTION,
 		potencyFactor: 1.1,
 	} as PotencyMultiplier,
+	Phantom: {
+		kind: "critDirect",
+		source: PotencyModifierType.PHANTOM,
+		critBonus: 0,
+		dhBonus: 0,
+	} as CritDirectMultiplier,
+	PhantomHitsWeakness: {
+		kind: "multiplier",
+		source: PotencyModifierType.PHANTOM_HITS_WEAKNESS,
+		potencyFactor: 1.3,
+	} as PotencyMultiplier,
+	PhantomHitsLibra: {
+		kind: "multiplier",
+		source: PotencyModifierType.PHANTOM_LIBRA,
+		potencyFactor: 1.4,
+	} as PotencyMultiplier,
+	PhantomKick1: {
+		kind: "multiplier",
+		source: PotencyModifierType.PHANTOM_KICK_1,
+		potencyFactor: 1.09,
+	} as PotencyMultiplier,
+	PhantomKick2: {
+		kind: "multiplier",
+		source: PotencyModifierType.PHANTOM_KICK_2,
+		potencyFactor: 1.18,
+	} as PotencyMultiplier,
+	PhantomKick3: {
+		kind: "multiplier",
+		source: PotencyModifierType.PHANTOM_KICK_3,
+		potencyFactor: 1.27,
+	} as PotencyMultiplier,
+	QuickerStep: {
+		kind: "multiplier",
+		source: PotencyModifierType.QUICKER_STEP,
+		potencyFactor: 1.02,
+	} as PotencyMultiplier,
+	Mesmerized: {
+		kind: "multiplier",
+		source: PotencyModifierType.MESMERIZED,
+		potencyFactor: 1.1,
+	} as PotencyMultiplier,
+	DrainTouch: {
+		kind: "multiplier",
+		source: PotencyModifierType.DRAIN_TOUCH,
+		potencyFactor: 1.3,
+	} as PotencyMultiplier,
+	DeadlyPhantomAim: {
+		kind: "critDirect",
+		source: PotencyModifierType.DEADLY_PHANTOM_AIM,
+		critBonus: 0.5,
+		dhBonus: 0.5,
+	} as CritDirectMultiplier,
+	HonedSpellblade: {
+		kind: "adder",
+		source: PotencyModifierType.HONED_SPELLBLADE,
+		additiveAmount: 100,
+	} as PotencyAdder,
+	Bell1: {
+		kind: "multiplier",
+		source: PotencyModifierType.BELL_1,
+		potencyFactor: 1.05,
+	} as PotencyMultiplier,
+	Bell2: {
+		kind: "multiplier",
+		source: PotencyModifierType.BELL_2,
+		potencyFactor: 1.1,
+	} as PotencyMultiplier,
+	Bell3: {
+		kind: "multiplier",
+		source: PotencyModifierType.BELL_3,
+		potencyFactor: 1.15,
+	} as PotencyMultiplier,
+	Bell4: {
+		kind: "multiplier",
+		source: PotencyModifierType.BELL_4,
+		potencyFactor: 1.2,
+	} as PotencyMultiplier,
+	Bell5: {
+		kind: "multiplier",
+		source: PotencyModifierType.BELL_5,
+		potencyFactor: 1.25,
+	} as PotencyMultiplier,
+	Bell6: {
+		kind: "multiplier",
+		source: PotencyModifierType.BELL_6,
+		potencyFactor: 1.3,
+	} as PotencyMultiplier,
+	Bell7: {
+		kind: "multiplier",
+		source: PotencyModifierType.BELL_7,
+		potencyFactor: 1.35,
+	} as PotencyMultiplier,
+	Bell8: {
+		kind: "multiplier",
+		source: PotencyModifierType.BELL_8,
+		potencyFactor: 1.4,
+	} as PotencyMultiplier,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {
@@ -836,6 +953,35 @@ export class Potency {
 		return totalAmount;
 	}
 
+	/**
+	 * Expected absolute damage for this potency, using the same modifiers as getAmount.
+	 */
+	getDamageAmount(props: {
+		tincturePotencyMultiplier: number;
+		includePartyBuffs: boolean;
+		includeSplash: boolean;
+		isDot?: boolean;
+	}): number {
+		const noDebuffTargetCount = this.targetCount - (this.#targetSpecificModifiers?.size ?? 0);
+		let totalAmount = this.#getDamageWithModifiers(
+			props,
+			this.targetList.length === 0 || !this.#targetSpecificModifiers?.has(this.targetList[0]),
+			noDebuffTargetCount,
+			this.#modifiers,
+		);
+		if (this.targetList.length === 0) {
+			return totalAmount;
+		}
+		const primary = this.targetList[0];
+		this.#targetSpecificModifiers?.forEach((modifiers, targetNumber) => {
+			totalAmount += this.#getDamageWithModifiers(props, targetNumber === primary, 1, [
+				...this.#modifiers,
+				...modifiers,
+			]);
+		});
+		return totalAmount;
+	}
+
 	#getAmountWithModifiers(
 		props: {
 			tincturePotencyMultiplier: number;
@@ -859,6 +1005,8 @@ export class Potency {
 		let isAutoCDH = false;
 		let isAutoCrit = false;
 		let noCDH = false;
+		// Detect up front so later crit/DH modifiers are ignored regardless of order.
+		const isPhantom = modifiers.some((m) => m.source === PotencyModifierType.PHANTOM);
 
 		modifiers.forEach((m) => {
 			if (m.source === PotencyModifierType.POT)
@@ -867,7 +1015,9 @@ export class Potency {
 			else if (m.source === PotencyModifierType.AUTO_CRIT) isAutoCrit = true;
 			else if (m.source === PotencyModifierType.NO_CDH) noCDH = true;
 			// handle calculation for ordinary crit/DH bonuses separate from autocrit/dh
-			else if (m.kind === "critDirect") {
+			// Phantom actions cannot crit/DH, so ignore those buffs entirely (including the
+			// PHANTOM marker itself, which is a critDirect with 0/0 bonuses).
+			else if (m.kind === "critDirect" && !isPhantom) {
 				totalCritBonus += m.critBonus;
 				totalDhBonus += m.dhBonus;
 			} else if (m.kind === "multiplier") totalDamageFactor *= m.potencyFactor;
@@ -878,7 +1028,7 @@ export class Potency {
 			!(noCDH && (isAutoCDH || isAutoCrit)),
 			"skills that can't CDH cannot be auto-crit or auto-CDH",
 		);
-		if (noCDH) {
+		if (noCDH || isPhantom) {
 			isAutoCDH = false;
 			isAutoCrit = false;
 		}
@@ -888,7 +1038,7 @@ export class Potency {
 			controller.game.getPartyBuffs(this.snapshotTime).forEach((buff) => {
 				if (buff.kind === "multiplier") {
 					totalDamageFactor *= buff.potencyFactor;
-				} else if (buff.kind === "critDirect") {
+				} else if (buff.kind === "critDirect" && !isPhantom) {
 					totalCritBonus += buff.critBonus;
 					totalDhBonus += buff.dhBonus;
 				}
@@ -912,7 +1062,7 @@ export class Potency {
 			// accounted for as a multiplier on other potencies.
 			amt =
 				(base * totalDamageFactor) /
-				XIVMath.calculateDamage(
+				XIVMath.calculateExpectedPotency(
 					this.config.level,
 					this.config.criticalHit,
 					this.config.directHit,
@@ -922,6 +1072,106 @@ export class Potency {
 					0,
 				);
 		}
+		if (props.includeSplash) {
+			const splashScalar = includesPrimary
+				? 1 + (1 - (this.falloff ?? 1)) * (targetCount - 1)
+				: (1 - (this.falloff ?? 1)) * targetCount;
+			amt *= splashScalar;
+		}
+		return amt;
+	}
+
+	#getDamageWithModifiers(
+		props: {
+			tincturePotencyMultiplier: number;
+			includePartyBuffs: boolean;
+			includeSplash: boolean;
+			isDot?: boolean;
+		},
+		includesPrimary: boolean,
+		targetCount: number,
+		modifiers: PotencyModifier[],
+	): number {
+		if (targetCount === 0) {
+			return 0;
+		}
+		let totalDamageFactor = 1;
+		let totalAdditiveAmount = 0;
+		let totalCritBonus = 0;
+		let totalDhBonus = 0;
+
+		let isAutoCDH = false;
+		let isAutoCrit = false;
+		let noCDH = false;
+		const isPhantom = modifiers.some((m) => m.source === PotencyModifierType.PHANTOM);
+
+		modifiers.forEach((m) => {
+			if (m.source === PotencyModifierType.POT)
+				totalDamageFactor *= props.tincturePotencyMultiplier;
+			else if (m.source === PotencyModifierType.AUTO_CDH) isAutoCDH = true;
+			else if (m.source === PotencyModifierType.AUTO_CRIT) isAutoCrit = true;
+			else if (m.source === PotencyModifierType.NO_CDH) noCDH = true;
+			else if (m.kind === "critDirect" && !isPhantom) {
+				totalCritBonus += m.critBonus;
+				totalDhBonus += m.dhBonus;
+			} else if (m.kind === "multiplier") totalDamageFactor *= m.potencyFactor;
+			else if (m.kind === "adder") totalAdditiveAmount += m.additiveAmount;
+		});
+		if (noCDH || isPhantom) {
+			isAutoCDH = false;
+			isAutoCrit = false;
+		}
+
+		if (props.includePartyBuffs && this.snapshotTime) {
+			controller.game.getPartyBuffs(this.snapshotTime).forEach((buff) => {
+				if (buff.kind === "multiplier") {
+					totalDamageFactor *= buff.potencyFactor;
+				} else if (buff.kind === "critDirect" && !isPhantom) {
+					totalCritBonus += buff.critBonus;
+					totalDhBonus += buff.dhBonus;
+				}
+			});
+		}
+		const base = this.base + totalAdditiveAmount;
+		const cfg = this.config;
+		const jobOpts = cfg.getDamageCalcOptions();
+
+		let critBonus = totalCritBonus;
+		let dhBonus = totalDhBonus;
+		if (noCDH) {
+			critBonus = -1;
+			dhBonus = -1;
+		} else if (isAutoCDH) {
+			critBonus = 1 + totalCritBonus;
+			dhBonus = 1 + totalDhBonus;
+		} else if (isAutoCrit) {
+			critBonus = 1 + totalCritBonus;
+		}
+
+		let amt = XIVMath.calculateExpectedDamage(
+			cfg.level,
+			isPhantom ? base * totalDamageFactor : base,
+			cfg.main,
+			cfg.wd,
+			cfg.determination,
+			cfg.criticalHit,
+			cfg.directHit,
+			{
+				...jobOpts,
+				damageFactor: isPhantom ? 1 : totalDamageFactor,
+				critBonus,
+				dhBonus,
+				autoDh: isAutoCDH,
+				isDot: props.isDot,
+				speed: props.isDot
+					? jobOpts.useCasterFormula
+						? cfg.spellSpeed
+						: cfg.skillSpeed
+					: undefined,
+				isPhantom,
+			},
+		);
+
 		if (props.includeSplash) {
 			const splashScalar = includesPrimary
 				? 1 + (1 - (this.falloff ?? 1)) * (targetCount - 1)
@@ -972,7 +1222,7 @@ export class Potency {
 
 	#calculateAutoCDHModifier(critBonus: number, dhBonus: number) {
 		const level = this.config.level;
-		const base = XIVMath.calculateDamage(
+		const base = XIVMath.calculateExpectedPotency(
 			level,
 			controller.gameConfig.criticalHit,
 			controller.gameConfig.directHit,
@@ -981,7 +1231,7 @@ export class Potency {
 			critBonus,
 			dhBonus,
 		);
-		const buffed = XIVMath.calculateDamage(
+		const buffed = XIVMath.calculateExpectedPotency(
 			level,
 			controller.gameConfig.criticalHit,
 			controller.gameConfig.directHit,
@@ -996,7 +1246,7 @@ export class Potency {
 
 	#calculateAutoCritModifier(critBonus: number, dhBonus: number) {
 		const level = this.config.level;
-		const base = XIVMath.calculateDamage(
+		const base = XIVMath.calculateExpectedPotency(
 			level,
 			controller.gameConfig.criticalHit,
 			controller.gameConfig.directHit,
@@ -1005,7 +1255,7 @@ export class Potency {
 			critBonus,
 			dhBonus,
 		);
-		const buffed = XIVMath.calculateDamage(
+		const buffed = XIVMath.calculateExpectedPotency(
 			level,
 			controller.gameConfig.criticalHit,
 			controller.gameConfig.directHit,
@@ -1024,8 +1274,8 @@ export class Potency {
 		const dhStat = this.config.directHit;
 		const det = this.config.determination;
 
-		const base = XIVMath.calculateDamage(level, critStat, dhStat, det, 1, 0, 0);
-		const buffed = XIVMath.calculateDamage(
+		const base = XIVMath.calculateExpectedPotency(level, critStat, dhStat, det, 1, 0, 0);
+		const buffed = XIVMath.calculateExpectedPotency(
 			level,
 			critStat,
 			dhStat,

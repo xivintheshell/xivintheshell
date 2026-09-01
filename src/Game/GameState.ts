@@ -51,7 +51,7 @@ import { Buff } from "./Buffs";
 import { SkillButtonViewInfo } from "../Components/Skills";
 import { ReactNode } from "react";
 import { localizeResourceType } from "../Components/Localization";
-import { ShellJob, HEALER_JOBS, CASTER_JOBS, JOBS, HEALERS } from "./Data/Jobs";
+import { ShellJob, HEALER_JOBS, CASTER_JOBS, JOBS, CASTERS, HEALERS } from "./Data/Jobs";
 import { ActionKey, CooldownKey, ResourceKey, RESOURCES, TraitKey } from "./Data";
 import { hasUnlockedTrait } from "../utilities";
 import { StatusPropsGenerator } from "../Components/StatusDisplay";
@@ -84,6 +84,64 @@ export interface OverTimePotencyProps {
 	aspect?: Aspect;
 	modifiers?: PotencyModifier[];
 	targetModifiers?: Map<number, PotencyModifier[]>;
+}
+
+// TODO this should probably live somewhere better, but this prevents import cycles w/ ./Jobs/Phantom
+const bellModifiersByStack = [
+	Modifiers.Bell1,
+	Modifiers.Bell2,
+	Modifiers.Bell3,
+	Modifiers.Bell4,
+	Modifiers.Bell5,
+	Modifiers.Bell6,
+	Modifiers.Bell7,
+	Modifiers.Bell8,
+];
+
+export function getPhantomDamageModifiers(state: Readonly<GameState>): PotencyModifier[] {
+	// assume all pjob self-buffs are mutually exclusive because i'm lazy
+	if (state.hasResourceAvailable("PHANTOM_KICK")) {
+		const kickStacks = state.resources.get("PHANTOM_KICK").availableAmount();
+		return kickStacks === 3
+			? [Modifiers.PhantomKick3]
+			: kickStacks === 2
+				? [Modifiers.PhantomKick2]
+				: [Modifiers.PhantomKick1];
+	}
+	if (state.hasResourceAvailable("DEADLY_PHANTOM_AIM")) {
+		return [Modifiers.DeadlyPhantomAim];
+	}
+	if (state.hasResourceAvailable("BATTLES_CLANGOR")) {
+		const bellStacks = state.resources.get("BATTLES_CLANGOR").availableAmount();
+		return [bellModifiersByStack[bellStacks - 1]];
+	}
+	// deliberately skipping MYK Blazing Blade, as it's presumed to always be active
+	return [];
+}
+
+const bellBuffTypesByStack = [
+	BuffType.BattlesClangor1,
+	BuffType.BattlesClangor2,
+	BuffType.BattlesClangor3,
+	BuffType.BattlesClangor4,
+	BuffType.BattlesClangor5,
+	BuffType.BattlesClangor6,
+	BuffType.BattlesClangor7,
+	BuffType.BattlesClangor8,
+];
+
+export function addPhantomDamageBuffCovers(state: Readonly<GameState>, node: ActionNode): void {
+	if (state.hasResourceAvailable("PHANTOM_KICK")) {
+		// too lazy to distinguish stacks
+		node.addBuff(BuffType.PhantomKick);
+	}
+	if (state.hasResourceAvailable("DEADLY_PHANTOM_AIM")) {
+		node.addBuff(BuffType.DeadlyPhantomAim);
+	}
+	if (state.hasResourceAvailable("BATTLES_CLANGOR")) {
+		const bellStacks = state.resources.get("BATTLES_CLANGOR").availableAmount();
+		node.addBuff(bellBuffTypesByStack[bellStacks - 1]);
+	}
 }
 
 // GameState := resources + events queue
@@ -201,6 +259,10 @@ export class GameState {
 		// Tracked for compatibility with sleeposim
 		this.autoStartTimes = [];
 		this.autoStopTimes = [];
+
+		// Hack for phantom berserker: treat RAGE as a dot/pet ability (must be registered for all jobs).
+		this.dotSkills.push("RAGE");
+		this.petSkills.push("RAGE");
 	}
 
 	get statusPropsGenerator(): StatusPropsGenerator<GameState> {
@@ -587,6 +649,10 @@ export class GameState {
 	jobSpecificAutoBasePotency(): number {
 		// Copied from xivgear:
 		// https://github.com/xiv-gear-planner/gear-planner/blob/505398e19a45cc0304a7746e4acd3e694051b908/packages/xivmath/src/xivconstants.ts#L113-L120
+		// TODO remove this hack to skip potencies for casters
+		if (this.job in CASTERS || this.job in HEALERS) {
+			return 0;
+		}
 		return this.job === "BRD" || this.job === "MCH" ? 80 : 90;
 	}
 
@@ -1163,6 +1229,10 @@ export class GameState {
 
 		this.jobSpecificAddSpeedBuffCovers(node, skill);
 
+		if (this.hasResourceAvailable("OCCULT_QUICK") && skill.cdName === "cd_GCD") {
+			node.addBuff(BuffType.OccultQuick);
+		}
+
 		// create potency node object (snapshotted buffs will populate on confirm)
 		const potencyNumber = skill.potencyFn(this);
 
@@ -1248,6 +1318,7 @@ export class GameState {
 					if (this.hasResourceAvailable("TINCTURE")) {
 						potency.addModifiers(Modifiers.Tincture);
 					}
+					potency.addModifiers(...getPhantomDamageModifiers(this));
 					potency.addModifiers(...skill.jobPotencyModifiers(this));
 					potency.addTargetSpecificModifiers(skill.jobTargetPotencyModifiers(this, node));
 				}
@@ -1257,6 +1328,7 @@ export class GameState {
 				if (this.hasResourceAvailable("TINCTURE") && !node.hasBuff(BuffType.Tincture)) {
 					node.addBuff(BuffType.Tincture);
 				}
+				addPhantomDamageBuffCovers(this, node);
 
 				this.jobSpecificAddDamageBuffCovers(node, skill);
 			}
@@ -1384,6 +1456,7 @@ export class GameState {
 			if (this.hasResourceAvailable("TINCTURE")) {
 				potency.addModifiers(Modifiers.Tincture);
 			}
+			potency.addModifiers(...getPhantomDamageModifiers(this));
 			potency.addModifiers(...skill.jobPotencyModifiers(this));
 			potency.addTargetSpecificModifiers(skill.jobTargetPotencyModifiers(this, node));
 			node.addPotency(potency);
@@ -1456,6 +1529,7 @@ export class GameState {
 			}
 			this.jobSpecificAddDamageBuffCovers(node, skill);
 		}
+		addPhantomDamageBuffCovers(this, node);
 
 		if (healingPotencyNumber > 0) {
 			// tincture
@@ -1978,6 +2052,7 @@ export class GameState {
 			mods.push(Modifiers.Tincture);
 			props.node.addBuff(BuffType.Tincture);
 		}
+		mods.push(...getPhantomDamageModifiers(this));
 
 		const effectDuration = duration ?? this.getStatusDuration(props.effectName);
 		const isGroundTargeted =

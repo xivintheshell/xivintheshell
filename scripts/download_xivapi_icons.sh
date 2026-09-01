@@ -12,7 +12,7 @@
 # too lazy to rewrite this to parse a text file).
 # Does not re-retrieve assets that were already downloaded (delete the file first if you want to update them).
 
-JOB="NIN"  # change me when you do a different job
+JOB="Phantom"  # change me when you do a different job
 
 SKILL_DIR="public/assets/Skills/$JOB"
 BUFF_DIR="public/assets/Buffs/$JOB"
@@ -52,66 +52,46 @@ get_buff_icon() {
     fi
 }
 
-get_buff_icon "Hide" "210607"
-get_buff_icon "Shade Shift" "210605"
-get_buff_icon "Trick Attack" "214857"
-get_buff_icon "Kassatsu" "212902"
-get_buff_icon "Dokumori" "212920"
-get_buff_icon "Tenri Jindo Ready" "212922"
-get_buff_icon "Ten Chi Jin" "212911"
-get_buff_icon "Meisui" "212914"
-get_buff_icon "Shadow Walker" "212919"
-get_buff_icon "Bunshin" "219681"
-get_buff_icon "Bunshin" "219682" 2
-get_buff_icon "Bunshin" "219683" 3
-get_buff_icon "Bunshin" "219684" 4
-get_buff_icon "Bunshin" "219685" 5
-get_buff_icon "Phantom Kamaitachi Ready" "212917"
-get_buff_icon "Raiju Ready" "217597"
-get_buff_icon "Raiju Ready" "217598" 2
-get_buff_icon "Raiju Ready" "217599" 3
-get_buff_icon "Kunai's Bane" "212923"
-get_buff_icon "Higi" "212921"
-get_buff_icon "Doton" "212904"
-get_buff_icon "Mudra" "212901"
+get_buff_icon "Drain Touch" "229987"
+get_buff_icon "Pent-up Rage" "229905"
+get_buff_icon "Magic Shell" "22963"
+get_buff_icon "Honed Spellblade" "229964"
+get_buff_icon "Blazing Spellblade" "229965"
+get_buff_icon "Deadly Phantom Aim" "229908"
+get_buff_icon "Occult Unicorn" "229956"
+get_buff_icon "Battle's Clangor" "218192"
+get_buff_icon "Battle's Clangor" "218193" 2
+get_buff_icon "Battle's Clangor" "218194" 3
+get_buff_icon "Battle's Clangor" "218195" 4
+get_buff_icon "Battle's Clangor" "218196" 5
+get_buff_icon "Battle's Clangor" "218197" 6
+get_buff_icon "Battle's Clangor" "218198" 7
+get_buff_icon "Battle's Clangor" "218199" 8
+get_buff_icon "Vigilance" "229932"
+get_buff_icon "Rage" "229904"
 
-get_skill_icon "Spinning Edge" "000601"
-get_skill_icon "Shade Shift" "000607"
-get_skill_icon "Gust Slash" "000602"
-get_skill_icon "Hide" "000609"
-get_skill_icon "Throwing Dagger" "000614"
-get_skill_icon "Trick Attack" "000618"
-get_skill_icon "Aeolian Edge" "000605"
-get_skill_icon "Ten" "002901"
-get_skill_icon "Ninjutsu" "002904"
-get_skill_icon "Chi" "002902"
-get_skill_icon "Death Blossom" "000615"
-get_skill_icon "Shukuchi" "002905"
-get_skill_icon "Jin" "002903"
-get_skill_icon "Kassatsu" "002906"
-get_skill_icon "Hakke Mujinsatsu" "002923"
-get_skill_icon "Armor Crush" "002915"
-get_skill_icon "Dream Within a Dream" "002918"
-get_skill_icon "Hellfrog Medium" "002920"
-get_skill_icon "Dokumori" "000619"
-get_skill_icon "Bhavacakra" ""002921
-get_skill_icon "Ten Chi Jin" "002922"
-get_skill_icon "Meisui" "002924"
-get_skill_icon "Bunshin" "002927"
-get_skill_icon "Phantom Kamaitachi" "002929"
-get_skill_icon "Forked Raiju" "002931"
-get_skill_icon "Fleeting Raiju" "002932"
-get_skill_icon "Kunai's Bane" "000620"
-get_skill_icon "Deathfrog Medium" "002934"
-get_skill_icon "Zesho Meppo" "002933"
-get_skill_icon "Tenri Jindo" "002935"
-get_skill_icon "Fuma Shuriken" "002907"
-get_skill_icon "Katon" "002908"
-get_skill_icon "Raiton" "002912"
-get_skill_icon "Hyoton" "002909"
-get_skill_icon "Huton" "002910"
-get_skill_icon "Doton" "002911"
-get_skill_icon "Suiton" "002913"
-get_skill_icon "Goka Mekkyaku" "002925"
-get_skill_icon "Hyosho Ranryu" "002926"
-get_skill_icon "Rabbit Medium" "002914"
+get_skill_icon "Occult Fire III" "064511"
+get_skill_icon "Occult Blizzard III" "064512"
+get_skill_icon "Occult Thunder III" "064513"
+get_skill_icon "Occult Flare" "064515"
+get_skill_icon "Hellfire" "064519"
+get_skill_icon "Judgment Bolt" "064520"
+get_skill_icon "Thunderstorm" "064522"
+get_skill_icon "Megaflare" "064523"
+get_skill_icon "Wisdom on the Winds" "064600"
+get_skill_icon "Drain Touch" "064529"
+get_skill_icon "Deep Freeze" "064530"
+get_skill_icon "Hell Wind" "064531"
+get_skill_icon "Chaos Drive" "064532"
+get_skill_icon "Doomsday" "064533"
+get_skill_icon "Rage" "064766"
+get_skill_icon "Deadly Blow" "064767"
+get_skill_icon "Sundering Spellblade" "064576"
+get_skill_icon "Magic Shell" "064577"
+get_skill_icon "Holy Spellblade" "064578"
+get_skill_icon "Blazing Spellblade" "064579"
+get_skill_icon "Phantom Aim" "064772"
+get_skill_icon "Occult Featherfoot" "064773"
+get_skill_icon "Occult Unicorn" "064775"
+get_skill_icon "Battle Bell" "064784"
+get_skill_icon "Apply Occult Ether" "064555"

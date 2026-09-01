@@ -68,8 +68,14 @@ export function localizeConfigField(key: keyof ConfigData): string {
 			return localize({ en: "determination: ", zh: "信念：" }).toString();
 		case "piety":
 			return localize({ en: "piety: ", zh: "信仰：" }).toString();
+		case "main":
+			return localize({ en: "main stat: ", zh: "主属性：" }).toString();
+		case "wd":
+			return localize({ en: "weapon damage: ", zh: "武器伤害：" }).toString();
 		case "animationLock":
 			return localize({ en: "animation lock: ", zh: "能力技后摇：" }).toString();
+		case "phantomJob":
+			return localize({ en: "phantom job: ", zh: "辅助职业：" }).toString();
 	}
 	return key;
 }
@@ -307,6 +313,25 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.POISED, { en: "poised" }],
 	[PotencyModifierType.CHAIN_STRAT, { en: "chain stratagem", zh: "连环计" }],
 	[PotencyModifierType.NO_CDH, { en: "no crit/direct hit", zh: "必不直暴" }],
+	[PotencyModifierType.PHANTOM, { en: "phantom potency" }],
+	[PotencyModifierType.PHANTOM_HITS_WEAKNESS, { en: "elemental weakness" }],
+	[PotencyModifierType.PHANTOM_LIBRA, { en: "libra" }],
+	[PotencyModifierType.PHANTOM_KICK_1, { en: "phantom kick (1)" }],
+	[PotencyModifierType.PHANTOM_KICK_2, { en: "phantom kick (2)" }],
+	[PotencyModifierType.PHANTOM_KICK_3, { en: "phantom kick (3)" }],
+	[PotencyModifierType.QUICKER_STEP, { en: "quicker step" }],
+	[PotencyModifierType.MESMERIZED, { en: "mesmerized" }],
+	[PotencyModifierType.DRAIN_TOUCH, { en: "drain touch" }],
+	[PotencyModifierType.DEADLY_PHANTOM_AIM, { en: "deadly phantom aim" }],
+	[PotencyModifierType.HONED_SPELLBLADE, { en: "honed spellblade" }],
+	[PotencyModifierType.BELL_1, { en: "bell (1)" }],
+	[PotencyModifierType.BELL_2, { en: "bell (2)" }],
+	[PotencyModifierType.BELL_3, { en: "bell (3)" }],
+	[PotencyModifierType.BELL_4, { en: "bell (4)" }],
+	[PotencyModifierType.BELL_5, { en: "bell (5)" }],
+	[PotencyModifierType.BELL_6, { en: "bell (6)" }],
+	[PotencyModifierType.BELL_7, { en: "bell (7)" }],
+	[PotencyModifierType.BELL_8, { en: "bell (8)" }],
 ]);
 export function localizeModifierName(modifierType: PotencyModifierType): string {
 	console.assert(
@@ -397,6 +422,25 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.POISED, { en: "POISED" }],
 	[PotencyModifierType.CHAIN_STRAT, { en: "CHAIN", zh: "连环计" }],
 	[PotencyModifierType.NO_CDH, { en: "NO CDH", zh: "必不直暴" }],
+	[PotencyModifierType.PHANTOM, { en: "PH" }],
+	[PotencyModifierType.PHANTOM_HITS_WEAKNESS, { en: "WEAK" }],
+	[PotencyModifierType.PHANTOM_LIBRA, { en: "LIBRA" }],
+	[PotencyModifierType.PHANTOM_KICK_1, { en: "PK1" }],
+	[PotencyModifierType.PHANTOM_KICK_2, { en: "PK2" }],
+	[PotencyModifierType.PHANTOM_KICK_3, { en: "PK3" }],
+	[PotencyModifierType.QUICKER_STEP, { en: "QS" }],
+	[PotencyModifierType.MESMERIZED, { en: "MESM" }],
+	[PotencyModifierType.DRAIN_TOUCH, { en: "DT" }],
+	[PotencyModifierType.DEADLY_PHANTOM_AIM, { en: "DPA" }],
+	[PotencyModifierType.HONED_SPELLBLADE, { en: "HSB" }],
+	[PotencyModifierType.BELL_1, { en: "B1" }],
+	[PotencyModifierType.BELL_2, { en: "B2" }],
+	[PotencyModifierType.BELL_3, { en: "B3" }],
+	[PotencyModifierType.BELL_4, { en: "B4" }],
+	[PotencyModifierType.BELL_5, { en: "B5" }],
+	[PotencyModifierType.BELL_6, { en: "B6" }],
+	[PotencyModifierType.BELL_7, { en: "B7" }],
+	[PotencyModifierType.BELL_8, { en: "B8" }],
 ]);
 export function localizeModifierTag(modifierType: PotencyModifierType): string {
 	console.assert(
