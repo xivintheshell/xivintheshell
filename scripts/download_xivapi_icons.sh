@@ -67,6 +67,7 @@ get_buff_icon "Battle's Clangor" "218196" 5
 get_buff_icon "Battle's Clangor" "218197" 6
 get_buff_icon "Battle's Clangor" "218198" 7
 get_buff_icon "Battle's Clangor" "218199" 8
+get_buff_icon "Vigilance" "229932"
 
 get_skill_icon "Occult Fire III" "064511"
 get_skill_icon "Occult Blizzard III" "064512"

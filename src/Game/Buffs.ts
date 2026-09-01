@@ -103,6 +103,7 @@ export const buffInfos = [
 	new BuffInfo(BuffType.OffensiveAria, MarkerColor.Orange, 4247, 999, 1.04, 0, 0, "BLU"),
 	new BuffInfo(BuffType.HerosRime, MarkerColor.Red, 4249, 20, 1.1, 0, 0, "BLU"),
 	new BuffInfo(BuffType.BattleHigh, MarkerColor.Green, 4229, 20, 1, 0.5, 0.5, "BLU"),
+	new BuffInfo(BuffType.Vigilance, MarkerColor.Red, 4277, 20, 1, 0.6, 0, "BLU"),
 ];
 
 const buffInfosMap: Map<BuffType, BuffInfo> = new Map();

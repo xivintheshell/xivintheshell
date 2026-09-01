@@ -83,6 +83,7 @@ buffIcons.set(BuffType.Recitation, "Buffs/SCH/Recitation.png");
 buffIcons.set(BuffType.OffensiveAria, "Buffs/Phantom/Offensive Aria.png");
 buffIcons.set(BuffType.HerosRime, "Buffs/Phantom/Hero's Rime.png");
 buffIcons.set(BuffType.BattleHigh, "Buffs/Phantom/Battle High.png");
+buffIcons.set(BuffType.Vigilance, "Buffs/Phantom/Vigilance.png");
 buffIcons.set(BuffType.OccultQuick, "Buffs/Phantom/Occult Quick.png");
 buffIcons.set(BuffType.PhantomKick, "Buffs/Phantom/Phantom Kick.png");
 buffIcons.set(BuffType.DeadlyPhantomAim, "Buffs/Phantom/Deadly Phantom Aim.png");

@@ -161,6 +161,7 @@ export enum BuffType {
 	HerosRime = "Hero's Rime",
 	OffensiveAria = "Offensive Aria",
 	BattleHigh = "Battle High",
+	Vigilance = "Vigilance",
 	DeadlyPhantomAim = "Deadly Phantom Aim",
 	BattlesClangor1 = "Battle's Clangor",
 	BattlesClangor2 = "Battle's Clangor2",
