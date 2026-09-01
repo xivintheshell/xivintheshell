@@ -987,7 +987,9 @@ export class DamageStatistics extends React.Component {
 							}}
 						>
 							{isPetTracker(props.row.skillName)
-								? localize({ en: "(pet)", zh: "（宠物）" })
+								? props.row.skillName !== "RAGE"
+									? localize({ en: "(pet)", zh: "（宠物）" })
+									: null
 								: localize({ en: "(DoT)", zh: "（DoT）" })}{" "}
 						</span>
 						<Help

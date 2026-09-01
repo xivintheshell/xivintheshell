@@ -259,6 +259,10 @@ export class GameState {
 		// Tracked for compatibility with sleeposim
 		this.autoStartTimes = [];
 		this.autoStopTimes = [];
+
+		// Hack for phantom berserker: treat RAGE as a dot/pet ability (must be registered for all jobs).
+		this.dotSkills.push("RAGE");
+		this.petSkills.push("RAGE");
 	}
 
 	get statusPropsGenerator(): StatusPropsGenerator<GameState> {

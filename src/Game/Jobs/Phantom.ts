@@ -16,9 +16,18 @@ import {
 	MakeGCDParams,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
 } from "../Skills";
-import { makeResource, CoolDown, getResourceInfo, ResourceInfo } from "../Resources";
-import { Modifiers, PotencyModifier, PotencyModifierType } from "../Potency";
-import { type GameState } from "../GameState";
+import { controller } from "../../Controller/Controller";
+import { ActionNode } from "../../Controller/Record";
+import {
+	makeResource,
+	CoolDown,
+	Event,
+	getResourceInfo,
+	OverTimeBuff,
+	ResourceInfo,
+} from "../Resources";
+import { Modifiers, Potency, PotencyModifier, PotencyModifierType } from "../Potency";
+import { getPhantomDamageModifiers, type GameState } from "../GameState";
 import { Aspect } from "../Common";
 import { CASTERS, HEALERS } from "../Data/Jobs";
 import { BRDResourceKey } from "../Data/Jobs/BRD";
@@ -26,6 +35,8 @@ import { BLMState, getEnochianModifier } from "./BLM";
 import { BRDState } from "./BRD";
 import { ActionKey } from "../Data";
 
+const ENRAGED_STRIKE_COUNT = 6;
+const RAGE_BUFF_DURATION = 10;
 ALL_JOBS.forEach((job) => {
 	makeResource(job, "PHANTOM_KICK", 3, { timeout: 40 });
 	makeResource(job, "COUNTERSTANCE", 1, { timeout: 60 });
@@ -33,7 +44,10 @@ ALL_JOBS.forEach((job) => {
 
 	makeResource(job, "SHIRAHADORI", 1, { timeout: 4 });
 	makeResource(job, "OCCULT_MAGE_MASHER", 1, { timeout: 60 });
+	makeResource(job, "RAGE", 1, { timeout: RAGE_BUFF_DURATION });
 	makeResource(job, "PENT_UP_RAGE", 1, { timeout: 15 });
+	// tracks the number of autos left during a rage
+	makeResource(job, "ENRAGED_STRIKE_TRACKER", ENRAGED_STRIKE_COUNT, {});
 	makeResource(job, "DEADLY_PHANTOM_AIM", 1, { timeout: 30 });
 	makeResource(job, "OCCULT_UNICORN", 1, { timeout: 30 });
 	makeResource(job, "FALSE_PREDICTION", 1, { timeout: 20 }); // TODO check duration
@@ -331,14 +345,95 @@ makePhantomWeaponskill("ZENINAGE", "cd_OC_GROUP_C", 120, PhantomJob.Samurai, {
 });
 
 // BERSERKER
+const ENRAGED_STRIKE_BETWEEN_DELAY = 1.7;
+const RAGE_APPLICATION_DELAY = 0.6;
+const RAGE_ANIMATION_LOCK = RAGE_BUFF_DURATION + RAGE_APPLICATION_DELAY;
+
+const pauseAutosForAnimationLock = (state: GameState, animationLock: number) => {
+	const autosEngaged = state.resources.get("AUTOS_ENGAGED").available(1);
+	if (!autosEngaged || !state.isInCombat()) {
+		return;
+	}
+	const recurringAutoDelay = state.jobSpecificAutoAttackDelay();
+	const currentDelay = state.findAutoAttackTimerInQueue();
+	const aaDelay = animationLock + (currentDelay === -1 ? recurringAutoDelay : currentDelay);
+	state.startAutoAttackTimer(aaDelay, recurringAutoDelay, animationLock);
+};
+
+const resolveEnragedStrikePotency = (state: GameState, node: ActionNode) => {
+	const strikesRemaining = state.resources.get("ENRAGED_STRIKE_TRACKER").availableAmount();
+	const potencyIndex = ENRAGED_STRIKE_COUNT - strikesRemaining;
+	const potency = node.getDotPotencies("ENRAGED_STRIKE_TRACKER")[potencyIndex];
+	if (potency === undefined) {
+		return;
+	}
+	if (state.hasResourceAvailable("TINCTURE")) {
+		potency.addModifiers(Modifiers.Tincture);
+	}
+	potency.addModifiers(Modifiers.Phantom);
+	potency.addModifiers(...getPhantomDamageModifiers(state));
+	const jobMods: PotencyModifier[] = [];
+	addDamageModifiers(state, jobMods, Aspect.Physical);
+	potency.addModifiers(...jobMods);
+	potency.snapshotTime = state.getDisplayTime();
+	controller.resolvePotency(potency);
+};
+
+const handleEnragedStrike = (state: GameState) => {
+	if (!state.hasResourceAvailable("ENRAGED_STRIKE_TRACKER")) {
+		return;
+	}
+	const strikeNode = (state.resources.get("ENRAGED_STRIKE_TRACKER") as OverTimeBuff).node;
+	if (strikeNode !== undefined) {
+		resolveEnragedStrikePotency(state, strikeNode);
+	}
+	state.resources.get("ENRAGED_STRIKE_TRACKER").consume(1);
+	if (state.hasResourceAvailable("ENRAGED_STRIKE_TRACKER")) {
+		state.addEvent(
+			new Event("enraged strike", ENRAGED_STRIKE_BETWEEN_DELAY, () =>
+				handleEnragedStrike(state),
+			),
+		);
+	}
+};
+
 makePhantomAbility("RAGE", "cd_OC_GROUP_B", PhantomJob.Berserker, {
 	cooldown: 60,
-	potency: 0, // TODO
+	potency: 0,
 	aspect: Aspect.Physical,
-	// 10s + some animation lock
-	animationLock: 10.5,
-	applicationDelay: 0.5,
-	onApplication: (state) => state.gainStatus("PENT_UP_RAGE"),
+	animationLock: RAGE_ANIMATION_LOCK,
+	applicationDelay: RAGE_APPLICATION_DELAY,
+	startsAuto: false,
+	onConfirm: (state, node) => {
+		pauseAutosForAnimationLock(state, RAGE_ANIMATION_LOCK);
+		state.resources.get("ENRAGED_STRIKE_TRACKER").gain(ENRAGED_STRIKE_COUNT);
+		for (let i = 0; i < ENRAGED_STRIKE_COUNT; i++) {
+			node.addDoTPotency(
+				new Potency({
+					config: state.config,
+					sourceTime: state.getDisplayTime(),
+					sourceSkill: "ENRAGED_STRIKE",
+					aspect: Aspect.Physical,
+					description: "",
+					basePotency: 150,
+					snapshotTime: undefined,
+					targetList: node.targetList,
+					falloff: 0,
+				}),
+				"ENRAGED_STRIKE_TRACKER",
+			);
+		}
+		(state.resources.get("ENRAGED_STRIKE_TRACKER") as OverTimeBuff).node = node;
+		state.addEvent(
+			new Event("initial enraged strike", RAGE_APPLICATION_DELAY, () =>
+				handleEnragedStrike(state),
+			),
+		);
+		state.addEvent(
+			new Event("pent-up rage", RAGE_ANIMATION_LOCK, () => state.gainStatus("PENT_UP_RAGE")),
+		);
+	},
+	onApplication: (state) => state.gainStatus("RAGE"),
 });
 
 makePhantomWeaponskill("DEADLY_BLOW", "cd_OC_GROUP_A", 30, PhantomJob.Berserker, {

@@ -58,6 +58,9 @@ export const PHANTOM_ACTIONS = ensureRecord<ActionData>()({
 		name: "Deadly Blow",
 		id: 41593,
 	},
+	ENRAGED_STRIKE: {
+		name: "Enraged Strike",
+	},
 
 	// Ranger
 	PHANTOM_AIM: {
@@ -199,8 +202,15 @@ export const PHANTOM_STATUSES = ensureRecord<ResourceData>()({
 	OCCULT_MAGE_MASHER: {
 		name: "Occult Mage Masher",
 	},
+	RAGE: {
+		name: "Rage",
+	},
 	PENT_UP_RAGE: {
 		name: "Pent-up Rage",
+	},
+	ENRAGED_STRIKE_TRACKER: {
+		name: "Enraged Strike Tracker",
+		isPetTracker: true,
 	},
 	FALSE_PREDICTION: {
 		name: "False Prediction",
