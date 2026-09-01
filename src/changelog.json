@@ -4,7 +4,8 @@
 		"changes": [
 			"[BETA][OC] Added Phantom Berserker, Ranger, and Mystic Knight. Berserker currently has no associated damage calculation, only animation locks. Blazing Blade's passive damage increase is ignored.",
 			"[BETA][OC] Libra and elemental weakness are now only displayed for jobs where it is relevant.",
-			"[BETA][OC] Added a universal action for gaining stacks of Battle Bell."
+			"[BETA][OC] Added a universal action for gaining stacks of Battle Bell.",
+			"[BETA][OC] Added a buff marker for Vigilance."
 		]
 	},
 	{

@@ -770,6 +770,7 @@ function drawSkills(params: {
 		[BuffType.Protraction, { color: colors.sch.protraction, showImage: true }],
 		[BuffType.Recitation, { color: colors.sch.recitation, showImage: true }],
 		[BuffType.HerosRime, { color: colors.rdm.whiteMana, showImage: true }],
+		[BuffType.Vigilance, { color: colors.jobAccents.WAR!, showImage: true }],
 		[BuffType.OccultQuick, { color: colors.timeline.buffCover, showImage: true }],
 		[BuffType.DeadlyPhantomAim, { color: colors.resources.cdhTag, showImage: true }],
 		[BuffType.BattlesClangor1, { color: colors.rpr.soulGaugeLow, showImage: true }],
