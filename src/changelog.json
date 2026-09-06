@@ -24,6 +24,12 @@
 		"level": "major"
 	},
 	{
+		"date": "9/6/26",
+		"changes": [
+			"[BETA][OC] Fixed incorrect skill icons for Phantom Mystic Knight actions."
+		]
+	},
+	{
 		"date": "8/31/26",
 		"changes": [
 			"[BETA][OC] Added Phantom Berserker, Ranger, and Mystic Knight. Deadly Blow has no associated damage calculation (please do the math yourself). Blazing Blade's passive damage increase is ignored.",
