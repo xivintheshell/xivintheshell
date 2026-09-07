@@ -1304,25 +1304,50 @@ export function drawMarkerTracks(params: {
 				renderingProps.scale,
 			)
 		: visibleWidth;
-	// make trackbins
+	// "info" bins are stored as a map because they may be sparse.
+	// Untargetable markers are guaranteed to have a single track at most.
+	// Buff markers are stored as a map keyed on the buff type.
 	const trackBins = new Map<number, MarkerElem[]>();
+	const untargetableBin: MarkerElem[] = [];
+	const buffTrackBins = new Map<BuffType, MarkerElem[]>();
 	renderingProps.allMarkers.forEach((marker) => {
-		let trackBin = trackBins.get(marker.track);
-		if (trackBin === undefined) trackBin = [];
-		trackBin.push(marker);
-		trackBins.set(marker.track, trackBin);
+		if (marker.markerType === MarkerType.Untargetable) {
+			untargetableBin.push(marker);
+		} else if (marker.markerType === MarkerType.Buff) {
+			const key = marker.description as BuffType;
+			let buffTrackBin = buffTrackBins.get(marker.description as BuffType);
+			if (buffTrackBin === undefined) buffTrackBin = [];
+			buffTrackBin.push(marker);
+			buffTrackBins.set(key, buffTrackBin);
+		} else {
+			let trackBin = trackBins.get(marker.track);
+			if (trackBin === undefined) trackBin = [];
+			trackBin.push(marker);
+			trackBins.set(marker.track, trackBin);
+		}
 	});
+	// Do one more pass to fold buff and untargetable bins into trackBins for rendering purposes.
+	// We stack the untargetable track one above the highest info track, and then buff tracks in
+	// sorted key-alphabetical order on top.
+	const maxInfoTrack = Math.max(-1, ...trackBins.keys());
+	let i = 1;
+	if (untargetableBin.length > 0) {
+		// I'm inlining a postfix unary add because I'm a psycho
+		trackBins.set(maxInfoTrack + i++, untargetableBin);
+	}
+	// Flip the sort comparison on purpose (we want later alphabetically to have a lower track)
+	for (const buffType of buffTrackBins
+		.keys()
+		.toArray()
+		.sort((a, b) => b.localeCompare(a))) {
+		trackBins.set(maxInfoTrack + i++, buffTrackBins.get(buffType)!);
+	}
 
+	// Add 1 since trackBins is 0-indexed
+	const numTracks = maxInfoTrack + 1 + (untargetableBin.length > 0 ? 1 : 0) + buffTrackBins.size;
+	const markerTracksBottomY = originY + numTracks * TimelineDimensions.trackHeight;
 	// tracks background
 	ctx.beginPath();
-	let numTracks = 0;
-	let hasUntargetableTrack = false;
-	for (const k of trackBins.keys()) {
-		numTracks = Math.max(numTracks, k + 1);
-		if (k === UntargetableMarkerTrack) hasUntargetableTrack = true;
-	}
-	if (hasUntargetableTrack) numTracks += 1;
-	const markerTracksBottomY = originY + numTracks * TimelineDimensions.trackHeight;
 	ctx.fillStyle = colors.timeline.tracks;
 	for (let i = 0; i < numTracks; i += 2) {
 		const top = markerTracksBottomY - (i + 1) * TimelineDimensions.trackHeight;
@@ -1798,14 +1823,19 @@ function drawAddSlotButton(params: {
 // Layer 3: tooltips and cursors only displayed during interactions
 
 function getMarkerTracksHeight(): number {
-	let numTracks = 0;
 	let hasUntargetableTrack = false;
+	let maxInfoTrack = -1;
+	const seenBuffs = new Set<BuffType>();
 	for (const marker of controller.timeline.getAllMarkers()) {
-		const k = marker.track;
-		numTracks = Math.max(numTracks, k + 1);
-		if (k === UntargetableMarkerTrack) hasUntargetableTrack = true;
+		if (marker.markerType === MarkerType.Untargetable) {
+			hasUntargetableTrack = true;
+		} else if (marker.markerType === MarkerType.Buff) {
+			seenBuffs.add(marker.description as BuffType);
+		} else {
+			maxInfoTrack = Math.max(marker.track, maxInfoTrack);
+		}
 	}
-	if (hasUntargetableTrack) numTracks += 1;
+	const numTracks = maxInfoTrack + 1 + (hasUntargetableTrack ? 1 : 0) + seenBuffs.size;
 	return numTracks * TimelineDimensions.trackHeight;
 }
 

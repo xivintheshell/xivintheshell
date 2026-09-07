@@ -26,7 +26,6 @@ export const enum ElemType {
 	Skill = "Skill",
 	Marker = "Marker",
 	WarningMark = "WarningMark",
-	Buff = "Buff",
 }
 
 export const UntargetableMarkerTrack = -1;
@@ -43,9 +42,15 @@ export type MarkerTrackIndividual = {
 	markers: SerializedMarker[];
 };
 
+export type BuffTrack = {
+	fileType: FileType.BuffsCombined;
+	markers: SerializedBuffMarker[];
+};
+
 export type MarkerTracksCombined = {
 	fileType: FileType.MarkerTracksCombined;
 	tracks: MarkerTrackIndividual[];
+	buffs: BuffTrack;
 };
 
 type TimelineElemBase = {
@@ -114,7 +119,7 @@ export type MarkerElem = TimelineElemBase & {
 	markerType: MarkerType;
 	duration: number;
 	color: MarkerColor;
-	track: number;
+	track: number; // ignored for Untargetable and Buff markers, which automatically choose a track to draw on
 	showText: boolean;
 	description: string; // if markerType is Buff, description holds BuffType as string, and is localized on render
 };
@@ -125,6 +130,12 @@ export type SerializedMarker = TimelineElemBase & {
 	showText: boolean;
 	color: MarkerColor;
 	description: string;
+};
+
+export type SerializedBuffMarker = TimelineElemBase & {
+	markerType: MarkerType.Buff;
+	duration: number;
+	description: BuffType; // localized on render
 };
 
 export type SharedTimelineElem = CursorElem | HistoricalCursorElem;
