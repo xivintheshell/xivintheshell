@@ -527,6 +527,9 @@ export default class Main extends React.Component<{ command?: string }> {
 														<b>Mystic Knight</b>
 													</li>
 													<li>
+														<b>Gladiator</b>
+													</li>
+													<li>
 														<b>Dancer</b>
 													</li>
 													<li>
