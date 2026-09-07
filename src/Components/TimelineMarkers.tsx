@@ -19,6 +19,7 @@ import {
 	MarkerElem,
 	MarkerType,
 	MarkerTracksCombined,
+	SerializedBuffTrack,
 	UntargetableMarkerTrack,
 } from "../Controller/Timeline";
 import {
@@ -105,7 +106,7 @@ const TrackIndexContext = createContext<{
 
 // exported to expose to test files
 export function doPresetTrackLoad(
-	content: MarkerTracksCombined,
+	content: MarkerTracksCombined | SerializedBuffTrack,
 	// can't access useContext here since it's in a hook
 	setTrackIndices: (arr: number[]) => void,
 	opts?: {
@@ -117,11 +118,13 @@ export function doPresetTrackLoad(
 	let parsedGlobalOffset = parseTime(opts?.globalOffset ?? "");
 	parsedGlobalOffset = isNaN(parsedGlobalOffset) ? 0 : parsedGlobalOffset;
 	const parsedLocalOffset = parseTime(opts?.localOffset ?? "");
-	controller.timeline.loadCombinedTracksPreset(
-		content,
-		parsedGlobalOffset + (isNaN(parsedLocalOffset) ? 0 : parsedLocalOffset),
-		opts?.cutoff !== undefined ? parsedGlobalOffset + opts.cutoff : undefined,
-	);
+	const offset = parsedGlobalOffset + (isNaN(parsedLocalOffset) ? 0 : parsedLocalOffset);
+	const cutoff = opts?.cutoff !== undefined ? parsedGlobalOffset + opts.cutoff : undefined;
+	if (content.fileType === FileType.BuffsCombined) {
+		controller.timeline.loadBuffTrackPreset(content, offset, cutoff);
+	} else {
+		controller.timeline.loadCombinedTracksPreset(content, offset, cutoff);
+	}
 	setTrackIndices(controller.timeline.getTrackIndices());
 	controller.updateStats();
 	controller.timeline.drawElements();
@@ -578,7 +581,6 @@ export function CustomMarkerWidget() {
 				style={{ display: "inline-block", marginBottom: 6 }}
 				onChange={setRepeatMarkerCount}
 			/>
-			{/* TODO gray this out if count === 1 */}
 			<span>{localize({ en: " marker(s)", zh: "个标记" })}</span>
 			<Input
 				defaultValue={repeatMarkerInterval}
@@ -691,18 +693,21 @@ export function CustomMarkerWidget() {
 							});
 						}
 						if (
-							repeatMarkerCount.length > 0 &&
-							(isNaN(parseFloat(repeatMarkerCount)) ||
-								!Number.isInteger(parseFloat(repeatMarkerCount)))
+							repeatMarkerCount.length === 0 ||
+							isNaN(parseFloat(repeatMarkerCount)) ||
+							!Number.isInteger(parseFloat(repeatMarkerCount)) ||
+							parseInt(repeatMarkerCount) < 1
 						) {
 							err = localize({
-								en: "marker repeat count must be an integer",
-								zh: "标记重复次数必须为整数",
+								en: "marker repeat count must be an integer >= 1",
+								zh: "标记重复次数必须为大于等于1的整数",
 							});
 						}
+						const repeatCount = parseInt(repeatMarkerCount);
 						if (
-							repeatMarkerInterval.length > 0 &&
-							isNaN(parseFloat(repeatMarkerInterval))
+							repeatCount > 1 &&
+							(repeatMarkerInterval.length === 0 ||
+								isNaN(parseFloat(repeatMarkerInterval)))
 						) {
 							err = localize({
 								en: "marker repeat interval must be a number",
@@ -786,7 +791,11 @@ export function MarkerLoadSaveWidget() {
 			defaultLoadUrl={""}
 			label={localize({ en: "Load multiple tracks combined: ", zh: "载入多轨文件：" })}
 			onLoadFn={(content: any) => {
-				controller.timeline.loadCombinedTracksPreset(content, parsedOffset);
+				if (content.fileType === FileType.BuffsCombined) {
+					controller.timeline.loadBuffTrackPreset(content, parsedOffset);
+				} else {
+					controller.timeline.loadCombinedTracksPreset(content, parsedOffset);
+				}
 				controller.updateStats();
 				controller.timeline.drawElements();
 			}}

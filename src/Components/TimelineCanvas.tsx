@@ -21,7 +21,6 @@ import {
 	SkillElem,
 	SlotTimelineElem,
 	TimelineElem,
-	UntargetableMarkerTrack,
 	HistoricalCursorElem,
 	WarningMarkElem,
 } from "../Controller/Timeline";
@@ -224,21 +223,13 @@ function drawTip(params: {
 function drawMarkers(params: {
 	ctx: CanvasRenderingContext2D;
 	viewInfo: ViewInfo;
-	markerTracksTopY: number;
 	markerTracksBottomY: number; // bottom Y of track 0
 	timelineOrigin: number;
 	trackBins: Map<number, MarkerElem[]>;
 	testInteraction: InteractionHandler;
 }) {
-	const {
-		ctx,
-		viewInfo,
-		markerTracksTopY,
-		markerTracksBottomY,
-		timelineOrigin,
-		trackBins,
-		testInteraction,
-	} = params;
+	const { ctx, viewInfo, markerTracksBottomY, timelineOrigin, trackBins, testInteraction } =
+		params;
 	const colors = viewInfo.colors;
 	const { countdown, scale } = viewInfo.renderingProps;
 	// markers
@@ -247,10 +238,7 @@ function drawMarkers(params: {
 	ctx.font = "11px " + DEFAULT_FONTS;
 	ctx.textAlign = "left";
 	trackBins.forEach((elems, track) => {
-		let top = markerTracksBottomY - (track + 1) * TimelineDimensions.trackHeight;
-		if (track === UntargetableMarkerTrack) {
-			top = markerTracksTopY;
-		}
+		const top = markerTracksBottomY - (track + 1) * TimelineDimensions.trackHeight;
 		for (let i = 0; i < elems.length; i++) {
 			const m = elems[i];
 
@@ -1359,7 +1347,6 @@ export function drawMarkerTracks(params: {
 	drawMarkers({
 		ctx,
 		viewInfo,
-		markerTracksTopY: originY,
 		markerTracksBottomY,
 		timelineOrigin: originX,
 		trackBins,

@@ -46,7 +46,8 @@ export type MarkerTrackIndividual = {
 export type MarkerTracksCombined = {
 	fileType: FileType.MarkerTracksCombined;
 	tracks: MarkerTrackIndividual[];
-	buffs: SerializedBuffTrack;
+	// Omitted by older presets that treat buff markers the same as other tracks.
+	buffs?: SerializedBuffTrack;
 };
 
 type TimelineElemBase = {
@@ -380,11 +381,12 @@ export class Timeline {
 			window.alert("wrong file type '" + content.fileType + "'");
 			return;
 		}
-		// TODO: Preset markers currently do not contain any buff markers within them.
-		// If this ever changes, then we'll need to add a path to read content.buffs properly.
 		content.tracks.forEach((trackContent) => {
 			this.loadIndividualTrackPreset(trackContent, trackContent.track, offset, cutoff);
 		});
+		if (content.buffs !== undefined) {
+			this.#loadBuffTrack(content.buffs, offset, cutoff);
+		}
 	}
 
 	loadIndividualTrackPreset(
@@ -398,6 +400,14 @@ export class Timeline {
 			return;
 		}
 		this.#appendMarkersPreset(content, track, offset, cutoff);
+	}
+
+	loadBuffTrackPreset(content: SerializedBuffTrack, offset: number, cutoff?: number) {
+		if (content.fileType !== FileType.BuffsCombined) {
+			window.alert("wrong file type '" + content.fileType + "'");
+			return;
+		}
+		this.#loadBuffTrack(content, offset, cutoff);
 	}
 
 	deleteAllMarkers() {
