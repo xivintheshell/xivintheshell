@@ -1,5 +1,17 @@
 [
 	{
+		"date": "9/7/26",
+		"changes": [
+			"Buff markers now automatically are displayed above other markers, and no longer are specified with a track number.",
+			"You can now add repeated buff markers at fixed intervals. Hopefully this will still be useful in 8.0."
+		],
+		"changes_zh": [
+			"buff 标记现已自动显示在其他标记上方，且无需再指定音轨编号。",
+			"现已支持按固定时间间隔添加重复的 buff 标记。我只能希望这个功能在 8.0 版本中依然有用。"
+		],
+		"level": "major"
+	},
+	{
 		"date": "8/30/26",
 		"changes": [
 			"Separated resource overrides into separate sub-groups for trackers, gauges, statuses, and cooldowns."

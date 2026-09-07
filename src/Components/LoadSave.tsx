@@ -36,7 +36,8 @@ export function LoadSave() {
 			);
 		} else if (
 			content.fileType === FileType.MarkerTrackIndividual ||
-			content.fileType === FileType.MarkerTracksCombined
+			content.fileType === FileType.MarkerTracksCombined ||
+			content.fileType === FileType.BuffsCombined
 		) {
 			window.alert(
 				"wrong file type '" +

@@ -24,6 +24,8 @@ export const enum FileType {
 	MarkerTrackIndividual = "MarkerTrackIndividual",
 	/** A set of multiple tracks for preset markers, spanning multiple lines. */
 	MarkerTracksCombined = "MarkerTracksCombined",
+	/** A collection of buff markers, which are automatically assigned track numbers at render time. */
+	BuffsCombined = "BuffsCombined",
 	/**
 	 * A collection of individual markers, as well as pointers to other MarkerTracksCombined
 	 * objects with phase timing information.

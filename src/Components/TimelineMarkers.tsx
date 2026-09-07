@@ -19,6 +19,7 @@ import {
 	MarkerElem,
 	MarkerType,
 	MarkerTracksCombined,
+	SerializedBuffTrack,
 	UntargetableMarkerTrack,
 } from "../Controller/Timeline";
 import {
@@ -105,7 +106,7 @@ const TrackIndexContext = createContext<{
 
 // exported to expose to test files
 export function doPresetTrackLoad(
-	content: MarkerTracksCombined,
+	content: MarkerTracksCombined | SerializedBuffTrack,
 	// can't access useContext here since it's in a hook
 	setTrackIndices: (arr: number[]) => void,
 	opts?: {
@@ -117,11 +118,13 @@ export function doPresetTrackLoad(
 	let parsedGlobalOffset = parseTime(opts?.globalOffset ?? "");
 	parsedGlobalOffset = isNaN(parsedGlobalOffset) ? 0 : parsedGlobalOffset;
 	const parsedLocalOffset = parseTime(opts?.localOffset ?? "");
-	controller.timeline.loadCombinedTracksPreset(
-		content,
-		parsedGlobalOffset + (isNaN(parsedLocalOffset) ? 0 : parsedLocalOffset),
-		opts?.cutoff !== undefined ? parsedGlobalOffset + opts.cutoff : undefined,
-	);
+	const offset = parsedGlobalOffset + (isNaN(parsedLocalOffset) ? 0 : parsedLocalOffset);
+	const cutoff = opts?.cutoff !== undefined ? parsedGlobalOffset + opts.cutoff : undefined;
+	if (content.fileType === FileType.BuffsCombined) {
+		controller.timeline.loadBuffTrackPreset(content, offset, cutoff);
+	} else {
+		controller.timeline.loadCombinedTracksPreset(content, offset, cutoff);
+	}
 	setTrackIndices(controller.timeline.getTrackIndices());
 	controller.updateStats();
 	controller.timeline.drawElements();
@@ -435,8 +438,11 @@ export function CustomMarkerWidget() {
 	const [nextMarkerDescription, setNextMarkerDescription] = useState("");
 	const [nextMarkerShowText, setNextMarkerShowText] = useState(false);
 	const [nextMarkerBuff, setNextMarkerBuff] = useState(BuffType.TechnicalFinish);
+	const [repeatMarkerCount, setRepeatMarkerCount] = useState("1");
+	const [repeatMarkerInterval, setRepeatMarkerInterval] = useState("120");
 	const inlineDiv = { display: "inline-block", marginRight: "1em", marginBottom: 6 };
 	const { setTrackIndices } = useContext(TrackIndexContext);
+	const colors = getCurrentThemeColors();
 
 	useEffect(() => {
 		// DANGER!! CONTROLLER STATE HACK
@@ -546,6 +552,12 @@ export function CustomMarkerWidget() {
 		{localizeBuffType(info.name)}
 	</option>);
 
+	const repeatIntervalStyle: CSSProperties =
+		parseInt(repeatMarkerCount) > 1
+			? {}
+			: {
+					color: colors.bgHighContrast,
+				};
 	const buffOnlySection = <div>
 		<span>{localize({ en: "Buff: ", zh: "团辅：" })}</span>
 		<select
@@ -557,18 +569,29 @@ export function CustomMarkerWidget() {
 					onEnterBuffEdit(buffType);
 				}
 			}}
+			style={inlineDiv}
 		>
 			{buffCollection}
 		</select>
-
-		<div style={{ marginTop: 5 }}>
+		<div>
 			<Input
-				defaultValue={nextMarkerTrack}
-				description={localize({ en: "Track: ", zh: "轨道序号：" })}
-				width={4}
-				style={inlineDiv}
-				onChange={setNextMarkerTrack}
+				defaultValue={repeatMarkerCount}
+				description={localize({ en: "Repeat: ", zh: "重复：" })}
+				width={2}
+				style={{ display: "inline-block", marginBottom: 6 }}
+				onChange={setRepeatMarkerCount}
 			/>
+			<span>{localize({ en: " marker(s)", zh: "个标记" })}</span>
+			<Input
+				defaultValue={repeatMarkerInterval}
+				description={localize({ en: ", with ", zh: "，间隔" })}
+				width={3}
+				style={{ display: "inline-block", marginBottom: 6, ...repeatIntervalStyle }}
+				onChange={setRepeatMarkerInterval}
+			/>
+			<span style={repeatIntervalStyle}>
+				{localize({ en: "seconds in between", zh: "秒" })}
+			</span>
 		</div>
 	</div>;
 	return <div>
@@ -669,6 +692,28 @@ export function CustomMarkerWidget() {
 								zh: `此团辅持续时间不能超过${buff.info.duration}秒`,
 							});
 						}
+						if (
+							repeatMarkerCount.length === 0 ||
+							isNaN(parseFloat(repeatMarkerCount)) ||
+							!Number.isInteger(parseFloat(repeatMarkerCount)) ||
+							parseInt(repeatMarkerCount) < 1
+						) {
+							err = localize({
+								en: "marker repeat count must be an integer >= 1",
+								zh: "标记重复次数必须为大于等于1的整数",
+							});
+						}
+						const repeatCount = parseInt(repeatMarkerCount);
+						if (
+							repeatCount > 1 &&
+							(repeatMarkerInterval.length === 0 ||
+								isNaN(parseFloat(repeatMarkerInterval)))
+						) {
+							err = localize({
+								en: "marker repeat interval must be a number",
+								zh: "标记重复间隔必须为数字",
+							});
+						}
 						marker.color = buff.info.color;
 						marker.description = buff.name;
 						marker.duration = duration;
@@ -692,6 +737,17 @@ export function CustomMarkerWidget() {
 						return;
 					}
 					controller.timeline.addMarker(marker);
+					// Process repeat state for buff markers here, after error validation
+					if (nextMarkerType === MarkerType.Buff) {
+						const repeatCount = parseInt(repeatMarkerCount);
+						const repeatInterval = parseFloat(repeatMarkerInterval);
+						for (let i = 1; i < repeatCount; i++) {
+							controller.timeline.addMarker({
+								...marker,
+								time: marker.time + i * repeatInterval,
+							});
+						}
+					}
 					controller.updateStats();
 					setTrackIndices(controller.timeline.getTrackIndices());
 					if (nextMarkerType === MarkerType.Untargetable) {
@@ -701,14 +757,13 @@ export function CustomMarkerWidget() {
 					e.preventDefault();
 				}}
 			>
-				{localize({ en: "add marker", zh: "添加标记" })}
+				{localize({ en: "add marker(s)", zh: "添加标记" })}
 			</button>
 		</form>
 	</div>;
 }
 
 export function MarkerLoadSaveWidget() {
-	const { trackIndices, setTrackIndices } = useContext(TrackIndexContext);
 	const offset = parseInt(useContext(OffsetContext));
 	const parsedOffset = isNaN(offset) ? 0 : offset;
 	const colors = getThemeColors(useContext(ColorThemeContext));
@@ -736,9 +791,12 @@ export function MarkerLoadSaveWidget() {
 			defaultLoadUrl={""}
 			label={localize({ en: "Load multiple tracks combined: ", zh: "载入多轨文件：" })}
 			onLoadFn={(content: any) => {
-				controller.timeline.loadCombinedTracksPreset(content, parsedOffset);
+				if (content.fileType === FileType.BuffsCombined) {
+					controller.timeline.loadBuffTrackPreset(content, parsedOffset);
+				} else {
+					controller.timeline.loadCombinedTracksPreset(content, parsedOffset);
+				}
 				controller.updateStats();
-				setTrackIndices(controller.timeline.getTrackIndices());
 				controller.timeline.drawElements();
 			}}
 		/>
@@ -763,40 +821,48 @@ export function MarkerLoadSaveWidget() {
 					}
 					controller.timeline.loadIndividualTrackPreset(content, track, parsedOffset);
 					controller.updateStats();
-					setTrackIndices(controller.timeline.getTrackIndices());
 					controller.timeline.drawElements();
 				}}
 			/>
 		</div>
 	</>;
 
+	const { tracks, buffs } = controller.timeline.serializedSeparateMarkerTracks();
 	const saveTracksSection = <>
-		<SaveToFile
-			key={"combined"}
-			fileFormat={FileFormat.Json}
-			getContentFn={() => controller.timeline.serializedCombinedMarkerTracks()}
-			filename={"tracks_all"}
-			displayName={localize({ en: "all tracks combined", zh: "所有轨道" })}
-		/>
-
-		{trackIndices.map((trackIndex) => {
+		{tracks.length > 0 || buffs.buffs.length > 0 ? (
+			<SaveToFile
+				key={"combined"}
+				fileFormat={FileFormat.Json}
+				getContentFn={() => controller.timeline.serializedCombinedMarkerTracks()}
+				filename={"tracks_all"}
+				displayName={localize({ en: "all tracks combined", zh: "所有轨道" })}
+			/>
+		) : (
+			<div>
+				<i>{localize({ en: "no tracks to save", zh: "无轨道可保存" })}</i>
+			</div>
+		)}
+		{buffs.buffs.length > 0 ? (
+			<SaveToFile
+				key="buff"
+				fileFormat={FileFormat.Json}
+				getContentFn={() => buffs}
+				filename="track_buffs"
+				displayName={localize({ en: "buff tracks", zh: "BUFF轨" })}
+			/>
+		) : undefined}
+		{tracks.map((track) => {
+			const trackIndex = track.track;
 			let fileSuffix = trackIndex.toString();
 			let displayName: ContentNode = localize({ en: "track ", zh: "轨" }) + fileSuffix;
 			if (trackIndex === UntargetableMarkerTrack) {
 				fileSuffix = "untargetable";
-				displayName = localize({ en: "track untargetable", zh: "不可选中标记轨" });
+				displayName = localize({ en: "untargetable track", zh: "不可选中标记轨" });
 			}
 			return <SaveToFile
 				key={trackIndex}
 				fileFormat={FileFormat.Json}
-				getContentFn={() => {
-					const files = controller.timeline.serializedSeparateMarkerTracks();
-					for (let i = 0; i < files.length; i++) {
-						if (files[i].track === trackIndex) return files[i];
-					}
-					console.assert(false);
-					return [];
-				}}
+				getContentFn={() => track}
 				filename={"track_" + fileSuffix}
 				displayName={displayName}
 			/>;
