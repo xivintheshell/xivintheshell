@@ -148,7 +148,9 @@ export default class Main extends React.Component<{ command?: string }> {
 			// Change the favicon
 			// https://stackoverflow.com/a/260877
 			const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
-			link.href = "/favicons/beta.ico";
+			if (link) {
+				link.href = "/favicons/beta.ico";
+			}
 			// Change the title
 			const title = document.getElementById("pageTitle") as HTMLTitleElement;
 			if (title) {
