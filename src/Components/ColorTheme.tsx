@@ -940,6 +940,10 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.BELL_6, colors.text],
 		[PotencyModifierType.BELL_7, colors.text],
 		[PotencyModifierType.BELL_8, colors.text],
+		[PotencyModifierType.FINISHER_1, colors.text],
+		[PotencyModifierType.FINISHER_2, colors.text],
+		[PotencyModifierType.FINISHER_3, colors.text],
+		[PotencyModifierType.FINISHER_4, colors.text],
 	]);
 	console.assert(
 		modifierColors.has(modifierType),

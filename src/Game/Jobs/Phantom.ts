@@ -64,6 +64,8 @@ ALL_JOBS.forEach((job) => {
 	makeResource(job, "MAGIC_SHELL", 1, { timeout: 60 });
 	makeResource(job, "HONED_SPELLBLADE", 1, { timeout: 30 });
 	makeResource(job, "BLAZING_SPELLBLADE", 1, { timeout: 70 });
+	makeResource(job, "FINISHING_FERVOR", 4, { timeout: 120 });
+	makeResource(job, "DEFEND", 1, { timeout: 5 });
 	makeResource(job, "POISED_TO_SWORD_DANCE", 1, { timeout: 30 });
 	makeResource(job, "TEMPTED_TO_TANGO", 1, { timeout: 30 });
 	makeResource(job, "JITTERBUGGED", 1, { timeout: 30 });
@@ -578,6 +580,59 @@ makePhantomWeaponskill("BLAZING_SPELLBLADE", "cd_OC_GROUP_A", 30, PhantomJob.Mys
 		state.hasResourceAvailable("HONED_SPELLBLADE") ? [Modifiers.HonedSpellblade] : [],
 	onConfirm: (state) => state.tryConsumeResource("HONED_SPELLBLADE"),
 	onApplication: (state) => state.gainStatus("BLAZING_SPELLBLADE"),
+});
+
+// GLADIATOR
+makePhantomWeaponskill("FINISHER", "cd_OC_GROUP_E", 60, PhantomJob.Gladiator, {
+	potency: 560, // average potency with 0 stacks
+	aspect: Aspect.Physical,
+	jobPotencyModifiers: (state) => {
+		const fervor = state.resources.get("FINISHING_FERVOR").availableAmount();
+		return fervor === 1
+			? [Modifiers.Finisher1]
+			: fervor === 2
+				? [Modifiers.Finisher2]
+				: fervor === 3
+					? [Modifiers.Finisher3]
+					: fervor === 4
+						? [Modifiers.Finisher4]
+						: [];
+	},
+});
+
+makePhantomAbility("DEFEND", "cd_OC_GROUP_A", PhantomJob.Gladiator, {
+	replaceIf: [
+		{
+			newSkill: "ADD_DEFEND_STACK",
+			condition: (state) => state.hasResourceAvailable("DEFEND"),
+		},
+	],
+	cooldown: 30,
+	onConfirm: (state) => state.gainStatus("DEFEND"),
+});
+
+makePhantomAbility("ADD_DEFEND_STACK", "cd_APPLY_BUFF", PhantomJob.Gladiator, {
+	startOnHotbar: false,
+	animationLock: FAKE_SKILL_ANIMATION_LOCK,
+	cooldown: FAKE_SKILL_ANIMATION_LOCK,
+	highlightIf: (state) => state.hasResourceAvailable("DEFEND"),
+	validateAttempt: (state) => state.hasResourceAvailable("DEFEND"),
+	onConfirm: (state) =>
+		state.gainStatus(
+			"FINISHING_FERVOR",
+			Math.min(state.resources.get("FINISHING_FERVOR").availableAmount() + 1, 4),
+		),
+});
+
+makePhantomWeaponskill("LONG_REACH", "cd_OC_GROUP_D", 120, PhantomJob.Gladiator, {
+	potency: 400,
+	aspect: Aspect.Physical,
+});
+
+makePhantomWeaponskill("BLADEBLITZ", "cd_OC_GROUP_C", 120, PhantomJob.Gladiator, {
+	potency: 600,
+	aspect: Aspect.Physical,
+	falloff: 0,
 });
 
 // DANCER

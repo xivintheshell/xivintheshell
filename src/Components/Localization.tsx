@@ -332,6 +332,10 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.BELL_6, { en: "bell (6)" }],
 	[PotencyModifierType.BELL_7, { en: "bell (7)" }],
 	[PotencyModifierType.BELL_8, { en: "bell (8)" }],
+	[PotencyModifierType.FINISHER_1, { en: "finisher (1)" }],
+	[PotencyModifierType.FINISHER_2, { en: "finisher (2)" }],
+	[PotencyModifierType.FINISHER_3, { en: "finisher (3)" }],
+	[PotencyModifierType.FINISHER_4, { en: "finisher (4)" }],
 ]);
 export function localizeModifierName(modifierType: PotencyModifierType): string {
 	console.assert(
@@ -441,6 +445,10 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.BELL_6, { en: "B6" }],
 	[PotencyModifierType.BELL_7, { en: "B7" }],
 	[PotencyModifierType.BELL_8, { en: "B8" }],
+	[PotencyModifierType.FINISHER_1, { en: "FIN1" }],
+	[PotencyModifierType.FINISHER_2, { en: "FIN2" }],
+	[PotencyModifierType.FINISHER_3, { en: "FIN3" }],
+	[PotencyModifierType.FINISHER_4, { en: "FIN4" }],
 ]);
 export function localizeModifierTag(modifierType: PotencyModifierType): string {
 	console.assert(

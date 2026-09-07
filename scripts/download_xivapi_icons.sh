@@ -69,6 +69,11 @@ get_buff_icon "Battle's Clangor" "218198" 7
 get_buff_icon "Battle's Clangor" "218199" 8
 get_buff_icon "Vigilance" "229932"
 get_buff_icon "Rage" "229904"
+get_buff_icon "Finishing Fervor" "218176"
+get_buff_icon "Finishing Fervor" "218177" 2
+get_buff_icon "Finishing Fervor" "218178" 3
+get_buff_icon "Finishing Fervor" "218179" 4
+get_buff_icon "Defend" "229967"
 
 get_skill_icon "Occult Fire III" "064511"
 get_skill_icon "Occult Blizzard III" "064512"
@@ -95,3 +100,7 @@ get_skill_icon "Occult Featherfoot" "064773"
 get_skill_icon "Occult Unicorn" "064775"
 get_skill_icon "Battle Bell" "064784"
 get_skill_icon "Apply Occult Ether" "064555"
+get_skill_icon "Finisher" "064579"
+get_skill_icon "Defend" "064580"
+get_skill_icon "Long Reach" "064581"
+get_skill_icon "Bladeblitz" "064582"

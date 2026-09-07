@@ -141,6 +141,10 @@ export const enum PotencyModifierType {
 	BELL_6,
 	BELL_7,
 	BELL_8,
+	FINISHER_1,
+	FINISHER_2,
+	FINISHER_3,
+	FINISHER_4,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -771,6 +775,26 @@ export const Modifiers = {
 		source: PotencyModifierType.BELL_8,
 		potencyFactor: 1.4,
 	} as PotencyMultiplier,
+	Finisher1: {
+		kind: "adder",
+		source: PotencyModifierType.FINISHER_1,
+		additiveAmount: 110,
+	} as PotencyAdder,
+	Finisher2: {
+		kind: "adder",
+		source: PotencyModifierType.FINISHER_2,
+		additiveAmount: 220,
+	} as PotencyAdder,
+	Finisher3: {
+		kind: "adder",
+		source: PotencyModifierType.FINISHER_3,
+		additiveAmount: 330,
+	} as PotencyAdder,
+	Finisher4: {
+		kind: "adder",
+		source: PotencyModifierType.FINISHER_4,
+		additiveAmount: 440,
+	} as PotencyAdder,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {

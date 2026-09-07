@@ -9,6 +9,7 @@ export enum PhantomJob {
 	Ranger = "RNG",
 	Oracle = "ORC",
 	MysticKnight = "MYK",
+	Gladiator = "GLA",
 	Dancer = "DNC",
 	BlackMage = "BLM",
 	Summoner = "SMN",
@@ -126,10 +127,17 @@ export const PHANTOM_ACTIONS = ensureRecord<ActionData>()({
 
 	// Mystic Knight
 	SUNDERING_SPELLBLADE: { name: "Sundering Spellblade", id: 46591 },
-	MAGIC_SHELL: { name: "Magic Shell", id: 46592 },
+	MAGIC_SHELL: { name: "Magic Shell", id: 46590 },
 	POP_MAGIC_SHELL: { name: "Pop Magic Shell" },
-	HOLY_SPELLBLADE: { name: "Holy Spellblade", id: 46593 },
-	BLAZING_SPELLBLADE: { name: "Blazing Spellblade", id: 46594 },
+	HOLY_SPELLBLADE: { name: "Holy Spellblade", id: 46592 },
+	BLAZING_SPELLBLADE: { name: "Blazing Spellblade", id: 46593 },
+
+	// Gladiator
+	FINISHER: { name: "Finisher", id: 46594 },
+	DEFEND: { name: "Defend", id: 46595 },
+	LONG_REACH: { name: "Long Reach", id: 46596 },
+	BLADEBLITZ: { name: "Bladeblitz", id: 46597 },
+	ADD_DEFEND_STACK: { name: "Add Defend Stack" },
 
 	// Dancer
 	DANCE: { name: "Dance", id: 46598 },
@@ -233,11 +241,13 @@ export const PHANTOM_STATUSES = ensureRecord<ResourceData>()({
 	INVULNERABILITY: {
 		name: "Invulnerability",
 	},
+	DEADLY_PHANTOM_AIM: { name: "Deadly Phantom Aim" },
+	OCCULT_UNICORN: { name: "Occult Unicorn" },
 	MAGIC_SHELL: { name: "Magic Shell", mayNotBeCanceled: true },
 	HONED_SPELLBLADE: { name: "Honed Spellblade" },
 	BLAZING_SPELLBLADE: { name: "Blazing Spellblade" },
-	DEADLY_PHANTOM_AIM: { name: "Deadly Phantom Aim" },
-	OCCULT_UNICORN: { name: "Occult Unicorn" },
+	FINISHING_FERVOR: { name: "Finishing Fervor", maximumStacks: 4 },
+	DEFEND: { name: "Defend" },
 	POISED_TO_SWORD_DANCE: { name: "Poised to Sword Dance" },
 	TEMPTED_TO_TANGO: { name: "Tempted to Tango" },
 	JITTERBUGGED: { name: "Jitterbugged" },
