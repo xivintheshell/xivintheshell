@@ -435,8 +435,11 @@ export function CustomMarkerWidget() {
 	const [nextMarkerDescription, setNextMarkerDescription] = useState("");
 	const [nextMarkerShowText, setNextMarkerShowText] = useState(false);
 	const [nextMarkerBuff, setNextMarkerBuff] = useState(BuffType.TechnicalFinish);
+	const [repeatMarkerCount, setRepeatMarkerCount] = useState("1");
+	const [repeatMarkerInterval, setRepeatMarkerInterval] = useState("120");
 	const inlineDiv = { display: "inline-block", marginRight: "1em", marginBottom: 6 };
 	const { setTrackIndices } = useContext(TrackIndexContext);
+	const colors = getCurrentThemeColors();
 
 	useEffect(() => {
 		// DANGER!! CONTROLLER STATE HACK
@@ -546,6 +549,12 @@ export function CustomMarkerWidget() {
 		{localizeBuffType(info.name)}
 	</option>);
 
+	const repeatIntervalStyle: CSSProperties =
+		parseInt(repeatMarkerCount) > 1
+			? {}
+			: {
+					color: colors.bgHighContrast,
+				};
 	const buffOnlySection = <div>
 		<span>{localize({ en: "Buff: ", zh: "团辅：" })}</span>
 		<select
@@ -557,18 +566,30 @@ export function CustomMarkerWidget() {
 					onEnterBuffEdit(buffType);
 				}
 			}}
+			style={inlineDiv}
 		>
 			{buffCollection}
 		</select>
-
-		<div style={{ marginTop: 5 }}>
+		<div>
 			<Input
-				defaultValue={nextMarkerTrack}
-				description={localize({ en: "Track: ", zh: "轨道序号：" })}
-				width={4}
-				style={inlineDiv}
-				onChange={setNextMarkerTrack}
+				defaultValue={repeatMarkerCount}
+				description={localize({ en: "Repeat: ", zh: "重复：" })}
+				width={2}
+				style={{ display: "inline-block", marginBottom: 6 }}
+				onChange={setRepeatMarkerCount}
 			/>
+			{/* TODO gray this out if count === 1 */}
+			<span>{localize({ en: " marker(s)", zh: "个标记" })}</span>
+			<Input
+				defaultValue={repeatMarkerInterval}
+				description={localize({ en: ", with ", zh: "，间隔" })}
+				width={3}
+				style={{ display: "inline-block", marginBottom: 6, ...repeatIntervalStyle }}
+				onChange={setRepeatMarkerInterval}
+			/>
+			<span style={repeatIntervalStyle}>
+				{localize({ en: "seconds in between", zh: "秒" })}
+			</span>
 		</div>
 	</div>;
 	return <div>
@@ -669,6 +690,25 @@ export function CustomMarkerWidget() {
 								zh: `此团辅持续时间不能超过${buff.info.duration}秒`,
 							});
 						}
+						if (
+							repeatMarkerCount.length > 0 &&
+							(isNaN(parseFloat(repeatMarkerCount)) ||
+								!Number.isInteger(parseFloat(repeatMarkerCount)))
+						) {
+							err = localize({
+								en: "marker repeat count must be an integer",
+								zh: "标记重复次数必须为整数",
+							});
+						}
+						if (
+							repeatMarkerInterval.length > 0 &&
+							isNaN(parseFloat(repeatMarkerInterval))
+						) {
+							err = localize({
+								en: "marker repeat interval must be a number",
+								zh: "标记重复间隔必须为数字",
+							});
+						}
 						marker.color = buff.info.color;
 						marker.description = buff.name;
 						marker.duration = duration;
@@ -692,6 +732,17 @@ export function CustomMarkerWidget() {
 						return;
 					}
 					controller.timeline.addMarker(marker);
+					// Process repeat state for buff markers here, after error validation
+					if (nextMarkerType === MarkerType.Buff) {
+						const repeatCount = parseInt(repeatMarkerCount);
+						const repeatInterval = parseFloat(repeatMarkerInterval);
+						for (let i = 1; i < repeatCount; i++) {
+							controller.timeline.addMarker({
+								...marker,
+								time: marker.time + i * repeatInterval,
+							});
+						}
+					}
 					controller.updateStats();
 					setTrackIndices(controller.timeline.getTrackIndices());
 					if (nextMarkerType === MarkerType.Untargetable) {
@@ -701,7 +752,7 @@ export function CustomMarkerWidget() {
 					e.preventDefault();
 				}}
 			>
-				{localize({ en: "add marker", zh: "添加标记" })}
+				{localize({ en: "add marker(s)", zh: "添加标记" })}
 			</button>
 		</form>
 	</div>;
