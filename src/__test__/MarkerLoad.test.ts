@@ -6,6 +6,7 @@ import fs from "node:fs";
 import { controller } from "../Controller/Controller";
 import { doPresetTrackLoad } from "../Components/TimelineMarkers";
 import { MarkerTracksCombined, MarkerType } from "../Controller/Timeline";
+import { MarkerColor } from "../Components/ColorTheme";
 
 function loadTrackToJSON(relPath: string): MarkerTracksCombined {
 	const absPath = "public/presets/markers/" + relPath;
@@ -65,4 +66,39 @@ it("loads fru p1 without cutoff", () => {
 it("loads fru p1 with enrage cutoff", () => {
 	doPresetTrackLoad(loadTrackToJSON("fru_p1.txt"), () => {}, { cutoff: 150 });
 	checkMissingMarker(FRU_P1_ENRAGE);
+});
+
+it("loads and migrates old buff track", () => {
+	// This track contains an overlapping info and buff (tech step) marker.
+	doPresetTrackLoad(
+		JSON.parse(fs.readFileSync("src/__test__/Asset/track_with_overlapping_info.txt", "utf8")),
+		() => {},
+	);
+	// NOTE: We cannot actually test that the render position of the buff marker is appropriately set
+	// to the correct bin, as that state is computed only at draw time. Instead, we simply check that
+	// the export blob ends up being well-formed.
+	const blob = controller.timeline.serializedCombinedMarkerTracks();
+	expect(blob).toMatchObject({
+		fileType: "MarkerTracksCombined",
+		tracks: [
+			{
+				fileType: "MarkerTrackIndividual",
+				track: 0,
+				markers: [
+					{
+						time: 1,
+						markerType: "Info",
+						duration: 13,
+						description: "overlapping info passing through",
+						color: MarkerColor.Blue,
+						showText: false,
+					},
+				],
+			},
+		],
+		buffs: {
+			fileType: "BuffsCombined",
+			buffs: [{ description: "Technical Finish", markers: [{ time: 0, duration: 20 }] }],
+		},
+	});
 });

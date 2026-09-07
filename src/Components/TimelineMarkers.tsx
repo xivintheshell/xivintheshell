@@ -708,7 +708,6 @@ export function CustomMarkerWidget() {
 }
 
 export function MarkerLoadSaveWidget() {
-	const { trackIndices, setTrackIndices } = useContext(TrackIndexContext);
 	const offset = parseInt(useContext(OffsetContext));
 	const parsedOffset = isNaN(offset) ? 0 : offset;
 	const colors = getThemeColors(useContext(ColorThemeContext));
@@ -738,7 +737,6 @@ export function MarkerLoadSaveWidget() {
 			onLoadFn={(content: any) => {
 				controller.timeline.loadCombinedTracksPreset(content, parsedOffset);
 				controller.updateStats();
-				setTrackIndices(controller.timeline.getTrackIndices());
 				controller.timeline.drawElements();
 			}}
 		/>
@@ -763,40 +761,48 @@ export function MarkerLoadSaveWidget() {
 					}
 					controller.timeline.loadIndividualTrackPreset(content, track, parsedOffset);
 					controller.updateStats();
-					setTrackIndices(controller.timeline.getTrackIndices());
 					controller.timeline.drawElements();
 				}}
 			/>
 		</div>
 	</>;
 
+	const { tracks, buffs } = controller.timeline.serializedSeparateMarkerTracks();
 	const saveTracksSection = <>
-		<SaveToFile
-			key={"combined"}
-			fileFormat={FileFormat.Json}
-			getContentFn={() => controller.timeline.serializedCombinedMarkerTracks()}
-			filename={"tracks_all"}
-			displayName={localize({ en: "all tracks combined", zh: "所有轨道" })}
-		/>
-
-		{trackIndices.map((trackIndex) => {
+		{tracks.length > 0 || buffs.buffs.length > 0 ? (
+			<SaveToFile
+				key={"combined"}
+				fileFormat={FileFormat.Json}
+				getContentFn={() => controller.timeline.serializedCombinedMarkerTracks()}
+				filename={"tracks_all"}
+				displayName={localize({ en: "all tracks combined", zh: "所有轨道" })}
+			/>
+		) : (
+			<div>
+				<i>{localize({ en: "no tracks to save", zh: "无轨道可保存" })}</i>
+			</div>
+		)}
+		{buffs.buffs.length > 0 ? (
+			<SaveToFile
+				key="buff"
+				fileFormat={FileFormat.Json}
+				getContentFn={() => buffs}
+				filename="track_buffs"
+				displayName={localize({ en: "buff tracks", zh: "BUFF轨" })}
+			/>
+		) : undefined}
+		{tracks.map((track) => {
+			const trackIndex = track.track;
 			let fileSuffix = trackIndex.toString();
 			let displayName: ContentNode = localize({ en: "track ", zh: "轨" }) + fileSuffix;
 			if (trackIndex === UntargetableMarkerTrack) {
 				fileSuffix = "untargetable";
-				displayName = localize({ en: "track untargetable", zh: "不可选中标记轨" });
+				displayName = localize({ en: "untargetable track", zh: "不可选中标记轨" });
 			}
 			return <SaveToFile
 				key={trackIndex}
 				fileFormat={FileFormat.Json}
-				getContentFn={() => {
-					const files = controller.timeline.serializedSeparateMarkerTracks();
-					for (let i = 0; i < files.length; i++) {
-						if (files[i].track === trackIndex) return files[i];
-					}
-					console.assert(false);
-					return [];
-				}}
+				getContentFn={() => track}
 				filename={"track_" + fileSuffix}
 				displayName={displayName}
 			/>;

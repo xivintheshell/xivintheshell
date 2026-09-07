@@ -1823,20 +1823,7 @@ function drawAddSlotButton(params: {
 // Layer 3: tooltips and cursors only displayed during interactions
 
 function getMarkerTracksHeight(): number {
-	let hasUntargetableTrack = false;
-	let maxInfoTrack = -1;
-	const seenBuffs = new Set<BuffType>();
-	for (const marker of controller.timeline.getAllMarkers()) {
-		if (marker.markerType === MarkerType.Untargetable) {
-			hasUntargetableTrack = true;
-		} else if (marker.markerType === MarkerType.Buff) {
-			seenBuffs.add(marker.description as BuffType);
-		} else {
-			maxInfoTrack = Math.max(marker.track, maxInfoTrack);
-		}
-	}
-	const numTracks = maxInfoTrack + 1 + (hasUntargetableTrack ? 1 : 0) + seenBuffs.size;
-	return numTracks * TimelineDimensions.trackHeight;
+	return controller.timeline.getNumMarkerTracks() * TimelineDimensions.trackHeight;
 }
 
 function getTimelineStartY(): number {

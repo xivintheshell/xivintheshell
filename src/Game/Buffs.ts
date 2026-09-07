@@ -63,6 +63,10 @@ buffInfos.forEach((info) => {
 	buffInfosMap.set(info.name, info);
 });
 
+export function getBuffColor(buff: BuffType): MarkerColor | undefined {
+	return buffInfosMap.get(buff)?.color;
+}
+
 export class Buff {
 	readonly name: BuffType;
 	info: BuffInfo;

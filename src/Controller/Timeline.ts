@@ -10,6 +10,7 @@ import { MarkerColor } from "../Components/ColorTheme";
 import { TimelineDimensions } from "../Components/Common";
 import { ShellJob } from "../Game/Data/Jobs";
 import { ActionKey, ResourceKey } from "../Game/Data";
+import { getBuffColor } from "../Game/Buffs";
 
 export const MAX_TIMELINE_SLOTS = 4;
 
@@ -42,15 +43,10 @@ export type MarkerTrackIndividual = {
 	markers: SerializedMarker[];
 };
 
-export type BuffTrack = {
-	fileType: FileType.BuffsCombined;
-	markers: SerializedBuffMarker[];
-};
-
 export type MarkerTracksCombined = {
 	fileType: FileType.MarkerTracksCombined;
 	tracks: MarkerTrackIndividual[];
-	buffs: BuffTrack;
+	buffs: SerializedBuffTrack;
 };
 
 type TimelineElemBase = {
@@ -132,10 +128,17 @@ export type SerializedMarker = TimelineElemBase & {
 	description: string;
 };
 
-export type SerializedBuffMarker = TimelineElemBase & {
-	markerType: MarkerType.Buff;
+export type SerializedBuffTrack = {
+	fileType: FileType.BuffsCombined;
+	buffs: SerializedBuffGroup[];
+};
+// these types are usually handled as a Map when not at rest
+export type BuffMarkerSkeleton = TimelineElemBase & {
 	duration: number;
+};
+export type SerializedBuffGroup = {
 	description: BuffType; // localized on render
+	markers: BuffMarkerSkeleton[];
 };
 
 export type SharedTimelineElem = CursorElem | HistoricalCursorElem;
@@ -317,6 +320,7 @@ export class Timeline {
 		track: number,
 		offset: number,
 		cutoff?: number,
+		skipSave: boolean = false,
 	) {
 		let newMarkers = preset.markers.map((m: SerializedMarker): MarkerElem => {
 			return {
@@ -338,6 +342,36 @@ export class Timeline {
 		this.#allMarkers = this.#allMarkers.concat(newMarkers);
 		this.#recreateUntargetableList();
 		this.#recreateBuffList();
+		if (!skipSave) {
+			this.#save();
+		}
+	}
+
+	#loadBuffTrack(buffTrack: SerializedBuffTrack, offset: number, cutoff?: number) {
+		// Under our new buff serialization mechanism, the track number of a buff marker is irrelevant
+		// as long as it is not the untargetable track.
+		// As such, we just assign track 0 for simplicity.
+		let newMarkers = buffTrack.buffs.flatMap((group) =>
+			group.markers.map(({ time, duration }): MarkerElem => {
+				return {
+					time: time + offset,
+					duration,
+					color: getBuffColor(group.description)!,
+					description: group.description,
+					track: 0,
+					type: ElemType.Marker,
+					markerType: MarkerType.Buff,
+					showText: true,
+				};
+			}),
+		);
+		if (cutoff !== undefined) {
+			newMarkers = newMarkers.filter(
+				(m: MarkerElem) => cutoff === undefined || m.time <= cutoff + Debug.epsilon,
+			);
+		}
+		this.#allMarkers = this.#allMarkers.concat(newMarkers);
+		this.#recreateBuffList();
 		this.#save();
 	}
 
@@ -346,6 +380,8 @@ export class Timeline {
 			window.alert("wrong file type '" + content.fileType + "'");
 			return;
 		}
+		// TODO: Preset markers currently do not contain any buff markers within them.
+		// If this ever changes, then we'll need to add a path to read content.buffs properly.
 		content.tracks.forEach((trackContent) => {
 			this.loadIndividualTrackPreset(trackContent, trackContent.track, offset, cutoff);
 		});
@@ -563,8 +599,20 @@ export class Timeline {
 		this.updateTimelineMarkers();
 	}
 
-	getTrackIndices(): number[] {
-		return Array.from(new Set(this.#allMarkers.map((marker) => marker.track))).sort();
+	getTrackIndices(skipBuffTracks: boolean = false): number[] {
+		return Array.from(
+			this.#allMarkers.reduce<Set<number>>(
+				skipBuffTracks
+					? (seenTracks, marker) => {
+							if (marker.markerType !== MarkerType.Buff) {
+								seenTracks.add(marker.track);
+							}
+							return seenTracks;
+						}
+					: (seenTracks, marker) => seenTracks.add(marker.track),
+				new Set(),
+			),
+		).sort();
 	}
 
 	updateTimelineMarkers() {
@@ -612,14 +660,19 @@ export class Timeline {
 	}
 
 	getNumMarkerTracks() {
-		let maxTrack = -1;
 		let hasUntargetableTrack = false;
-		for (let i = 0; i < this.#allMarkers.length; i++) {
-			maxTrack = Math.max(maxTrack, this.#allMarkers[i].track);
-			if (this.#allMarkers[i].track === UntargetableMarkerTrack) hasUntargetableTrack = true;
+		let maxInfoTrack = -1;
+		const seenBuffs = new Set<BuffType>();
+		for (const marker of this.getAllMarkers()) {
+			if (marker.markerType === MarkerType.Untargetable) {
+				hasUntargetableTrack = true;
+			} else if (marker.markerType === MarkerType.Buff) {
+				seenBuffs.add(marker.description as BuffType);
+			} else {
+				maxInfoTrack = Math.max(marker.track, maxInfoTrack);
+			}
 		}
-		if (hasUntargetableTrack) return maxTrack + 2;
-		return maxTrack + 1;
+		return maxInfoTrack + 1 + (hasUntargetableTrack ? 1 : 0) + seenBuffs.size;
 	}
 
 	duringUntargetable(displayTime: number): boolean {
@@ -687,8 +740,9 @@ export class Timeline {
 	}
 
 	#save() {
-		const files = this.serializedSeparateMarkerTracks();
-		setCachedValue("timelineMarkers", JSON.stringify(files));
+		const { tracks, buffs } = this.serializedSeparateMarkerTracks();
+		setCachedValue("timelineMarkers", JSON.stringify(tracks));
+		setCachedValue("timelineBuffs", JSON.stringify(buffs));
 	}
 
 	#load() {
@@ -696,13 +750,20 @@ export class Timeline {
 		if (str !== null) {
 			const files = JSON.parse(str);
 			files.forEach((f: MarkerTrackIndividual) => {
-				this.#appendMarkersPreset(f, f.track, 0);
+				this.#appendMarkersPreset(f, f.track, 0, undefined, true);
 			});
+		}
+		const buffStr = getCachedValue("timelineBuffs");
+		if (buffStr !== null) {
+			const buffs = JSON.parse(buffStr) as SerializedBuffTrack;
+			this.#loadBuffTrack(buffs, 0);
 		}
 	}
 
-	// localStorage; saving tracks as separate files
-	serializedSeparateMarkerTracks() {
+	serializedSeparateMarkerTracks(): {
+		tracks: MarkerTrackIndividual[];
+		buffs: SerializedBuffTrack;
+	} {
 		const maxTrack = this.getNumMarkerTracks() - 1;
 
 		const markerTracks: Map<number, SerializedMarker[]> = new Map();
@@ -710,40 +771,65 @@ export class Timeline {
 			markerTracks.set(i, []);
 		}
 
+		const tracks: MarkerTrackIndividual[] = [];
+		const buffBins = new Map<BuffType, BuffMarkerSkeleton[]>();
 		this.#allMarkers.forEach((marker) => {
-			const bin = markerTracks.get(marker.track);
-			console.assert(bin);
-			if (bin) {
+			if (marker.markerType === "Buff") {
+				const key = marker.description as BuffType;
+				const bin = buffBins.get(key) ?? [];
+				if (!buffBins.has(key)) buffBins.set(key, bin);
 				bin.push({
 					time: marker.time,
-					markerType: marker.markerType,
 					duration: marker.duration,
-					description: marker.description,
-					color: marker.color,
-					showText: marker.showText,
 				});
-				markerTracks.set(marker.track, bin);
+			} else {
+				const bin = markerTracks.get(marker.track);
+				console.assert(bin);
+				if (bin) {
+					bin.push({
+						time: marker.time,
+						markerType: marker.markerType,
+						duration: marker.duration,
+						description: marker.description,
+						color: marker.color,
+						showText: marker.showText,
+					});
+					markerTracks.set(marker.track, bin);
+				}
 			}
 		});
-		const files: MarkerTrackIndividual[] = [];
 		markerTracks.forEach((bin, i) => {
 			if (bin.length > 0) {
-				files.push({
+				tracks.push({
 					fileType: FileType.MarkerTrackIndividual,
 					track: i,
 					markers: bin,
 				});
 			}
 		});
-		return files;
+		const buffs: SerializedBuffTrack = {
+			fileType: FileType.BuffsCombined,
+			buffs: buffBins
+				.keys()
+				.toArray()
+				.sort()
+				.map((key) => {
+					return {
+						description: key,
+						markers: buffBins.get(key)!,
+					};
+				}),
+		};
+		return { tracks, buffs };
 	}
 
 	// saving tracks as a combined file
-	serializedCombinedMarkerTracks() {
-		const tracks = this.serializedSeparateMarkerTracks();
+	serializedCombinedMarkerTracks(): MarkerTracksCombined {
+		const { tracks, buffs } = this.serializedSeparateMarkerTracks();
 		return {
 			fileType: FileType.MarkerTracksCombined,
-			tracks: tracks,
+			tracks,
+			buffs,
 		};
 	}
 }
