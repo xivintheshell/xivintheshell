@@ -16,7 +16,12 @@ import {
 } from "../../Controller/Record";
 import { ActionKey } from "../../Game/Data";
 import { ProcMode, LevelSync } from "../../Game/Common";
-import { ConfigData, GameConfig, SerializedConfig } from "../../Game/GameConfig";
+import {
+	ConfigData,
+	GameConfig,
+	getSavedConfigPart,
+	SerializedConfig,
+} from "../../Game/GameConfig";
 import { Input, Help, StaticFn } from "../Common";
 import { ColorThemeContext, getCurrentThemeColors } from "../ColorTheme";
 import {
@@ -31,6 +36,14 @@ import {
 	TIMESTAMP_TD_STYLE,
 	updateInvalidStatus,
 } from "../TimelineEditor";
+import {
+	asyncFetchJson,
+	doPhasedPresetTrackLoad,
+	doPresetTrackLoad,
+	MarkerTrackSet,
+	PhasedTrack,
+} from "../TimelineMarkers";
+import { TRACK_META_MAP } from "../TimelineMarkerPresets";
 import { AccessTokenStatus, getAccessToken, initiateFflogsAuth } from "./Auth";
 import {
 	FightInfo,
@@ -71,7 +84,7 @@ interface ApplyImportProgress {
  * Yields a snapshot of processing progress, but it should generally be fast enough to not be relevant.
  * Upon completion, returns a list of invalid actions in the finished timeline.
  *
- * This function can take a bit of time run because adding nodes invokes controller methods that may
+ * This function can take a bit of time to run because adding nodes invokes controller methods that may
  * trigger re-renders, and we need to splice in wait/jump nodes in the middle.
  * For most logs, there should not be very many node insertions, but in degenerate cases where
  * a log is very very off and many jumps need to be added, things may go wrong.
@@ -84,8 +97,10 @@ function* applyImportedActions(
 ): Generator<ApplyImportProgress, InvalidActionInfo[]> {
 	// Reset the controller's GameConfig.
 	const oldConfig = controller.gameConfig.serialized();
+	const savedJobStats = getSavedConfigPart(state.job);
 	const newConfig: SerializedConfig = {
 		...oldConfig,
+		...savedJobStats,
 		procMode: ProcMode.Always,
 		job: state.job,
 		initialResourceOverrides:
@@ -328,6 +343,8 @@ export function FflogsImportFlow() {
 	const colors = getCurrentThemeColors();
 
 	const [resetOnImport, setResetOnImport] = useState(true);
+	const [importMarkers, setImportMarkers] = useState(false);
+	const [isMarkerImportAvailable, setIsMarkerImportAvailable] = useState(false);
 	const dialogRef = useRef<HTMLDivElement | null>(null);
 
 	const [logLink, setLogLink] = useState("");
@@ -340,6 +357,14 @@ export function FflogsImportFlow() {
 			setImportProgress(null);
 			setResetOnImport(true);
 			setInvalidActions([]);
+		}
+		if (
+			newFlowState !== LogImportFlowState.ADJUSTING_CONFIG &&
+			newFlowState !== LogImportFlowState.PROCESSING_IMPORT &&
+			newFlowState !== LogImportFlowState.IMPORT_DONE
+		) {
+			setIsMarkerImportAvailable(false);
+			setImportMarkers(false);
 		}
 		if (
 			newFlowState !== LogImportFlowState.ADJUSTING_CONFIG &&
@@ -361,6 +386,9 @@ export function FflogsImportFlow() {
 				LogImportFlowState.AWAITING_LOG_LINK,
 				LogImportFlowState.CHOOSE_FIGHT,
 				LogImportFlowState.CHOOSE_PLAYER,
+				// Need these two states to remember log link when importing marker tracks
+				LogImportFlowState.ADJUSTING_CONFIG,
+				LogImportFlowState.PROCESSING_IMPORT,
 			].includes(newFlowState)
 		) {
 			logInfo.current = undefined;
@@ -570,6 +598,7 @@ export function FflogsImportFlow() {
 							playerID: partialLogInfo.playerID,
 						});
 						setIntermediateImportState(state);
+						setIsMarkerImportAvailable(state.encounterTrackKey !== undefined);
 						console.log(`preparing to import ${state.actions.length} skills`);
 						setFlowState(LogImportFlowState.ADJUSTING_CONFIG);
 					}
@@ -699,6 +728,7 @@ export function FflogsImportFlow() {
 					})
 						.then((state) => {
 							setIntermediateImportState(state);
+							setIsMarkerImportAvailable(state.encounterTrackKey !== undefined);
 							console.log(`preparing to import ${state.actions.length} skills`);
 							setFlowState(LogImportFlowState.ADJUSTING_CONFIG);
 						})
@@ -750,10 +780,10 @@ export function FflogsImportFlow() {
 		topic="fflogsConfigReset"
 		content={localize({
 			en: <div>
-				FFLogs only records exact combat stats for the player that created the log. All
-				other stats must be entered manually. Any configuration not specified in this
-				dialog, including initial resource overrides, will use the values set in the main
-				"Config" panel.
+				FFLogs only records exact combat stats for the player that created the log. When
+				those stats are missing, the last-saved stats for the imported job are used instead.
+				Any other configuration not specified in this dialog, including initial resource
+				overrides, will use the values set in the main "Config" panel.
 				<br />
 				After a log import, the "proc mode" field is set to "Always". You can manually
 				adjust this later.
@@ -795,6 +825,23 @@ export function FflogsImportFlow() {
 			</span>,
 		})}
 	/>;
+	const importMarkersHelp = <Help
+		container={dialogRef}
+		topic="fflogsConfigResetActive"
+		content={localize({
+			en: <span>
+				When checked, markers for this fight will automatically be imported according to the
+				phase timings and party buff usages found in this log.{" "}
+				<b>This will overwrite any currently-set markers.</b> This feature is only available
+				for certain fights.
+			</span>,
+			zh: <span>
+				勾选后，将根据本场logs中的阶段时间与团辅使用情况自动导入该副本的标记。
+				<b>这将覆盖当前已设置的所有标记。</b>
+				此功能仅对部分副本可用。
+			</span>,
+		})}
+	/>;
 	const statBlock = <div className="importPage">
 		{localize({
 			en: <p>
@@ -813,9 +860,9 @@ export function FflogsImportFlow() {
 						zh: "将使用logs中的装备数值。可按需手动调整。",
 					})
 				: localize({
-						en: "Exact stats not found in log; using values in current game config. Please enter manually or adjust with the Config pane after import. ",
-						zh: "Logs中未找到此玩家的装备数据，将使用当前属性设置界面的数值。请手动输入装备数值，或在导入后去属性设置界面调整。",
-					})}
+						en: "Exact stats not found in log; using the last-saved stats for this job. Please enter manually or adjust with the Config pane after import. ",
+						zh: "Logs中未找到此玩家的装备数据，将使用该职业上次保存的属性数值。请手动输入装备数值，或在导入后去属性设置界面调整。",
+					})}{" "}
 			{configHelp}
 		</div>
 		<hr />
@@ -901,6 +948,25 @@ export function FflogsImportFlow() {
 				{resetOnImport ? resetActiveHelp : resetInactiveHelp}
 			</div>
 		)}
+		{isMarkerImportAvailable ? (
+			<div>
+				<input
+					className="shellCheckbox"
+					type="checkbox"
+					onChange={(e) => {
+						setImportMarkers(e.currentTarget.checked);
+					}}
+					checked={importMarkers}
+				/>
+				<span>
+					{localize({
+						en: "Import marker and buff timings from log",
+						zh: "从logs导入标记与团辅时间",
+					})}{" "}
+				</span>
+				{importMarkersHelp}
+			</div>
+		) : undefined}
 		<div className="buttonHolder">
 			<button
 				style={confirmButtonStyle}
@@ -912,13 +978,75 @@ export function FflogsImportFlow() {
 							resetOnImport || needsForceReset(),
 						);
 						// We use a dummy setTimeout to ensure we transition the UI to the processing screen.
-						setTimeout(() => {
+						setTimeout(async () => {
 							let iter = gen.next();
 							while (!iter.done) {
 								setImportProgress({ ...iter.value });
 								iter = gen.next();
 							}
 							setInvalidActions(iter.value);
+							// Import markers if necessary
+							if (importMarkers && intermediateImportState.encounterTrackKey) {
+								const trackKey = intermediateImportState.encounterTrackKey;
+								const meta = TRACK_META_MAP.get(trackKey)!;
+								try {
+									const content = await new Promise<any>((resolve, reject) => {
+										asyncFetchJson(
+											`/presets/markers/${trackKey}.txt`,
+											resolve,
+											reject,
+										);
+									});
+									controller.timeline.deleteAllMarkers();
+									if (meta.phased) {
+										const phasedTracks: PhasedTrack[] = (
+											content as MarkerTrackSet
+										).phasedTracks;
+										const offsetMap = new Map<string, string>();
+										// Convert ms phase starts from FFLogs to string seconds values
+										// expected by internal helpers.
+										phasedTracks.forEach((track, i) => {
+											// Hard-coded workaround for FRU: we combine P3+P4 into
+											// a single file since the transition timing is fixed, so
+											// we need to skip 1 ahead to get the right P5 timestamp
+											// from FFLogs.
+											// Note that fru_zh isn't phased, so it's ignored here.
+											if (trackKey === "fru_en_full" && i === 3) {
+												i++;
+											}
+											const ms =
+												intermediateImportState.phaseTransitionTimestamps[
+													i
+												];
+											if (ms !== undefined) {
+												offsetMap.set(
+													track.fileName,
+													(ms / 1000).toString(),
+												);
+											}
+										});
+										await doPhasedPresetTrackLoad(
+											phasedTracks,
+											() => {},
+											"",
+											offsetMap,
+										);
+									} else {
+										// Explicitly override the global offset flag for FFLogs imports.
+										doPresetTrackLoad(content, () => {}, {
+											globalOffset: "",
+										});
+									}
+									controller.timeline.addBuffMarkers(
+										intermediateImportState.partyBuffMarkers,
+									);
+									if (intermediateImportState.partyBuffMarkers.length > 0) {
+										controller.updateStats();
+									}
+								} catch (e) {
+									console.error("failed to import markers from log", e);
+								}
+							}
 							setFlowState(LogImportFlowState.IMPORT_DONE);
 						}, 0);
 					} else {

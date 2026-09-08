@@ -261,6 +261,28 @@ export class Timeline {
 		this.#save();
 	}
 
+	addBuffMarkers(windows: { buffType: BuffType; time: number; duration: number }[]) {
+		if (windows.length === 0) {
+			return;
+		}
+		for (const { buffType, time, duration } of windows) {
+			const marker: MarkerElem = {
+				type: ElemType.Marker,
+				markerType: MarkerType.Buff,
+				time,
+				duration,
+				color: getBuffColor(buffType)!,
+				track: 0,
+				showText: true,
+				description: buffType,
+			};
+			this.#allMarkers.push(marker);
+			this.#buffMarkers.push(marker);
+		}
+		this.drawElements();
+		this.#save();
+	}
+
 	deleteMarker(marker: MarkerElem) {
 		let deleted = false;
 		for (let i = 0; i < this.#allMarkers.length; i++) {

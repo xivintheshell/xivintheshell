@@ -58,7 +58,7 @@ export const MIN_TRACK_NUMBER = 0; // untargetable track (-1) is handled separat
 
 const ROW_GAP_PX = 5;
 
-type PhasedTrack = {
+export type PhasedTrack = {
 	offset: number;
 	label: LocalizedContent;
 	fileName: string;
@@ -83,17 +83,27 @@ function Hsep(props: { marginTop: number; marginBottom: number }) {
 	/>;
 }
 
-const asyncFetchJson = function (url: string, callback: (content: any) => void) {
-	asyncFetch(url, (data) => {
-		try {
-			const content = JSON.parse(data);
-			callback(content);
-		} catch (e) {
-			console.log("Error fetching/parsing JSON " + url);
-			console.error(e);
-		}
-	});
-};
+export function asyncFetchJson(
+	url: string,
+	callback: (content: any) => void,
+	errorCallback: (err: object) => void = (e) => {
+		console.log("Error fetching/parsing JSON " + url);
+		console.error(e);
+	},
+) {
+	asyncFetch(
+		url,
+		(data) => {
+			try {
+				const content = JSON.parse(data);
+				callback(content);
+			} catch (e) {
+				errorCallback(e as object);
+			}
+		},
+		errorCallback,
+	);
+}
 
 const OffsetContext = createContext("");
 const TrackIndexContext = createContext<{
@@ -104,10 +114,9 @@ const TrackIndexContext = createContext<{
 	setTrackIndices: () => {},
 });
 
-// exported to expose to test files
 export function doPresetTrackLoad(
 	content: MarkerTracksCombined | SerializedBuffTrack,
-	// can't access useContext here since it's in a hook
+	// can't access useContext directly here since it's in a hook
 	setTrackIndices: (arr: number[]) => void,
 	opts?: {
 		globalOffset?: string;
@@ -128,6 +137,53 @@ export function doPresetTrackLoad(
 	setTrackIndices(controller.timeline.getTrackIndices());
 	controller.updateStats();
 	controller.timeline.drawElements();
+}
+
+export function doPhasedPresetTrackLoad(
+	phasedTracks: PhasedTrack[],
+	// can't access useContext directly here since it's in a hook
+	setTrackIndices: (arr: number[]) => void,
+	globalOffset: string,
+	offsetMap: Map<string, string>,
+): Promise<void> {
+	// Cut off markers that would end after a subsequent phase begins.
+	const cutoffs = new Map<string, number>();
+	phasedTracks.forEach((track, i) => {
+		let acc = undefined;
+		for (let j = i + 1; j < phasedTracks.length; j++) {
+			const laterOfs = offsetMap.get(phasedTracks[j].fileName);
+			// Do not apply cutoffs when using the default offset.
+			if (laterOfs) {
+				const parsedOfs = parseTime(laterOfs);
+				if (acc === undefined || parsedOfs < acc) {
+					acc = parsedOfs;
+				}
+			}
+		}
+		if (acc !== undefined) {
+			cutoffs.set(track.fileName, acc);
+		}
+	});
+	return Promise.all(
+		phasedTracks.map(
+			(track) =>
+				new Promise<void>((resolve, reject) => {
+					asyncFetchJson(
+						PRESET_MARKERS_BASE + track.fileName, // do not include txt extension here
+						(content) => {
+							doPresetTrackLoad(content, setTrackIndices, {
+								globalOffset,
+								localOffset:
+									offsetMap.get(track.fileName) ?? track.offset.toString(),
+								cutoff: cutoffs.get(track.fileName),
+							});
+							resolve();
+						},
+						reject,
+					);
+				}),
+		),
+	).then(() => {});
 }
 
 function LoadCombinedTracksBtn(props: {
@@ -263,40 +319,14 @@ function TrackSetDisplay(props: TrackDisplayProps) {
 						<button
 							onClick={(e) => {
 								e.stopPropagation(); // Don't trigger the expandable
-								// Cut off markers that would end after a subsequent phase begins.
-								const cutoffs = new Map<string, number>();
-								phasedTracks?.forEach((track, i) => {
-									let acc = undefined;
-									for (let j = i + 1; j < phasedTracks.length; j++) {
-										const laterOfs = offsetMap.get(phasedTracks[j].fileName);
-										// Do not apply cutoffs when using the default offset.
-										if (laterOfs) {
-											const parsedOfs = parseTime(laterOfs);
-											if (acc === undefined || parsedOfs < acc) {
-												acc = parsedOfs;
-											}
-										}
-									}
-									if (acc !== undefined) {
-										cutoffs.set(track.fileName, acc);
-									}
-								});
-								// Ideally we would rewrite asyncFetchJson to be more promise-y and we
-								// can then await all the tracks being loaded together
-								phasedTracks?.forEach((track) =>
-									asyncFetchJson(
-										PRESET_MARKERS_BASE + track.fileName, // do not include txt extension here
-										(content) => {
-											doPresetTrackLoad(content, setTrackIndices, {
-												globalOffset,
-												localOffset:
-													offsetMap.get(track.fileName) ??
-													track.offset.toString(),
-												cutoff: cutoffs.get(track.fileName),
-											});
-										},
-									),
-								);
+								if (phasedTracks !== undefined) {
+									doPhasedPresetTrackLoad(
+										phasedTracks,
+										setTrackIndices,
+										globalOffset,
+										offsetMap,
+									).catch((e) => console.error(e));
+								}
 							}}
 						>
 							{localize({ en: "Load all phases", zh: "载入整场战斗" })}

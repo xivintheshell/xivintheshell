@@ -42,6 +42,8 @@ export type MarkerTrackMeta = {
 	// the author of the trackset will be used instead.
 	authors?: string[];
 	phased: boolean;
+	// Used to automatically import marker tracks for certain fights.
+	fflogsEncounterId?: number;
 };
 
 function mm(
@@ -49,6 +51,7 @@ function mm(
 	fightKind: FightKind,
 	supportedLanguages: Language | Language[],
 	authors?: string | string[],
+	fflogsEncounterId?: number,
 	phased?: boolean,
 ): MarkerTrackMeta {
 	return {
@@ -63,71 +66,79 @@ function mm(
 		supportedLanguages:
 			typeof supportedLanguages === "string" ? [supportedLanguages] : supportedLanguages,
 		authors: typeof authors === "string" ? [authors] : authors,
+		fflogsEncounterId,
 		phased: phased ?? false,
 	};
 }
 
 // When adding a new fight, add  its metadata to this map, and add its label to the appropriate track category list.
 export const TRACK_META_MAP: Map<string, MarkerTrackMeta> = new Map([
-	["dmu_en_full", mm({ en: "DMU", zh: "绝妖星乱舞" }, "ultimate", "en", "shanzhe", true)],
+	["dmu_en_full", mm({ en: "DMU", zh: "绝妖星乱舞" }, "ultimate", "en", "shanzhe", 1085, true)],
 	[
 		"dmu_zh_full",
-		mm({ en: "DMU", zh: "绝妖星乱舞" }, "ultimate", "zh", ["shanzhe", "鱼卡"], true),
+		mm({ en: "DMU", zh: "绝妖星乱舞" }, "ultimate", "zh", ["shanzhe", "鱼卡"], 1085, true),
 	],
-	["m9s", mm("M9S", "savage", "en", "shanzhe")],
-	["m9s_zh", mm("M9S", "savage", "zh", ["shanzhe", "鱼卡"])],
-	["m10s", mm("M10S", "savage", "en", "shanzhe")],
-	["m10s_zh", mm("M10S", "savage", "zh", ["shanzhe", "鱼卡"])],
-	["m11s", mm("M11S", "savage", "en", "shanzhe")],
-	["m11s_zh", mm("M11S", "savage", "zh", ["shanzhe", "鱼卡"])],
-	["m12s_p1", mm({ en: "M12S P1", zh: "M12S门神" }, "savage", "en", "shanzhe")],
-	["m12s_p1_zh", mm({ en: "M12S P1", zh: "M12S门神" }, "savage", "zh", ["shanzhe", "鱼卡"])],
-	["m12s_p2", mm({ en: "M12S P2", zh: "M12S本体" }, "savage", "en", "shanzhe")],
-	["m12s_p2_zh", mm({ en: "M12S P2", zh: "M12S本体" }, "savage", "zh", ["shanzhe", "鱼卡"])],
-	["m5s", mm("M5S", "savage", "en", "shanzhe")],
-	["m6s", mm("M6S", "savage", "en", "shanzhe")],
-	["m7s", mm("M7S", "savage", "en", "shanzhe")],
-	["m8s_full", mm("M8S", "savage", "en", "shanzhe", true)],
-	["final_verse_q40", mm("The Final Verse Q40", "dungeon", "en", "shanzhe")],
+	["m9s", mm("M9S", "savage", "en", "shanzhe", 101)],
+	["m9s_zh", mm("M9S", "savage", "zh", ["shanzhe", "鱼卡"], 101)],
+	["m10s", mm("M10S", "savage", "en", "shanzhe", 102)],
+	["m10s_zh", mm("M10S", "savage", "zh", ["shanzhe", "鱼卡"], 102)],
+	["m11s", mm("M11S", "savage", "en", "shanzhe", 103)],
+	["m11s_zh", mm("M11S", "savage", "zh", ["shanzhe", "鱼卡"], 103)],
+	["m12s_p1", mm({ en: "M12S P1", zh: "M12S门神" }, "savage", "en", "shanzhe", 104)],
+	["m12s_p1_zh", mm({ en: "M12S P1", zh: "M12S门神" }, "savage", "zh", ["shanzhe", "鱼卡"], 104)],
+	["m12s_p2", mm({ en: "M12S P2", zh: "M12S本体" }, "savage", "en", "shanzhe", 105)],
+	["m12s_p2_zh", mm({ en: "M12S P2", zh: "M12S本体" }, "savage", "zh", ["shanzhe", "鱼卡"], 105)],
+	["m5s", mm("M5S", "savage", "en", "shanzhe", 97)],
+	["m6s", mm("M6S", "savage", "en", "shanzhe", 98)],
+	["m7s", mm("M7S", "savage", "en", "shanzhe", 99)],
+	["m8s_full", mm("M8S", "savage", "en", "shanzhe", 100, true)],
+	["final_verse_q40", mm("The Final Verse Q40", "dungeon", "en", "shanzhe", 4548)],
 	["dsr_p2", mm("DSR P2", "ultimate", "en", "Caro")],
 	["dsr_p6", mm("DSR P6", "ultimate", "en", "Tischel")],
 	["dsr_p7", mm("DSR P7", "ultimate", "en", "Tischel")],
-	["TOP_2023_04_02", mm("TOP", "ultimate", "en", "Santa")],
-	["m2s", mm("M2S", "savage", "en", "shanzhe")],
-	["m3s", mm("M3S", "savage", "en", "shanzhe")],
-	["m4s", mm("M4S", "savage", "en", "shanzhe")],
-	["m1s_zh", mm("M1S", "savage", "zh", "kiyozero")],
-	["m2s_zh", mm("M2S", "savage", "zh", "kiyozero")],
-	["m3s_zh", mm("M3S", "savage", "zh", "kiyozero")],
-	["m4s_zh", mm("M4S", "savage", "zh", "kiyozero")],
-	["fru_en_full", mm({ en: "FRU", zh: "绝伊甸" }, "ultimate", "en", ["Yara", "shanzhe"], true)],
-	["fru_zh", mm({ en: "FRU", zh: "绝伊甸" }, "ultimate", "zh", ["小盐", "czmm"])],
-	["queen_eternal", mm({ en: "Queen Eternal", zh: "永恒女王" }, "extreme", "zh", "小盐")],
-	["p1s_aetherial_shackles_first", mm("P1S Aetherial Shackles first", "savage", "en")],
-	["p1s_shackles_of_time_first", mm("P1S Shackles of Time first", "savage", "en")],
-	["p2s", mm("P2S", "savage", "en")],
-	["p5s_zh", mm("P5S", "savage", "zh", "不打冰3攻略组")],
-	["p6s_zh", mm("P6S", "savage", "zh", "不打冰3攻略组")],
-	["p7s_zh", mm("P7S", "savage", "zh", "不打冰3攻略组")],
+	// NOTE: TOP has ID 1068 for reports from EW where it wasn't considered a legacy ultimate
+	["TOP_2023_04_02", mm("TOP", "ultimate", "en", "Santa", 1077)],
+	["m2s", mm("M2S", "savage", "en", "shanzhe", 94)],
+	["m3s", mm("M3S", "savage", "en", "shanzhe", 95)],
+	["m4s", mm("M4S", "savage", "en", "shanzhe", 96)],
+	["m1s_zh", mm("M1S", "savage", "zh", "kiyozero", 93)],
+	["m2s_zh", mm("M2S", "savage", "zh", "kiyozero", 94)],
+	["m3s_zh", mm("M3S", "savage", "zh", "kiyozero", 95)],
+	["m4s_zh", mm("M4S", "savage", "zh", "kiyozero", 96)],
+	[
+		"fru_en_full",
+		mm({ en: "FRU", zh: "绝伊甸" }, "ultimate", "en", ["Yara", "shanzhe"], 1079, true),
+	],
+	["fru_zh", mm({ en: "FRU", zh: "绝伊甸" }, "ultimate", "zh", ["小盐", "czmm"], 1079)],
+	["queen_eternal", mm({ en: "Queen Eternal", zh: "永恒女王" }, "extreme", "zh", "小盐", 1078)],
+	[
+		"p1s_aetherial_shackles_first",
+		mm("P1S Aetherial Shackles first", "savage", "en", undefined, 78),
+	],
+	["p1s_shackles_of_time_first", mm("P1S Shackles of Time first", "savage", "en", undefined, 78)],
+	["p2s", mm("P2S", "savage", "en", undefined, 79)],
+	["p5s_zh", mm("P5S", "savage", "zh", "不打冰3攻略组", 83)],
+	["p6s_zh", mm("P6S", "savage", "zh", "不打冰3攻略组", 84)],
+	["p7s_zh", mm("P7S", "savage", "zh", "不打冰3攻略组", 85)],
 	[
 		"p8s_p1_snake_zh",
-		mm({ en: "P8S P1 snake first", zh: "P8S门神蛇轴" }, "savage", "zh", "不打冰3攻略组"),
+		mm({ en: "P8S P1 snake first", zh: "P8S门神蛇轴" }, "savage", "zh", "不打冰3攻略组", 86),
 	],
 	[
 		"p8s_p1_beast_zh",
-		mm({ en: "P8S P1 dog first", zh: "P8S门神车轴" }, "savage", "zh", "不打冰3攻略组"),
+		mm({ en: "P8S P1 dog first", zh: "P8S门神车轴" }, "savage", "zh", "不打冰3攻略组", 86),
 	],
-	["p8s_p2_zh", mm({ en: "P8S P2", zh: "P8S本体" }, "savage", "zh", "不打冰3攻略组")],
-	["p9s", mm("P9S", "savage", "en", "Lilian")],
-	["p10s", mm("P10S", "savage", "en", "Tischel")],
-	["p11s", mm("P11S", "savage", "en", "Lilian")],
-	["p12s_p1", mm("P12S P1", "savage", "en", "Yara")],
-	["p12s_p2", mm("P12S P2", "savage", "en", "Yara")],
-	["p9s_zh", mm("P9S", "savage", "zh", "不打冰3攻略组")],
-	["p10s_zh", mm("P10S", "savage", "zh", "不打冰3攻略组")],
-	["p11s_zh", mm("P11S（错误较多）", "savage", "zh", "不打冰3攻略组")],
-	["p12s_p1_zh", mm("P12S门神", "savage", "zh", "不打冰3攻略组")],
-	["p12s_p2_zh", mm("P12S本体", "savage", "zh", "不打冰3攻略组")],
+	["p8s_p2_zh", mm({ en: "P8S P2", zh: "P8S本体" }, "savage", "zh", "不打冰3攻略组", 87)],
+	["p9s", mm("P9S", "savage", "en", "Lilian", 88)],
+	["p10s", mm("P10S", "savage", "en", "Tischel", 89)],
+	["p11s", mm("P11S", "savage", "en", "Lilian", 90)],
+	["p12s_p1", mm("P12S P1", "savage", "en", "Yara", 91)],
+	["p12s_p2", mm("P12S P2", "savage", "en", "Yara", 92)],
+	["p9s_zh", mm("P9S", "savage", "zh", "不打冰3攻略组", 88)],
+	["p10s_zh", mm("P10S", "savage", "zh", "不打冰3攻略组", 89)],
+	["p11s_zh", mm("P11S（错误较多）", "savage", "zh", "不打冰3攻略组", 90)],
+	["p12s_p1_zh", mm("P12S门神", "savage", "zh", "不打冰3攻略组", 91)],
+	["p12s_p2_zh", mm("P12S本体", "savage", "zh", "不打冰3攻略组", 92)],
 ]);
 
 export const RECENT_CONTENT_TRACKS = [
@@ -202,3 +213,22 @@ export const ARCHIVE_TRACKS = new Map([
 		],
 	],
 ]);
+
+// Return the metadata lookup key for the fight corresponding to the provided FFLogs encounter ID
+// and language. Returns undefined on failure.
+export function findTrackKeyWithIdAndLanguage(
+	id: number | undefined,
+	language: Language,
+): string | undefined {
+	if (id === undefined) {
+		return undefined;
+	}
+	// Just do a manual O(N) search, skipping a ~40-element array traversal is not worth the effort
+	// to initialize a 2-layer hashmap keyed on both zone ID and language.
+	for (const [key, meta] of TRACK_META_MAP.entries()) {
+		if (meta.fflogsEncounterId === id && meta.supportedLanguages.includes(language)) {
+			return key;
+		}
+	}
+	return undefined;
+}

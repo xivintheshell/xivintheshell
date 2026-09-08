@@ -26,6 +26,7 @@ import {
 } from "../Controller/Timeline";
 import { DEFAULT_FONTS, StaticFn, TimelineDimensions, TimelineDrawOptions } from "./Common";
 import { BuffType } from "../Game/Common";
+import { buffTrackBinKey } from "../Game/Buffs";
 import { getSkillIconImage } from "./Skills";
 import { buffIconImages } from "./Buffs";
 import { controller } from "../Controller/Controller";
@@ -1302,8 +1303,8 @@ export function drawMarkerTracks(params: {
 		if (marker.markerType === MarkerType.Untargetable) {
 			untargetableBin.push(marker);
 		} else if (marker.markerType === MarkerType.Buff) {
-			const key = marker.description as BuffType;
-			let buffTrackBin = buffTrackBins.get(marker.description as BuffType);
+			const key = buffTrackBinKey(marker.description as BuffType);
+			let buffTrackBin = buffTrackBins.get(key);
 			if (buffTrackBin === undefined) buffTrackBin = [];
 			buffTrackBin.push(marker);
 			buffTrackBins.set(key, buffTrackBin);
