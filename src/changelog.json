@@ -1,5 +1,17 @@
 [
 	{
+		"date": "9/8/26",
+		"changes": [
+			"When importing a fight from FFLogs, you may now choose to automatically import markers that match party buff and phase transition timings.",
+			"[MCH] Adjusted buff durations for Hypercharged, Full Metal Field, and Reassembled."
+		],
+		"changes_zh": [
+			"从 FFLogs 导入战斗时，现可选择自动导入团辅及阶段转换对应的标记。",
+			"【机工士】调整了【超荷】、【全金属爆发】和【整备】的 buff 持续时间。"
+		],
+		"level": "major"
+	},
+	{
 		"date": "9/7/26",
 		"changes": [
 			"Buff markers now automatically are displayed above other markers, and no longer are specified with a track number.",
