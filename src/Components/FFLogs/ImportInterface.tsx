@@ -1041,7 +1041,17 @@ export function FflogsImportFlow() {
 										});
 									}
 								} catch (e) {
-									console.error("failed to import markers from log", e);
+									console.error("failed to import phase markers from log", e);
+								}
+								try {
+									controller.timeline.addBuffMarkers(
+										intermediateImportState.partyBuffMarkers,
+									);
+									if (intermediateImportState.partyBuffMarkers.length > 0) {
+										controller.updateStats();
+									}
+								} catch (e) {
+									console.error("failed to import buff markers from log", e);
 								}
 							}
 							setFlowState(LogImportFlowState.IMPORT_DONE);

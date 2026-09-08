@@ -216,7 +216,10 @@ export const ARCHIVE_TRACKS = new Map([
 
 // Return the metadata lookup key for the fight corresponding to the provided FFLogs encounter ID
 // and language. Returns undefined on failure.
-export function findTrackKeyWithIdAndLanguage(id?: number, language: Language): string | undefined {
+export function findTrackKeyWithIdAndLanguage(
+	id: number | undefined,
+	language: Language,
+): string | undefined {
 	if (id === undefined) {
 		return undefined;
 	}

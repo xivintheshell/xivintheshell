@@ -1,9 +1,10 @@
 // Functions for submitting queries about logs to the FFLogs GraphQL API.
 import { ActionType, SkillNodeInfo } from "../../Controller/Record";
-import { LevelSync } from "../../Game/Common";
+import { BuffType, LevelSync } from "../../Game/Common";
 import { ActionKey, ResourceKey } from "../../Game/Data";
 import { ALL_JOBS, JOBS, ShellJob } from "../../Game/Data/Jobs";
 import { ConfigData, getSavedConfigPart } from "../../Game/GameConfig";
+import { buffInfos, getBuffInfoByStatusId, BRD_SONG_BUFF_TYPES } from "../../Game/Buffs";
 import { skillIdMap } from "../../Game/Skills";
 import { getCurrentLanguage, localize, LocalizedContent } from "../Localization";
 import { findTrackKeyWithIdAndLanguage } from "../TimelineMarkerPresets";
@@ -11,6 +12,12 @@ import { findTrackKeyWithIdAndLanguage } from "../TimelineMarkerPresets";
 type ReportCode = string;
 type FightID = number;
 type PlayerID = number;
+
+export interface PartyBuffMarkerWindow {
+	buffType: BuffType;
+	time: number;
+	duration: number;
+}
 
 export interface LogQueryParams {
 	apiBaseUrl: string;
@@ -129,6 +136,7 @@ export interface IntermediateLogImportState {
 	combatStartTime: number;
 	encounterTrackKey?: string;
 	phaseTransitionTimestamps: number[];
+	partyBuffMarkers: PartyBuffMarkerWindow[];
 }
 
 const BUFF_IDS = {
@@ -232,6 +240,193 @@ query GetPlayerEvents($reportCode: String, $fightID: Int, $playerID: Int) {
 		}
 	}
 }`;
+
+// FFLogs encodes status IDs as 1_000_000 + game status id on buff/debuff events.
+const FFLOGS_STATUS_ID_OFFSET = 1_000_000;
+
+const STATUS_EVENTS_QUERY = `
+query GetPartyStatusEvents($reportCode: String, $fightID: Int, $filterExpression: String) {
+	reportData {
+		report(code: $reportCode) {
+			events(
+				fightIDs: [$fightID],
+				filterExpression: $filterExpression,
+				limit: 10000
+			) {
+				data
+				nextPageTimestamp
+			}
+		}
+	}
+}`;
+
+type StatusEvent = {
+	timestamp: number;
+	type: string;
+	sourceID: number;
+	targetID: number;
+	abilityGameID: number;
+};
+
+async function queryPartyStatusEvents(params: LogQueryParams): Promise<StatusEvent[]> {
+	// Filter by known party-buff / boss-debuff status IDs. `target.id` in filterExpression is
+	// unreliable (apparently???), so we instead filter out self-buffs from the player post-query.
+	const abilityIds = Array.from(
+		new Set(buffInfos.map((info) => FFLOGS_STATUS_ID_OFFSET + info.statusId)),
+	).join(", ");
+	const filterExpression =
+		`type in ("applybuff","removebuff","applydebuff","removedebuff")` +
+		` and ability.id in (${abilityIds})`;
+	const data = await fetchQuery(params.apiBaseUrl, STATUS_EVENTS_QUERY, {
+		reportCode: params.reportCode,
+		fightID: params.fightID,
+		filterExpression,
+	});
+	const page = data.reportData.report.events;
+	if (page.nextPageTimestamp != null) {
+		console.warn(
+			"party status events exceeded limit=10000; some buff markers may be missing",
+			page.nextPageTimestamp,
+		);
+	}
+	return page.data as StatusEvent[];
+}
+
+/**
+ * Computes buff windows based on apply/remove status events from FFLogs.
+ * Ignores all events where the source is the player themselves, as those are computed from
+ * direct actions in the timeline. Player buffs must also target the selected player.
+ */
+function aggregatePartyBuffMarkers(
+	events: StatusEvent[],
+	playerID: PlayerID,
+	combatStartTime: number,
+	_fightEndTime: number,
+): PartyBuffMarkerWindow[] {
+	type OpenWindow = { startMs: number; buffType: BuffType; defaultDuration: number };
+	// Key by statusId only (including boss debuffs): multi-target / untargetable phases can leave
+	// per-target windows open with no remove event.
+	const openWindows = new Map<number, OpenWindow>();
+	const raw: PartyBuffMarkerWindow[] = [];
+
+	// Because FFLogs has no inherent distinction for Radiant Finale stacks on status events, we
+	// just manually count the number of times we've seen an RF cast. Apparently the event from the
+	// BRD itself will have a number of stacks, but that sounds too convoluted to deal with, so we'll
+	// just let resource runs languish for now.
+	let radiantFinaleStacks = 1;
+
+	const sorted = [...events].sort((a, b) => a.timestamp - b.timestamp);
+	for (const evt of sorted) {
+		const statusId =
+			evt.abilityGameID >= FFLOGS_STATUS_ID_OFFSET
+				? evt.abilityGameID - FFLOGS_STATUS_ID_OFFSET
+				: evt.abilityGameID;
+		const info = getBuffInfoByStatusId(statusId, radiantFinaleStacks);
+		if (!info) {
+			continue;
+		}
+		const isDebuff = evt.type.endsWith("debuff");
+		// Only examine party buffs that are applied to the selected player, and not issued
+		// from the player themselves.
+		if ((!isDebuff && evt.targetID !== playerID) || evt.sourceID === playerID) {
+			continue;
+		}
+		if (evt.type === "applybuff" || evt.type === "applydebuff") {
+			const opened = openWindows.get(statusId);
+			if (opened && statusId === 2964) {
+				// Up the number of times we've seen Radiant Finale
+				opened.buffType = getBuffInfoByStatusId(statusId, radiantFinaleStacks++)!.name;
+			}
+			// BRD songs overwrite each other; cut short any other open song at this apply.
+			if (BRD_SONG_BUFF_TYPES.has(info.name)) {
+				for (const [otherId, other] of openWindows) {
+					if (otherId !== statusId && BRD_SONG_BUFF_TYPES.has(other.buffType)) {
+						raw.push({
+							buffType: other.buffType,
+							time: (other.startMs - combatStartTime) / 1000,
+							duration: (evt.timestamp - other.startMs) / 1000,
+						});
+						openWindows.delete(otherId);
+					}
+				}
+				openWindows.set(statusId, {
+					startMs: evt.timestamp,
+					buffType: info.name,
+					defaultDuration: info.duration,
+				});
+			} else if (opened && evt.timestamp > opened.startMs) {
+				// If we didn't see a remove event (boss went untargetable, or player went out of
+				// log range), end the marker with the default duration given by BuffInfo.
+				raw.push({
+					buffType: opened.buffType,
+					time: (opened.startMs - combatStartTime) / 1000,
+					duration: opened.defaultDuration,
+				});
+				openWindows.set(statusId, {
+					startMs: evt.timestamp,
+					buffType: info.name,
+					defaultDuration: info.duration,
+				});
+			} else if (!opened) {
+				openWindows.set(statusId, {
+					startMs: evt.timestamp,
+					buffType: info.name,
+					defaultDuration: info.duration,
+				});
+			}
+		} else if (evt.type === "removebuff" || evt.type === "removedebuff") {
+			const opened = openWindows.get(statusId);
+			if (opened) {
+				raw.push({
+					buffType: opened.buffType,
+					time: (opened.startMs - combatStartTime) / 1000,
+					duration: (evt.timestamp - opened.startMs) / 1000,
+				});
+				openWindows.delete(statusId);
+			}
+		}
+	}
+
+	for (const opened of openWindows.values()) {
+		raw.push({
+			buffType: opened.buffType,
+			time: (opened.startMs - combatStartTime) / 1000,
+			duration: opened.defaultDuration,
+		});
+	}
+
+	// Merge together any overlapping buff windows.
+	const positive = raw.filter((w) => w.duration > 0);
+	const byType = new Map<BuffType, PartyBuffMarkerWindow[]>();
+	for (const w of positive) {
+		const list = byType.get(w.buffType) ?? [];
+		list.push(w);
+		byType.set(w.buffType, list);
+	}
+	const merged: PartyBuffMarkerWindow[] = [];
+	for (const [buffType, list] of byType) {
+		list.sort((a, b) => a.time - b.time);
+		let cur: PartyBuffMarkerWindow | undefined;
+		for (const w of list) {
+			if (!cur) {
+				cur = { ...w };
+				continue;
+			}
+			const curEnd = cur.time + cur.duration;
+			const wEnd = w.time + w.duration;
+			if (w.time <= curEnd) {
+				cur.duration = Math.max(curEnd, wEnd) - cur.time;
+			} else {
+				merged.push(cur);
+				cur = { ...w };
+			}
+		}
+		if (cur) {
+			merged.push({ ...cur, buffType });
+		}
+	}
+	return merged;
+}
 
 async function fetchQuery(apiBaseUrl: string, query: string, variables: any): Promise<any> {
 	const options = {
@@ -592,6 +787,33 @@ export async function queryPlayerEvents(
 			healTargetCount: undefined,
 		} as SkillNodeInfo;
 	});
+	const combatStartTime = fight.endTime - fight.combatTime;
+	// Look up whether we have markers presets for the current fight in the current language,
+	// and set timestamps from recorded phase transitions.
+	// Note that fights like M8S P1 post-adds that have variable timelines based on mechanic times
+	// must rely on targetabilityupdate events, which would require issuing an additional query
+	// + extra parsing logic to handle properly.
+	const encounterTrackKey = findTrackKeyWithIdAndLanguage(
+		fight.encounterID,
+		getCurrentLanguage(),
+	);
+	let partyBuffMarkers: PartyBuffMarkerWindow[] = [];
+	if (encounterTrackKey !== undefined) {
+		// Run a second query to retrieve all buff events that target the player/debuff events
+		// that target a boss. This is deliberately run only if we have marker tracks for the
+		// encounter; strictly speaking we can separate them but I'm lazy about adding UI for it.
+		try {
+			const statusEvents = await queryPartyStatusEvents(params);
+			partyBuffMarkers = aggregatePartyBuffMarkers(
+				statusEvents,
+				params.playerID,
+				combatStartTime,
+				fight.endTime,
+			);
+		} catch (e) {
+			console.error("failed to query party status events for buff markers", e);
+		}
+	}
 	const state: IntermediateLogImportState = {
 		playerName: name,
 		job,
@@ -611,17 +833,13 @@ export async function queryPlayerEvents(
 		).sort((k1, k2) => k1.timestamp - k2.timestamp),
 		actions,
 		timestamps,
-		combatStartTime: fight.endTime - fight.combatTime,
-		// Look up whether we have markers presets for the current fight in the current language,
-		// and set timestamps from recorded phase transitions.
-		// Note that fights like M8S P1 post-adds that have variable timelines based on mechanic times
-		// must rely on targetabilityupdate events, which would require issuing an additional query
-		// + extra parsing logic to handle properly.
-		encounterTrackKey: findTrackKeyWithIdAndLanguage(fight.encounterID, getCurrentLanguage()),
+		combatStartTime,
+		encounterTrackKey,
 		phaseTransitionTimestamps:
 			fight.phaseTransitions?.map(
 				({ startTime }: { startTime: number }) => startTime - fight.startTime,
 			) ?? [],
+		partyBuffMarkers,
 	};
 	if (!castQueryCache.has(params.reportCode)) {
 		castQueryCache.set(
