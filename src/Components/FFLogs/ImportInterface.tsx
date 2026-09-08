@@ -16,7 +16,12 @@ import {
 } from "../../Controller/Record";
 import { ActionKey } from "../../Game/Data";
 import { ProcMode, LevelSync } from "../../Game/Common";
-import { ConfigData, GameConfig, SerializedConfig } from "../../Game/GameConfig";
+import {
+	ConfigData,
+	GameConfig,
+	getSavedConfigPart,
+	SerializedConfig,
+} from "../../Game/GameConfig";
 import { Input, Help, StaticFn } from "../Common";
 import { ColorThemeContext, getCurrentThemeColors } from "../ColorTheme";
 import {
@@ -92,8 +97,10 @@ function* applyImportedActions(
 ): Generator<ApplyImportProgress, InvalidActionInfo[]> {
 	// Reset the controller's GameConfig.
 	const oldConfig = controller.gameConfig.serialized();
+	const savedJobStats = getSavedConfigPart(state.job);
 	const newConfig: SerializedConfig = {
 		...oldConfig,
+		...savedJobStats,
 		procMode: ProcMode.Always,
 		job: state.job,
 		initialResourceOverrides:
@@ -775,10 +782,10 @@ export function FflogsImportFlow() {
 		topic="fflogsConfigReset"
 		content={localize({
 			en: <div>
-				FFLogs only records exact combat stats for the player that created the log. All
-				other stats must be entered manually. Any configuration not specified in this
-				dialog, including initial resource overrides, will use the values set in the main
-				"Config" panel.
+				FFLogs only records exact combat stats for the player that created the log. When
+				those stats are missing, the last-saved stats for the imported job are used instead.
+				Any other configuration not specified in this dialog, including initial resource
+				overrides, will use the values set in the main "Config" panel.
 				<br />
 				After a log import, the "proc mode" field is set to "Always". You can manually
 				adjust this later.
@@ -853,9 +860,9 @@ export function FflogsImportFlow() {
 						zh: "将使用logs中的装备数值。可按需手动调整。",
 					})
 				: localize({
-						en: "Exact stats not found in log; using values in current game config. Please enter manually or adjust with the Config pane after import. ",
-						zh: "Logs中未找到此玩家的装备数据，将使用当前属性设置界面的数值。请手动输入装备数值，或在导入后去属性设置界面调整。",
-					})}
+						en: "Exact stats not found in log; using the last-saved stats for this job. Please enter manually or adjust with the Config pane after import. ",
+						zh: "Logs中未找到此玩家的装备数据，将使用该职业上次保存的属性数值。请手动输入装备数值，或在导入后去属性设置界面调整。",
+					})}{" "}
 			{configHelp}
 		</div>
 		<hr />
@@ -999,6 +1006,17 @@ export function FflogsImportFlow() {
 										// Convert ms phase starts from FFLogs to string seconds values
 										// expected by internal helpers.
 										phasedTracks.forEach((track, i) => {
+											// Hard-coded workaround for FRU: we combine P3+P4 into
+											// a single file since the transition timing is fixed, so
+											// we need to skip 1 ahead to get the right P5 timestamp
+											// from FFLogs.
+											if (
+												(trackKey === "fru_en_full" ||
+													trackKey === "fru_zh") &&
+												i === 3
+											) {
+												i++;
+											}
 											const ms =
 												intermediateImportState.phaseTransitionTimestamps[
 													i

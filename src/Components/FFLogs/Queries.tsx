@@ -3,7 +3,7 @@ import { ActionType, SkillNodeInfo } from "../../Controller/Record";
 import { LevelSync } from "../../Game/Common";
 import { ActionKey, ResourceKey } from "../../Game/Data";
 import { ALL_JOBS, JOBS, ShellJob } from "../../Game/Data/Jobs";
-import { ConfigData } from "../../Game/GameConfig";
+import { ConfigData, getSavedConfigPart } from "../../Game/GameConfig";
 import { skillIdMap } from "../../Game/Skills";
 import { getCurrentLanguage, localize, LocalizedContent } from "../Localization";
 import { findTrackKeyWithIdAndLanguage } from "../TimelineMarkerPresets";
@@ -538,6 +538,12 @@ export async function queryPlayerEvents(
 	trackedBuffApplies
 		.get("TEMPERA_GRASSA")
 		?.forEach((timestamp) => trackedBuffRemovals.get("TEMPERA_COAT_POP")?.delete(timestamp));
+	const statsInLog =
+		inferredConfig !== undefined && Object.values(inferredConfig).every((x) => x !== undefined);
+	if (!statsInLog) {
+		// Fall back to last-saved stats for the imported job.
+		inferredConfig = { ...getSavedConfigPart(job) };
+	}
 	const actions: SkillNodeInfo[] = castEvents.map((event: any) => {
 		const id = event.abilityGameID;
 		const key =
@@ -590,9 +596,7 @@ export async function queryPlayerEvents(
 		playerName: name,
 		job,
 		level,
-		statsInLog:
-			inferredConfig !== undefined &&
-			Object.values(inferredConfig).every((x) => x !== undefined),
+		statsInLog,
 		inferredConfig,
 		buffRemovalActions: Array.from(
 			trackedBuffRemovals.entries().flatMap(([key, set]) =>

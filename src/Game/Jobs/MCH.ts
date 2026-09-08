@@ -50,16 +50,16 @@ makeMCHResource("HEAT_GAUGE", 100, { warnOnOvercap: true });
 makeMCHResource("BATTERY_GAUGE", 100, { warnOnOvercap: true });
 
 // Status Effects
-makeMCHResource("REASSEMBLED", 1, { timeout: 5, warnOnTimeout: true });
+makeMCHResource("REASSEMBLED", 1, { timeout: 5.62, warnOnTimeout: true });
 makeMCHResource("OVERHEATED", 5, { timeout: 10, warnOnTimeout: true });
 makeMCHResource("WILDFIRE", 1, { timeout: 10 });
 makeMCHResource("WILDFIRE_SELF", 1, { timeout: 10 });
 makeMCHResource("FLAMETHROWER", 1, { timeout: 10 });
 makeMCHResource("BIOBLASTER", 1, { timeout: 15 });
 makeMCHResource("TACTICIAN", 1, { timeout: 15 });
-makeMCHResource("HYPERCHARGED", 1, { timeout: 30, warnOnTimeout: true });
+makeMCHResource("HYPERCHARGED", 1, { timeout: 30.05, warnOnTimeout: true });
 makeMCHResource("EXCAVATOR_READY", 1, { timeout: 30, warnOnTimeout: true });
-makeMCHResource("FULL_METAL_MACHINIST", 1, { timeout: 30, warnOnTimeout: true });
+makeMCHResource("FULL_METAL_MACHINIST", 1, { timeout: 30.62, warnOnTimeout: true });
 
 // Combos & other tracking
 makeMCHResource("HEAT_COMBO", 2, { timeout: 30 });
