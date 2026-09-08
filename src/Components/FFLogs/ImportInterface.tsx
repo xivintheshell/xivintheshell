@@ -336,9 +336,7 @@ enum LogImportFlowState {
 export function FflogsImportFlow() {
 	const [dialogOpen, _setDialogOpen] = useState<boolean>(
 		// The dialog should be opened upon returning from the FFLogs auth flow.
-		// new URLSearchParams(window.location.search).has("code"),
-		// TODO testing
-		true,
+		new URLSearchParams(window.location.search).has("code"),
 	);
 	const handleStyle: React.CSSProperties = {};
 	const lightMode = useContext(ColorThemeContext) === "Light";
@@ -349,9 +347,7 @@ export function FflogsImportFlow() {
 	const [isMarkerImportAvailable, setIsMarkerImportAvailable] = useState(false);
 	const dialogRef = useRef<HTMLDivElement | null>(null);
 
-	const [logLink, setLogLink] = useState(
-		"https://www.fflogs.com/reports/FpX7P1YzHVkMamcf?fight=18",
-	); // useState(""); TODO testing
+	const [logLink, setLogLink] = useState("");
 	const [flowState, _setFlowState] = useState<LogImportFlowState>(
 		LogImportFlowState.AWAITING_AUTH,
 	);

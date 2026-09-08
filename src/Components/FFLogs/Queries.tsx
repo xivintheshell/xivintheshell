@@ -333,10 +333,6 @@ function aggregatePartyBuffMarkers(
 		}
 		if (evt.type === "applybuff" || evt.type === "applydebuff") {
 			const opened = openWindows.get(statusId);
-			if (opened && statusId === 2964) {
-				// Up the number of times we've seen Radiant Finale
-				opened.buffType = getBuffInfoByStatusId(statusId, radiantFinaleStacks++)!.name;
-			}
 			// BRD songs overwrite each other; cut short any other open song at this apply.
 			if (BRD_SONG_BUFF_TYPES.has(info.name)) {
 				for (const [otherId, other] of openWindows) {
@@ -377,6 +373,10 @@ function aggregatePartyBuffMarkers(
 		} else if (evt.type === "removebuff" || evt.type === "removedebuff") {
 			const opened = openWindows.get(statusId);
 			if (opened) {
+				if (statusId === 2964) {
+					// Up the number of times we've seen Radiant Finale
+					opened.buffType = getBuffInfoByStatusId(statusId, radiantFinaleStacks++)!.name;
+				}
 				raw.push({
 					buffType: opened.buffType,
 					time: (opened.startMs - combatStartTime) / 1000,

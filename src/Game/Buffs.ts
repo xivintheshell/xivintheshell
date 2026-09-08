@@ -117,9 +117,21 @@ export const BRD_SONG_BUFF_TYPES: ReadonlySet<BuffType> = new Set([
 	BuffType.ArmysPaeon,
 ]);
 
-// Render all BRD songs on the Wanderer's Minuet track, since they're mutually exclusive.
+const RADIANT_FINALE_BUFF_TYPES: ReadonlySet<BuffType> = new Set([
+	BuffType.RadiantFinale1,
+	BuffType.RadiantFinale2,
+	BuffType.RadiantFinale3,
+]);
+
+// Render all mutually exclusive buffs on a single track.
 export function buffTrackBinKey(buffType: BuffType): BuffType {
-	return BRD_SONG_BUFF_TYPES.has(buffType) ? BuffType.WanderersMinuet : buffType;
+	if (BRD_SONG_BUFF_TYPES.has(buffType)) {
+		return BuffType.WanderersMinuet;
+	}
+	if (RADIANT_FINALE_BUFF_TYPES.has(buffType)) {
+		return BuffType.RadiantFinale1;
+	}
+	return buffType;
 }
 
 const buffInfoByStatusId: Map<number, BuffInfo> = new Map();
