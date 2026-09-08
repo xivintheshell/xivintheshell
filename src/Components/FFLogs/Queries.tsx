@@ -5,7 +5,8 @@ import { ActionKey, ResourceKey } from "../../Game/Data";
 import { ALL_JOBS, JOBS, ShellJob } from "../../Game/Data/Jobs";
 import { ConfigData } from "../../Game/GameConfig";
 import { skillIdMap } from "../../Game/Skills";
-import { localize, LocalizedContent } from "../Localization";
+import { getCurrentLanguage, localize, LocalizedContent } from "../Localization";
+import { findTrackKeyWithIdAndLanguage } from "../TimelineMarkerPresets";
 
 type ReportCode = string;
 type FightID = number;
@@ -126,6 +127,8 @@ export interface IntermediateLogImportState {
 	actions: SkillNodeInfo[];
 	timestamps: number[];
 	combatStartTime: number;
+	encounterTrackKey?: string;
+	phaseTransitionTimestamps: number[];
 }
 
 const BUFF_IDS = {
@@ -216,28 +219,19 @@ query GetPlayerEvents($reportCode: String, $fightID: Int, $playerID: Int) {
 				nextPageTimestamp
 			}
 			fights(fightIDs: [$fightID]) {
+				encounterID
 				name
 				combatTime
 				startTime
 				endTime
+				phaseTransitions {
+					startTime
+				}
 			}
 			playerDetails(fightIDs: [$fightID])
 		}
 	}
 }`;
-
-const TARGETABILITY_UPDATE_QUERY = `
-query GetTargetability($reportCode: String, $fightID: Int) {
-	reportData {
-		report(code: $reportCode) {
-			events(fightIDs: [$fightID], filterExpression: "type=\\"targetabilityupdate\\"") {
-				data
-				nextPageTimestamp
-			}
-		}
-	}
-}
-`;
 
 async function fetchQuery(apiBaseUrl: string, query: string, variables: any): Promise<any> {
 	const options = {
@@ -282,8 +276,6 @@ function formatFightInfo(
 		startTime: number;
 	},
 ): FightInfo {
-	// We do not currently use the encounterID field, but we can do so in the future to
-	// add automatic marker import.
 	const pctString =
 		fightInfo.bossPercentage === null
 			? localize({ en: "(trash)", zh: "（垃圾）" }).toString()
@@ -616,7 +608,15 @@ export async function queryPlayerEvents(
 		actions,
 		timestamps,
 		combatStartTime: fight.endTime - fight.combatTime,
+		// Look up whether we have markers presets for the current fight in the current language,
+		// and set timestamps from recorded phase transitions.
+		// Note that fights like M8S P1 post-adds that have variable timelines based on mechanic times
+		// must rely on targetabilityupdate events, which would require issuing an additional query
+		// + extra parsing logic to handle properly.
+		encounterTrackKey: findTrackKeyWithIdAndLanguage(fight.encounterID, getCurrentLanguage()),
+		phaseTransitionTimestamps: fight.phaseTransitions?.map(({startTime}: {startTime: number}) => startTime - fight.startTime),
 	};
+	console.log(state.phaseTransitionTimestamps)
 	if (!castQueryCache.has(params.reportCode)) {
 		castQueryCache.set(
 			params.reportCode,
@@ -630,22 +630,4 @@ export async function queryPlayerEvents(
 		castQueryCache.get(params.reportCode)!.get(params.fightID)!.set(params.playerID, state);
 	}
 	return state;
-}
-
-/**
- * Issue a GraphQL query given the fight report ID and fight index ID.
- * Returns a list of targetabilityupdate events..
- */
-// TODO bundle this in with the player event query so we can do a single pass (may require more complex
-// filter expression)
-// TODO make this return type something structured
-export async function queryTargetabilityEvents(
-	params: TargetabilityQueryParams,
-): Promise<string[]> {
-	const data = await fetchQuery(params.apiBaseUrl, TARGETABILITY_UPDATE_QUERY, params);
-	const updateEvents: any[] = data.reportData.report.events.data;
-	return updateEvents.map(
-		(evt) =>
-			`${evt.sourceID}: ${evt.targetable === 1 ? "targetable" : "untargetable"} @ ${evt.timestamp}`,
-	);
 }

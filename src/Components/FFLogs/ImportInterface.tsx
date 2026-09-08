@@ -31,6 +31,8 @@ import {
 	TIMESTAMP_TD_STYLE,
 	updateInvalidStatus,
 } from "../TimelineEditor";
+import { doPhasedPresetTrackLoad } from "../TimelineMarkers";
+import { TRACK_META_MAP } from "../TimelineMarkerPresets";
 import { AccessTokenStatus, getAccessToken, initiateFflogsAuth } from "./Auth";
 import {
 	FightInfo,
@@ -331,6 +333,7 @@ export function FflogsImportFlow() {
 
 	const [resetOnImport, setResetOnImport] = useState(true);
 	const [importMarkers, setImportMarkers] = useState(false);
+	const [isMarkerImportAvailable, setIsMarkerImportAvailable] = useState(false);
 	const dialogRef = useRef<HTMLDivElement | null>(null);
 
 	const [logLink, setLogLink] = useState(
@@ -344,6 +347,7 @@ export function FflogsImportFlow() {
 		if (flowState === LogImportFlowState.IMPORT_DONE) {
 			setImportProgress(null);
 			setResetOnImport(true);
+			setIsMarkerImportAvailable(false);
 			setImportMarkers(false);
 			setInvalidActions([]);
 		}
@@ -579,6 +583,9 @@ export function FflogsImportFlow() {
 							playerID: partialLogInfo.playerID,
 						});
 						setIntermediateImportState(state);
+						if (state.encounterTrackKey !== undefined) {
+							setIsMarkerImportAvailable(true);
+						}
 						console.log(`preparing to import ${state.actions.length} skills`);
 						setFlowState(LogImportFlowState.ADJUSTING_CONFIG);
 					}
@@ -708,6 +715,9 @@ export function FflogsImportFlow() {
 					})
 						.then((state) => {
 							setIntermediateImportState(state);
+							if (state.encounterTrackKey !== undefined) {
+								setIsMarkerImportAvailable(true);
+							}
 							console.log(`preparing to import ${state.actions.length} skills`);
 							setFlowState(LogImportFlowState.ADJUSTING_CONFIG);
 						})
@@ -754,7 +764,6 @@ export function FflogsImportFlow() {
 	// TODO add back arrow
 	// TODO populate stat fields + level that aren't inferred
 	const needsForceReset = () => controller.gameConfig.job !== intermediateImportState?.job;
-	const isMarkerImportAvailable = true; // TODO set this based on some hardcoded list?
 	const configHelp = <Help
 		container={dialogRef}
 		topic="fflogsConfigReset"
@@ -810,11 +819,9 @@ export function FflogsImportFlow() {
 		topic="fflogsConfigResetActive"
 		content={localize({
 			en: <span>
-				<i>
-					When checked, markers for this fight will automatically be imported according to
-					the phase timings found in this log. **This will overwrite any currently-set
-					markers.** This feature is only available for certain fights.
-				</i>
+				When checked, markers for this fight will automatically be imported according to
+				the phase timings and party buff usages found in this log. <b>This will overwrite any currently-set
+				markers.</b> This feature is only available for certain fights.
 			</span>,
 			zh: <span>
 				<i>TODO</i>
@@ -966,10 +973,7 @@ export function FflogsImportFlow() {
 							setInvalidActions(iter.value);
 							// Import markers if necessary
 							if (importMarkers) {
-								// TODO hook this up to actual display state
-								// @ts-expect-error too lazy to type check
-								const evts = await queryTargetabilityEvents(logInfo.current);
-								console.log(evts);
+								doPhasedPresetTrackLoad(/* TODO */)
 							}
 							setFlowState(LogImportFlowState.IMPORT_DONE);
 						}, 0);

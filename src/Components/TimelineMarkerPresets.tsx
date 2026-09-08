@@ -213,3 +213,19 @@ export const ARCHIVE_TRACKS = new Map([
 		],
 	],
 ]);
+
+// Return the metadata lookup key for the fight corresponding to the provided FFLogs encounter ID
+// and language. Returns undefined on failure.
+export function findTrackKeyWithIdAndLanguage(id?: number, language: Language): string | undefined {
+	if (id === undefined) {
+		return undefined;
+	}
+	// Just do a manual O(N) search, skipping a ~40-element array traversal is not worth the effort
+	// to initialize a 2-layer hashmap keyed on both zone ID and language.
+	for (const [key, meta] of TRACK_META_MAP.entries()) {
+		if (meta.fflogsEncounterId === id && meta.supportedLanguages.includes(language)) {
+			return key;
+		}
+	}
+	return undefined;
+}
