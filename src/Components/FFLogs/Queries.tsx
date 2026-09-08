@@ -614,9 +614,11 @@ export async function queryPlayerEvents(
 		// must rely on targetabilityupdate events, which would require issuing an additional query
 		// + extra parsing logic to handle properly.
 		encounterTrackKey: findTrackKeyWithIdAndLanguage(fight.encounterID, getCurrentLanguage()),
-		phaseTransitionTimestamps: fight.phaseTransitions?.map(({startTime}: {startTime: number}) => startTime - fight.startTime),
+		phaseTransitionTimestamps:
+			fight.phaseTransitions?.map(
+				({ startTime }: { startTime: number }) => startTime - fight.startTime,
+			) ?? [],
 	};
-	console.log(state.phaseTransitionTimestamps)
 	if (!castQueryCache.has(params.reportCode)) {
 		castQueryCache.set(
 			params.reportCode,

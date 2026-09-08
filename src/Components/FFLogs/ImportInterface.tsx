@@ -31,7 +31,13 @@ import {
 	TIMESTAMP_TD_STYLE,
 	updateInvalidStatus,
 } from "../TimelineEditor";
-import { doPhasedPresetTrackLoad } from "../TimelineMarkers";
+import {
+	asyncFetchJson,
+	doPhasedPresetTrackLoad,
+	doPresetTrackLoad,
+	MarkerTrackSet,
+	PhasedTrack,
+} from "../TimelineMarkers";
 import { TRACK_META_MAP } from "../TimelineMarkerPresets";
 import { AccessTokenStatus, getAccessToken, initiateFflogsAuth } from "./Auth";
 import {
@@ -819,9 +825,10 @@ export function FflogsImportFlow() {
 		topic="fflogsConfigResetActive"
 		content={localize({
 			en: <span>
-				When checked, markers for this fight will automatically be imported according to
-				the phase timings and party buff usages found in this log. <b>This will overwrite any currently-set
-				markers.</b> This feature is only available for certain fights.
+				When checked, markers for this fight will automatically be imported according to the
+				phase timings and party buff usages found in this log.{" "}
+				<b>This will overwrite any currently-set markers.</b> This feature is only available
+				for certain fights.
 			</span>,
 			zh: <span>
 				<i>TODO</i>
@@ -973,7 +980,51 @@ export function FflogsImportFlow() {
 							setInvalidActions(iter.value);
 							// Import markers if necessary
 							if (importMarkers) {
-								doPhasedPresetTrackLoad(/* TODO */)
+								const trackKey = intermediateImportState.encounterTrackKey!;
+								const meta = TRACK_META_MAP.get(trackKey)!;
+								controller.timeline.deleteAllMarkers();
+								try {
+									const content = await new Promise<any>((resolve, reject) => {
+										asyncFetchJson(
+											`/presets/markers/${trackKey}.txt`,
+											resolve,
+											reject,
+										);
+									});
+									if (meta.phased) {
+										const phasedTracks: PhasedTrack[] = (
+											content as MarkerTrackSet
+										).phasedTracks;
+										const offsetMap = new Map<string, string>();
+										// Convert ms phase starts from FFLogs to string seconds values
+										// expected by internal helpers.
+										phasedTracks.forEach((track, i) => {
+											const ms =
+												intermediateImportState.phaseTransitionTimestamps[
+													i
+												];
+											if (ms !== undefined) {
+												offsetMap.set(
+													track.fileName,
+													(ms / 1000).toString(),
+												);
+											}
+										});
+										await doPhasedPresetTrackLoad(
+											phasedTracks,
+											() => {},
+											"",
+											offsetMap,
+										);
+									} else {
+										// Explicitly override the global offset flag for FFLogs imports.
+										doPresetTrackLoad(content, () => {}, {
+											globalOffset: "",
+										});
+									}
+								} catch (e) {
+									console.error("failed to import markers from log", e);
+								}
 							}
 							setFlowState(LogImportFlowState.IMPORT_DONE);
 						}, 0);
