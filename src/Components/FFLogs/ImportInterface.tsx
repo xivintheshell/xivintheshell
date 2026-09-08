@@ -836,7 +836,9 @@ export function FflogsImportFlow() {
 				for certain fights.
 			</span>,
 			zh: <span>
-				<i>TODO</i>
+				勾选后，将根据本场logs中的阶段时间与团辅使用情况自动导入该副本的标记。
+				<b>这将覆盖当前已设置的所有标记。</b>
+				此功能仅对部分副本可用。
 			</span>,
 		})}
 	/>;
@@ -959,7 +961,7 @@ export function FflogsImportFlow() {
 				<span>
 					{localize({
 						en: "Import marker and buff timings from log",
-						zh: "TODO",
+						zh: "从logs导入标记与团辅时间",
 					})}{" "}
 				</span>
 				{importMarkersHelp}
