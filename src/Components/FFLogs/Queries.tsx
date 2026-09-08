@@ -332,7 +332,6 @@ function aggregatePartyBuffMarkers(
 			continue;
 		}
 		if (evt.type === "applybuff" || evt.type === "applydebuff") {
-			const opened = openWindows.get(statusId);
 			// BRD songs overwrite each other; cut short any other open song at this apply.
 			if (BRD_SONG_BUFF_TYPES.has(info.name)) {
 				for (const [otherId, other] of openWindows) {
@@ -345,12 +344,9 @@ function aggregatePartyBuffMarkers(
 						openWindows.delete(otherId);
 					}
 				}
-				openWindows.set(statusId, {
-					startMs: evt.timestamp,
-					buffType: info.name,
-					defaultDuration: info.duration,
-				});
-			} else if (opened && evt.timestamp > opened.startMs) {
+			}
+			const opened = openWindows.get(statusId);
+			if (opened && evt.timestamp > opened.startMs) {
 				// If we didn't see a remove event (boss went untargetable, or player went out of
 				// log range), end the marker with the default duration given by BuffInfo.
 				raw.push({
@@ -837,7 +833,7 @@ export async function queryPlayerEvents(
 		encounterTrackKey,
 		phaseTransitionTimestamps:
 			fight.phaseTransitions?.map(
-				({ startTime }: { startTime: number }) => startTime - fight.startTime,
+				({ startTime }: { startTime: number }) => startTime - combatStartTime,
 			) ?? [],
 		partyBuffMarkers,
 	};

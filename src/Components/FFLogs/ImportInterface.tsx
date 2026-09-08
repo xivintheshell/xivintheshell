@@ -356,9 +356,15 @@ export function FflogsImportFlow() {
 		if (flowState === LogImportFlowState.IMPORT_DONE) {
 			setImportProgress(null);
 			setResetOnImport(true);
+			setInvalidActions([]);
+		}
+		if (
+			newFlowState !== LogImportFlowState.ADJUSTING_CONFIG &&
+			newFlowState !== LogImportFlowState.PROCESSING_IMPORT &&
+			newFlowState !== LogImportFlowState.IMPORT_DONE
+		) {
 			setIsMarkerImportAvailable(false);
 			setImportMarkers(false);
-			setInvalidActions([]);
 		}
 		if (
 			newFlowState !== LogImportFlowState.ADJUSTING_CONFIG &&
@@ -592,9 +598,7 @@ export function FflogsImportFlow() {
 							playerID: partialLogInfo.playerID,
 						});
 						setIntermediateImportState(state);
-						if (state.encounterTrackKey !== undefined) {
-							setIsMarkerImportAvailable(true);
-						}
+						setIsMarkerImportAvailable(state.encounterTrackKey !== undefined);
 						console.log(`preparing to import ${state.actions.length} skills`);
 						setFlowState(LogImportFlowState.ADJUSTING_CONFIG);
 					}
@@ -724,9 +728,7 @@ export function FflogsImportFlow() {
 					})
 						.then((state) => {
 							setIntermediateImportState(state);
-							if (state.encounterTrackKey !== undefined) {
-								setIsMarkerImportAvailable(true);
-							}
+							setIsMarkerImportAvailable(state.encounterTrackKey !== undefined);
 							console.log(`preparing to import ${state.actions.length} skills`);
 							setFlowState(LogImportFlowState.ADJUSTING_CONFIG);
 						})
@@ -982,10 +984,9 @@ export function FflogsImportFlow() {
 							}
 							setInvalidActions(iter.value);
 							// Import markers if necessary
-							if (importMarkers) {
-								const trackKey = intermediateImportState.encounterTrackKey!;
+							if (importMarkers && intermediateImportState.encounterTrackKey) {
+								const trackKey = intermediateImportState.encounterTrackKey;
 								const meta = TRACK_META_MAP.get(trackKey)!;
-								controller.timeline.deleteAllMarkers();
 								try {
 									const content = await new Promise<any>((resolve, reject) => {
 										asyncFetchJson(
@@ -994,6 +995,7 @@ export function FflogsImportFlow() {
 											reject,
 										);
 									});
+									controller.timeline.deleteAllMarkers();
 									if (meta.phased) {
 										const phasedTracks: PhasedTrack[] = (
 											content as MarkerTrackSet
@@ -1006,11 +1008,8 @@ export function FflogsImportFlow() {
 											// a single file since the transition timing is fixed, so
 											// we need to skip 1 ahead to get the right P5 timestamp
 											// from FFLogs.
-											if (
-												(trackKey === "fru_en_full" ||
-													trackKey === "fru_zh") &&
-												i === 3
-											) {
+											// Note that fru_zh isn't phased, so it's ignored here.
+											if (trackKey === "fru_en_full" && i === 3) {
 												i++;
 											}
 											const ms =
@@ -1036,10 +1035,6 @@ export function FflogsImportFlow() {
 											globalOffset: "",
 										});
 									}
-								} catch (e) {
-									console.error("failed to import phase markers from log", e);
-								}
-								try {
 									controller.timeline.addBuffMarkers(
 										intermediateImportState.partyBuffMarkers,
 									);
@@ -1047,7 +1042,7 @@ export function FflogsImportFlow() {
 										controller.updateStats();
 									}
 								} catch (e) {
-									console.error("failed to import buff markers from log", e);
+									console.error("failed to import markers from log", e);
 								}
 							}
 							setFlowState(LogImportFlowState.IMPORT_DONE);
