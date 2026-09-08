@@ -960,7 +960,7 @@ export function FflogsImportFlow() {
 				/>
 				<span>
 					{localize({
-						en: "Import marker timings from log",
+						en: "Import marker and buff timings from log",
 						zh: "TODO",
 					})}{" "}
 				</span>
