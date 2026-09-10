@@ -128,6 +128,11 @@ const RADIANT_FINALE_BUFF_TYPES: ReadonlySet<BuffType> = new Set([
 	BuffType.RadiantFinale3,
 ]);
 
+const PHANTOM_BARD_BUFF_TYPES: ReadonlySet<BuffType> = new Set([
+	BuffType.OffensiveAria,
+	BuffType.HerosRime,
+]);
+
 // Render all mutually exclusive buffs on a single track.
 export function buffTrackBinKey(buffType: BuffType): BuffType {
 	if (BRD_SONG_BUFF_TYPES.has(buffType)) {
@@ -135,6 +140,9 @@ export function buffTrackBinKey(buffType: BuffType): BuffType {
 	}
 	if (RADIANT_FINALE_BUFF_TYPES.has(buffType)) {
 		return BuffType.RadiantFinale1;
+	}
+	if (PHANTOM_BARD_BUFF_TYPES.has(buffType)) {
+		return BuffType.OffensiveAria;
 	}
 	return buffType;
 }
