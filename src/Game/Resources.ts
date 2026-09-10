@@ -214,6 +214,10 @@ export class CoolDown extends ResourceOrCooldown {
 	overrideTimeTillNextStack(newTime: number) {
 		this.#timeTillNextStackAvailable = newTime;
 	}
+	makeFullyAvailable() {
+		this.#timeTillNextStackAvailable = 0;
+		this.overrideCurrentValue(this.maxValue);
+	}
 	stacksAvailable(): number {
 		return super.availableAmount();
 	}
@@ -523,6 +527,9 @@ ALL_JOBS.forEach((job) => {
 	makeResource(job, "AUTOS_ENGAGED", 1, { default: 0 });
 	// Setting STORED_AUTO ensures combat begins with an auto-attack
 	makeResource(job, "STORED_AUTO", 1, { default: 1 });
+	// assume always that we start out hitting elemental weakness w/ libra for now
+	makeResource(job, "LIBRA", 1, { default: 1 });
+	makeResource(job, "ELEMENTAL_WEAKNESS", 1, { default: 1 });
 });
 
 MELEE_JOBS.forEach((job) => {

@@ -2,7 +2,7 @@
 
 import { controller } from "../../Controller/Controller";
 import { Aspect, BuffType } from "../Common";
-import { Modifiers, Potency } from "../Potency";
+import { Modifiers, Potency, PotencyModifier } from "../Potency";
 import {
 	Ability,
 	combineEffects,
@@ -163,6 +163,10 @@ export class SMNState extends GameState {
 		if (this.hasResourceAvailable("SEARING_LIGHT")) {
 			node.addBuff(BuffType.SearingLight);
 		}
+	}
+
+	override jobSpecificAutoPotencyModifiers(): PotencyModifier[] {
+		return this.hasResourceAvailable("SEARING_LIGHT") ? [Modifiers.SearingLight] : [];
 	}
 
 	get activeDemi(): ActiveDemiValue {

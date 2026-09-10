@@ -15,6 +15,7 @@ import { JOBS } from "../Game/Data/Jobs";
 import { ResourceKey, RESOURCES } from "../Game/Data";
 import { ROLE_RESOURCES } from "../Game/Data/Shared/Role";
 import { LIMIT_BREAK_RESOURCES } from "../Game/Data/Shared/LimitBreak";
+import { PHANTOM_STATUSES, PhantomJob } from "../Game/Data/Shared/Phantom";
 
 type StatusResourceLocksViewProps = {
 	gcdReady: boolean;
@@ -414,6 +415,15 @@ export function registerBuffIcon(buff: ResourceKey, relativePath: string) {
 Object.keys(ROLE_RESOURCES).forEach((buff) => {
 	const iconName = RESOURCES[buff as ResourceKey].name;
 	buffIcons.set(buff, `Buffs/Role/${iconName}.png`);
+});
+
+Object.keys(PHANTOM_STATUSES).forEach((buff) => {
+	const iconName = RESOURCES[buff as ResourceKey].name;
+	buffIcons.set(buff, `Buffs/Phantom/${iconName}.png`);
+	const maxStacks = RESOURCES[buff as ResourceKey].maximumStacks ?? 1;
+	for (let i = 2; i <= maxStacks; i++) {
+		buffIcons.set(buff + i, `Buffs/Phantom/${iconName + i}.png`);
+	}
 });
 
 // Tank LBs share the same buff icon
@@ -1058,6 +1068,24 @@ export class StatusPropsGenerator<T extends GameState> {
 			roleBuffViewProps.push(
 				...(["SWIFTCAST", "LUCID_DREAMING", "SURECAST"] as ResourceKey[]).map((rscType) =>
 					this.makeCommonTimer(rscType),
+				),
+			);
+		}
+
+		// Libra and elemental weakness should be shown only for relevant phantom jobs.
+		const pj = this.state.config.phantomJob;
+		if (pj !== undefined) {
+			roleBuffViewProps.push(
+				...Object.keys(PHANTOM_STATUSES).flatMap((rscType) =>
+					rscType === "LIBRA" || rscType === "ELEMENTAL_WEAKNESS"
+						? [
+								PhantomJob.BlackMage,
+								PhantomJob.Summoner,
+								PhantomJob.Necromancer,
+							].includes(pj)
+							? [this.makeToggleableTimerless(rscType)]
+							: []
+						: [this.makeCommonTimer(rscType as ResourceKey)],
 				),
 			);
 		}
