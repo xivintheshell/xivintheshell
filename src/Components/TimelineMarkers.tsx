@@ -1,4 +1,11 @@
-import React, { createContext, CSSProperties, useContext, useEffect, useState } from "react";
+import React, {
+	createContext,
+	CSSProperties,
+	useContext,
+	useEffect,
+	useMemo,
+	useState,
+} from "react";
 import {
 	asyncFetch,
 	Columns,
@@ -925,10 +932,14 @@ export function MarkerLoadSaveWidget() {
 
 export function TimelineMarkers() {
 	const [trackIndices, setTrackIndices] = useState<number[]>([]);
+	const [offsetStr, setOffsetStr] = useState("");
 	useEffect(() => {
 		setTrackIndices(controller.timeline.getTrackIndices());
 	}, []);
-	const [offsetStr, setOffsetStr] = useState("");
+	const trackIndexContextValue = useMemo(
+		() => ({ trackIndices, setTrackIndices }),
+		[trackIndices],
+	);
 	const parsedTime = parseTime(offsetStr);
 	const offsetInput = <Input
 		defaultValue={offsetStr}
@@ -1030,7 +1041,7 @@ export function TimelineMarkers() {
 					</p>
 					<div>{offsetInput}</div>
 					<OffsetContext.Provider value={offsetStr}>
-						<TrackIndexContext.Provider value={{ trackIndices, setTrackIndices }}>
+						<TrackIndexContext.Provider value={trackIndexContextValue}>
 							<TrackCollection
 								label={{ en: "Current content", zh: "当前版本" }}
 								trackList={RECENT_CONTENT_TRACKS}
@@ -1060,7 +1071,7 @@ export function TimelineMarkers() {
 				content: <>
 					{actionsSection}
 					<Hsep marginTop={15} marginBottom={15} />
-					<TrackIndexContext.Provider value={{ trackIndices, setTrackIndices }}>
+					<TrackIndexContext.Provider value={trackIndexContextValue}>
 						<CustomMarkerWidget />
 					</TrackIndexContext.Provider>
 				</>,
@@ -1069,7 +1080,7 @@ export function TimelineMarkers() {
 				defaultSize: 35,
 				content: <>
 					<OffsetContext.Provider value={offsetStr}>
-						<TrackIndexContext.Provider value={{ trackIndices, setTrackIndices }}>
+						<TrackIndexContext.Provider value={trackIndexContextValue}>
 							<MarkerLoadSaveWidget />
 						</TrackIndexContext.Provider>
 					</OffsetContext.Provider>

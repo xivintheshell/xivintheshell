@@ -609,8 +609,8 @@ export function TimeControl() {
 		return undefined;
 	};
 	const settings = loadSettings();
-	const [timeScale, _setTimeScale] = useState(settings?.tickMode ?? 1);
-	const [tickMode, _setTickMode] = useState(settings?.timeScale ?? TickMode.Manual);
+	const [timeScale, _setTimeScale] = useState(settings?.timeScale ?? 1);
+	const [tickMode, _setTickMode] = useState(settings?.tickMode ?? TickMode.Manual);
 	const [cooldownDisplayMode, _setCooldownDisplayMode] = useState(
 		(settings?.cooldownDisplayMode ?? "center") as CooldownDisplayMode,
 	);
