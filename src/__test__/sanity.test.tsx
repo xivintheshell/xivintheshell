@@ -46,6 +46,8 @@ it("allows timeline inputs without crashing", async () => {
 	const damageTable = container.querySelector("#damageTable");
 
 	// Before clicking Sprint, it won't show up anywhere
+	// @ts-expect-error something about vite 5.x broke type-checking on the .not here and
+	// I don't feel like fixing it
 	expect(within(damageTable as HTMLElement).queryByText("Sprint")).not.toBeInTheDocument();
 	// click a skill
 	await user.click(skillButton as HTMLElement);
