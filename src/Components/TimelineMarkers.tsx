@@ -801,7 +801,7 @@ export function CustomMarkerWidget() {
 }
 
 export function MarkerLoadSaveWidget() {
-	const offset = parseInt(useContext(OffsetContext));
+	const offset = parseTime(useContext(OffsetContext));
 	const parsedOffset = isNaN(offset) ? 0 : offset;
 	const colors = getThemeColors(useContext(ColorThemeContext));
 	const [loadTrackDest, setLoadTrackDest] = useState("0");
