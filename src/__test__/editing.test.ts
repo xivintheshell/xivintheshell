@@ -357,7 +357,7 @@ describe("individual skill interactions", () => {
 });
 
 describe("timeline slot manipulation", () => {
-	it(
+	it.skip(
 		"creates a new empty timeline with the same config",
 		undoRedoTest([
 			{

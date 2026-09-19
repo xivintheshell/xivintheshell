@@ -66,88 +66,88 @@ import { XIVMath } from "../Game/XIVMath";
 
 const commonStats: [number, number, number, number] = [100, 3214, 1990, 2033]; // level, crit, dh, det
 
-const hammerBaseDamage = XIVMath.calculateDamage(...commonStats, 1, 1, 1);
-const paintBaseDamage = XIVMath.calculateDamage(...commonStats, 1, 0, 0);
+const hammerBaseDamage = XIVMath.calculateExpectedPotency(...commonStats, 1, 1, 1);
+const paintBaseDamage = XIVMath.calculateExpectedPotency(...commonStats, 1, 0, 0);
 
 // just Battle Litany
 it("calculates hammer with litany", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1, 1.1, 1);
+	const withBuffs = XIVMath.calculateExpectedPotency(...commonStats, 1, 1.1, 1);
 	expect(withBuffs / hammerBaseDamage).toBeCloseTo(1.06, 2);
 });
 
 it("calculates paint with litany", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1, 0.1, 0);
+	const withBuffs = XIVMath.calculateExpectedPotency(...commonStats, 1, 0.1, 0);
 	expect(withBuffs / paintBaseDamage).toBeCloseTo(1.05, 2);
 });
 
 // just Devilment
 it.fails("calculates hammer with devilment", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1, 1.2, 1.2);
+	const withBuffs = XIVMath.calculateExpectedPotency(...commonStats, 1, 1.2, 1.2);
 	expect(withBuffs / hammerBaseDamage).toBeCloseTo(1.17, 2);
 });
 
 it("calculates paint with devilment", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1, 0.2, 0.2);
+	const withBuffs = XIVMath.calculateExpectedPotency(...commonStats, 1, 0.2, 0.2);
 	expect(withBuffs / paintBaseDamage).toBeCloseTo(1.156, 2);
 });
 
 // Battle Litany + Wanderer's Minuet
 it("calculates hammer with litany + wm", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1, 1.12, 1);
+	const withBuffs = XIVMath.calculateExpectedPotency(...commonStats, 1, 1.12, 1);
 	expect(withBuffs / hammerBaseDamage).toBeCloseTo(1.072, 2);
 });
 
 // Battle Litany + Chain Stratagem
 it.fails("calculates hammer with litany + chain", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1, 1.2, 1);
+	const withBuffs = XIVMath.calculateExpectedPotency(...commonStats, 1, 1.2, 1);
 	expect(withBuffs / hammerBaseDamage).toBeCloseTo(1.102, 2);
 });
 
 it.fails("calculates paint with litany + chain", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1, 0.2, 0);
+	const withBuffs = XIVMath.calculateExpectedPotency(...commonStats, 1, 0.2, 0);
 	expect(withBuffs / paintBaseDamage).toBeCloseTo(1.088, 2);
 });
 
 // Battle Litany + Devilment
 it.fails("calculates hammer with litany + devilment", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1, 1.3, 1.2);
+	const withBuffs = XIVMath.calculateExpectedPotency(...commonStats, 1, 1.3, 1.2);
 	expect(withBuffs / hammerBaseDamage).toBeCloseTo(1.23, 2);
 });
 
 it("calculates paint with litany + devilment", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1, 0.3, 0.2);
+	const withBuffs = XIVMath.calculateExpectedPotency(...commonStats, 1, 0.3, 0.2);
 	expect(withBuffs / paintBaseDamage).toBeCloseTo(1.21, 2);
 });
 
 // Battle Litany + Devilment + Technical Finish
 it.fails("calculates hammer with litany + devilment + tech", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1.05, 1.3, 1.2);
+	const withBuffs = XIVMath.calculateExpectedPotency(...commonStats, 1.05, 1.3, 1.2);
 	expect(withBuffs / hammerBaseDamage).toBeCloseTo(1.27, 2);
 });
 
 it.fails("calculates paint with litany + devilment + tech", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1.05, 0.3, 0.2);
+	const withBuffs = XIVMath.calculateExpectedPotency(...commonStats, 1.05, 0.3, 0.2);
 	expect(withBuffs / paintBaseDamage).toBeCloseTo(1.25, 2);
 });
 
 // just Technical Finish
 it("calculates hammer with tech", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1.05, 1, 1);
+	const withBuffs = XIVMath.calculateExpectedPotency(...commonStats, 1.05, 1, 1);
 	expect(withBuffs / hammerBaseDamage).toBeCloseTo(1.05, 2);
 });
 
 it("calculates paint with tech", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1.05, 0, 0);
+	const withBuffs = XIVMath.calculateExpectedPotency(...commonStats, 1.05, 0, 0);
 	expect(withBuffs / paintBaseDamage).toBeCloseTo(1.05, 2);
 });
 
 // Army's Paeon + Technical Finish
 it("calculates hammer with AP + tech", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1.05, 1, 1.03);
+	const withBuffs = XIVMath.calculateExpectedPotency(...commonStats, 1.05, 1, 1.03);
 	expect(withBuffs / hammerBaseDamage).toBeCloseTo(1.058, 2);
 });
 
 it("calculates paint with AP + tech", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1.05, 0, 0.03);
+	const withBuffs = XIVMath.calculateExpectedPotency(...commonStats, 1.05, 0, 0.03);
 	expect(withBuffs / paintBaseDamage).toBeCloseTo(1.057, 2);
 });

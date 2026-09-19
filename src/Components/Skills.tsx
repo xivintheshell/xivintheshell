@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, FormEvent } from "react";
+import React, { useContext, useEffect, useState, FormEvent, ReactElement } from "react";
 import { Tooltip } from "@base-ui/react/tooltip";
 import { Clickable, ContentNode, Help, parseTime, ValueChangeEvent } from "./Common";
 import { Debug, SkillReadyStatus, SkillUnavailableReason } from "../Game/Common";
@@ -11,6 +11,7 @@ import { TargetSelector } from "./TargetSelector";
 import { getSkillAssetPath } from "../Game/Skills";
 import { ActionKey, ACTIONS } from "../Game/Data";
 import { ShellJob } from "../Game/Data/Jobs";
+import { PJOB_ABILITY_MAP } from "../Game/Jobs/Phantom";
 
 // keyed on concatenation of job __ skillName to avoid uniqueness issues
 const skillIconImages = new Map<string, HTMLImageElement>();
@@ -667,7 +668,9 @@ export function SkillsWindow() {
 		}
 	};
 
-	const skillButtons = statusList.map((info, i) => {
+	const skillButtons: ReactElement[] = [];
+	const phSkillButtons: ReactElement[] = [];
+	statusList.forEach((info, i) => {
 		const skillName = info.skillName;
 
 		const readyAsideFromCd = info
@@ -675,7 +678,7 @@ export function SkillsWindow() {
 					(reason) => reason !== SkillUnavailableReason.Blocked,
 				)
 			: false;
-		return <SkillButton
+		const button = <SkillButton
 			key={i}
 			highlight={info ? info.highlight : false}
 			skillName={skillName}
@@ -692,6 +695,7 @@ export function SkillsWindow() {
 			targetList={getTargetList()}
 			activeJob={controller.game.job}
 		/>;
+		(PJOB_ABILITY_MAP.has(skillName) ? phSkillButtons : skillButtons).push(button);
 	});
 
 	const waitUntilHelp = <Help
@@ -801,6 +805,12 @@ export function SkillsWindow() {
 				}
 			`}</style>
 			{skillButtons}
+			{phSkillButtons.length > 0 && <div style={{ marginBlock: 8, fontWeight: "bold" }}>
+				<div style={{ marginBottom: 5 }}>
+					{localize({ en: "Phantom Actions", zh: "辅助技能" })}
+				</div>
+				<div>{phSkillButtons}</div>
+			</div>}
 			<div style={{ margin: "10px 0" }}>
 				{localize({
 					en: "# of targets hit",

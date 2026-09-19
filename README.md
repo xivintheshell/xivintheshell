@@ -1,4 +1,6 @@
-# XIV in the Shell
+# XIV in the Shell (Occult Crescent)
+
+## If you're reading this, this branch's dev build is on port 3001 to avoid sharing localStorage with the main site. Do not be alarmed.
 
 FFXIV job simulators & rotation planners.
 
