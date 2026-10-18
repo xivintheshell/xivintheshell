@@ -97,7 +97,7 @@ export const TRACK_META_MAP: Map<string, MarkerTrackMeta> = new Map([
 	["dsr_p6", mm("DSR P6", "ultimate", "en", "Tischel")],
 	["dsr_p7", mm("DSR P7", "ultimate", "en", "Tischel")],
 	// NOTE: TOP has ID 1068 for reports from EW where it wasn't considered a legacy ultimate
-	["TOP_2023_04_02", mm("TOP", "ultimate", "en", "Santa", 1077)],
+	["top_en_full", mm("TOP", "ultimate", "en", "Santa", 1077, true)],
 	["m2s", mm("M2S", "savage", "en", "shanzhe", 94)],
 	["m3s", mm("M3S", "savage", "en", "shanzhe", 95)],
 	["m4s", mm("M4S", "savage", "en", "shanzhe", 96)],
@@ -159,7 +159,7 @@ export const RECENT_CONTENT_TRACKS = [
 	"final_verse_q40",
 ];
 
-export const LEGACY_ULTIMATE_TRACKS = ["dsr_p2", "dsr_p6", "dsr_p7", "TOP_2023_04_02"];
+export const LEGACY_ULTIMATE_TRACKS = ["dsr_p2", "dsr_p6", "dsr_p7", "top_en_full"];
 
 export const ARCHIVE_TRACKS = new Map([
 	[
@@ -199,7 +199,7 @@ export const ARCHIVE_TRACKS = new Map([
 			"p8s_p2_zh",
 			"p9s",
 			"p9s_zh",
-			"TOP_2023_04_02",
+			"top_en_full",
 			"p9s",
 			"p10s",
 			"p11s",
