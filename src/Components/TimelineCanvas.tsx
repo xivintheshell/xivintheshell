@@ -2075,6 +2075,40 @@ export function TimelineCanvas(props: {
 	const setDraggedSkillElem = (e: SkillElem | undefined) => {
 		draggedSkillElem.current = e;
 	};
+	// In order to support touch gestures, we must draw fake DOM elements atop skill hitboxes
+	// to capture touch events, so tapping a selected skill and dragging does not trigger native
+	// browser scroll behavior. This computation is (hopefully) inexpensive.
+	const rootRef = useRef<HTMLDivElement | null>(null);
+	type SelectedSkillRect = Rect & { actionIndex: number };
+	const [selectedSkillRects, setSelectedSkillRects] = useState<SelectedSkillRect[]>([]);
+	const publishSelectedSkillRects = () => {
+		if (lockContext.value) {
+			setSelectedSkillRects((prev) => (prev.length === 0 ? prev : []));
+			return;
+		}
+		const next: SelectedSkillRect[] = [];
+		const start = controller.record.selectionStartIndex;
+		const end = controller.record.selectionEndIndex;
+		if (start !== undefined && end !== undefined) {
+			for (let actionIndex = start; actionIndex <= end; actionIndex++) {
+				const rect = skillHitboxes.current.get(actionIndex);
+				if (rect) next.push({ actionIndex, ...rect });
+			}
+		}
+		setSelectedSkillRects((prev) =>
+			prev.length === next.length &&
+			prev.every(
+				(rect, i) =>
+					rect.actionIndex === next[i].actionIndex &&
+					rect.x === next[i].x &&
+					rect.y === next[i].y &&
+					rect.w === next[i].w &&
+					rect.h === next[i].h,
+			)
+				? prev
+				: next,
+		);
+	};
 
 	const bgSelecting = useRef(false);
 	const setBgSelecting = (b: boolean) => {
@@ -2480,6 +2514,7 @@ export function TimelineCanvas(props: {
 				}),
 			);
 			[liveCtx, interactiveCtx, lowUpdateCtx].forEach((ctx) => ctx.scale(1 / dpr, 1 / dpr));
+			publishSelectedSkillRects();
 		}
 	};
 
@@ -2493,6 +2528,7 @@ export function TimelineCanvas(props: {
 			globalDragContext.setDragTarget(null, null);
 			setDraggedSkillElem(undefined);
 		}
+		publishSelectedSkillRects();
 	}, [lockContext.value]);
 
 	// Redraw everything when a mouse position changes, or an animation frame is requested by props.version.
@@ -2510,7 +2546,6 @@ export function TimelineCanvas(props: {
 	// ruler, skill icons, animation lock/cast/recast bars, damage ticks, mp and other background ticks,
 	// historical and sim end cursors
 	// 2. A "low update" layer for elements that are infrequently redrawn:
-	// Context for elements that are infrequently updated:
 	// timeline markers, slot handles, add/clone buttons
 	// 3. An "interactive" layer for elements like tooltips that display when the user interacts
 	// selection box, skill selection highlight, drag/drop target cursor, drag/drop skill icon
@@ -2518,6 +2553,8 @@ export function TimelineCanvas(props: {
 	// Only the interactive layer is currently re-drawn independently.
 	//
 	// https://stackoverflow.com/questions/3008635/html5-canvas-element-multiple-layers
+	//
+	// A fourth "layer" of invisible div elements at z-index=3 captures touch gestures.
 	const canvasStyle: CSSProperties = {
 		width: props.visibleWidth,
 		height: props.timelineHeight,
@@ -2527,9 +2564,13 @@ export function TimelineCanvas(props: {
 		left: 0,
 		top: 0,
 	};
+	const pointerToCanvas = (e: React.PointerEvent) => {
+		const rect = rootRef.current!.getBoundingClientRect();
+		return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+	};
 	const canvasWidth = Math.ceil(scaledWidth);
 	const canvasHeight = Math.ceil(scaledHeight);
-	return <div style={{ position: "relative" }}>
+	return <div ref={rootRef} style={{ position: "relative", zIndex: 1, pointerEvents: "none" }}>
 		<canvas
 			ref={liveCanvasRef}
 			width={canvasWidth}
@@ -2551,5 +2592,44 @@ export function TimelineCanvas(props: {
 			tabIndex={-1}
 			style={{ ...canvasStyle, zIndex: 2, backgroundColor: "transparent" }}
 		/>
+		{selectedSkillRects.map((skillRect) => <div
+			key={skillRect.actionIndex}
+			data-skill-drag-handle=""
+			style={{
+				position: "absolute",
+				left: skillRect.x,
+				top: skillRect.y,
+				width: skillRect.w,
+				height: skillRect.h,
+				touchAction: "none",
+				pointerEvents: "auto",
+				zIndex: 3,
+			}}
+			onPointerDown={(e) => {
+				e.stopPropagation();
+				if (!rootRef.current) return;
+				e.currentTarget.setPointerCapture(e.pointerId);
+				const { x, y } = pointerToCanvas(e);
+				callbacks.onMouseDown(x, y);
+			}}
+			onPointerMove={(e) => {
+				e.stopPropagation();
+				if (!rootRef.current) return;
+				const { x, y } = pointerToCanvas(e);
+				callbacks.onMouseMove(x, y);
+			}}
+			onPointerUp={(e) => {
+				e.stopPropagation();
+				if (!rootRef.current) return;
+				const { x, y } = pointerToCanvas(e);
+				callbacks.onMouseUp(e, x, y);
+			}}
+			onPointerCancel={(e) => {
+				e.stopPropagation();
+				if (!rootRef.current) return;
+				const { x, y } = pointerToCanvas(e);
+				callbacks.onMouseUp(e, x, y);
+			}}
+		/>)}
 	</div>;
 }

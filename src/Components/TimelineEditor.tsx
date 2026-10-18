@@ -54,14 +54,27 @@ export let updateActiveTimelineEditor = (slotSwapFn: () => void) => {
 const EditorDragContext = createContext<
 	(i: number) => {
 		drop: DragEventHandler<HTMLTableRowElement>;
+		hover: () => void;
 		setSelected: (b: boolean) => void;
 	}
 >((i) => {
 	return {
 		drop: (e) => {},
+		hover: () => {},
 		setSelected: (b) => {},
 	};
 });
+
+const TOUCH_DRAG_SLOP_PX = 10;
+
+// Unlike mouse events, touch drag gestures do not fire a `dragover` event, so we need
+// to compute a drag target by setting an HTML data property instead.
+function actionIndexFromPoint(x: number, y: number): number | undefined {
+	const row = document.elementFromPoint(x, y)?.closest("[data-action-index]");
+	if (!row) return undefined;
+	const index = Number(row.getAttribute("data-action-index"));
+	return Number.isNaN(index) ? undefined : index;
+}
 
 export const getBorderStyling = (colors: ThemeColors) => {
 	return {
@@ -203,15 +216,20 @@ function TimelineActionElement(props: {
 	const globalDragTarget = useContext(DragTargetContext);
 	const isDragTarget = globalDragTarget.dragTargetIndex === props.index;
 	const lockContext = useContext(DragLockContext);
-	const localEditorContext = useContext(EditorDragContext)(props.index);
+	const editorDragAt = useContext(EditorDragContext);
+	const localEditorContext = editorDragAt(props.index);
+	const suppressRowClick = useRef(false);
+	const [touchDragging, setTouchDragging] = useState(false);
+	const canTouchDrag = props.isSelected && !lockContext.value;
 	return <tr
+		data-action-index={props.index}
 		style={{
 			...TR_STYLE,
 			background: bgColor,
 			...(isDragTarget ? getDropTargetStyle(colors) : {}),
 		}}
 		ref={props.refObj ?? null}
-		draggable={!lockContext.value}
+		draggable={!lockContext.value && !touchDragging}
 		onDragStart={(e) => {
 			localEditorContext.setSelected(true);
 			if (!props.isSelected) {
@@ -228,23 +246,80 @@ function TimelineActionElement(props: {
 		onDragOver={(e) => {
 			// preventDefault enables this to receive drops
 			e.preventDefault();
-			// If the action being dragged is an oGCD, place it at the end of the PRIOR node's
-			// animation lock.
-			// This is not fully robust and doesn't account for GCDs moved around wait events,
-			// but it's good enough.
-			let targetTime = props.usedAt;
-			const priorNode =
-				props.index > 0 ? controller.record.actions[props.index - 1] : undefined;
-			if (
-				priorNode?.tmp_endLockTime !== undefined &&
-				props.node.info.type === ActionType.Skill &&
-				getSkill(controller.game.job, props.node.info.skillName).cdName === "cd_GCD"
-			) {
-				targetTime = priorNode.tmp_endLockTime - controller.gameConfig.countdown;
-			}
-			globalDragTarget.setDragTarget(props.index, targetTime);
+			localEditorContext.hover();
+		}}
+		onPointerDown={(e) => {
+			if (e.pointerType !== "touch" || !canTouchDrag) return;
+			const row = e.currentTarget;
+			const pointerId = e.pointerId;
+			const originX = e.clientX;
+			const originY = e.clientY;
+			let moved = false;
+			let targetIndex: number | undefined;
+			// touch-action: none also suppresses HTML5 mouse drags in Chrome, so we need
+			// to explicitly block scrolling only for this touch gesture.
+			const blockScroll = (ev: TouchEvent) => {
+				ev.preventDefault();
+			};
+			row.addEventListener("touchmove", blockScroll, { passive: false });
+			row.draggable = false;
+			setTouchDragging(true);
+			const hoverAt = (x: number, y: number) => {
+				targetIndex = actionIndexFromPoint(x, y);
+				if (targetIndex === undefined) {
+					globalDragTarget.setDragTarget(null, null);
+					return;
+				}
+				editorDragAt(targetIndex).hover();
+			};
+			const cleanup = () => {
+				window.removeEventListener("pointermove", onMove);
+				window.removeEventListener("pointerup", onUp);
+				window.removeEventListener("pointercancel", onCancel);
+				row.removeEventListener("touchmove", blockScroll);
+				row.draggable = !lockContext.value;
+				setTouchDragging(false);
+			};
+			const onMove = (ev: PointerEvent) => {
+				if (ev.pointerId !== pointerId) return;
+				if (
+					!moved &&
+					Math.hypot(ev.clientX - originX, ev.clientY - originY) < TOUCH_DRAG_SLOP_PX
+				) {
+					return;
+				}
+				moved = true;
+				hoverAt(ev.clientX, ev.clientY);
+			};
+			const onUp = (ev: PointerEvent) => {
+				if (ev.pointerId !== pointerId) return;
+				cleanup();
+				if (!moved) return;
+				suppressRowClick.current = true;
+				const target = targetIndex;
+				globalDragTarget.setDragTarget(null, null);
+				if (target !== undefined) {
+					editorDragAt(target).drop(
+						ev as unknown as React.DragEvent<HTMLTableRowElement>,
+					);
+				}
+			};
+			const onCancel = (ev: PointerEvent) => {
+				if (ev.pointerId !== pointerId) return;
+				moved = false;
+				cleanup();
+				globalDragTarget.setDragTarget(null, null);
+			};
+			window.addEventListener("pointermove", onMove);
+			window.addEventListener("pointerup", onUp);
+			window.addEventListener("pointercancel", onCancel);
 		}}
 		onClick={(e) => {
+			if (suppressRowClick.current) {
+				suppressRowClick.current = false;
+				e.stopPropagation();
+				return;
+			}
 			localEditorContext.setSelected(true);
 			if (props.recordIsDirty) {
 				// controller.record.onClickNode(props.index, e.shiftKey);
@@ -1004,6 +1079,27 @@ export function TimelineEditor() {
 					doRecordEdit((record) => record.moveSelected(distance));
 				}
 			},
+			hover: () => {
+				// If the action being dragged is an oGCD, place it at the end of the PRIOR node's
+				// animation lock.
+				// This is not fully robust and doesn't account for GCDs moved around wait events,
+				// but it's good enough.
+				if (i >= controller.record.actions.length) {
+					globalDragTarget.setDragTarget(i, controller.game.getDisplayTime());
+					return;
+				}
+				const node = controller.record.actions[i];
+				let targetTime = recordValidStatus?.skillUseTimes[i] ?? 0;
+				const priorNode = i > 0 ? controller.record.actions[i - 1] : undefined;
+				if (
+					priorNode?.tmp_endLockTime !== undefined &&
+					node.info.type === ActionType.Skill &&
+					getSkill(controller.game.job, node.info.skillName).cdName === "cd_GCD"
+				) {
+					targetTime = priorNode.tmp_endLockTime - controller.gameConfig.countdown;
+				}
+				globalDragTarget.setDragTarget(i, targetTime);
+			},
 			setSelected: (b: boolean) => {
 				bHandledSkillSelectionThisFrame.current = b;
 			},
@@ -1019,6 +1115,7 @@ export function TimelineEditor() {
 		actionsList.push(
 			<tr
 				key={actionCount}
+				data-action-index={actionCount}
 				tabIndex={-1}
 				style={{
 					height: "0.8em",
@@ -1038,7 +1135,7 @@ export function TimelineEditor() {
 				onDragOver={(e) => {
 					// preventDefault enables this to receive drops
 					e.preventDefault();
-					globalDragTarget.setDragTarget(actionCount, controller.game.getDisplayTime());
+					dragHandler.hover();
 				}}
 			>
 				<td style={{ border: "none" }}></td>
