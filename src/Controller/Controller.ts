@@ -9,6 +9,7 @@ import {
 	ShellVersion,
 	TickMode,
 } from "./Common";
+import { getBindByPress } from "./KeyBindManager";
 import { ClipboardMode, copy, paste } from "./Clipboard";
 import { UndoStack, AddNode, DeleteNodes, AddNodeBulk } from "./UndoStack";
 import { GameState } from "../Game/GameState";
@@ -2340,17 +2341,30 @@ class Controller {
 		if (this.displayingUpToDateGameState) {
 			if (evt.key === "u") {
 				// delete the last action in the current timeline
-				this.undoStack.doThenPush(
-					new DeleteNodes(
-						this.record.tailIndex,
-						[this.record.actions[this.record.tailIndex]],
-						"delete",
-					),
-				);
+				if (controller.record.length > 0) {
+					this.undoStack.doThenPush(
+						new DeleteNodes(
+							this.record.tailIndex,
+							[this.record.actions[this.record.tailIndex]],
+							"delete",
+						),
+					);
+				}
 				processed = true;
 			}
 		}
-		if (evt.key === "z" && ctrlOrCmd) {
+		const maybeHotbarBind = getBindByPress(evt);
+		if (maybeHotbarBind !== undefined) {
+			const [bar, slot] = maybeHotbarBind.split("_");
+			const skill = this.game.displayedSkills.getAt(parseInt(bar), parseInt(slot));
+			if (skill !== undefined) {
+				this.requestUseSkill({
+					skillName: skill,
+					targetList: [1], // TODO
+				});
+				processed = true;
+			}
+		} else if (evt.key === "z" && ctrlOrCmd) {
 			this.undoStack.undo();
 			processed = true;
 		} else if ((evt.key === "Z" && ctrlOrCmd) || (evt.key === "y" && ctrlOrCmd)) {
