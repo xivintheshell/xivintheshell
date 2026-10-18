@@ -934,6 +934,7 @@ export function getConditionalReplacement<T extends GameState>(
 	return getAutoReplacedSkillName(state.job, skill.name, state.config.level);
 }
 
+// TODO refactor to have a display order
 export class DisplayedSkills {
 	#skills: ActionKey[];
 
@@ -965,5 +966,20 @@ export class DisplayedSkills {
 	// `autoUpgrade`/`autoDowngrade` conditions are also checked in the constructor.
 	getCurrentSkillNames<T extends GameState>(state: T): ActionKey[] {
 		return this.#skills.map((skillName) => getConditionalReplacement(skillName, state));
+	}
+
+	// TODO make a proper interface
+	getAt(hotbar: number, slot: number): ActionKey | undefined {
+		// TODO allow sparse hotbars instead of always assuming length 15
+		return this.#skills[(hotbar - 1) * 15 + (slot - 1)];
+	}
+
+	indexOf(skillName: ActionKey): { hotbar: number; slot: number } | undefined {
+		// TODO compute properly
+		const idx = this.#skills.indexOf(skillName);
+		if (idx > -1) {
+			return { hotbar: Math.floor(idx / 15) + 1, slot: (idx % 15) + 1 };
+		}
+		return undefined;
 	}
 }

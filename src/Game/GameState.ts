@@ -37,6 +37,7 @@ import {
 import { controller } from "../Controller/Controller";
 import { MAX_ABILITY_TARGETS } from "../Controller/Common";
 import { skillNode, ActionNode } from "../Controller/Record";
+import { getDisplayBindBySlot } from "../Controller/KeyBindManager";
 import {
 	Modifiers,
 	Potency,
@@ -2176,6 +2177,11 @@ export class GameState {
 				cooldownOverlaySeconds = timeTillNextStackReady;
 			}
 		}
+		const skillIdx = this.displayedSkills.indexOf(skill.name);
+		const keyBind =
+			skillIdx !== undefined
+				? getDisplayBindBySlot(skillIdx.hotbar, skillIdx.slot)
+				: undefined;
 		return {
 			skillName: skill.name,
 			status,
@@ -2195,6 +2201,7 @@ export class GameState {
 			llCovered,
 			usedAt: this.getDisplayTime(),
 			cooldownOverlaySeconds,
+			keyBind,
 		};
 	}
 
