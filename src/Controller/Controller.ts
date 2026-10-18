@@ -129,8 +129,9 @@ type ReplayResult = {
 class Controller {
 	timeScale;
 	cooldownDisplayMode: CooldownDisplayMode;
-	keybindEnabled: boolean;
 	roundCooldownUp: boolean;
+	keybindEnabled: boolean;
+	hotbarOneOnBottom: boolean;
 	shouldLoop: boolean;
 	tickMode;
 	timeline;
@@ -186,8 +187,9 @@ class Controller {
 		this.queuedPastes = 0;
 		this.tickMode = TickMode.RealTimeAutoPause;
 		this.cooldownDisplayMode = "center";
-		this.keybindEnabled = true;
 		this.roundCooldownUp = false;
+		this.keybindEnabled = true;
+		this.hotbarOneOnBottom = false;
 
 		this.timeline = new Timeline();
 		this.timeline.reset();
@@ -1068,13 +1070,11 @@ class Controller {
 
 	setKeybindSettings(props: {
 		enabled: boolean;
+		hotbarOneOnBottom: boolean;
 		// Actual keybind mappings are handled through KeybindManager
 	}) {
-		const changed = this.keybindEnabled === props.enabled;
 		this.keybindEnabled = props.enabled;
-		if (changed) {
-			this.updateSkillButtons(this.game);
-		}
+		this.hotbarOneOnBottom = props.hotbarOneOnBottom;
 	}
 
 	setConfigAndRestart(

@@ -595,6 +595,8 @@ type TimeControlState = {
 	tickMode: TickMode;
 	cooldownDisplayMode: CooldownDisplayMode;
 	roundCooldownUp: boolean;
+	keybindEnabled: boolean;
+	hotbarOneOnBottom: boolean;
 };
 
 export function TimeControl() {
@@ -617,20 +619,19 @@ export function TimeControl() {
 	);
 	const [roundCooldownUp, _setRoundCooldownUp] = useState(settings?.roundCooldownUp ?? false);
 	const [keybindEnabled, _setKeybindEnabled] = useState(settings?.keybindEnabled ?? true);
+	const [hotbarOneOnBottom, _setHotbarOneOnBottom] = useState(
+		settings?.hotbarOneOnBottom ?? false,
+	);
 
-	const saveSettings = (
-		timeScale: number,
-		tickMode: TickMode,
-		cooldownDisplayMode: CooldownDisplayMode,
-		roundCooldownUp: boolean,
-	) => {
-		const str = JSON.stringify({
-			tickMode,
-			timeScale,
-			cooldownDisplayMode,
-			roundCooldownUp,
-			keybindEnabled,
-		});
+	const saveSettings = (props: {
+		timeScale?: number;
+		tickMode?: TickMode;
+		cooldownDisplayMode?: CooldownDisplayMode;
+		roundCooldownUp?: boolean;
+		keybindEnabled?: boolean;
+		hotbarOneOnBottom?: boolean;
+	}) => {
+		const str = JSON.stringify({ ...settings, ...props });
 		setCachedValue("playbackSettings", str);
 	};
 
@@ -643,7 +644,7 @@ export function TimeControl() {
 				tickMode: numVal,
 				timeScale,
 			});
-			saveSettings(timeScale, numVal, cooldownDisplayMode, roundCooldownUp, keybindEnabled);
+			saveSettings({ tickMode: numVal });
 		}
 	};
 
@@ -655,7 +656,7 @@ export function TimeControl() {
 				tickMode,
 				timeScale: numVal,
 			});
-			saveSettings(numVal, tickMode, cooldownDisplayMode, roundCooldownUp, keybindEnabled);
+			saveSettings({ timeScale: numVal });
 		}
 	};
 
@@ -670,7 +671,7 @@ export function TimeControl() {
 				cooldownDisplayMode: newMode,
 				roundCooldownUp,
 			});
-			saveSettings(timeScale, tickMode, newMode, roundCooldownUp, keybindEnabled);
+			saveSettings({ cooldownDisplayMode: newMode });
 		}
 	};
 
@@ -680,13 +681,19 @@ export function TimeControl() {
 			cooldownDisplayMode,
 			roundCooldownUp: val,
 		});
-		saveSettings(timeScale, tickMode, cooldownDisplayMode, val, keybindEnabled);
+		saveSettings({ roundCooldownUp: val });
 	};
 
 	const setKeybindEnabled = (val: boolean) => {
 		_setKeybindEnabled(val);
-		controller.setKeybindSettings({ enabled: val });
-		saveSettings(timeScale, tickMode, cooldownDisplayMode, roundCooldownUp, val);
+		controller.setKeybindSettings({ enabled: val, hotbarOneOnBottom });
+		saveSettings({ keybindEnabled: val });
+	};
+
+	const setHotbarOneOnBottom = (val: boolean) => {
+		_setHotbarOneOnBottom(val);
+		controller.setKeybindSettings({ enabled: keybindEnabled, hotbarOneOnBottom: val });
+		saveSettings({ hotbarOneOnBottom: val });
 	};
 
 	useEffect(() => {
@@ -700,6 +707,7 @@ export function TimeControl() {
 		});
 		controller.setKeybindSettings({
 			enabled: keybindEnabled,
+			hotbarOneOnBottom,
 		});
 	});
 	const radioStyle: React.CSSProperties = {
@@ -841,12 +849,19 @@ export function TimeControl() {
 			onChange={(val) => setRoundCooldownUp(val)}
 		/>
 		<br />
-		{header({ en: "Keybind Settings" })}
+		{header({ en: "Hotbar Settings" })}
 		<Checkbox
 			uniqueName={"keybindEnabled"}
 			label={localize({ en: "enable hotbar keybinds" })}
 			defaultChecked={keybindEnabled}
 			onChange={(val) => setKeybindEnabled(val)}
+			style={{ marginBlock: "10px" }}
+		/>
+		<Checkbox
+			uniqueName={"hotbarOneOnBottom"}
+			label={localize({ en: "place hotbar 1 on bottom" })}
+			defaultChecked={hotbarOneOnBottom}
+			onChange={(val) => setHotbarOneOnBottom(val)}
 			style={{ marginBlock: "10px" }}
 		/>
 	</div>;

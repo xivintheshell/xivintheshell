@@ -1,6 +1,8 @@
 import React, { ChangeEvent, CSSProperties, ReactNode, useEffect, useState, useRef } from "react";
-import { localize } from "./Localization";
+import { FaXmark } from "react-icons/fa6";
+import { Dialog } from "@base-ui/react/dialog";
 import { Tooltip } from "@base-ui/react/tooltip";
+import { localize } from "./Localization";
 import { getCurrentThemeColors } from "./ColorTheme";
 import { Debug } from "../Game/Common";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
@@ -868,4 +870,31 @@ export function Help(props: {
 			</Tooltip.Portal>
 		</Tooltip.Root>
 	</Tooltip.Provider>;
+}
+
+export function DialogTrigger(props: {
+	handleStyle?: React.CSSProperties;
+	titleNode: ContentNode;
+	handle?: React.Element;
+}) {
+	// Don't use a bespoke Clickable component for the expand button, since it suppresses Dialog.Trigger's
+	// built-in dismiss behavior.
+	const triggerRender = <div className="clickable">
+		<span style={props.handleStyle}>
+			{props.handle}
+			<span className="clickableLinkLike">{props.titleNode}</span>
+		</span>
+	</div>;
+	return <Dialog.Trigger render={triggerRender} nativeButton={false} />;
+}
+
+export function DialogClose() {
+	const colors = getCurrentThemeColors();
+	const exitTrigger = <FaXmark
+		className="dialogExit"
+		style={{
+			color: colors.bgHighContrast,
+		}}
+	/>;
+	return <Dialog.Close render={exitTrigger} nativeButton={false} />;
 }
