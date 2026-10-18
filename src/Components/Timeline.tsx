@@ -18,6 +18,8 @@ export let updateTimelineView = () => {};
 export let scrollTimelineTo = (positionX: number) => {};
 
 const DRAG_LOCK_CACHE_KEY = "dragLock";
+// Distance a finger can move while still being considered a single "click" action.
+const TAP_SLOP_PX = 10;
 
 const initialDragLockStr = getCachedValue(DRAG_LOCK_CACHE_KEY);
 const initialDragLock = initialDragLockStr === "true";
@@ -56,6 +58,18 @@ function TimelineMain() {
 	const [visibleWidth, setVisibleWidth] = useState(66);
 	const [version, setVersion] = useState(0);
 	const [pointerMouse, setPointerMouse] = useState(false);
+	// We don't provide full support for touch gesters, but several users requested at least
+	// basic support more than a year ago.
+	// Touching/swiping with a single finger has two possible behaviors:
+	// 1. If no skills are selected (or the touch is not on a selected skill): the timeline canvas
+	//    and editor tables use the browser's native scroll functionality.
+	// 2. If the user touches a selected skill: the selected skills will be clicked and dragged.
+	// Other functionality, like click+drag selection, is not supported through touch gestures.
+	// This basic level of support should be sufficient for users throwing together something quickly
+	// on a phone or tablet device.
+	const fromTouch = useRef(false);
+	const touchPointerId = useRef<number | null>(null);
+	const touchStart = useRef<{ x: number; y: number; scrollLeft: number } | null>(null);
 	const [callbacks, setCallbacks] = useState<CanvasCallbacks>({
 		onMouseMove: () => {},
 		onMouseEnter: () => {},
@@ -101,6 +115,10 @@ function TimelineMain() {
 		setCallbacks={setCallbacks}
 		setPointerMouse={setPointerMouse}
 	/>;
+	const scrollerPoint = (clientX: number, clientY: number) => {
+		const rect = myRef.current!.getBoundingClientRect();
+		return { x: clientX - rect.left, y: clientY - rect.top };
+	};
 	const colorContext = useContext(ColorThemeContext);
 	const bg = getThemeField(colorContext, "bgMediumContrast");
 	const firefoxScrollSpacer = IS_FIREFOX ? (
@@ -131,30 +149,71 @@ function TimelineMain() {
 				}
 			}}
 			onMouseMove={(e) => {
-				if (myRef.current) {
-					const rect = myRef.current.getBoundingClientRect();
-					const x = e.clientX - rect.left;
-					const y = e.clientY - rect.top;
-					callbacks.onMouseMove(x, y);
-				}
+				if (fromTouch.current || !myRef.current) return;
+				const { x, y } = scrollerPoint(e.clientX, e.clientY);
+				callbacks.onMouseMove(x, y);
 			}}
 			onMouseDown={(e) => {
-				if (myRef.current) {
-					const rect = myRef.current.getBoundingClientRect();
-					const x = e.clientX - rect.left;
-					const y = e.clientY - rect.top;
-					callbacks.onMouseDown(x, y);
-				}
+				if (fromTouch.current || !myRef.current) return;
+				const { x, y } = scrollerPoint(e.clientX, e.clientY);
+				callbacks.onMouseDown(x, y);
 			}}
 			onMouseEnter={() => callbacks.onMouseEnter()}
-			onMouseLeave={() => callbacks.onMouseLeave()}
+			onMouseLeave={(e) => {
+				const next = e.relatedTarget;
+				if (next instanceof Element && next.closest("[data-skill-drag-handle]")) return;
+				callbacks.onMouseLeave();
+			}}
 			onMouseUp={(e) => {
-				if (myRef.current) {
-					const rect = myRef.current.getBoundingClientRect();
-					const x = e.clientX - rect.left;
-					const y = e.clientY - rect.top;
+				if (fromTouch.current) {
+					fromTouch.current = false;
+					return;
+				}
+				if (!myRef.current) return;
+				const { x, y } = scrollerPoint(e.clientX, e.clientY);
+				callbacks.onMouseUp(e, x, y);
+			}}
+			onPointerDown={(e) => {
+				if (e.pointerType !== "touch" || !myRef.current) return;
+				fromTouch.current = true;
+				touchPointerId.current = e.pointerId;
+				touchStart.current = {
+					x: e.clientX,
+					y: e.clientY,
+					scrollLeft: myRef.current.scrollLeft,
+				};
+			}}
+			onPointerUp={(e) => {
+				if (e.pointerType !== "touch" || !touchStart.current || !myRef.current) return;
+				const pointerId = e.pointerId;
+				const start = touchStart.current;
+				touchStart.current = null;
+				const moved = Math.hypot(e.clientX - start.x, e.clientY - start.y);
+				const scrolled = Math.abs(myRef.current.scrollLeft - start.scrollLeft) > 1;
+				// Compatibility mouse events are ignored while fromTouch is set.
+				window.setTimeout(() => {
+					if (touchPointerId.current !== pointerId) return;
+					fromTouch.current = false;
+					touchPointerId.current = null;
+				}, 500);
+				if (!(moved > TAP_SLOP_PX || scrolled)) {
+					const { x, y } = scrollerPoint(e.clientX, e.clientY);
+					// Run both the mousedown and mouseup events to simulate a click.
+					callbacks.onMouseDown(x, y);
 					callbacks.onMouseUp(e, x, y);
 				}
+				callbacks.onMouseLeave();
+			}}
+			onPointerCancel={(e) => {
+				if (e.pointerType !== "touch") return;
+				const pointerId = e.pointerId;
+				touchStart.current = null;
+				window.setTimeout(() => {
+					if (touchPointerId.current !== pointerId) return;
+					fromTouch.current = false;
+					touchPointerId.current = null;
+				}, 500);
+				callbacks.onMouseLeave();
 			}}
 			onKeyDown={(e) => callbacks.onKeyDown(e)}
 		>
@@ -310,6 +369,8 @@ export function Timeline() {
 		null,
 		null,
 	]);
+	const dragTargetRef = useRef({ index: dragTargetIndex, time: dragTargetTime });
+	dragTargetRef.current = { index: dragTargetIndex, time: dragTargetTime };
 	const childDragTargetSetter = (index: number | null, time: number | null) => {
 		if (dragLock) {
 			index = null;
@@ -329,7 +390,8 @@ export function Timeline() {
 			}
 		}
 		// Prevent re-renders if the values are not new.
-		if (index !== dragTargetIndex || time !== dragTargetTime) {
+		if (index !== dragTargetRef.current.index || time !== dragTargetRef.current.time) {
+			dragTargetRef.current = { index, time };
 			setDragTarget([index, time]);
 		}
 	};
