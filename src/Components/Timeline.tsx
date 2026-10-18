@@ -196,11 +196,13 @@ function TimelineMain() {
 					fromTouch.current = false;
 					touchPointerId.current = null;
 				}, 500);
-				if (moved > TAP_SLOP_PX || scrolled) return;
-				const { x, y } = scrollerPoint(e.clientX, e.clientY);
-				// Run both the mousedown and mouseup events to simulate a click.
-				callbacks.onMouseDown(x, y);
-				callbacks.onMouseUp(e, x, y);
+				if (!(moved > TAP_SLOP_PX || scrolled)) {
+					const { x, y } = scrollerPoint(e.clientX, e.clientY);
+					// Run both the mousedown and mouseup events to simulate a click.
+					callbacks.onMouseDown(x, y);
+					callbacks.onMouseUp(e, x, y);
+				}
+				callbacks.onMouseLeave();
 			}}
 			onPointerCancel={(e) => {
 				if (e.pointerType !== "touch") return;
@@ -211,6 +213,7 @@ function TimelineMain() {
 					fromTouch.current = false;
 					touchPointerId.current = null;
 				}, 500);
+				callbacks.onMouseLeave();
 			}}
 			onKeyDown={(e) => callbacks.onKeyDown(e)}
 		>

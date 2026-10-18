@@ -2623,12 +2623,14 @@ export function TimelineCanvas(props: {
 				if (!rootRef.current) return;
 				const { x, y } = pointerToCanvas(e);
 				callbacks.onMouseUp(e, x, y);
+				if (e.pointerType === "touch") callbacks.onMouseLeave();
 			}}
 			onPointerCancel={(e) => {
 				e.stopPropagation();
 				if (!rootRef.current) return;
 				const { x, y } = pointerToCanvas(e);
 				callbacks.onMouseUp(e, x, y);
+				if (e.pointerType === "touch") callbacks.onMouseLeave();
 			}}
 		/>)}
 	</div>;
