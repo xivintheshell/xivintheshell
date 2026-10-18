@@ -1,5 +1,11 @@
 [
 	{
+		"date": "10/18/26",
+		"changes": [
+			"Separated TOP markers into individual phases."
+		]
+	},
+	{
 		"date": "9/8/26",
 		"changes": [
 			"When importing a fight from FFLogs, you may now choose to automatically import markers that match party buff and phase transition timings.",
