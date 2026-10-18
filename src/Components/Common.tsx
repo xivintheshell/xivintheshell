@@ -631,6 +631,7 @@ export function Checkbox(props: {
 	label: ContentNode;
 	onChange: (newValue: boolean) => void;
 	defaultChecked?: boolean;
+	style?: React.CSSProperties;
 }) {
 	const [checked, setChecked] = useState<boolean>(false);
 	useEffect(() => {
@@ -642,7 +643,7 @@ export function Checkbox(props: {
 		setChecked(defaultChecked);
 		props.onChange(defaultChecked);
 	}, []);
-	return <div style={{ marginBottom: 5 }}>
+	return <div style={props.style ?? { marginBottom: 5 }}>
 		<input
 			className="shellCheckbox"
 			type="checkbox"

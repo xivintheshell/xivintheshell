@@ -378,18 +378,17 @@ function SkillButton(props: SkillButtonProps) {
 	} else {
 		stacksOverlay = <></>;
 	}
-	let keyBindOverlay: React.ReactNode = null;
-	// TODO check controller disabled flag
-	if (info.keyBind !== undefined) {
-		const fontSizePx = skillBoxPx / Math.max(info.keyBind.length, 4) + 3;
-		const keyBindPositionStyle: React.CSSProperties = {
+	let keybindOverlay: React.ReactNode = null;
+	if (controller.keybindEnabled && info.keybind !== undefined) {
+		const fontSizePx = skillBoxPx / Math.max(info.keybind.length, 4) + 3;
+		const keybindPositionStyle: React.CSSProperties = {
 			position: "absolute",
 			top: 0,
 			left: 0,
 		};
-		keyBindOverlay = <span
+		keybindOverlay = <span
 			style={{
-				...keyBindPositionStyle,
+				...keybindPositionStyle,
 				pointerEvents: "none",
 				zIndex: 3, // must render above shading circle
 				fontFamily: "XIVShell Defaults",
@@ -399,7 +398,7 @@ function SkillButton(props: SkillButtonProps) {
 				textAlign: "center",
 			}}
 		>
-			{info.keyBind}
+			{info.keybind}
 		</span>;
 	}
 	let cooldownOverlay: React.ReactNode = null;
@@ -502,7 +501,7 @@ function SkillButton(props: SkillButtonProps) {
 					props.secondaryCdProgress > 1 - Debug.epsilon ||
 					secondaryOutline}
 			</div>
-			{keyBindOverlay}
+			{keybindOverlay}
 			{cooldownOverlay}
 			<div
 				style={{
@@ -563,7 +562,7 @@ export type SkillButtonViewInfo = {
 	highlight: boolean;
 	llCovered: boolean;
 	usedAt: number;
-	keyBind?: string; // repr string for the keybind
+	keybind?: string; // repr string for the keybind
 	cooldownOverlaySeconds?: number;
 };
 

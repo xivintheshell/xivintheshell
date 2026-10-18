@@ -9,7 +9,7 @@ import {
 	ShellVersion,
 	TickMode,
 } from "./Common";
-import { getBindByPress } from "./KeyBindManager";
+import { getBindByPress } from "./KeybindManager";
 import { ClipboardMode, copy, paste } from "./Clipboard";
 import { UndoStack, AddNode, DeleteNodes, AddNodeBulk } from "./UndoStack";
 import { GameState } from "../Game/GameState";
@@ -129,6 +129,7 @@ type ReplayResult = {
 class Controller {
 	timeScale;
 	cooldownDisplayMode: CooldownDisplayMode;
+	keybindEnabled: boolean;
 	roundCooldownUp: boolean;
 	shouldLoop: boolean;
 	tickMode;
@@ -185,6 +186,7 @@ class Controller {
 		this.queuedPastes = 0;
 		this.tickMode = TickMode.RealTimeAutoPause;
 		this.cooldownDisplayMode = "center";
+		this.keybindEnabled = true;
 		this.roundCooldownUp = false;
 
 		this.timeline = new Timeline();
@@ -1059,6 +1061,17 @@ class Controller {
 			this.roundCooldownUp !== props.roundCooldownUp;
 		this.cooldownDisplayMode = props.cooldownDisplayMode;
 		this.roundCooldownUp = props.roundCooldownUp;
+		if (changed) {
+			this.updateSkillButtons(this.game);
+		}
+	}
+
+	setKeybindSettings(props: {
+		enabled: boolean;
+		// Actual keybind mappings are handled through KeybindManager
+	}) {
+		const changed = this.keybindEnabled === props.enabled;
+		this.keybindEnabled = props.enabled;
 		if (changed) {
 			this.updateSkillButtons(this.game);
 		}
@@ -2354,7 +2367,7 @@ class Controller {
 			}
 		}
 		const maybeHotbarBind = getBindByPress(evt);
-		if (maybeHotbarBind !== undefined) {
+		if (this.keybindEnabled && maybeHotbarBind !== undefined) {
 			const [bar, slot] = maybeHotbarBind.split("_");
 			const skill = this.game.displayedSkills.getAt(parseInt(bar), parseInt(slot));
 			if (skill !== undefined) {
