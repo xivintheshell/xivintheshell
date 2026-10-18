@@ -13,7 +13,7 @@ import {
 } from "./Common";
 import { ConfigApply } from "../Controller/UndoStack";
 import { getCachedValue, setCachedValue, ShellVersion, TickMode } from "../Controller/Common";
-// import { updateBind, resetAllBinds } from "../Controller/KeyBindManager";
+// import { updateBind, resetAllBinds } from "../Controller/KeybindManager";
 import { LevelSync, ProcMode } from "../Game/Common";
 import { getAllResources, getResourceInfo, ResourceOverrideData } from "../Game/Resources";
 import {
@@ -616,6 +616,7 @@ export function TimeControl() {
 		(settings?.cooldownDisplayMode ?? "center") as CooldownDisplayMode,
 	);
 	const [roundCooldownUp, _setRoundCooldownUp] = useState(settings?.roundCooldownUp ?? false);
+	const [keybindEnabled, _setKeybindEnabled] = useState(settings?.keybindEnabled ?? true);
 
 	const saveSettings = (
 		timeScale: number,
@@ -628,6 +629,7 @@ export function TimeControl() {
 			timeScale,
 			cooldownDisplayMode,
 			roundCooldownUp,
+			keybindEnabled,
 		});
 		setCachedValue("playbackSettings", str);
 	};
@@ -641,7 +643,7 @@ export function TimeControl() {
 				tickMode: numVal,
 				timeScale,
 			});
-			saveSettings(timeScale, numVal, cooldownDisplayMode, roundCooldownUp);
+			saveSettings(timeScale, numVal, cooldownDisplayMode, roundCooldownUp, keybindEnabled);
 		}
 	};
 
@@ -653,7 +655,7 @@ export function TimeControl() {
 				tickMode,
 				timeScale: numVal,
 			});
-			saveSettings(numVal, tickMode, cooldownDisplayMode, roundCooldownUp);
+			saveSettings(numVal, tickMode, cooldownDisplayMode, roundCooldownUp, keybindEnabled);
 		}
 	};
 
@@ -668,7 +670,7 @@ export function TimeControl() {
 				cooldownDisplayMode: newMode,
 				roundCooldownUp,
 			});
-			saveSettings(timeScale, tickMode, newMode, roundCooldownUp);
+			saveSettings(timeScale, tickMode, newMode, roundCooldownUp, keybindEnabled);
 		}
 	};
 
@@ -678,7 +680,13 @@ export function TimeControl() {
 			cooldownDisplayMode,
 			roundCooldownUp: val,
 		});
-		saveSettings(timeScale, tickMode, cooldownDisplayMode, val);
+		saveSettings(timeScale, tickMode, cooldownDisplayMode, val, keybindEnabled);
+	};
+
+	const setKeybindEnabled = (val: boolean) => {
+		_setKeybindEnabled(val);
+		controller.setKeybindSettings({ enabled: val });
+		saveSettings(timeScale, tickMode, cooldownDisplayMode, roundCooldownUp, val);
 	};
 
 	useEffect(() => {
@@ -689,6 +697,9 @@ export function TimeControl() {
 		controller.setCooldownDisplaySettings({
 			cooldownDisplayMode,
 			roundCooldownUp,
+		});
+		controller.setKeybindSettings({
+			enabled: keybindEnabled,
 		});
 	});
 	const radioStyle: React.CSSProperties = {
@@ -828,6 +839,15 @@ export function TimeControl() {
 			label={localize({ en: "round cooldowns up", zh: "cd 小数值向上取整" })}
 			defaultChecked={roundCooldownUp}
 			onChange={(val) => setRoundCooldownUp(val)}
+		/>
+		<br />
+		{header({ en: "Keybind Settings" })}
+		<Checkbox
+			uniqueName={"keybindEnabled"}
+			label={localize({ en: "enable hotbar keybinds" })}
+			defaultChecked={keybindEnabled}
+			onChange={(val) => setKeybindEnabled(val)}
+			style={{ marginBlock: "10px" }}
 		/>
 	</div>;
 }
