@@ -8,6 +8,7 @@ import { ActionKey, ACTIONS, CooldownKey, ResourceKey, RESOURCES, TraitKey } fro
 import { SCH_ACTIONS } from "./Data/Jobs/SCH";
 import { LimitBreakActionKey } from "./Data/Shared/LimitBreak";
 import { hasUnlockedTrait } from "../utilities";
+import { MAX_HOTBAR_SLOTS, MAX_NUM_HOTBARS } from "../Controller/KeybindManager";
 import { Data } from "./Data/Data";
 import { SMN_ACTIONS } from "./Data/Jobs/SMN";
 import { BLU_ACTIONS } from "./Data/Jobs/BLU";
@@ -934,30 +935,48 @@ export function getConditionalReplacement<T extends GameState>(
 	return getAutoReplacedSkillName(state.job, skill.name, state.config.level);
 }
 
+function defaultDisplayedSkillNames(job: ShellJob, level: LevelSync): ActionKey[] {
+	const skills: ActionKey[] = [];
+	console.assert(skillMap.has(job), `No skill map found for job: ${job}`);
+	for (const skillInfo of skillMap.get(job)!.values()) {
+		// Leave off abilities that are above the current level sync, or placeholder abilities
+		// that use the "NEVER" cooldown.
+		// Also leave off any abilities that auto-downgrade, like HF2/HB2/HT,
+		// since their downgrade versions will already be on the hotbar.
+		if (
+			skillInfo.name !== "NEVER" &&
+			skillInfo.cdName !== "NEVER" &&
+			level >= skillInfo.unlockLevel &&
+			skillInfo.autoDowngrade === undefined &&
+			skillInfo.startOnHotbar
+		) {
+			skills.push(getAutoReplacedSkillName(job, skillInfo.name, level));
+		}
+	}
+	return skills;
+}
+
+// Every skill that can be placed on a hotbar, in the default order, after checking conditional replacements.
+export function getAllAssignableSkillNames<T extends GameState>(state: Readonly<T>): ActionKey[] {
+	return defaultDisplayedSkillNames(state.job, state.config.level).map((skillName) =>
+		getConditionalReplacement(skillName, state),
+	);
+}
+
 export class DisplayedSkills {
 	#skills: ActionKey[];
+	// User hotbar, copied from the controller when this object is constructed. Absent until a layout
+	// has been loaded.
+	// DisplayedSkills does not own this property because it is frequently re-initialized, and we
+	// want to ignore overly-frequent localStorage reads.
+	#layout?: ActionKey[][];
 
-	constructor(job: ShellJob, level: LevelSync) {
+	constructor(job: ShellJob, level: LevelSync, layout?: ActionKey[][]) {
 		// TODO: this path is currently somewhat hot (apparently run once for each simulated skill)
 		// While none of the operations are particularly intensive, we could potentially improve load
 		// times somewhat by avoiding this constructor's loops and branches.
-		this.#skills = [];
-		console.assert(skillMap.has(job), `No skill map found for job: ${job}`);
-		for (const skillInfo of skillMap.get(job)!.values()) {
-			// Leave off abilities that are above the current level sync, or placeholder abilities
-			// that use the "NEVER" cooldown.
-			// Also leave off any abilities that auto-downgrade, like HF2/HB2/HT,
-			// since their downgrade versions will already be on the hotbar.
-			if (
-				skillInfo.name !== "NEVER" &&
-				skillInfo.cdName !== "NEVER" &&
-				level >= skillInfo.unlockLevel &&
-				skillInfo.autoDowngrade === undefined &&
-				skillInfo.startOnHotbar
-			) {
-				this.#skills.push(getAutoReplacedSkillName(job, skillInfo.name, level));
-			}
-		}
+		this.#skills = defaultDisplayedSkillNames(job, level);
+		this.#layout = layout;
 	}
 
 	// Get the list of skills to display in the current game state.
@@ -967,18 +986,24 @@ export class DisplayedSkills {
 		return this.#skills.map((skillName) => getConditionalReplacement(skillName, state));
 	}
 
-	// TODO make a proper interface
-	getAt(hotbar: number, slot: number): ActionKey | undefined {
-		// TODO allow sparse hotbars instead of always assuming length 15
-		return this.#skills[(hotbar - 1) * 15 + (slot - 1)];
+	// Default hotbar: getCurrentSkillNames packed left to right, with empty slots left as NEVER.
+	getDefaultHotbarLayout<T extends GameState>(state: Readonly<T>): ActionKey[][] {
+		const skills = this.getCurrentSkillNames(state);
+		const bars: ActionKey[][] = [];
+		for (let bar = 0; bar < MAX_NUM_HOTBARS; bar++) {
+			const row: ActionKey[] = [];
+			for (let slot = 0; slot < MAX_HOTBAR_SLOTS; slot++) {
+				row.push(skills[bar * MAX_HOTBAR_SLOTS + slot] ?? "NEVER");
+			}
+			bars.push(row);
+		}
+		return bars;
 	}
 
-	indexOf(skillName: ActionKey): { hotbar: number; slot: number } | undefined {
-		// TODO compute properly
-		const idx = this.#skills.indexOf(skillName);
-		if (idx > -1) {
-			return { hotbar: Math.floor(idx / 15) + 1, slot: (idx % 15) + 1 };
-		}
-		return undefined;
+	// Return the action bound to a particular hotbar slot, or undefined if none.
+	getAt(hotbar: number, slot: number): ActionKey | undefined {
+		const skill = this.#layout?.[hotbar - 1]?.[slot - 1];
+		if (skill === undefined || skill === "NEVER") return undefined;
+		return skill;
 	}
 }

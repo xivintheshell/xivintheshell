@@ -7,7 +7,9 @@ import { localize, localizeSkillName } from "./Localization";
 import { DialogTrigger, DialogClose, dialogOnOpenChangeHandler } from "./Common";
 import { ColorThemeContext, getCurrentThemeColors } from "./ColorTheme";
 import { SkillIconImage, iconStyle, iconImgStyle } from "./Skills";
-import { MAX_NUM_HOTBARS, MAX_HOTBAR_SLOTS, hotbarSlotId } from "../Controller/KeybindManager";
+import { getAllAssignableSkillNames, getConditionalReplacement } from "../Game/Skills";
+import { controller } from "../Controller/Controller";
+import { MAX_NUM_HOTBARS, MAX_HOTBAR_SLOTS } from "../Controller/KeybindManager";
 import { ShellJob, JOBS } from "../Game/Data/Jobs";
 import { GameState } from "../Game/GameState";
 import { ActionKey } from "../Game/Data";
@@ -95,8 +97,8 @@ export function HotbarManager(props: {
 	const [dialogOpen, _setDialogOpen] = useState(true);
 	// Hotbar slot under the pointer. Set only while a skill icon is being dragged.
 	const [bindTarget, setBindTarget] = useState<[number, number] | undefined>(undefined);
-	// Test stand-in for persisted hotbar bindings, keyed with hotbarSlotId.
-	const [boundActions, setBoundActions] = useState<Map<string, ActionKey>>(() => new Map());
+	// Bumped after a layout commit so this dialog re-reads controller.hotbarLayout.
+	const [, setHotbarRevision] = useState(0);
 	// dragGhost is needed to render the skill icon being dragged, as we suppress the native
 	// browser image drag event.
 	const [dragGhost, setDragGhost] = useState<ActionKey | undefined>(undefined);
@@ -137,20 +139,19 @@ export function HotbarManager(props: {
 		const target = bindTargetRef.current;
 		const origin = dragOrigin.current;
 		if (commit && skill !== undefined && target !== undefined && origin !== undefined) {
-			const targetKey = hotbarSlotId(target[0], target[1]);
-			const sourceKey =
-				origin.kind === "slot" ? hotbarSlotId(origin.bar, origin.slot) : undefined;
-			setBoundActions((prev) => {
-				if (sourceKey === targetKey) return prev;
-				const next = new Map(prev);
-				const displaced = next.get(targetKey);
-				next.set(targetKey, skill);
-				if (sourceKey !== undefined) {
-					if (displaced === undefined) next.delete(sourceKey);
-					else next.set(sourceKey, displaced);
+			const [targetBar, targetSlot] = target;
+			const sameSlot =
+				origin.kind === "slot" && origin.bar === targetBar && origin.slot === targetSlot;
+			if (!sameSlot) {
+				const next = controller.hotbarLayout.map((row) => row.slice());
+				const displaced = next[targetBar - 1][targetSlot - 1];
+				next[targetBar - 1][targetSlot - 1] = skill;
+				if (origin.kind === "slot") {
+					next[origin.bar - 1][origin.slot - 1] = displaced;
 				}
-				return next;
-			});
+				controller.saveHotbarLayout(next);
+				setHotbarRevision((n) => n + 1);
+			}
 		}
 		skillToBind.current = undefined;
 		dragOrigin.current = undefined;
@@ -191,13 +192,25 @@ export function HotbarManager(props: {
 		endDrag(false);
 	};
 	const unbindSlot = (bar: number, slot: number) => {
-		const key = hotbarSlotId(bar, slot);
-		setBoundActions((prev) => {
-			if (!prev.has(key)) return prev;
-			const next = new Map(prev);
-			next.delete(key);
-			return next;
-		});
+		const next = controller.hotbarLayout.map((row) => row.slice());
+		if (next[bar - 1]?.[slot - 1] === undefined || next[bar - 1][slot - 1] === "NEVER") return;
+		next[bar - 1][slot - 1] = "NEVER";
+		controller.saveHotbarLayout(next);
+		setHotbarRevision((n) => n + 1);
+	};
+	const clearHotbars = () => {
+		controller.saveHotbarLayout(
+			Array.from({ length: MAX_NUM_HOTBARS }, () =>
+				Array.from({ length: MAX_HOTBAR_SLOTS }, () => "NEVER" as ActionKey),
+			),
+		);
+		setHotbarRevision((n) => n + 1);
+	};
+	const resetHotbars = () => {
+		controller.saveHotbarLayout(
+			props.state.displayedSkills.getDefaultHotbarLayout(props.state),
+		);
+		setHotbarRevision((n) => n + 1);
 	};
 	const lightMode = useContext(ColorThemeContext) === "Light";
 	const colors = getCurrentThemeColors();
@@ -215,59 +228,79 @@ export function HotbarManager(props: {
 			).map((i) => <div key={`hotbarManager-bar-${i + 1}`}>
 				<h4>{localize({ en: "Hotbar " + (i + 1).toString() })}</h4>
 				{[...Array(MAX_HOTBAR_SLOTS).keys()].map((j) => {
-					const boundSkill = boundActions.get(hotbarSlotId(i + 1, j + 1));
-					return <Tooltip.Root
-						disableHoverablePopup={true}
-						key={`hotbarManager-bar-${i + 1}-slot-${j + 1}`}
-					>
-						<Tooltip.Trigger
-							delay={0}
-							render={
-								<div
-									className="clickableLinkLike"
-									data-hotbar-slot=""
-									data-bar={i + 1}
-									data-slot={j + 1}
-									style={{
-										...iconStyle,
-										touchAction: "none",
-										...(bindTarget !== undefined &&
-										i + 1 === bindTarget[0] &&
-										j + 1 === bindTarget[1]
-											? {
-													outline: `4px solid ${colors.dropTarget}`,
-													outlineOffset: "-4px",
-												}
-											: {}),
-									}}
-									onDragStart={(e) => e.preventDefault()}
-									onContextMenu={(e) => e.preventDefault()}
-									onPointerDown={(e) => {
-										if (e.button === 2) {
-											e.preventDefault();
-											if (skillToBind.current !== undefined) return;
-											unbindSlot(i + 1, j + 1);
-											return;
-										}
-										if (boundSkill === undefined) return;
-										onSkillPointerDown(e, boundSkill, {
-											kind: "slot",
-											bar: i + 1,
-											slot: j + 1,
-										});
-									}}
-									onPointerMove={onSkillPointerMove}
-									onPointerUp={onSkillPointerUp}
-									onPointerCancel={onSkillPointerCancel}
-								>
-									<SkillIconImage
-										style={{ ...iconImgStyle, pointerEvents: "none" }}
-										activeJob={props.activeJob}
-										skillName={boundSkill ?? "NEVER"}
-									/>
-								</div>
+					const assigned = controller.hotbarLayout[i]?.[j];
+					const hasBind = !(assigned === undefined || assigned === "NEVER");
+					const boundSkill = hasBind ? assigned : undefined;
+					const displayedSkill =
+						boundSkill === undefined
+							? undefined
+							: getConditionalReplacement(boundSkill, props.state);
+					const slotNode = <div
+						className={hasBind ? undefined : "clickableLinkLike"}
+						data-hotbar-slot=""
+						data-bar={i + 1}
+						data-slot={j + 1}
+						style={{
+							...iconStyle,
+							touchAction: "none",
+							...(!hasBind
+								? {
+										// If there's no skill bound, just draw the slot number.
+										boxSizing: "border-box",
+										border: `1px solid ${colors.bgHighContrast}`,
+										display: "inline-flex",
+										alignItems: "center",
+										justifyContent: "center",
+										color: colors.text,
+									}
+								: {}),
+							...(bindTarget !== undefined &&
+							i + 1 === bindTarget[0] &&
+							j + 1 === bindTarget[1]
+								? {
+										// Draw a blue box if this is the target of a drag/drop
+										outline: `4px solid ${colors.dropTarget}`,
+										outlineOffset: "-4px",
+									}
+								: {}),
+						}}
+						onDragStart={(e) => e.preventDefault()}
+						onContextMenu={(e) => e.preventDefault()}
+						onPointerDown={(e) => {
+							if (e.button === 2) {
+								// unbind the skill on right click
+								e.preventDefault();
+								if (skillToBind.current !== undefined) return;
+								unbindSlot(i + 1, j + 1);
+								return;
 							}
-						/>
+							if (!hasBind) return;
+							onSkillPointerDown(e, boundSkill, {
+								kind: "slot",
+								bar: i + 1,
+								slot: j + 1,
+							});
+						}}
+						onPointerMove={onSkillPointerMove}
+						onPointerUp={onSkillPointerUp}
+						onPointerCancel={onSkillPointerCancel}
+					>
+						{displayedSkill === undefined ? (
+							j + 1
+						) : (
+							<SkillIconImage
+								style={{ ...iconImgStyle, pointerEvents: "none" }}
+								activeJob={props.activeJob}
+								skillName={displayedSkill}
+							/>
+						)}
+					</div>;
+					const key = `hotbarManager-bar-${i + 1}-slot-${j + 1}`;
+					if (displayedSkill === undefined) {
+						return <React.Fragment key={key}>{slotNode}</React.Fragment>;
+					}
+					return <Tooltip.Root disableHoverablePopup={true} key={key}>
+						<Tooltip.Trigger delay={0} render={slotNode} />
 						<Tooltip.Portal container={tooltipAnchorRef}>
 							<Tooltip.Positioner
 								sideOffset={3}
@@ -276,7 +309,7 @@ export function HotbarManager(props: {
 							>
 								<Tooltip.Popup className="info-tooltip tooltip">
 									<div className="paragraph">
-										<b>{localizeSkillName(boundSkill ?? "NEVER")}</b>
+										<b>{localizeSkillName(displayedSkill)}</b>
 									</div>
 								</Tooltip.Popup>
 							</Tooltip.Positioner>
@@ -296,48 +329,46 @@ export function HotbarManager(props: {
 				width: `min(100%, ${MAX_HOTBAR_SLOTS * 48}px)`,
 			}}
 		>
-			{props.state.displayedSkills
-				.getCurrentSkillNames(props.state)
-				.map((actionKey, i) => <Tooltip.Root
-					disableHoverablePopup={true}
-					key={`hotbarManager-allSkills-${i}`}
-				>
-					<Tooltip.Trigger
-						delay={0}
-						render={
-							<div
-								className="clickableLinkLike"
-								style={{ ...iconStyle, touchAction: "none" }}
-								onDragStart={(e) => e.preventDefault()}
-								onPointerDown={(e) =>
-									onSkillPointerDown(e, actionKey, { kind: "palette" })
-								}
-								onPointerMove={onSkillPointerMove}
-								onPointerUp={onSkillPointerUp}
-								onPointerCancel={onSkillPointerCancel}
-							>
-								<SkillIconImage
-									style={{ ...iconImgStyle, pointerEvents: "none" }}
-									activeJob={props.activeJob}
-									skillName={actionKey}
-								/>
-							</div>
-						}
-					/>
-					<Tooltip.Portal container={tooltipAnchorRef}>
-						<Tooltip.Positioner
-							sideOffset={3}
-							side="top"
-							className="tooltip-positioner hotbar-tooltip-positioner"
+			{getAllAssignableSkillNames(props.state).map((actionKey, i) => <Tooltip.Root
+				disableHoverablePopup={true}
+				key={`hotbarManager-allSkills-${i}`}
+			>
+				<Tooltip.Trigger
+					delay={0}
+					render={
+						<div
+							className="clickableLinkLike"
+							style={{ ...iconStyle, touchAction: "none" }}
+							onDragStart={(e) => e.preventDefault()}
+							onPointerDown={(e) =>
+								onSkillPointerDown(e, actionKey, { kind: "palette" })
+							}
+							onPointerMove={onSkillPointerMove}
+							onPointerUp={onSkillPointerUp}
+							onPointerCancel={onSkillPointerCancel}
 						>
-							<Tooltip.Popup className="info-tooltip tooltip">
-								<div className="paragraph">
-									<b>{localizeSkillName(actionKey)}</b>
-								</div>
-							</Tooltip.Popup>
-						</Tooltip.Positioner>
-					</Tooltip.Portal>
-				</Tooltip.Root>)}
+							<SkillIconImage
+								style={{ ...iconImgStyle, pointerEvents: "none" }}
+								activeJob={props.activeJob}
+								skillName={actionKey}
+							/>
+						</div>
+					}
+				/>
+				<Tooltip.Portal container={tooltipAnchorRef}>
+					<Tooltip.Positioner
+						sideOffset={3}
+						side="top"
+						className="tooltip-positioner hotbar-tooltip-positioner"
+					>
+						<Tooltip.Popup className="info-tooltip tooltip">
+							<div className="paragraph">
+								<b>{localizeSkillName(actionKey)}</b>
+							</div>
+						</Tooltip.Popup>
+					</Tooltip.Positioner>
+				</Tooltip.Portal>
+			</Tooltip.Root>)}
 		</div>
 	</div>;
 	return <>
@@ -417,6 +448,15 @@ export function HotbarManager(props: {
 							</ScrollArea.Scrollbar>
 						</ScrollArea.Root>
 						{allSkills}
+						<div style={{ marginBlock: 10 }}>
+							<button onClick={clearHotbars}>
+								{localize({ en: "clear all hotbars", zh: "清空所有热键栏" })}
+							</button>
+							<span> </span>
+							<button onClick={resetHotbars}>
+								{localize({ en: "reset to default", zh: "恢复默认" })}
+							</button>
+						</div>
 					</div>
 				</Dialog.Popup>
 			</Dialog.Portal>
@@ -442,7 +482,11 @@ export function HotbarManager(props: {
 					<SkillIconImage
 						style={{ ...iconImgStyle, pointerEvents: "none" }}
 						activeJob={props.activeJob}
-						skillName={dragGhost}
+						skillName={
+							dragOrigin.current?.kind === "slot"
+								? getConditionalReplacement(dragGhost, props.state)
+								: dragGhost
+						}
 					/>
 				</div>,
 				document.body,
