@@ -914,7 +914,7 @@ export function getAutoReplacedSkillName(
 
 export function getConditionalReplacement<T extends GameState>(
 	key: ActionKey,
-	state: T,
+	state: Readonly<T>,
 ): ActionKey {
 	// Attempt to replace a skill if required by the current state
 	const skill = getSkill(state.job, key);
@@ -934,7 +934,6 @@ export function getConditionalReplacement<T extends GameState>(
 	return getAutoReplacedSkillName(state.job, skill.name, state.config.level);
 }
 
-// TODO refactor to have a display order
 export class DisplayedSkills {
 	#skills: ActionKey[];
 
@@ -964,7 +963,7 @@ export class DisplayedSkills {
 	// Get the list of skills to display in the current game state.
 	// `replaceIf` and `autoUpgrade`/`autoDowngrade`` conditions are checked here;
 	// `autoUpgrade`/`autoDowngrade` conditions are also checked in the constructor.
-	getCurrentSkillNames<T extends GameState>(state: T): ActionKey[] {
+	getCurrentSkillNames<T extends GameState>(state: Readonly<T>): ActionKey[] {
 		return this.#skills.map((skillName) => getConditionalReplacement(skillName, state));
 	}
 

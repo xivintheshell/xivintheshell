@@ -21,7 +21,14 @@ import {
 	getSavedConfigPart,
 	SerializedConfig,
 } from "../../Game/GameConfig";
-import { Input, Help, StaticFn, DialogTrigger, DialogClose } from "../Common";
+import {
+	Input,
+	Help,
+	StaticFn,
+	DialogTrigger,
+	DialogClose,
+	dialogOnOpenChangeHandler,
+} from "../Common";
 import { ColorThemeContext, getCurrentThemeColors } from "../ColorTheme";
 import {
 	localize,
@@ -406,6 +413,7 @@ export function FflogsImportFlow() {
 			}
 			_setDialogOpen(open);
 		}
+		dialogOnOpenChangeHandler(open);
 	};
 
 	// Automatically perform authentication on component load.

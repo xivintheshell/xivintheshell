@@ -2,7 +2,13 @@ import React, { useState, useEffect, useRef, useContext } from "react";
 import { Dialog } from "@base-ui/react/dialog";
 import changelog from "../changelog.json";
 import { getCurrentThemeColors, ColorThemeContext } from "./ColorTheme";
-import { Clickable, ContentNode, DialogTrigger, DialogClose } from "./Common";
+import {
+	Clickable,
+	ContentNode,
+	DialogTrigger,
+	DialogClose,
+	dialogOnOpenChangeHandler,
+} from "./Common";
 import { localize } from "./Localization";
 import { getCachedValue, setCachedValue, isFirstVisit } from "../Controller/Common";
 
@@ -150,6 +156,7 @@ export function Changelog() {
 			}
 			setUpToDate(true);
 		}
+		dialogOnOpenChangeHandler(open);
 	};
 
 	if (upToDate) {

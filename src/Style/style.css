@@ -183,6 +183,22 @@ https://github.com/ReactTooltip/react-tooltip/blob/master/src/components/Tooltip
   }
 }
 
+.Body {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.BodyViewport {
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-height: 0;
+  overscroll-behavior: contain;
+  outline: none;
+}
+
 /* Keeps a <th> element fixed in place relative to the table. */
 th.stickyTh {
     position: sticky;

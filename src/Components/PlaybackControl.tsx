@@ -11,6 +11,7 @@ import {
 	RadioSet,
 	ValueChangeEvent,
 } from "./Common";
+import { KeybindManager, HotbarManager } from "./KeybindManager";
 import { ConfigApply } from "../Controller/UndoStack";
 import { getCachedValue, setCachedValue, ShellVersion, TickMode } from "../Controller/Common";
 // import { updateBind, resetAllBinds } from "../Controller/KeybindManager";
@@ -863,6 +864,13 @@ export function TimeControl() {
 			defaultChecked={hotbarOneOnBottom}
 			onChange={(val) => setHotbarOneOnBottom(val)}
 			style={{ marginBlock: "10px" }}
+		/>
+		<KeybindManager />
+		<br />
+		<HotbarManager
+			activeJob={controller.game.job}
+			hotbarOneOnBottom={hotbarOneOnBottom}
+			state={controller.game}
 		/>
 	</div>;
 }
