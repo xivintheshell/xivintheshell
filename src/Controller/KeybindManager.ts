@@ -1,8 +1,11 @@
 // TODO support gamepad and MMO mouse inputs
 import React from "react";
 import { getCachedValue, removeCachedValue, setCachedValue } from "./Common";
+import { ActionKey } from "../Game/Data";
+import { ShellJob } from "../Game/Data/Jobs";
 
 const KEYBIND_CACHE_KEY = "customKeybinds";
+const HOTBAR_CACHE_PREFIX = "customHotbars-";
 
 // For simplicity, each unique hotbar row is internally keyed with a 1-indexed row number and slot
 // number, like "1_1" representing hotbar 1, slot 1.
@@ -11,7 +14,7 @@ const KEYBIND_CACHE_KEY = "customKeybinds";
 // SCH has the most displayed skills (I think) with 37 at time of writing, going most of the way
 // through 3 rows.
 // Note that FFXIV starts hotbar 1 at the _bottom_ by default, while we start populating skills
-// from the top downwards. TODO: add a new switch to reverse hotbar orders to match game
+// from the top downwards. This can be flipped by a configuration setting.
 
 interface BindEntry {
 	key: string;
@@ -26,7 +29,6 @@ const cachedBinds = getCachedValue(KEYBIND_CACHE_KEY);
 export const MAX_HOTBAR_SLOTS = 15;
 export const MAX_NUM_HOTBARS = 6;
 
-// 1-indexed hotbar and slot, matching the key format described above.
 export function hotbarSlotId(hotbar: number, slot: number) {
 	return `${hotbar}_${slot}`;
 }
@@ -51,10 +53,6 @@ if (cachedBinds === null) {
 	setCachedValue(KEYBIND_CACHE_KEY, JSON.stringify(Array.from(DEFAULT_BINDS)));
 }
 
-// each hotbar slot has a row, with the current keybind (click + input to set) and a reset button
-// right-clicking unbinds a slot
-
-// keybind display setting: disabled/top left/top right
 // assume modifiers alone (alt/shift/ctrl/meta) are never treated as terminal when attempting to bind
 const RESERVED_KEYS = new Set([
 	"Delete",
@@ -145,4 +143,69 @@ export function getDisplayBindBySlot(hotbar: number, slot: number): string | und
 		return result;
 	}
 	return undefined;
+}
+
+// We serialize hotbars as pseudo-sparse arrays to save on our localStorage footprint.
+// To ensure serialization runs both ways, any runs of unbound slots are stored as an integer
+// rather than an ActionKey.
+// Some napkin math: we currently support 6 hotbars of 15 slots each, which amounts to 90 slots.
+// The "NEVER" key is 5 characters long, so storing a full set of unbound hotbars for each job
+// is ~450 bytes (before any metadata overhead), which is... not nothing? This might be premature
+// optimization, but I was feeling fancy.
+type SerializedHotbar = (number | ActionKey)[];
+
+// Returns a 2d array of ActionKeys for the job. Unassigned slots are populated with NEVER.
+// If no hotbar is saved, returns undefined; the caller should handle populating the default.
+export function loadHotbarForJob(job: ShellJob): ActionKey[][] | undefined {
+	const savedHotbars = getCachedValue(HOTBAR_CACHE_PREFIX + job);
+	if (savedHotbars === null) {
+		return undefined;
+	}
+	const parsedHotbars = JSON.parse(savedHotbars) as SerializedHotbar[];
+	const result: ActionKey[][] = [];
+	for (const row of parsedHotbars) {
+		const newBar: ActionKey[] = [];
+		let count = 0;
+		for (const keyOrRun of row) {
+			if (typeof keyOrRun === "number") {
+				[...Array(keyOrRun).keys()].forEach((i) => newBar.push("NEVER" as ActionKey));
+				count += keyOrRun;
+			} else {
+				newBar.push(keyOrRun as ActionKey);
+				count++;
+			}
+		}
+		if (count < MAX_HOTBAR_SLOTS) {
+			[...Array(MAX_HOTBAR_SLOTS - count).keys()].forEach((i) =>
+				newBar.push("NEVER" as ActionKey),
+			);
+		}
+		result.push(newBar);
+	}
+	return result;
+}
+
+export function saveHotbarForJob(job: ShellJob, hotbar: ActionKey[][]) {
+	const hotbarsToStore: SerializedHotbar[] = [];
+	for (const bar of hotbar) {
+		const barToStore: SerializedHotbar = [];
+		let emptyRun = 0;
+		for (const key of bar) {
+			if (key !== "NEVER") {
+				// push any previous run of empty actions
+				if (emptyRun > 0) {
+					barToStore.push(emptyRun);
+					emptyRun = 0;
+				}
+				barToStore.push(key);
+			} else {
+				emptyRun++;
+			}
+		}
+		if (emptyRun > 0) {
+			barToStore.push(emptyRun);
+		}
+		hotbarsToStore.push(barToStore);
+	}
+	setCachedValue(HOTBAR_CACHE_PREFIX + job, JSON.stringify(hotbarsToStore));
 }
