@@ -8,7 +8,7 @@ import { DialogTrigger, DialogClose, dialogOnOpenChangeHandler } from "./Common"
 import { ColorThemeContext, getCurrentThemeColors } from "./ColorTheme";
 import { SkillIconImage, iconStyle, iconImgStyle } from "./Skills";
 import { MAX_NUM_HOTBARS, MAX_HOTBAR_SLOTS, hotbarSlotId } from "../Controller/KeybindManager";
-import { ShellJob } from "../Game/Data/Jobs";
+import { ShellJob, JOBS } from "../Game/Data/Jobs";
 import { GameState } from "../Game/GameState";
 import { ActionKey } from "../Game/Data";
 
@@ -379,7 +379,16 @@ export function HotbarManager(props: {
 						width: "60vw",
 					}}
 				>
-					<Dialog.Title render={<h3>{localize({ en: "Edit hotbars" })}</h3>} />
+					<Dialog.Title
+						render={
+							<h3>
+								{localize({
+									en: `Edit hotbars (${props.activeJob})`,
+									zh: `设计热键栏（${JOBS[props.activeJob].zh}）`,
+								})}
+							</h3>
+						}
+					/>
 					<DialogClose />
 					<div id="hotbarSettingsAnchor" ref={tooltipAnchorRef}>
 						<Dialog.Description className="Description" render={description} />
