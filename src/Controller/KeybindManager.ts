@@ -25,15 +25,21 @@ const cachedBinds = getCachedValue(KEYBIND_CACHE_KEY);
 
 export const MAX_HOTBAR_SLOTS = 15;
 export const MAX_NUM_HOTBARS = 6;
+
+// 1-indexed hotbar and slot, matching the key format described above.
+export function hotbarSlotId(hotbar: number, slot: number) {
+	return `${hotbar}_${slot}`;
+}
+
 const DEFAULT_BINDS = new Map<string, BindEntry>();
 for (let i = 1; i <= 10; i++) {
-	DEFAULT_BINDS.set(`1_${i}`, { key: (i % 10).toFixed(0) });
-	DEFAULT_BINDS.set(`2_${i}`, { key: (i % 10).toFixed(0), ctrlKey: true });
+	DEFAULT_BINDS.set(hotbarSlotId(1, i), { key: (i % 10).toFixed(0) });
+	DEFAULT_BINDS.set(hotbarSlotId(2, i), { key: (i % 10).toFixed(0), ctrlKey: true });
 }
-DEFAULT_BINDS.set(`1_11`, { key: "-" });
-DEFAULT_BINDS.set(`1_12`, { key: "=" });
-DEFAULT_BINDS.set(`2_11`, { key: "-", ctrlKey: true });
-DEFAULT_BINDS.set(`2_12`, { key: "=", ctrlKey: true });
+DEFAULT_BINDS.set(hotbarSlotId(1, 11), { key: "-" });
+DEFAULT_BINDS.set(hotbarSlotId(1, 12), { key: "=" });
+DEFAULT_BINDS.set(hotbarSlotId(2, 11), { key: "-", ctrlKey: true });
+DEFAULT_BINDS.set(hotbarSlotId(2, 12), { key: "=", ctrlKey: true });
 
 const activeBinds =
 	cachedBinds === null
@@ -100,7 +106,7 @@ export function updateBind(hotbar: number, slot: number, e: React.KeyboardEvent)
 		shiftKey: e.shiftKey,
 	};
 	if (validateBind(bind)) {
-		activeBinds.set(`${hotbar}_${slot}`, bind);
+		activeBinds.set(hotbarSlotId(hotbar, slot), bind);
 		setCachedValue(KEYBIND_CACHE_KEY, JSON.stringify(Array.from(activeBinds)));
 	}
 }
@@ -128,7 +134,7 @@ export function getBindByPress(evt: React.KeyboardEvent): string | undefined {
 }
 
 export function getDisplayBindBySlot(hotbar: number, slot: number): string | undefined {
-	const entry = activeBinds.get(`${hotbar}_${slot}`);
+	const entry = activeBinds.get(hotbarSlotId(hotbar, slot));
 	if (entry) {
 		// TODO check modifier order in-game
 		let result = entry.key;
