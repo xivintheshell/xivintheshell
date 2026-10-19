@@ -154,7 +154,8 @@ export function getDisplayBindBySlot(hotbar: number, slot: number): string | und
 // optimization, but I was feeling fancy.
 type SerializedHotbar = (number | ActionKey)[];
 
-// Returns a 2d array of ActionKeys for the job. Unassigned slots are populated with NEVER.
+// Returns a 2d array of ActionKeys for the job, sized to the hotbar maximum.
+// Unassigned slots are NEVER. Rows or slots past the maximum are dropped.
 // If no hotbar is saved, returns undefined; the caller should handle populating the default.
 export function loadHotbarForJob(job: ShellJob): ActionKey[][] | undefined {
 	const savedHotbars = getCachedValue(HOTBAR_CACHE_PREFIX + job);
@@ -164,23 +165,22 @@ export function loadHotbarForJob(job: ShellJob): ActionKey[][] | undefined {
 	const parsedHotbars = JSON.parse(savedHotbars) as SerializedHotbar[];
 	const result: ActionKey[][] = [];
 	for (const row of parsedHotbars) {
+		if (result.length >= MAX_NUM_HOTBARS) break;
 		const newBar: ActionKey[] = [];
-		let count = 0;
 		for (const keyOrRun of row) {
+			if (newBar.length >= MAX_HOTBAR_SLOTS) break;
 			if (typeof keyOrRun === "number") {
-				[...Array(keyOrRun).keys()].forEach((i) => newBar.push("NEVER" as ActionKey));
-				count += keyOrRun;
+				const count = Math.min(keyOrRun, MAX_HOTBAR_SLOTS - newBar.length);
+				for (let i = 0; i < count; i++) newBar.push("NEVER");
 			} else {
-				newBar.push(keyOrRun as ActionKey);
-				count++;
+				newBar.push(keyOrRun);
 			}
 		}
-		if (count < MAX_HOTBAR_SLOTS) {
-			[...Array(MAX_HOTBAR_SLOTS - count).keys()].forEach((i) =>
-				newBar.push("NEVER" as ActionKey),
-			);
-		}
+		while (newBar.length < MAX_HOTBAR_SLOTS) newBar.push("NEVER");
 		result.push(newBar);
+	}
+	while (result.length < MAX_NUM_HOTBARS) {
+		result.push(Array.from({ length: MAX_HOTBAR_SLOTS }, () => "NEVER" as ActionKey));
 	}
 	return result;
 }
@@ -208,4 +208,14 @@ export function saveHotbarForJob(job: ShellJob, hotbar: ActionKey[][]) {
 		hotbarsToStore.push(barToStore);
 	}
 	setCachedValue(HOTBAR_CACHE_PREFIX + job, JSON.stringify(hotbarsToStore));
+}
+
+let activeHotbarLayout: ActionKey[][] | undefined;
+
+export function getActiveHotbarLayout(): ActionKey[][] | undefined {
+	return activeHotbarLayout;
+}
+
+export function setActiveHotbarLayout(layout: ActionKey[][] | undefined) {
+	activeHotbarLayout = layout;
 }
