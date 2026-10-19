@@ -10,6 +10,7 @@ import {
 	TickMode,
 } from "./Common";
 import {
+	DELETE_LAST_TIMELINE_ACTION,
 	getBindByPress,
 	getDisplayBindBySlot,
 	loadHotbarForJob,
@@ -1078,6 +1079,11 @@ class Controller {
 	// must pass the slot rather than a skill name.
 	getKeybindForHotbarSlot(hotbar: number, slot: number): string | undefined {
 		return getDisplayBindBySlot(hotbar, slot);
+	}
+
+	// Skill-icon overlays read the live bind map, so refresh them after an edit.
+	onKeybindsChanged() {
+		this.updateSkillButtons(this.getDisplayedGame());
 	}
 
 	#requestTick(props: {
@@ -2421,9 +2427,10 @@ class Controller {
 		const selecting = firstSelected !== undefined;
 		// console.log(evt.keyCode);
 		let processed = false;
-		if (this.displayingUpToDateGameState) {
-			if (evt.key === "u") {
-				// delete the last action in the current timeline
+		const action = getBindByPress(evt);
+		if (action?.kind === "system" && action.command === DELETE_LAST_TIMELINE_ACTION.command) {
+			// delete the last action in the current timeline
+			if (this.displayingUpToDateGameState) {
 				if (controller.record.length > 0) {
 					this.undoStack.doThenPush(
 						new DeleteNodes(
@@ -2435,11 +2442,8 @@ class Controller {
 				}
 				processed = true;
 			}
-		}
-		const maybeHotbarBind = getBindByPress(evt);
-		if (this.keybindEnabled && maybeHotbarBind !== undefined) {
-			const [bar, slot] = maybeHotbarBind.split("_");
-			const skill = this.game.displayedSkills.getAt(parseInt(bar), parseInt(slot));
+		} else if (this.keybindEnabled && action?.kind === "hotbar") {
+			const skill = this.game.displayedSkills.getAt(action.hotbar, action.slot);
 			if (skill !== undefined) {
 				this.requestUseSkill({
 					skillName: skill,

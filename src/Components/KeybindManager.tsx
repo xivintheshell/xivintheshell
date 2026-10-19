@@ -1,4 +1,4 @@
-import React, { useState, useContext, useRef } from "react";
+import React, { useState, useContext, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Dialog } from "@base-ui/react/dialog";
 import { Tooltip } from "@base-ui/react/tooltip";
@@ -9,7 +9,29 @@ import { ColorThemeContext, getCurrentThemeColors } from "./ColorTheme";
 import { SkillIconImage, iconStyle, iconImgStyle } from "./Skills";
 import { getAllAssignableSkillNames, getConditionalReplacement } from "../Game/Skills";
 import { controller } from "../Controller/Controller";
-import { MAX_NUM_HOTBARS, MAX_HOTBAR_SLOTS } from "../Controller/KeybindManager";
+import {
+	MAX_NUM_HOTBARS,
+	MAX_HOTBAR_SLOTS,
+	DELETE_LAST_TIMELINE_ACTION,
+	assignBind,
+	bindEntryFromPress,
+	clearBind,
+	clearHotbarBinds,
+	findBindConflict,
+	formatBind,
+	getDefaultBind,
+	getDisplayBind,
+	hotbarKeybindAction,
+	isModifierKey,
+	resetAllBinds,
+	resetBind,
+	sameKeybindAction,
+	swapBindAssignment,
+	validateBind,
+	type BindEntry,
+	type KeybindAction,
+	type KeyPress,
+} from "../Controller/KeybindManager";
 import { ShellJob, JOBS } from "../Game/Data/Jobs";
 import { GameState } from "../Game/GameState";
 import { ActionKey } from "../Game/Data";
@@ -17,17 +39,234 @@ import { ActionKey } from "../Game/Data";
 // discriminated union for drags from full skill list vs. drag from another slot
 type HotbarDragOrigin = { kind: "palette" } | { kind: "slot"; bar: number; slot: number };
 
-// responsible for mapping user inputs -> hotbar slots (and potentially other shortcuts in the future)
+const EMPTY_MODIFIERS: KeyPress = { key: "" };
+
+function modifiersFrom(e: KeyboardEvent): KeyPress {
+	return {
+		key: "",
+		shiftKey: e.shiftKey,
+		ctrlKey: e.ctrlKey,
+		altKey: e.altKey,
+		metaKey: e.metaKey,
+	};
+}
+
+function bindFromEvent(e: KeyboardEvent): BindEntry {
+	return bindEntryFromPress({
+		key: e.key,
+		code: e.code,
+		shiftKey: e.shiftKey,
+		ctrlKey: e.ctrlKey,
+		altKey: e.altKey,
+		metaKey: e.metaKey,
+	});
+}
+
+function actionLabel(actionKey: KeybindAction): string {
+	if (actionKey.kind === "system") {
+		return localize({ en: "Remove last timeline entry", zh: "删除时间轴最后一项" }).toString();
+	}
+	return localize({
+		en: `Hotbar ${actionKey.hotbar} slot ${actionKey.slot}`,
+		zh: `热键栏 ${actionKey.hotbar} 槽位 ${actionKey.slot}`,
+	}).toString();
+}
+
+function captureText(actionKey: KeybindAction): string {
+	if (actionKey.kind === "hotbar") {
+		return `Awaiting bind for Hotbar ${actionKey.hotbar}, Slot ${actionKey.slot} (Esc to cancel)`;
+	}
+	const target =
+		actionKey.command === "deleteLastTimelineAction"
+			? "Remove last timeline entry"
+			: actionKey.command;
+	return `Awaiting bind for "${target}" (Esc to cancel)`;
+}
+
+function rowKey(actionKey: KeybindAction): string {
+	if (actionKey.kind === "system") return `system:${actionKey.command}`;
+	return `hotbar:${actionKey.hotbar}:${actionKey.slot}`;
+}
+
+// responsible for mapping user inputs -> hotbar slots and system shortcuts
 export function KeybindManager() {
 	const [dialogOpen, _setDialogOpen] = useState(false);
+	const [bindRevision, setBindRevision] = useState(0);
+	const [armedAction, setArmedAction] = useState<KeybindAction | undefined>(undefined);
+	const [heldModifiers, setHeldModifiers] = useState<KeyPress>(EMPTY_MODIFIERS);
+	const armedActionRef = useRef(armedAction);
+	armedActionRef.current = armedAction;
 	const setDialogOpen = (open: boolean) => {
 		_setDialogOpen(open);
 		dialogOnOpenChangeHandler(open);
+		if (!open) setArmedAction(undefined);
 	};
+	const publish = () => {
+		controller.onKeybindsChanged();
+		setBindRevision((n) => n + 1);
+	};
+	const tryAssign = (actionKey: KeybindAction, bind: BindEntry): boolean => {
+		const reason = validateBind(bind);
+		if (reason !== undefined) {
+			window.alert(reason);
+			return false;
+		}
+		const conflict = findBindConflict(actionKey, bind);
+		if (conflict !== undefined) {
+			const swap = window.confirm(
+				localize({
+					en: `${formatBind(bind)} is currently bound to ${actionLabel(conflict)}. Swap the two bindings?`,
+				}).toString(),
+			);
+			if (!swap) return false;
+			swapBindAssignment(actionKey, bind, conflict);
+		} else {
+			assignBind(actionKey, bind);
+		}
+		publish();
+		return true;
+	};
+	useEffect(() => {
+		if (armedAction === undefined) return;
+		const onKeyDown = (e: KeyboardEvent) => {
+			if (e.repeat) return;
+			if (e.key === "Escape") {
+				e.preventDefault();
+				e.stopPropagation();
+				setArmedAction(undefined);
+				setHeldModifiers(EMPTY_MODIFIERS);
+				return;
+			}
+			if (isModifierKey(e.key)) {
+				setHeldModifiers(modifiersFrom(e));
+				return;
+			}
+			e.preventDefault();
+			e.stopPropagation();
+			const actionKey = armedActionRef.current;
+			if (actionKey === undefined) return;
+			const bind = bindFromEvent(e);
+			const reason = validateBind(bind);
+			if (reason !== undefined) {
+				window.alert(reason);
+				setArmedAction(undefined);
+				setHeldModifiers(EMPTY_MODIFIERS);
+				return;
+			}
+			tryAssign(actionKey, bind);
+			setArmedAction(undefined);
+			setHeldModifiers(EMPTY_MODIFIERS);
+		};
+		const onKeyUp = (e: KeyboardEvent) => {
+			if (!isModifierKey(e.key)) return;
+			setHeldModifiers(modifiersFrom(e));
+		};
+		window.addEventListener("keydown", onKeyDown, true);
+		window.addEventListener("keyup", onKeyUp, true);
+		return () => {
+			window.removeEventListener("keydown", onKeyDown, true);
+			window.removeEventListener("keyup", onKeyUp, true);
+		};
+	}, [armedAction]);
 	const lightMode = useContext(ColorThemeContext) === "Light";
 	const colors = getCurrentThemeColors();
-	const description = <div>{localize({ en: "work in progress" })}</div>;
-	const body = <div>{localize({ en: "work in progress" })}</div>;
+	const renderRow = (actionKey: KeybindAction, label: React.ReactNode) => {
+		const armed = armedAction !== undefined && sameKeybindAction(armedAction, actionKey);
+		const shown = armed ? formatBind(heldModifiers) : (getDisplayBind(actionKey) ?? "");
+		return <tr key={rowKey(actionKey)}>
+			<td style={{ padding: "4px 12px 4px 0", textAlign: "left", width: "100%" }}>{label}</td>
+			<td
+				style={{
+					padding: "4px 8px",
+					minWidth: "8em",
+					textAlign: "center",
+					cursor: "pointer",
+					border: `1px solid ${colors.bgHighContrast}`,
+					...(armed
+						? { outline: `2px solid ${colors.dropTarget}`, outlineOffset: -2 }
+						: {}),
+				}}
+				onClick={() => {
+					setArmedAction(actionKey);
+					setHeldModifiers(EMPTY_MODIFIERS);
+				}}
+				onContextMenu={(e) => {
+					e.preventDefault();
+					clearBind(actionKey);
+					if (
+						armedActionRef.current !== undefined &&
+						sameKeybindAction(armedActionRef.current, actionKey)
+					) {
+						setArmedAction(undefined);
+						setHeldModifiers(EMPTY_MODIFIERS);
+					}
+					publish();
+				}}
+			>
+				{shown === "" ? "\u00a0" : shown}
+			</td>
+			<td style={{ padding: "4px 0 4px 8px", textAlign: "right" }}>
+				<button
+					onClick={() => {
+						const fallback = getDefaultBind(actionKey);
+						if (fallback === undefined) {
+							clearBind(actionKey);
+							publish();
+							return;
+						}
+						if (findBindConflict(actionKey, fallback) === undefined) {
+							resetBind(actionKey);
+							setArmedAction(undefined);
+							setHeldModifiers(EMPTY_MODIFIERS);
+							publish();
+							return;
+						}
+						tryAssign(actionKey, fallback);
+						setArmedAction(undefined);
+						setHeldModifiers(EMPTY_MODIFIERS);
+					}}
+				>
+					{localize({ en: "reset", zh: "重置" })}
+				</button>
+			</td>
+		</tr>;
+	};
+	const description = <div style={{ marginBlock: 10 }}>
+		{localize({
+			en: "Click a binding to change it. Right-click to remove.",
+		})}
+	</div>;
+	// bindRevision is read so a save re-renders the tables from the live bind map.
+	void bindRevision;
+	const body = <div>
+		<h4>{localize({ en: "System", zh: "系统" })}</h4>
+		<table style={{ width: "100%" }}>
+			<tbody>
+				{renderRow(
+					DELETE_LAST_TIMELINE_ACTION,
+					localize({ en: "Remove last timeline entry", zh: "删除时间轴最后一项" }),
+				)}
+			</tbody>
+		</table>
+		{[...Array(MAX_NUM_HOTBARS).keys()].map((barIndex) => <div
+			key={`keybinds-bar-${barIndex + 1}`}
+		>
+			<h4>{localize({ en: `Hotbar ${barIndex + 1}`, zh: `热键栏 ${barIndex + 1}` })}</h4>
+			<table style={{ width: "100%" }}>
+				<tbody>
+					{[...Array(MAX_HOTBAR_SLOTS).keys()].map((slotIndex) =>
+						renderRow(
+							hotbarKeybindAction(barIndex + 1, slotIndex + 1),
+							localize({
+								en: `Slot ${slotIndex + 1}`,
+								zh: `槽位 ${slotIndex + 1}`,
+							}),
+						),
+					)}
+				</tbody>
+			</table>
+		</div>)}
+	</div>;
 	return <>
 		<Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
 			<DialogTrigger titleNode={localize({ en: "edit keybinds" })} handle={"\u2022 "} />
@@ -40,25 +279,26 @@ export function KeybindManager() {
 				/>
 				<Dialog.Popup
 					className="Popup invisibleScrollbar"
-					id="dialogPopup"
 					style={{
 						backgroundColor: colors.background,
 						border: "1px solid " + colors.bgMediumContrast,
 						color: colors.text,
 						overflow: "hidden",
 						maxHeight: "100%",
-						// width is chosen so all skills fit in one row by default, but at higher
-						// zoom levels or different resolutions then it may wrap
-						width: "60vw",
+						width: "32rem",
 					}}
 				>
 					<Dialog.Title render={<h3>{localize({ en: "Edit keybinds" })}</h3>} />
 					<DialogClose />
 					<Dialog.Description className="Description" render={description} />
-					<ScrollArea.Root className="Body" style={{ maxHeight: "100%" }}>
+					<ScrollArea.Root className="Body" style={{ maxHeight: "80%" }}>
 						<ScrollArea.Viewport className="BodyViewport">
 							<ScrollArea.Content
-								style={{ display: "flex", flexDirection: "column" }}
+								style={{
+									display: "flex",
+									flexDirection: "column",
+									paddingRight: 16,
+								}}
 							>
 								{body}
 							</ScrollArea.Content>
@@ -79,6 +319,36 @@ export function KeybindManager() {
 							/>
 						</ScrollArea.Scrollbar>
 					</ScrollArea.Root>
+					<div style={{ marginBlock: 10 }}>
+						<button
+							onClick={() => {
+								clearHotbarBinds();
+								publish();
+							}}
+						>
+							{localize({
+								en: "clear all hotbar bindings",
+								zh: "清空所有热键栏绑定",
+							})}
+						</button>
+						<span> </span>
+						<button
+							onClick={() => {
+								resetAllBinds();
+								setArmedAction(undefined);
+								setHeldModifiers(EMPTY_MODIFIERS);
+								publish();
+							}}
+						>
+							{localize({
+								en: "reset all bindings to default",
+								zh: "全部恢复默认绑定",
+							})}
+						</button>
+					</div>
+					<div style={{ minHeight: "1.5em", color: colors.emphasis }}>
+						{armedAction !== undefined && captureText(armedAction)}
+					</div>
 				</Dialog.Popup>
 			</Dialog.Portal>
 		</Dialog.Root>
@@ -94,7 +364,7 @@ export function HotbarManager(props: {
 	// it would be a pain.
 	state: Readonly<GameState>;
 }) {
-	const [dialogOpen, _setDialogOpen] = useState(true);
+	const [dialogOpen, _setDialogOpen] = useState(false);
 	// Hotbar slot under the pointer. Set only while a skill icon is being dragged.
 	const [bindTarget, setBindTarget] = useState<[number, number] | undefined>(undefined);
 	// Bumped after a layout commit so this dialog re-reads controller.hotbarLayout.
@@ -274,7 +544,7 @@ export function HotbarManager(props: {
 								unbindSlot(i + 1, j + 1);
 								return;
 							}
-							if (!hasBind) return;
+							if (boundSkill === undefined) return;
 							onSkillPointerDown(e, boundSkill, {
 								kind: "slot",
 								bar: i + 1,
