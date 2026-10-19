@@ -1,5 +1,12 @@
 [
 	{
+		"date": "10/19/26",
+		"changes": [
+			"[BETA] Added keyboard shortcuts for hotbar actions. You can customize these in the Control panel next to the Config tab."
+		],
+		"level": "major"
+	},
+	{
 		"date": "10/18/26",
 		"changes": [
 			"Separated TOP markers into individual phases."
