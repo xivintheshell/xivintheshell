@@ -9,10 +9,19 @@ import {
 	ShellVersion,
 	TickMode,
 } from "./Common";
+import {
+	DELETE_LAST_TIMELINE_ACTION,
+	getBindByPress,
+	getDisplayBindBySlot,
+	loadHotbarForJob,
+	saveHotbarForJob,
+	setActiveHotbarLayout,
+} from "./KeybindManager";
 import { ClipboardMode, copy, paste } from "./Clipboard";
 import { UndoStack, AddNode, DeleteNodes, AddNodeBulk } from "./UndoStack";
 import { GameState } from "../Game/GameState";
 import {
+	DisplayedSkills,
 	getAutoReplacedSkillName,
 	getConditionalReplacement,
 	getNormalizedSkillName,
@@ -127,8 +136,13 @@ type ReplayResult = {
 
 class Controller {
 	timeScale;
+	isDialogOpen: boolean;
 	cooldownDisplayMode: CooldownDisplayMode;
 	roundCooldownUp: boolean;
+	keybindEnabled: boolean;
+	hotbarOneOnBottom: boolean;
+	// Active job's hotbar. Survives GameState reconstruction; reloaded when the job changes.
+	hotbarLayout: ActionKey[][];
 	shouldLoop: boolean;
 	tickMode;
 	timeline;
@@ -185,6 +199,10 @@ class Controller {
 		this.tickMode = TickMode.RealTimeAutoPause;
 		this.cooldownDisplayMode = "center";
 		this.roundCooldownUp = false;
+		this.keybindEnabled = true;
+		this.hotbarOneOnBottom = false;
+		this.hotbarLayout = [];
+		this.isDialogOpen = false;
 
 		this.timeline = new Timeline();
 		this.timeline.reset();
@@ -209,11 +227,46 @@ class Controller {
 		this.savedHistoricalRecord = this.record;
 		this.undoStack = new UndoStack();
 
+		// Capture the default skill order before restart, then let the new GameState copy it.
+		this.#loadHotbarLayout();
 		this.#requestRestart();
 	}
 
+	// Load the active job's saved hotbar. If nothing is stored, fill rows from the default
+	// DisplayedSkills order. Callers that just changed jobs must clear the active layout first
+	// so the new GameState is built from the job's default skill list.
+	#loadHotbarLayout() {
+		const layout =
+			loadHotbarForJob(this.game.job) ??
+			this.game.displayedSkills.getDefaultHotbarLayout(this.game);
+		this.hotbarLayout = layout;
+		setActiveHotbarLayout(layout);
+		this.game.displayedSkills = new DisplayedSkills(
+			this.game.job,
+			this.game.config.level,
+			layout,
+		);
+	}
+
+	saveHotbarLayout(layout: ActionKey[][]) {
+		this.hotbarLayout = layout;
+		setActiveHotbarLayout(layout);
+		saveHotbarForJob(this.game.job, layout);
+		const install = (game: GameState) => {
+			game.displayedSkills = new DisplayedSkills(game.job, game.config.level, layout);
+		};
+		install(this.game);
+		if (
+			this.savedHistoricalGame !== this.game &&
+			this.savedHistoricalGame.job === this.game.job
+		) {
+			install(this.savedHistoricalGame);
+		}
+		this.updateSkillButtons(this.getDisplayedGame());
+	}
+
 	get inputLocked() {
-		return this.shouldLoop || this.queuedPastes > 0;
+		return this.shouldLoop || this.queuedPastes > 0 || this.isDialogOpen;
 	}
 
 	updateStats() {
@@ -464,6 +517,10 @@ class Controller {
 
 		updateActiveTimelineEditor(() => {
 			const gameConfig = new GameConfig(content.config);
+			const jobChanged = this.game.job !== gameConfig.job;
+			// The previous job's layout must not be copied onto the new GameState. Skill buttons
+			// would then request that job's icons for another job's skills.
+			if (jobChanged) setActiveHotbarLayout(undefined);
 
 			this.gameConfig = gameConfig;
 
@@ -474,6 +531,7 @@ class Controller {
 
 			// apply resource overrides
 			this.#applyResourceOverrides(this.gameConfig);
+			if (jobChanged) this.#loadHotbarLayout();
 
 			// Propagate the loaded job to the nested timeline object, since the active slot may
 			// otherwise retain a stale job (slots default to BLM) and render skill icons for the
@@ -1003,11 +1061,29 @@ class Controller {
 	}
 
 	updateSkillButtons(game: GameState) {
-		updateSkillButtons(
-			this.game.displayedSkills
-				.getCurrentSkillNames(this.game)
-				.map((skillName: ActionKey) => game.getSkillAvailabilityStatus(skillName)),
-		);
+		const buttons: SkillButtonViewInfo[] = [];
+		this.hotbarLayout.forEach((row, bar) => {
+			row.forEach((skillName, slot) => {
+				if (skillName === "NEVER") return;
+				buttons.push({
+					...game.getSkillAvailabilityStatus(skillName),
+					hotbar: bar + 1,
+					slot: slot + 1,
+				});
+			});
+		});
+		updateSkillButtons(buttons);
+	}
+
+	// Keyboard shortcut label for one hotbar slot. A skill may occupy several slots, so callers
+	// must pass the slot rather than a skill name.
+	getKeybindForHotbarSlot(hotbar: number, slot: number): string | undefined {
+		return getDisplayBindBySlot(hotbar, slot);
+	}
+
+	// Skill-icon overlays read the live bind map, so refresh them after an edit.
+	onKeybindsChanged() {
+		this.updateSkillButtons(this.getDisplayedGame());
 	}
 
 	#requestTick(props: {
@@ -1063,6 +1139,17 @@ class Controller {
 		}
 	}
 
+	setKeybindSettings(props: {
+		enabled: boolean;
+		hotbarOneOnBottom: boolean;
+		// Actual keybind mappings are handled through KeybindManager
+	}) {
+		const orderChanged = this.hotbarOneOnBottom !== props.hotbarOneOnBottom;
+		this.keybindEnabled = props.enabled;
+		this.hotbarOneOnBottom = props.hotbarOneOnBottom;
+		if (orderChanged) this.updateSkillButtons(this.game);
+	}
+
 	setConfigAndRestart(
 		props: {
 			job: ShellJob;
@@ -1101,6 +1188,8 @@ class Controller {
 				...props,
 				shellVersion: ShellInfo.version,
 			});
+			// Drop the previous job's layout so the restarted state builds the new job's defaults.
+			if (jobChanged) setActiveHotbarLayout(undefined);
 
 			if (resetRecord) {
 				this.record = new Record();
@@ -1114,6 +1203,7 @@ class Controller {
 
 			this.#requestRestart();
 			this.#applyResourceOverrides(this.gameConfig);
+			if (jobChanged) this.#loadHotbarLayout();
 			// Propagate changes to the intro section (definitely not idiomatic react... maybe we
 			// should just make the text static for all jobs)
 			if (jobChanged) {
@@ -2337,20 +2427,31 @@ class Controller {
 		const selecting = firstSelected !== undefined;
 		// console.log(evt.keyCode);
 		let processed = false;
-		if (this.displayingUpToDateGameState) {
-			if (evt.key === "u") {
-				// delete the last action in the current timeline
-				this.undoStack.doThenPush(
-					new DeleteNodes(
-						this.record.tailIndex,
-						[this.record.actions[this.record.tailIndex]],
-						"delete",
-					),
-				);
+		const action = getBindByPress(evt);
+		if (action?.kind === "system" && action.command === DELETE_LAST_TIMELINE_ACTION.command) {
+			// delete the last action in the current timeline
+			if (this.displayingUpToDateGameState) {
+				if (controller.record.length > 0) {
+					this.undoStack.doThenPush(
+						new DeleteNodes(
+							this.record.tailIndex,
+							[this.record.actions[this.record.tailIndex]],
+							"delete",
+						),
+					);
+				}
 				processed = true;
 			}
-		}
-		if (evt.key === "z" && ctrlOrCmd) {
+		} else if (this.keybindEnabled && action?.kind === "hotbar") {
+			const skill = this.game.displayedSkills.getAt(action.hotbar, action.slot);
+			if (skill !== undefined) {
+				this.requestUseSkill({
+					skillName: skill,
+					targetList: [1], // TODO how do we read the target list here?
+				});
+				processed = true;
+			}
+		} else if (evt.key === "z" && ctrlOrCmd) {
 			this.undoStack.undo();
 			processed = true;
 		} else if ((evt.key === "Z" && ctrlOrCmd) || (evt.key === "y" && ctrlOrCmd)) {

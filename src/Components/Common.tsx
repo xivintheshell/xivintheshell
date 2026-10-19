@@ -1,8 +1,11 @@
 import React, { ChangeEvent, CSSProperties, ReactNode, useEffect, useState, useRef } from "react";
-import { localize } from "./Localization";
+import { FaXmark } from "react-icons/fa6";
+import { Dialog } from "@base-ui/react/dialog";
 import { Tooltip } from "@base-ui/react/tooltip";
+import { localize } from "./Localization";
 import { getCurrentThemeColors } from "./ColorTheme";
 import { Debug } from "../Game/Common";
+import { controller } from "../Controller/Controller";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
 import { MAX_TIMELINE_SLOTS } from "../Controller/Timeline";
 import { LiaWindowMinimize } from "react-icons/lia";
@@ -631,6 +634,7 @@ export function Checkbox(props: {
 	label: ContentNode;
 	onChange: (newValue: boolean) => void;
 	defaultChecked?: boolean;
+	style?: React.CSSProperties;
 }) {
 	const [checked, setChecked] = useState<boolean>(false);
 	useEffect(() => {
@@ -642,7 +646,7 @@ export function Checkbox(props: {
 		setChecked(defaultChecked);
 		props.onChange(defaultChecked);
 	}, []);
-	return <div style={{ marginBottom: 5 }}>
+	return <div style={props.style ?? { marginBottom: 5 }}>
 		<input
 			className="shellCheckbox"
 			type="checkbox"
@@ -867,4 +871,37 @@ export function Help(props: {
 			</Tooltip.Portal>
 		</Tooltip.Root>
 	</Tooltip.Provider>;
+}
+
+export function dialogOnOpenChangeHandler(open: boolean) {
+	// technically can be a race condition if multiple dialogs are opened at once, but we're assuming
+	// that's not a possible state
+	controller.isDialogOpen = open;
+}
+
+export function DialogTrigger(props: {
+	handleStyle?: React.CSSProperties;
+	titleNode: ContentNode;
+	handle?: ContentNode;
+}) {
+	// Don't use a bespoke Clickable component for the expand button, since it suppresses Dialog.Trigger's
+	// built-in dismiss behavior.
+	const triggerRender = <div className="clickable">
+		<span style={props.handleStyle}>
+			{props.handle}
+			<span className="clickableLinkLike">{props.titleNode}</span>
+		</span>
+	</div>;
+	return <Dialog.Trigger render={triggerRender} nativeButton={false} />;
+}
+
+export function DialogClose() {
+	const colors = getCurrentThemeColors();
+	const exitTrigger = <FaXmark
+		className="dialogExit"
+		style={{
+			color: colors.bgHighContrast,
+		}}
+	/>;
+	return <Dialog.Close render={exitTrigger} nativeButton={false} />;
 }

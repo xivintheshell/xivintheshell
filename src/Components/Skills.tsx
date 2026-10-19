@@ -3,6 +3,7 @@ import { Tooltip } from "@base-ui/react/tooltip";
 import { Clickable, ContentNode, Help, parseTime, ValueChangeEvent } from "./Common";
 import { Debug, SkillReadyStatus, SkillUnavailableReason } from "../Game/Common";
 import { controller } from "../Controller/Controller";
+import { hotbarSlotId } from "../Controller/KeybindManager";
 import { MAX_ABILITY_TARGETS } from "../Controller/Common";
 import { localize, localizeSkillName, localizeSkillUnavailableReason } from "./Localization";
 import { updateTimelineView } from "./Timeline";
@@ -214,6 +215,24 @@ type SkillButtonProps = {
 	secondaryCdProgress?: number;
 	targetList: number[];
 	activeJob: ShellJob;
+	hotbar: number;
+	slot: number;
+};
+
+export const iconStyle: React.CSSProperties = {
+	width: 48,
+	height: 48,
+	verticalAlign: "top",
+	position: "relative",
+	display: "inline-block",
+};
+export const iconImgStyle: React.CSSProperties = {
+	width: 40,
+	height: 40,
+	position: "absolute",
+	top: 2,
+	left: "50%",
+	marginLeft: -20,
 };
 
 function SkillButton(props: SkillButtonProps) {
@@ -303,21 +322,6 @@ function SkillButton(props: SkillButtonProps) {
 		</div>;
 		setSkillDescription(content);
 	};
-	const iconStyle: React.CSSProperties = {
-		width: 48,
-		height: 48,
-		verticalAlign: "top",
-		position: "relative",
-		display: "inline-block",
-	};
-	const iconImgStyle: React.CSSProperties = {
-		width: 40,
-		height: 40,
-		position: "absolute",
-		top: 2,
-		left: "50%",
-		marginLeft: -20,
-	};
 	let readyOverlay = "transparent";
 	if (!props.readyAsideFromCd) {
 		readyOverlay = "rgba(0, 0, 0, 0.6)";
@@ -377,6 +381,32 @@ function SkillButton(props: SkillButtonProps) {
 		</div>;
 	} else {
 		stacksOverlay = <></>;
+	}
+	const keybind = controller.keybindEnabled
+		? controller.getKeybindForHotbarSlot(props.hotbar, props.slot)
+		: undefined;
+	let keybindOverlay: React.ReactNode = null;
+	if (keybind !== undefined) {
+		const fontSizePx = skillBoxPx / Math.max(keybind.length, 4) + 3;
+		const keybindPositionStyle: React.CSSProperties = {
+			position: "absolute",
+			top: 0,
+			left: 0,
+		};
+		keybindOverlay = <span
+			style={{
+				...keybindPositionStyle,
+				pointerEvents: "none",
+				zIndex: 3, // must render above shading circle
+				fontFamily: "XIVShell Defaults",
+				color: "white",
+				fontSize: `${fontSizePx}px`,
+				textShadow: "0 0 4px black, 0 0 8px black",
+				textAlign: "center",
+			}}
+		>
+			{keybind}
+		</span>;
 	}
 	let cooldownOverlay: React.ReactNode = null;
 	const cooldownDisplayMode = controller.cooldownDisplayMode;
@@ -478,6 +508,7 @@ function SkillButton(props: SkillButtonProps) {
 					props.secondaryCdProgress > 1 - Debug.epsilon ||
 					secondaryOutline}
 			</div>
+			{keybindOverlay}
 			{cooldownOverlay}
 			<div
 				style={{
@@ -539,6 +570,9 @@ export type SkillButtonViewInfo = {
 	llCovered: boolean;
 	usedAt: number;
 	cooldownOverlaySeconds?: number;
+	// Set when this button represents one hotbar slot. Absent for status queries that are not drawn.
+	hotbar?: number;
+	slot?: number;
 };
 
 export let updateSkillButtons = (statusList: SkillButtonViewInfo[]) => {};
@@ -667,32 +701,49 @@ export function SkillsWindow() {
 		}
 	};
 
-	const skillButtons = statusList.map((info, i) => {
-		const skillName = info.skillName;
-
-		const readyAsideFromCd = info
-			? !info.status.unavailableReasons.some(
-					(reason) => reason !== SkillUnavailableReason.Blocked,
-				)
-			: false;
-		return <SkillButton
-			key={i}
-			highlight={info ? info.highlight : false}
-			skillName={skillName}
-			ready={info ? info.status.ready() : false}
-			readyAsideFromCd={readyAsideFromCd}
-			cdProgress={info ? 1 - info.timeTillNextStackReady / info.cdRecastTime : 1}
-			secondaryCdProgress={
-				info
-					? info.secondaryCdRecastTime && info.timeTillSecondaryReady
+	// Look up skill status information by user-defined hotbar order
+	const statusBySlot = new Map(
+		statusList.flatMap((info) =>
+			info.hotbar === undefined || info.slot === undefined
+				? []
+				: [[hotbarSlotId(info.hotbar, info.slot), info] as const],
+		),
+	);
+	const visibleBars = controller.hotbarLayout.flatMap((row, index) =>
+		row.every((skillName) => skillName === "NEVER") ? [] : [index],
+	);
+	if (controller.hotbarOneOnBottom) visibleBars.reverse();
+	const skillButtons = visibleBars.map((barIndex) => <div key={barIndex + 1}>
+		{controller.hotbarLayout[barIndex].map((skillName, slotIndex) => {
+			const hotbar = barIndex + 1;
+			const slot = slotIndex + 1;
+			if (skillName === "NEVER") {
+				return <div key={`${hotbar}-${slot}`} style={iconStyle} />;
+			}
+			const info = statusBySlot.get(hotbarSlotId(hotbar, slot));
+			if (info === undefined) return <div key={`${hotbar}-${slot}`} style={iconStyle} />;
+			const readyAsideFromCd = !info.status.unavailableReasons.some(
+				(reason) => reason !== SkillUnavailableReason.Blocked,
+			);
+			return <SkillButton
+				key={`${hotbar}-${slot}`}
+				highlight={info.highlight}
+				skillName={info.skillName}
+				ready={info.status.ready()}
+				readyAsideFromCd={readyAsideFromCd}
+				cdProgress={1 - info.timeTillNextStackReady / info.cdRecastTime}
+				secondaryCdProgress={
+					info.secondaryCdRecastTime && info.timeTillSecondaryReady
 						? 1 - info.timeTillSecondaryReady / info.secondaryCdRecastTime
 						: 1
-					: 1
-			}
-			targetList={getTargetList()}
-			activeJob={controller.game.job}
-		/>;
-	});
+				}
+				targetList={getTargetList()}
+				activeJob={controller.game.job}
+				hotbar={hotbar}
+				slot={slot}
+			/>;
+		})}
+	</div>);
 
 	const waitUntilHelp = <Help
 		topic="waitUntilInputFormat"

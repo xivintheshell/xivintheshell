@@ -3,7 +3,6 @@
 // See docs for details: https://www.fflogs.com/api/docs
 import React, { useEffect, useContext, useState, useRef, CSSProperties } from "react";
 import { Dialog } from "@base-ui/react/dialog";
-import { FaXmark } from "react-icons/fa6";
 import { ImportLog } from "../../Controller/UndoStack";
 import { controller } from "../../Controller/Controller";
 import {
@@ -22,7 +21,14 @@ import {
 	getSavedConfigPart,
 	SerializedConfig,
 } from "../../Game/GameConfig";
-import { Input, Help, StaticFn } from "../Common";
+import {
+	Input,
+	Help,
+	StaticFn,
+	DialogTrigger,
+	DialogClose,
+	dialogOnOpenChangeHandler,
+} from "../Common";
 import { ColorThemeContext, getCurrentThemeColors } from "../ColorTheme";
 import {
 	localize,
@@ -338,7 +344,6 @@ export function FflogsImportFlow() {
 		// The dialog should be opened upon returning from the FFLogs auth flow.
 		new URLSearchParams(window.location.search).has("code"),
 	);
-	const handleStyle: React.CSSProperties = {};
 	const lightMode = useContext(ColorThemeContext) === "Light";
 	const colors = getCurrentThemeColors();
 
@@ -408,6 +413,7 @@ export function FflogsImportFlow() {
 			}
 			_setDialogOpen(open);
 		}
+		dialogOnOpenChangeHandler(open);
 	};
 
 	// Automatically perform authentication on component load.
@@ -1262,28 +1268,13 @@ export function FflogsImportFlow() {
 		{mainComponent}
 	</div>;
 
-	// Don't use a bespoke Clickable component for the expand button, since it suppresses Dialog.Trigger's
-	// built-in dismiss behavior.
-	const dialogTrigger = <div className="clickable">
-		<span style={handleStyle}>
-			<span className="clickableLinkLike">
-				{localize({
-					en: "Click to open dialog",
-					zh: "点击弹出对话框",
-				})}
-			</span>
-		</span>
-	</div>;
-
-	const exitTrigger = <FaXmark
-		className="dialogExit"
-		style={{
-			color: colors.bgHighContrast,
-		}}
-	/>;
-
 	return <Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
-		<Dialog.Trigger render={dialogTrigger} nativeButton={false} />
+		<DialogTrigger
+			titleNode={localize({
+				en: "Click to open dialog",
+				zh: "点击弹出对话框",
+			})}
+		/>
 		<Dialog.Portal>
 			<Dialog.Backdrop
 				className="Backdrop"
@@ -1303,7 +1294,7 @@ export function FflogsImportFlow() {
 				<Dialog.Title
 					render={<h3>{localize({ en: "Import from FFLogs", zh: "FFLogs导入" })}</h3>}
 				/>
-				<Dialog.Close render={exitTrigger} nativeButton={false} />
+				<DialogClose />
 				<Dialog.Description className="Description" render={body} />
 			</Dialog.Popup>
 		</Dialog.Portal>
