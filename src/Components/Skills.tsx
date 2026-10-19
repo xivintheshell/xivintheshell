@@ -216,6 +216,22 @@ type SkillButtonProps = {
 	activeJob: ShellJob;
 };
 
+export const iconStyle: React.CSSProperties = {
+	width: 48,
+	height: 48,
+	verticalAlign: "top",
+	position: "relative",
+	display: "inline-block",
+};
+export const iconImgStyle: React.CSSProperties = {
+	width: 40,
+	height: 40,
+	position: "absolute",
+	top: 2,
+	left: "50%",
+	marginLeft: -20,
+};
+
 function SkillButton(props: SkillButtonProps) {
 	const [skillDescription, setSkillDescription] = useState(<div />);
 	const colorContext = useContext(ColorThemeContext);
@@ -302,21 +318,6 @@ function SkillButton(props: SkillButtonProps) {
 			<div className="paragraph">{infoString}</div>
 		</div>;
 		setSkillDescription(content);
-	};
-	const iconStyle: React.CSSProperties = {
-		width: 48,
-		height: 48,
-		verticalAlign: "top",
-		position: "relative",
-		display: "inline-block",
-	};
-	const iconImgStyle: React.CSSProperties = {
-		width: 40,
-		height: 40,
-		position: "absolute",
-		top: 2,
-		left: "50%",
-		marginLeft: -20,
 	};
 	let readyOverlay = "transparent";
 	if (!props.readyAsideFromCd) {

@@ -128,6 +128,7 @@ type ReplayResult = {
 
 class Controller {
 	timeScale;
+	isDialogOpen: boolean;
 	cooldownDisplayMode: CooldownDisplayMode;
 	roundCooldownUp: boolean;
 	keybindEnabled: boolean;
@@ -190,6 +191,7 @@ class Controller {
 		this.roundCooldownUp = false;
 		this.keybindEnabled = true;
 		this.hotbarOneOnBottom = false;
+		this.isDialogOpen = false;
 
 		this.timeline = new Timeline();
 		this.timeline.reset();
@@ -218,7 +220,7 @@ class Controller {
 	}
 
 	get inputLocked() {
-		return this.shouldLoop || this.queuedPastes > 0;
+		return this.shouldLoop || this.queuedPastes > 0 || this.isDialogOpen;
 	}
 
 	updateStats() {

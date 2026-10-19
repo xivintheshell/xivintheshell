@@ -5,6 +5,7 @@ import { Tooltip } from "@base-ui/react/tooltip";
 import { localize } from "./Localization";
 import { getCurrentThemeColors } from "./ColorTheme";
 import { Debug } from "../Game/Common";
+import { controller } from "../Controller/Controller";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
 import { MAX_TIMELINE_SLOTS } from "../Controller/Timeline";
 import { LiaWindowMinimize } from "react-icons/lia";
@@ -872,10 +873,16 @@ export function Help(props: {
 	</Tooltip.Provider>;
 }
 
+export function dialogOnOpenChangeHandler(open: boolean) {
+	// technically can be a race condition if multiple dialogs are opened at once, but we're assuming
+	// that's not a possible state
+	controller.isDialogOpen = open;
+}
+
 export function DialogTrigger(props: {
 	handleStyle?: React.CSSProperties;
 	titleNode: ContentNode;
-	handle?: React.Element;
+	handle?: ContentNode;
 }) {
 	// Don't use a bespoke Clickable component for the expand button, since it suppresses Dialog.Trigger's
 	// built-in dismiss behavior.
