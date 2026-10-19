@@ -675,9 +675,7 @@ export function HotbarManager(props: {
 						color: colors.text,
 						overflow: "hidden",
 						maxHeight: "100%",
-						// width is chosen so all skills fit in one row by default, but at higher
-						// zoom levels or different resolutions then it may wrap
-						width: "60vw",
+						width: "54rem",
 					}}
 				>
 					<Dialog.Title
