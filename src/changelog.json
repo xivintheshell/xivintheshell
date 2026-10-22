@@ -1,5 +1,14 @@
 [
 	{
+		"date": "10/21/26",
+		"changes": [
+			"[MCH] Fixed a bug where Flamethrower would incorrectly consume Reassembled."
+		],
+		"changes_zh": [
+			"【机工士】修复了【火焰喷射器】会错误消耗【整备预备】的问题。"
+		]
+	},
+	{
 		"date": "10/18/26",
 		"changes": [
 			"Separated TOP markers into individual phases."

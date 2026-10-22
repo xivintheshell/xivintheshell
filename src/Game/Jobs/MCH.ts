@@ -88,6 +88,11 @@ const WEAPONSKILLS_THAT_DONT_CONSUME_OVERHEAT: MCHActionKey[] = [
 	"SPREAD_SHOT",
 ];
 
+const WEAPONSKILLS_THAT_DONT_CONSUME_REASSEMBLED: MCHActionKey[] = [
+	"FULL_METAL_FIELD",
+	"FLAMETHROWER",
+];
+
 export class MCHState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
@@ -328,7 +333,7 @@ const makeWeaponskill_MCH = (
 		params.onConfirm,
 		(state) => state.processComboStatus(name),
 		(state) => {
-			if (name !== "FULL_METAL_FIELD") {
+			if (!WEAPONSKILLS_THAT_DONT_CONSUME_REASSEMBLED.includes(name)) {
 				state.tryConsumeResource("REASSEMBLED");
 			}
 		},
@@ -349,7 +354,10 @@ const makeWeaponskill_MCH = (
 		onConfirm,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = [];
-			if (state.hasResourceAvailable("REASSEMBLED") || name === "FULL_METAL_FIELD") {
+			if (
+				(state.hasResourceAvailable("REASSEMBLED") || name === "FULL_METAL_FIELD") &&
+				name !== "FLAMETHROWER"
+			) {
 				mods.push(Modifiers.AutoCDH);
 			}
 			if (
