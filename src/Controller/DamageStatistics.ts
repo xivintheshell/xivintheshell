@@ -32,8 +32,6 @@ const AFUISkills = new Set<ActionKey>([
 	"FLARE_STAR",
 ]);
 
-const enoSkills = new Set<ActionKey>(["FOUL", "XENOGLOSSY", "PARADOX"]);
-
 // source of truth
 const excludedFromStats = new Set<ActionKey | "DoT">([]);
 
@@ -198,23 +196,12 @@ function expandNode(node: ActionNode): ExpandedNode {
 						break;
 					}
 				}
-			} else if (enoSkills.has(skillName)) {
-				// for foul/xeno/para, display enochian modifier if it has one. Otherwise empty.
-				for (const modifier of mainPotency.getDisplayedModifiers(node.targetList)) {
-					const tag = modifier.source;
-					if (tag === PotencyModifierType.ENO) {
-						res.basePotency = mainPotency.base;
-						res.displayedModifiers = [tag];
-						res.calculationModifiers = mainModifiers!;
-						break;
-					}
-				}
 			} else if (isDoTNode(node)) {
 				// dot modifiers are handled separately
 				res.basePotency = mainPotency.base;
 				node.info.targetList = mainPotency.targetList;
 			} else {
-				// for non-BLM jobs, display all non-pot modifiers on all damaging skills
+				// display all non-pot modifiers on damaging skills that are not AF/UI spells
 				res.basePotency = mainPotency.base;
 				for (const modifier of mainModifiers!) {
 					const tag = modifier.source;

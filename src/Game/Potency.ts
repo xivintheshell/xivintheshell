@@ -121,6 +121,7 @@ export const enum PotencyModifierType {
 	FEY_ILLUMINATION,
 	DISSIPATION,
 	PROTRACTION,
+	SCATHE,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -653,6 +654,11 @@ export const Modifiers = {
 		kind: "multiplier",
 		source: PotencyModifierType.PROTRACTION,
 		potencyFactor: 1.1,
+	} as PotencyMultiplier,
+	Scathe: {
+		kind: "multiplier",
+		source: PotencyModifierType.SCATHE,
+		potencyFactor: 2.0,
 	} as PotencyMultiplier,
 };
 

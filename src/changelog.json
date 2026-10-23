@@ -1,5 +1,14 @@
 [
 	{
+		"date": "10/22/26",
+		"changes": [
+			"[BLM] Added Scathe."
+		],
+		"changes_zh": [
+			"【黑魔】增加了崩溃"
+		]
+	},
+	{
 		"date": "10/21/26",
 		"changes": [
 			"[MCH] Fixed a bug where Flamethrower would incorrectly consume Reassembled."

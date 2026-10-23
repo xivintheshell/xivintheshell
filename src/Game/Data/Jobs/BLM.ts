@@ -14,6 +14,11 @@ export const BLM_ACTIONS = ensureRecord<ActionData>()({
 		label: { zh: "火1", ja: "ファイア" },
 		discordEmote: "F1",
 	},
+	SCATHE: {
+		id: 156,
+		name: "Scathe",
+		label: { zh: "崩溃" },
+	},
 	BLIZZARD_II: {
 		id: 25793,
 		name: "Blizzard 2",
