@@ -2,7 +2,7 @@
 
 import { ActionNode } from "../../Controller/Record";
 import { Aspect, BuffType, Debug } from "../Common";
-import { PotencyModifierType, PotencyMultiplier } from "../Potency";
+import { PotencyModifierType, PotencyMultiplier, Modifiers } from "../Potency";
 import {
 	Ability,
 	combineEffects,
@@ -499,6 +499,9 @@ const makeSpell_BLM = (
 						potencyFactor: 1.8,
 					});
 				}
+			}
+			if (name === "SCATHE" && state.triggersEffect(0.2)) {
+				mods.push(Modifiers.Scathe);
 			}
 			return mods;
 		},
@@ -1027,4 +1030,11 @@ makeAbility_BLM("RETRACE", 96, "cd_RETRACE", {
 		ll.pendingChange!.timeTillEvent = Math.floor(ll.pendingChange!.timeTillEvent) + 0.5;
 	},
 	startOnHotbar: false,
+});
+
+makeSpell_BLM("SCATHE", 15, {
+	baseCastTime: 0,
+	baseManaCost: 800,
+	applicationDelay: 0.67,
+	basePotency: 100,
 });

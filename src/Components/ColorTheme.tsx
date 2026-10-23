@@ -847,6 +847,7 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.UI2, colors.blm.umbralIce],
 		[PotencyModifierType.UI1, colors.blm.umbralIce],
 		[PotencyModifierType.ENO, colors.blm.enochian],
+		[PotencyModifierType.SCATHE, colors.text],
 		//[PotencyModifierType.POT, colors.text], // n/a
 		//[PotencyModifierType.PARTY, colors.text], // n/a
 		[PotencyModifierType.AUTO_CDH, colors.resources.cdhTag],
