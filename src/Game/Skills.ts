@@ -12,6 +12,7 @@ import { MAX_HOTBAR_SLOTS, MAX_NUM_HOTBARS } from "../Controller/KeybindManager"
 import { Data } from "./Data/Data";
 import { SMN_ACTIONS } from "./Data/Jobs/SMN";
 import { BLU_ACTIONS } from "./Data/Jobs/BLU";
+import { PHANTOM_ACTIONS } from "./Data/Shared/Phantom";
 
 // all gapclosers have the same animation lock
 // from: https://nga.178.com/read.php?tid=21233094&rand=761
@@ -988,7 +989,8 @@ export class DisplayedSkills {
 
 	// Default hotbar: getCurrentSkillNames packed left to right, with empty slots left as NEVER.
 	getDefaultHotbarLayout<T extends GameState>(state: Readonly<T>): ActionKey[][] {
-		const skills = this.getCurrentSkillNames(state);
+		// Omit phantom actions, which we render separately.
+		const skills = this.getCurrentSkillNames(state).filter((key) => !(key in PHANTOM_ACTIONS));
 		const bars: ActionKey[][] = [];
 		for (let bar = 0; bar < MAX_NUM_HOTBARS; bar++) {
 			const row: ActionKey[] = [];

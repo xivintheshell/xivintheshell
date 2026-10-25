@@ -1070,7 +1070,6 @@ class Controller {
 	}
 
 	updateSkillButtons(game: GameState) {
-<<<<<<< HEAD
 		const buttons: SkillButtonViewInfo[] = [];
 		this.hotbarLayout.forEach((row, bar) => {
 			row.forEach((skillName, slot) => {
