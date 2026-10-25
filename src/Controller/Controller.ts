@@ -2,6 +2,7 @@ import React from "react";
 import {
 	CURRENT_GAME_COMBAT_PATCH,
 	getCachedValue,
+	MAX_ABILITY_TARGETS,
 	removeCachedValue,
 	ReplayMode,
 	setCachedValue,
@@ -139,9 +140,16 @@ class Controller {
 	isDialogOpen: boolean;
 	cooldownDisplayMode: CooldownDisplayMode;
 	roundCooldownUp: boolean;
+
 	keybindEnabled: boolean;
 	hotbarOneOnBottom: boolean;
 	hotbarLayout: ActionKey[][];
+	// Targets for the next chosen skill. This state previously was owned by the Skills component,
+	// but must be promoted to the controller to ensure clicks and keybinds read the same list.
+	// `primary` is a 0-indexed number representing the primary target of AoE abilities.
+	#targetSelectionListeners = new Set<() => void>();
+	#targetSelectionSnapshot: { selected: boolean[]; primary: number };
+
 	shouldLoop: boolean;
 	tickMode;
 	timeline;
@@ -201,6 +209,9 @@ class Controller {
 		this.keybindEnabled = true;
 		this.hotbarOneOnBottom = false;
 		this.hotbarLayout = [];
+		const selectedTargets = Array<boolean>(MAX_ABILITY_TARGETS).fill(false);
+		selectedTargets[0] = true;
+		this.#targetSelectionSnapshot = { selected: selectedTargets, primary: 0 };
 		this.isDialogOpen = false;
 
 		this.timeline = new Timeline();
@@ -1069,6 +1080,41 @@ class Controller {
 			});
 		});
 		updateSkillButtons(buttons);
+	}
+
+	getTargetSelectionSnapshot(): { selected: boolean[]; primary: number } {
+		return this.#targetSelectionSnapshot;
+	}
+
+	subscribeTargetSelection(listener: () => void): () => void {
+		this.#targetSelectionListeners.add(listener);
+		return () => {
+			this.#targetSelectionListeners.delete(listener);
+		};
+	}
+
+	setTargetSelected(selected: boolean[]) {
+		this.#targetSelectionSnapshot = {
+			selected,
+			primary: this.#targetSelectionSnapshot.primary,
+		};
+		this.#targetSelectionListeners.forEach((listener) => listener());
+	}
+
+	setPrimaryTarget(primary: number) {
+		this.#targetSelectionSnapshot = {
+			selected: this.#targetSelectionSnapshot.selected,
+			primary,
+		};
+		this.#targetSelectionListeners.forEach((listener) => listener());
+	}
+
+	// 1-indexed targets for the next skill, with the primary target first.
+	getTargetList(): number[] {
+		const { selected, primary } = this.#targetSelectionSnapshot;
+		const targetList = selected.flatMap((flag, i) => (flag && i !== primary ? [i + 1] : []));
+		targetList.splice(0, 0, primary + 1);
+		return targetList;
 	}
 
 	// Returns the shortcut label for the specified hotbar slot. A single skill may be bound to
@@ -2453,7 +2499,7 @@ class Controller {
 					// Embolden's bind to trigger Vice of Thorns, since the controller would
 					// otherwise attempt to fast-forward to the end of Embolden's cd
 					skillName: getConditionalReplacement(skill, this.game),
-					targetList: [1], // TODO how do we read the target list here?
+					targetList: this.getTargetList(),
 				});
 				processed = true;
 			}

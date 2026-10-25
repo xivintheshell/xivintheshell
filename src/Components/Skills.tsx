@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, FormEvent } from "react";
+import React, { useContext, useEffect, useState, useSyncExternalStore, FormEvent } from "react";
 import { Tooltip } from "@base-ui/react/tooltip";
 import { Clickable, ContentNode, Help, parseTime, ValueChangeEvent } from "./Common";
 import { Debug, SkillReadyStatus, SkillUnavailableReason } from "../Game/Common";
@@ -213,7 +213,6 @@ type SkillButtonProps = {
 	readyAsideFromCd: boolean;
 	cdProgress: number;
 	secondaryCdProgress?: number;
-	targetList: number[];
 	activeJob: ShellJob;
 	hotbar: number;
 	slot: number;
@@ -528,7 +527,7 @@ function SkillButton(props: SkillButtonProps) {
 				controller.requestUseSkill(
 					{
 						skillName: props.skillName,
-						targetList: props.targetList,
+						targetList: controller.getTargetList(),
 					},
 					true,
 				);
@@ -581,24 +580,10 @@ export function SkillsWindow() {
 	const [waitTime, setWaitTime] = useState<string>("1");
 	const [waitSince, setWaitSince] = useState<WaitSince>(WaitSince.Now);
 	const [waitUntil, setWaitUntil] = useState<string>("0:00");
-	// 16 0-indexed booleans representing which targets are selected.
-	const initialSelected = Array(MAX_ABILITY_TARGETS).fill(false);
-	initialSelected[0] = true;
-	const [targetSelected, setTargetSelected] = useState<boolean[]>(initialSelected);
-	// 0-indexed number representing the primary target of AoE abilities.
-	// targetSelected[primaryTarget] must be true.
-	const [primaryTarget, setPrimaryTarget] = useState<number>(0);
-
-	const getTargetList = () => {
-		// Only pick selected elements, and convert from 0-indexing to 1-indexing
-		// used by serialization and display.
-		const selected = targetSelected.flatMap((flag, i) =>
-			flag && i !== primaryTarget ? [i + 1] : [],
-		);
-		// Primary target always goes first.
-		selected.splice(0, 0, primaryTarget + 1);
-		return selected;
-	};
+	const { selected: targetSelected, primary: primaryTarget } = useSyncExternalStore(
+		(onStoreChange) => controller.subscribeTargetSelection(onStoreChange),
+		() => controller.getTargetSelectionSnapshot(),
+	);
 
 	const colors = getCurrentThemeColors();
 
@@ -684,7 +669,7 @@ export function SkillsWindow() {
 					break;
 				}
 			}
-			setTargetSelected(newTargets);
+			controller.setTargetSelected(newTargets);
 		} else if (newTargetCount > currentTargetCount) {
 			// If it increased, then add non-primary targets starting from the start of the array.
 			for (let i = 0; i < newTargets.length; i++) {
@@ -696,7 +681,7 @@ export function SkillsWindow() {
 					break;
 				}
 			}
-			setTargetSelected(newTargets);
+			controller.setTargetSelected(newTargets);
 		}
 	};
 
@@ -741,7 +726,6 @@ export function SkillsWindow() {
 						? 1 - info.timeTillSecondaryReady / info.secondaryCdRecastTime
 						: 1
 				}
-				targetList={getTargetList()}
 				activeJob={controller.game.job}
 				hotbar={hotbar}
 				slot={slot}
@@ -884,8 +868,8 @@ export function SkillsWindow() {
 					selected={targetSelected}
 					primary={primaryTarget}
 					primaryOnly={false}
-					onSelectedChange={setTargetSelected}
-					onPrimaryChange={setPrimaryTarget}
+					onSelectedChange={(selected) => controller.setTargetSelected(selected)}
+					onPrimaryChange={(primary) => controller.setPrimaryTarget(primary)}
 				/>
 				<div style={{ display: "flex", flexDirection: "row", marginBottom: 6 }}>
 					{localize({

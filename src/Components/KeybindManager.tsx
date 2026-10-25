@@ -197,7 +197,9 @@ export function KeybindManager() {
 					minWidth: "8em",
 					textAlign: "center",
 					cursor: "pointer",
-					outline: armed ? `2px solid ${colors.dropTarget}` : `1px solid ${colors.bgHighContrast}`,
+					outline: armed
+						? `2px solid ${colors.dropTarget}`
+						: `1px solid ${colors.bgHighContrast}`,
 					outlineOffset: -2,
 				}}
 				onClick={() => {
