@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
 import { Dialog } from "@base-ui/react/dialog";
-import { FaXmark } from "react-icons/fa6";
 import changelog from "../changelog.json";
 import { getCurrentThemeColors, ColorThemeContext } from "./ColorTheme";
-import { Clickable, ContentNode } from "./Common";
+import {
+	Clickable,
+	ContentNode,
+	DialogTrigger,
+	DialogClose,
+	dialogOnOpenChangeHandler,
+} from "./Common";
 import { localize } from "./Localization";
 import { getCachedValue, setCachedValue, isFirstVisit } from "../Controller/Common";
 
@@ -151,6 +156,7 @@ export function Changelog() {
 			}
 			setUpToDate(true);
 		}
+		dialogOnOpenChangeHandler(open);
 	};
 
 	if (upToDate) {
@@ -176,26 +182,15 @@ export function Changelog() {
 			};
 		}
 	}
-	// Don't use a bespoke Clickable component for the expand button, since it suppresses Dialog.Trigger's
-	// built-in dismiss behavior.
-	const dialogTrigger = <div className="clickable">
-		<span style={handleStyle}>
-			<span>{dialogHandle} </span>
-			<span className="clickableLinkLike">{titleNode}</span>
-		</span>
-	</div>;
-
-	const exitTrigger = <FaXmark
-		className="dialogExit"
-		style={{
-			color: colors.bgHighContrast,
-		}}
-	/>;
 
 	return <>
 		<style>{changelogDialogStyles}</style>
 		<Dialog.Root onOpenChange={onOpenChange}>
-			<Dialog.Trigger render={dialogTrigger} nativeButton={false} />
+			<DialogTrigger
+				handleStyle={handleStyle}
+				handle={<span>{dialogHandle} </span>}
+				titleNode={titleNode}
+			/>
 			<Dialog.Portal>
 				<Dialog.Backdrop
 					className="Backdrop"
@@ -213,7 +208,7 @@ export function Changelog() {
 					}}
 				>
 					<Dialog.Title render={<h3>{titleNode}</h3>} />
-					<Dialog.Close render={exitTrigger} nativeButton={false} />
+					<DialogClose />
 					<Dialog.Description
 						className="Description"
 						render={

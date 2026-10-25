@@ -1,8 +1,9 @@
-import React, { useContext, useEffect, useState, FormEvent } from "react";
+import React, { useContext, useEffect, useState, useSyncExternalStore, FormEvent } from "react";
 import { Tooltip } from "@base-ui/react/tooltip";
 import { Clickable, ContentNode, Help, parseTime, ValueChangeEvent } from "./Common";
 import { Debug, SkillReadyStatus, SkillUnavailableReason } from "../Game/Common";
 import { controller } from "../Controller/Controller";
+import { hotbarSlotId } from "../Controller/KeybindManager";
 import { MAX_ABILITY_TARGETS } from "../Controller/Common";
 import { localize, localizeSkillName, localizeSkillUnavailableReason } from "./Localization";
 import { updateTimelineView } from "./Timeline";
@@ -212,9 +213,47 @@ type SkillButtonProps = {
 	readyAsideFromCd: boolean;
 	cdProgress: number;
 	secondaryCdProgress?: number;
-	targetList: number[];
 	activeJob: ShellJob;
+	hotbar: number;
+	slot: number;
 };
+
+export const iconStyle: React.CSSProperties = {
+	width: 48,
+	height: 48,
+	verticalAlign: "top",
+	position: "relative",
+	display: "inline-block",
+};
+export const iconImgStyle: React.CSSProperties = {
+	width: 40,
+	height: 40,
+	position: "absolute",
+	top: 2,
+	left: "50%",
+	marginLeft: -20,
+};
+
+// Top-left shortcut label drawn over a 48px skill slot.
+export function KeybindOverlay(props: { label: string }) {
+	const fontSizePx = 48 / Math.max(props.label.length, 4) + 3;
+	return <span
+		style={{
+			position: "absolute",
+			top: 0,
+			left: 0,
+			pointerEvents: "none",
+			zIndex: 3, // must render above shading circle
+			fontFamily: "XIVShell Defaults",
+			color: "white",
+			fontSize: `${fontSizePx}px`,
+			textShadow: "0 0 4px black, 0 0 8px black",
+			textAlign: "center",
+		}}
+	>
+		{props.label}
+	</span>;
+}
 
 function SkillButton(props: SkillButtonProps) {
 	const [skillDescription, setSkillDescription] = useState(<div />);
@@ -303,21 +342,6 @@ function SkillButton(props: SkillButtonProps) {
 		</div>;
 		setSkillDescription(content);
 	};
-	const iconStyle: React.CSSProperties = {
-		width: 48,
-		height: 48,
-		verticalAlign: "top",
-		position: "relative",
-		display: "inline-block",
-	};
-	const iconImgStyle: React.CSSProperties = {
-		width: 40,
-		height: 40,
-		position: "absolute",
-		top: 2,
-		left: "50%",
-		marginLeft: -20,
-	};
 	let readyOverlay = "transparent";
 	if (!props.readyAsideFromCd) {
 		readyOverlay = "rgba(0, 0, 0, 0.6)";
@@ -378,6 +402,10 @@ function SkillButton(props: SkillButtonProps) {
 	} else {
 		stacksOverlay = <></>;
 	}
+	const keybind = controller.keybindEnabled
+		? controller.getKeybindForHotbarSlot(props.hotbar, props.slot)
+		: undefined;
+	const keybindOverlay = keybind === undefined ? null : <KeybindOverlay label={keybind} />;
 	let cooldownOverlay: React.ReactNode = null;
 	const cooldownDisplayMode = controller.cooldownDisplayMode;
 	if (cooldownDisplayMode !== "disabled" && info.cooldownOverlaySeconds !== undefined) {
@@ -478,6 +506,7 @@ function SkillButton(props: SkillButtonProps) {
 					props.secondaryCdProgress > 1 - Debug.epsilon ||
 					secondaryOutline}
 			</div>
+			{keybindOverlay}
 			{cooldownOverlay}
 			<div
 				style={{
@@ -498,7 +527,7 @@ function SkillButton(props: SkillButtonProps) {
 				controller.requestUseSkill(
 					{
 						skillName: props.skillName,
-						targetList: props.targetList,
+						targetList: controller.getTargetList(),
 					},
 					true,
 				);
@@ -539,6 +568,9 @@ export type SkillButtonViewInfo = {
 	llCovered: boolean;
 	usedAt: number;
 	cooldownOverlaySeconds?: number;
+	// Set when the button is actually rendered in a hotbar; unset for simulations with no rendering.
+	hotbar?: number;
+	slot?: number;
 };
 
 export let updateSkillButtons = (statusList: SkillButtonViewInfo[]) => {};
@@ -548,24 +580,10 @@ export function SkillsWindow() {
 	const [waitTime, setWaitTime] = useState<string>("1");
 	const [waitSince, setWaitSince] = useState<WaitSince>(WaitSince.Now);
 	const [waitUntil, setWaitUntil] = useState<string>("0:00");
-	// 16 0-indexed booleans representing which targets are selected.
-	const initialSelected = Array(MAX_ABILITY_TARGETS).fill(false);
-	initialSelected[0] = true;
-	const [targetSelected, setTargetSelected] = useState<boolean[]>(initialSelected);
-	// 0-indexed number representing the primary target of AoE abilities.
-	// targetSelected[primaryTarget] must be true.
-	const [primaryTarget, setPrimaryTarget] = useState<number>(0);
-
-	const getTargetList = () => {
-		// Only pick selected elements, and convert from 0-indexing to 1-indexing
-		// used by serialization and display.
-		const selected = targetSelected.flatMap((flag, i) =>
-			flag && i !== primaryTarget ? [i + 1] : [],
-		);
-		// Primary target always goes first.
-		selected.splice(0, 0, primaryTarget + 1);
-		return selected;
-	};
+	const { selected: targetSelected, primary: primaryTarget } = useSyncExternalStore(
+		(onStoreChange) => controller.subscribeTargetSelection(onStoreChange),
+		() => controller.getTargetSelectionSnapshot(),
+	);
 
 	const colors = getCurrentThemeColors();
 
@@ -651,7 +669,7 @@ export function SkillsWindow() {
 					break;
 				}
 			}
-			setTargetSelected(newTargets);
+			controller.setTargetSelected(newTargets);
 		} else if (newTargetCount > currentTargetCount) {
 			// If it increased, then add non-primary targets starting from the start of the array.
 			for (let i = 0; i < newTargets.length; i++) {
@@ -663,36 +681,57 @@ export function SkillsWindow() {
 					break;
 				}
 			}
-			setTargetSelected(newTargets);
+			controller.setTargetSelected(newTargets);
 		}
 	};
 
-	const skillButtons = statusList.map((info, i) => {
-		const skillName = info.skillName;
-
-		const readyAsideFromCd = info
-			? !info.status.unavailableReasons.some(
-					(reason) => reason !== SkillUnavailableReason.Blocked,
-				)
-			: false;
-		return <SkillButton
-			key={i}
-			highlight={info ? info.highlight : false}
-			skillName={skillName}
-			ready={info ? info.status.ready() : false}
-			readyAsideFromCd={readyAsideFromCd}
-			cdProgress={info ? 1 - info.timeTillNextStackReady / info.cdRecastTime : 1}
-			secondaryCdProgress={
-				info
-					? info.secondaryCdRecastTime && info.timeTillSecondaryReady
+	// Look up skill status information by user-defined hotbar order
+	const statusBySlot = new Map(
+		statusList.flatMap((info) =>
+			info.hotbar === undefined || info.slot === undefined
+				? []
+				: [[hotbarSlotId(info.hotbar, info.slot), info] as const],
+		),
+	);
+	const visibleBars = controller.hotbarLayout.flatMap((row, index) =>
+		row.every((skillName) => skillName === "NEVER") ? [] : [index],
+	);
+	if (controller.hotbarOneOnBottom) {
+		visibleBars.reverse();
+	}
+	const skillButtons = visibleBars.map((barIndex) => <div key={barIndex + 1}>
+		{controller.hotbarLayout[barIndex].map((skillName, slotIndex) => {
+			const hotbar = barIndex + 1;
+			const slot = slotIndex + 1;
+			const emptyButton = <div key={`${hotbar}-${slot}`} style={iconStyle} />;
+			if (skillName === "NEVER") {
+				return emptyButton;
+			}
+			const info = statusBySlot.get(hotbarSlotId(hotbar, slot));
+			if (info === undefined) {
+				return emptyButton;
+			}
+			const readyAsideFromCd = !info.status.unavailableReasons.some(
+				(reason) => reason !== SkillUnavailableReason.Blocked,
+			);
+			return <SkillButton
+				key={`${hotbar}-${slot}`}
+				highlight={info.highlight}
+				skillName={info.skillName}
+				ready={info.status.ready()}
+				readyAsideFromCd={readyAsideFromCd}
+				cdProgress={1 - info.timeTillNextStackReady / info.cdRecastTime}
+				secondaryCdProgress={
+					info.secondaryCdRecastTime && info.timeTillSecondaryReady
 						? 1 - info.timeTillSecondaryReady / info.secondaryCdRecastTime
 						: 1
-					: 1
-			}
-			targetList={getTargetList()}
-			activeJob={controller.game.job}
-		/>;
-	});
+				}
+				activeJob={controller.game.job}
+				hotbar={hotbar}
+				slot={slot}
+			/>;
+		})}
+	</div>);
 
 	const waitUntilHelp = <Help
 		topic="waitUntilInputFormat"
@@ -820,6 +859,7 @@ export function SkillsWindow() {
 					}}
 					value={targetSelected.filter((flag) => flag).length}
 					onChange={onTargetCountChange}
+					onKeyDown={(e) => e.stopPropagation()}
 				/>
 				<TargetSelector
 					style={{
@@ -829,8 +869,8 @@ export function SkillsWindow() {
 					selected={targetSelected}
 					primary={primaryTarget}
 					primaryOnly={false}
-					onSelectedChange={setTargetSelected}
-					onPrimaryChange={setPrimaryTarget}
+					onSelectedChange={(selected) => controller.setTargetSelected(selected)}
+					onPrimaryChange={(primary) => controller.setPrimaryTarget(primary)}
 				/>
 				<div style={{ display: "flex", flexDirection: "row", marginBottom: 6 }}>
 					{localize({
@@ -844,6 +884,7 @@ export function SkillsWindow() {
 								}}
 								value={waitTime}
 								onChange={onWaitTimeChange}
+								onKeyDown={(e) => e.stopPropagation()}
 							/>{" "}
 							second(s) since{" "}
 							<select
@@ -875,6 +916,7 @@ export function SkillsWindow() {
 								}}
 								value={waitTime}
 								onChange={onWaitTimeChange}
+								onKeyDown={(e) => e.stopPropagation()}
 							/>{" "}
 							秒 <input type="submit" value="GO" />
 						</form>,
@@ -900,6 +942,7 @@ export function SkillsWindow() {
 								}}
 								value={waitTime}
 								onChange={onWaitTimeChange}
+								onKeyDown={(e) => e.stopPropagation()}
 							/>
 							秒進む
 							<input type="submit" value="GO" />
@@ -916,6 +959,7 @@ export function SkillsWindow() {
 								}}
 								value={waitUntil}
 								onChange={onWaitUntilChange}
+								onKeyDown={(e) => e.stopPropagation()}
 							/>
 							<input type="submit" value="GO" />
 						</form>,
@@ -929,6 +973,7 @@ export function SkillsWindow() {
 								}}
 								value={waitUntil}
 								onChange={onWaitUntilChange}
+								onKeyDown={(e) => e.stopPropagation()}
 							/>
 							<input type="submit" value="GO" />
 						</form>,
@@ -942,6 +987,7 @@ export function SkillsWindow() {
 								}}
 								value={waitUntil}
 								onChange={onWaitUntilChange}
+								onKeyDown={(e) => e.stopPropagation()}
 							/>
 							<input type="submit" value="GO" />
 						</form>,

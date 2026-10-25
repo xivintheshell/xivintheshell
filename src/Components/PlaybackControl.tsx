@@ -11,8 +11,10 @@ import {
 	RadioSet,
 	ValueChangeEvent,
 } from "./Common";
+import { KeybindManager, HotbarManager } from "./KeybindManager";
 import { ConfigApply } from "../Controller/UndoStack";
 import { getCachedValue, setCachedValue, ShellVersion, TickMode } from "../Controller/Common";
+// import { updateBind, resetAllBinds } from "../Controller/KeybindManager";
 import { LevelSync, ProcMode } from "../Game/Common";
 import { getAllResources, getResourceInfo, ResourceOverrideData } from "../Game/Resources";
 import {
@@ -594,6 +596,8 @@ type TimeControlState = {
 	tickMode: TickMode;
 	cooldownDisplayMode: CooldownDisplayMode;
 	roundCooldownUp: boolean;
+	keybindEnabled: boolean;
+	hotbarOneOnBottom: boolean;
 };
 
 export function TimeControl() {
@@ -615,19 +619,20 @@ export function TimeControl() {
 		(settings?.cooldownDisplayMode ?? "center") as CooldownDisplayMode,
 	);
 	const [roundCooldownUp, _setRoundCooldownUp] = useState(settings?.roundCooldownUp ?? false);
+	const [keybindEnabled, _setKeybindEnabled] = useState(settings?.keybindEnabled ?? true);
+	const [hotbarOneOnBottom, _setHotbarOneOnBottom] = useState(
+		settings?.hotbarOneOnBottom ?? false,
+	);
 
-	const saveSettings = (
-		timeScale: number,
-		tickMode: TickMode,
-		cooldownDisplayMode: CooldownDisplayMode,
-		roundCooldownUp: boolean,
-	) => {
-		const str = JSON.stringify({
-			tickMode,
-			timeScale,
-			cooldownDisplayMode,
-			roundCooldownUp,
-		});
+	const saveSettings = (props: {
+		timeScale?: number;
+		tickMode?: TickMode;
+		cooldownDisplayMode?: CooldownDisplayMode;
+		roundCooldownUp?: boolean;
+		keybindEnabled?: boolean;
+		hotbarOneOnBottom?: boolean;
+	}) => {
+		const str = JSON.stringify({ ...settings, ...props });
 		setCachedValue("playbackSettings", str);
 	};
 
@@ -640,7 +645,7 @@ export function TimeControl() {
 				tickMode: numVal,
 				timeScale,
 			});
-			saveSettings(timeScale, numVal, cooldownDisplayMode, roundCooldownUp);
+			saveSettings({ tickMode: numVal });
 		}
 	};
 
@@ -652,7 +657,7 @@ export function TimeControl() {
 				tickMode,
 				timeScale: numVal,
 			});
-			saveSettings(numVal, tickMode, cooldownDisplayMode, roundCooldownUp);
+			saveSettings({ timeScale: numVal });
 		}
 	};
 
@@ -667,7 +672,7 @@ export function TimeControl() {
 				cooldownDisplayMode: newMode,
 				roundCooldownUp,
 			});
-			saveSettings(timeScale, tickMode, newMode, roundCooldownUp);
+			saveSettings({ cooldownDisplayMode: newMode });
 		}
 	};
 
@@ -677,7 +682,19 @@ export function TimeControl() {
 			cooldownDisplayMode,
 			roundCooldownUp: val,
 		});
-		saveSettings(timeScale, tickMode, cooldownDisplayMode, val);
+		saveSettings({ roundCooldownUp: val });
+	};
+
+	const setKeybindEnabled = (val: boolean) => {
+		_setKeybindEnabled(val);
+		controller.setKeybindSettings({ enabled: val, hotbarOneOnBottom });
+		saveSettings({ keybindEnabled: val });
+	};
+
+	const setHotbarOneOnBottom = (val: boolean) => {
+		_setHotbarOneOnBottom(val);
+		controller.setKeybindSettings({ enabled: keybindEnabled, hotbarOneOnBottom: val });
+		saveSettings({ hotbarOneOnBottom: val });
 	};
 
 	useEffect(() => {
@@ -688,6 +705,10 @@ export function TimeControl() {
 		controller.setCooldownDisplaySettings({
 			cooldownDisplayMode,
 			roundCooldownUp,
+		});
+		controller.setKeybindSettings({
+			enabled: keybindEnabled,
+			hotbarOneOnBottom,
 		});
 	});
 	const radioStyle: React.CSSProperties = {
@@ -827,6 +848,29 @@ export function TimeControl() {
 			label={localize({ en: "round cooldowns up", zh: "cd 小数值向上取整" })}
 			defaultChecked={roundCooldownUp}
 			onChange={(val) => setRoundCooldownUp(val)}
+		/>
+		<br />
+		{header({ en: "Hotbar Settings", zh: "热键栏设置" })}
+		<Checkbox
+			uniqueName={"keybindEnabled"}
+			label={localize({ en: "enable hotbar keybinds", zh: "启用热键栏按键绑定" })}
+			defaultChecked={keybindEnabled}
+			onChange={(val) => setKeybindEnabled(val)}
+			style={{ marginBlock: "10px" }}
+		/>
+		<Checkbox
+			uniqueName={"hotbarOneOnBottom"}
+			label={localize({ en: "place hotbar 1 on bottom", zh: "将热键栏 1 置于底部" })}
+			defaultChecked={hotbarOneOnBottom}
+			onChange={(val) => setHotbarOneOnBottom(val)}
+			style={{ marginBlock: "10px" }}
+		/>
+		<KeybindManager />
+		<br />
+		<HotbarManager
+			activeJob={controller.game.job}
+			hotbarOneOnBottom={hotbarOneOnBottom}
+			level={controller.game.config.level}
 		/>
 	</div>;
 }

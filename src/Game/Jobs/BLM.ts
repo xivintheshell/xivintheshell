@@ -590,7 +590,6 @@ makeSpell_BLM("FIRE", 2, {
 makeAbility_BLM("TRANSPOSE", 4, "cd_TRANSPOSE", {
 	applicationDelay: 0, // instant
 	cooldown: 5,
-	validateAttempt: (state) => state.getFireStacks() > 0 || state.getIceStacks() > 0,
 	onApplication: (state, node) => {
 		if (state.getFireStacks() !== 0 || state.getIceStacks() !== 0) {
 			state.switchToAForUI(state.getFireStacks() > 0 ? "UMBRAL_ICE" : "ASTRAL_FIRE", 1);

@@ -1,5 +1,17 @@
 [
 	{
+		"date": "10/24/26",
+		"changes": [
+			"Added keyboard shortcuts for hotbar actions. You can customize these in the Control panel next to the Config tab.",
+			"[BLM] Fixed a bug where Transpose required Enochian to cast."
+		],
+		"changes_zh": [
+			"新增了热键栏操作的快捷键设置。您可以在“属性设置”标签页旁边的“操作设置”标签中进行自定义。",
+			"【黑魔】修复了【星灵移位】在未处于【天语】状态下无法发动的错误。"
+		],
+		"level": "major"
+	},
+	{
 		"date": "10/22/26",
 		"changes": [
 			"[BLM] Added Scathe."
