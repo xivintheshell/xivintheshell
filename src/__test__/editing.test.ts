@@ -759,3 +759,33 @@ describe("copy and paste", () => {
 		]),
 	);
 });
+
+describe("hotbar keybinds", () => {
+	it(
+		"recognizes default hotbar keybinds",
+		undoRedoTest([
+			{
+				action: async () => {
+					// The default first 3 binds for BLM are B1, F1, and transpose.
+					// C-1 maps to triplecast.
+					// Since we started with paradox, B1 should auto-replace with paradox.
+					mockKeyDown("1");
+					mockKeyDown("2");
+					mockKeyDown("3");
+					mockKeyDown("3");
+					mockKeyDown("1");
+					mockKeyDown("1", true);
+				},
+				line: [
+					...SLOT_0_INIT_ACTIONS,
+					skillNode("PARADOX", [1]).serialized(),
+					skillNode("FIRE", [1]).serialized(),
+					skillNode("TRANSPOSE", [1]).serialized(),
+					skillNode("TRANSPOSE", [1]).serialized(),
+					skillNode("BLIZZARD", [1]).serialized(),
+					skillNode("TRIPLECAST", [1]).serialized(),
+				]
+			}
+		])
+	)
+});
