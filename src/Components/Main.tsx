@@ -115,6 +115,7 @@ const betaPrefix = isBetaSite ? "[BETA] " : "";
 
 export default class Main extends React.Component<{ command?: string }> {
 	controlRegionRef: React.RefObject<HTMLDivElement | null>;
+	keyCaptureRef: React.RefObject<HTMLDivElement | null>;
 	gameplayKeyCapture: React.KeyboardEventHandler<HTMLDivElement>;
 	setColorTheme: (colorTheme: ColorTheme) => void;
 
@@ -141,6 +142,7 @@ export default class Main extends React.Component<{ command?: string }> {
 			colorTheme: getCachedColorTheme(),
 		};
 		this.controlRegionRef = React.createRef();
+		this.keyCaptureRef = React.createRef();
 
 		this.gameplayKeyCapture = (evt: React.KeyboardEvent) => {
 			controller.handleKeyboardEvent(evt);
@@ -187,6 +189,8 @@ export default class Main extends React.Component<{ command?: string }> {
 	componentDidMount() {
 		controller.tryAutoLoad();
 		controller.updateAllDisplay();
+		// Key events only reach this div once it or a descendant is focused.
+		this.keyCaptureRef.current?.focus();
 
 		if (this.controlRegionRef.current) {
 			new ResizeObserver(() => {
@@ -261,6 +265,7 @@ export default class Main extends React.Component<{ command?: string }> {
 				outline: "none",
 			}}
 			tabIndex={-1}
+			ref={this.keyCaptureRef}
 			onKeyDown={this.gameplayKeyCapture}
 		>
 			<style>{`

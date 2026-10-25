@@ -968,7 +968,7 @@ export class DisplayedSkills {
 	// User hotbar, copied from the controller when this object is constructed. Absent until a layout
 	// has been loaded.
 	// DisplayedSkills does not own this property because it is frequently re-initialized, and we
-	// want to ignore overly-frequent localStorage reads.
+	// want to avoid too many localStorage reads.
 	#layout?: ActionKey[][];
 
 	constructor(job: ShellJob, level: LevelSync, layout?: ActionKey[][]) {
@@ -1000,10 +1000,9 @@ export class DisplayedSkills {
 		return bars;
 	}
 
-	// Return the action bound to a particular hotbar slot, or undefined if none.
+	// Return the action bound to a particular 1-indexed hotbar slot, or undefined if none.
 	getAt(hotbar: number, slot: number): ActionKey | undefined {
 		const skill = this.#layout?.[hotbar - 1]?.[slot - 1];
-		if (skill === undefined || skill === "NEVER") return undefined;
-		return skill;
+		return skill === undefined || skill === "NEVER" ? undefined : skill;
 	}
 }

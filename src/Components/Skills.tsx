@@ -570,7 +570,7 @@ export type SkillButtonViewInfo = {
 	llCovered: boolean;
 	usedAt: number;
 	cooldownOverlaySeconds?: number;
-	// Set when this button represents one hotbar slot. Absent for status queries that are not drawn.
+	// Set when the button is actually rendered in a hotbar; unset for simulations with no rendering.
 	hotbar?: number;
 	slot?: number;
 };
@@ -712,16 +712,21 @@ export function SkillsWindow() {
 	const visibleBars = controller.hotbarLayout.flatMap((row, index) =>
 		row.every((skillName) => skillName === "NEVER") ? [] : [index],
 	);
-	if (controller.hotbarOneOnBottom) visibleBars.reverse();
+	if (controller.hotbarOneOnBottom) {
+		visibleBars.reverse();
+	}
 	const skillButtons = visibleBars.map((barIndex) => <div key={barIndex + 1}>
 		{controller.hotbarLayout[barIndex].map((skillName, slotIndex) => {
 			const hotbar = barIndex + 1;
 			const slot = slotIndex + 1;
+			const emptyButton = <div key={`${hotbar}-${slot}`} style={iconStyle} />;
 			if (skillName === "NEVER") {
-				return <div key={`${hotbar}-${slot}`} style={iconStyle} />;
+				return emptyButton;
 			}
 			const info = statusBySlot.get(hotbarSlotId(hotbar, slot));
-			if (info === undefined) return <div key={`${hotbar}-${slot}`} style={iconStyle} />;
+			if (info === undefined) {
+				return emptyButton;
+			}
 			const readyAsideFromCd = !info.status.unavailableReasons.some(
 				(reason) => reason !== SkillUnavailableReason.Blocked,
 			);

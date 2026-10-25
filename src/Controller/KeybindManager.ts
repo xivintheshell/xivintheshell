@@ -1,5 +1,6 @@
 // TODO support gamepad and MMO mouse inputs
 import { getCachedValue, setCachedValue } from "./Common";
+import { LocalizedContent } from "../Components/Localization";
 import { ActionKey } from "../Game/Data";
 import { ShellJob } from "../Game/Data/Jobs";
 
@@ -37,6 +38,8 @@ export type KeyPress = {
 export const MAX_HOTBAR_SLOTS = 15;
 export const MAX_NUM_HOTBARS = 6;
 
+// The only action we have a configurable keybind for is currently `u` to delete the last timeline action.
+// We'll add more members to this type in the future if that changes.
 export type SystemCommand = "deleteLastTimelineAction";
 
 export type KeybindAction =
@@ -48,31 +51,33 @@ export const DELETE_LAST_TIMELINE_ACTION = {
 	command: "deleteLastTimelineAction",
 } as const satisfies KeybindAction;
 
-// Earlier saves used this string for the system command.
-const LEGACY_DELETE_LAST_TIMELINE_NODE = "deleteLastTimelineNode";
-
 export function hotbarSlotId(hotbar: number, slot: number) {
 	return `${hotbar}_${slot}`;
 }
 
+// Produce a KeybindAction object for the corresponding hotbar/slot pair.
 export function hotbarKeybindAction(hotbar: number, slot: number): KeybindAction {
 	return { kind: "hotbar", hotbar, slot };
 }
 
-export function sameKeybindAction(a: KeybindAction, b: KeybindAction): boolean {
+export function keybindActionEq(a: KeybindAction, b: KeybindAction): boolean {
 	if (a.kind === "system" && b.kind === "system") return a.command === b.command;
 	if (a.kind === "hotbar" && b.kind === "hotbar")
 		return a.hotbar === b.hotbar && a.slot === b.slot;
 	return false;
 }
 
-function actionStorageKey(action: KeybindAction): string {
+function actionMapKey(action: KeybindAction): string {
 	if (action.kind === "system") return action.command;
 	return hotbarSlotId(action.hotbar, action.slot);
 }
 
+function hbMapKey(hotbar: number, slot: number): string {
+	return actionMapKey(hotbarKeybindAction(hotbar, slot));
+}
+
 function parseStoredAction(raw: string): KeybindAction | undefined {
-	if (raw === LEGACY_DELETE_LAST_TIMELINE_NODE || raw === DELETE_LAST_TIMELINE_ACTION.command) {
+	if (raw === DELETE_LAST_TIMELINE_ACTION.command) {
 		return DELETE_LAST_TIMELINE_ACTION;
 	}
 	const parts = raw.split("_");
@@ -85,17 +90,17 @@ function parseStoredAction(raw: string): KeybindAction | undefined {
 
 const DEFAULT_BINDS = new Map<string, BindEntry>();
 for (let i = 1; i <= 10; i++) {
-	DEFAULT_BINDS.set(actionStorageKey(hotbarKeybindAction(1, i)), { key: (i % 10).toFixed(0) });
-	DEFAULT_BINDS.set(actionStorageKey(hotbarKeybindAction(2, i)), {
+	DEFAULT_BINDS.set(hbMapKey(1, i), { key: (i % 10).toFixed(0) });
+	DEFAULT_BINDS.set(hbMapKey(2, i), {
 		key: (i % 10).toFixed(0),
 		ctrlKey: true,
 	});
 }
-DEFAULT_BINDS.set(actionStorageKey(hotbarKeybindAction(1, 11)), { key: "-" });
-DEFAULT_BINDS.set(actionStorageKey(hotbarKeybindAction(1, 12)), { key: "=" });
-DEFAULT_BINDS.set(actionStorageKey(hotbarKeybindAction(2, 11)), { key: "-", ctrlKey: true });
-DEFAULT_BINDS.set(actionStorageKey(hotbarKeybindAction(2, 12)), { key: "=", ctrlKey: true });
-DEFAULT_BINDS.set(actionStorageKey(DELETE_LAST_TIMELINE_ACTION), { key: "u" });
+DEFAULT_BINDS.set(hbMapKey(1, 11), { key: "-" });
+DEFAULT_BINDS.set(hbMapKey(1, 12), { key: "=" });
+DEFAULT_BINDS.set(hbMapKey(2, 11), { key: "-", ctrlKey: true });
+DEFAULT_BINDS.set(hbMapKey(2, 12), { key: "=", ctrlKey: true });
+DEFAULT_BINDS.set(actionMapKey(DELETE_LAST_TIMELINE_ACTION), { key: "u" });
 
 const MODIFIER_KEYS = new Set(["Shift", "Control", "Alt", "Meta"]);
 
@@ -123,85 +128,61 @@ const RESERVED_KEYS = new Set([
 ]);
 
 // Returns a user-facing reason when the bind is not allowed.
-export function validateBind(bind: BindEntry): string | undefined {
-	// TODO localize error messages
+export function validateBind(bind: BindEntry): LocalizedContent | undefined {
 	if (bind.key === "" || isModifierKey(bind.key)) {
-		return "A binding needs one non-modifier key.";
+		return {
+			en: "A binding needs one non-modifier key.",
+			zh: "绑定需要一个非修饰键。",
+		};
 	}
 	if (RESERVED_KEYS.has(bind.key)) {
-		return `"${bind.key}" cannot be used as a keybind.`;
+		return {
+			en: `"${bind.key}" is reserved and cannot be used as a keybind.`,
+			zh: `“${bind.key}”是保留键，不能用作按键绑定。`,
+		};
 	}
 	// Reject any letter combined with ctrl or meta, since it may overlap an application shortcut
 	// (like ctrl-z for undo) or a native browser function.
 	if (bind.key.match(/[a-zA-Z]/i) && (bind.ctrlKey || bind.metaKey)) {
-		return "Letters combined with Ctrl or the Meta key overlap application and browser shortcuts.";
+		return {
+			en: "Letters combined with the Ctrl/Cmd/Alt keys overlap application and browser shortcuts and cannot be bound.",
+			zh: "字母与 Ctrl/Cmd/Alt 键的组合会与应用程序和浏览器快捷键冲突，无法绑定。",
+		};
 	}
 	return undefined;
 }
 
-function cloneBind(bind: BindEntry): BindEntry {
-	return { ...bind };
-}
-
-function cloneDefaultBinds(): Map<string, BindEntry> {
-	return new Map(Array.from(DEFAULT_BINDS, ([id, bind]) => [id, cloneBind(bind)]));
-}
-
-type SerializedBinds = { version: 1; binds: [string, BindEntry][] };
+type SerializedBinds = [string, BindEntry][];
 
 function persistBinds(binds: Map<string, BindEntry>) {
-	const payload: SerializedBinds = { version: 1, binds: Array.from(binds) };
+	const payload: SerializedBinds = Array.from(binds);
 	setCachedValue(KEYBIND_CACHE_KEY, JSON.stringify(payload));
 }
 
-function mapStoredBinds(entries: [string, BindEntry][]): {
-	binds: Map<string, BindEntry>;
-	changed: boolean;
-} {
-	const binds = new Map<string, BindEntry>();
-	let changed = false;
-	for (const [raw, bind] of entries) {
-		const action = parseStoredAction(raw);
-		if (action === undefined) {
-			changed = true;
-			continue;
-		}
-		const stored = actionStorageKey(action);
-		if (stored !== raw) changed = true;
-		binds.set(stored, cloneBind(bind));
-	}
-	return { binds, changed };
-}
-
-// Old saves are a raw array of [actionKey, bind] pairs and have no system bind.
-// Versioned saves omit a cleared system bind on purpose, so a missing command stays unbound.
-function loadBinds(): { binds: Map<string, BindEntry>; rewrite: boolean } {
+function loadBinds(): Map<string, BindEntry> {
 	const cached = getCachedValue(KEYBIND_CACHE_KEY);
 	if (cached === null) {
-		return { binds: cloneDefaultBinds(), rewrite: true };
+		return new Map(DEFAULT_BINDS);
 	}
-	const parsed = JSON.parse(cached) as SerializedBinds | [string, BindEntry][];
-	if (Array.isArray(parsed)) {
-		const loaded = mapStoredBinds(parsed);
-		const systemKey = actionStorageKey(DELETE_LAST_TIMELINE_ACTION);
-		const system = DEFAULT_BINDS.get(systemKey);
-		if (system && !loaded.binds.has(systemKey)) {
-			loaded.binds.set(systemKey, cloneBind(system));
-		}
-		return { binds: loaded.binds, rewrite: true };
+	const parsed = JSON.parse(cached) as SerializedBinds;
+	if (!Array.isArray(parsed)) {
+		return new Map(DEFAULT_BINDS);
 	}
-	if (parsed?.version === 1 && Array.isArray(parsed.binds)) {
-		const loaded = mapStoredBinds(parsed.binds);
-		return { binds: loaded.binds, rewrite: loaded.changed };
+	const binds = new Map<string, BindEntry>();
+	for (const [raw, bind] of parsed) {
+		const action = parseStoredAction(raw);
+		if (action === undefined) continue;
+		binds.set(actionMapKey(action), bind);
 	}
-	return { binds: cloneDefaultBinds(), rewrite: true };
+	return binds;
 }
 
-const loadedBinds = loadBinds();
-const activeBinds = loadedBinds.binds;
-if (loadedBinds.rewrite) persistBinds(activeBinds);
+// In-memory mapping of actions -> corresponding key triggers.
+// While the reverse mapping (key -> action) would be used more frequently, maintaining it
+// is a pain, and not really worth the perf improvement since there's only ~90 keybinds possible.
+const activeBinds = loadBinds();
 
-// Shifted digit-row and numpad keys report the symbol in `key` ("!"). Keep the number instead.
+// Extracts a number from keycode to avoid stuff like shift-1 becoming !.
 function keyName(press: KeyPress): string {
 	if (!press.shiftKey || press.code === undefined) return press.key;
 	const digit = /^(?:Digit|Numpad)(\d)$/.exec(press.code);
@@ -218,42 +199,30 @@ function bindsMatch(entry: BindEntry, press: KeyPress): boolean {
 	);
 }
 
+// Omit unset modifier flags so the stored blob stays sparse.
 export function bindEntryFromPress(press: KeyPress): BindEntry {
 	return {
 		key: keyName(press),
-		shiftKey: press.shiftKey,
-		ctrlKey: press.ctrlKey,
-		altKey: press.altKey,
-		metaKey: press.metaKey,
-	};
-}
-
-function normalizeBind(bind: BindEntry): BindEntry {
-	return {
-		key: bind.key,
-		...(bind.shiftKey ? { shiftKey: true } : {}),
-		...(bind.ctrlKey ? { ctrlKey: true } : {}),
-		...(bind.metaKey ? { metaKey: true } : {}),
-		...(bind.altKey ? { altKey: true } : {}),
+		...(press.shiftKey ? { shiftKey: true } : {}),
+		...(press.ctrlKey ? { ctrlKey: true } : {}),
+		...(press.metaKey ? { metaKey: true } : {}),
+		...(press.altKey ? { altKey: true } : {}),
 	};
 }
 
 export function getBind(actionKey: KeybindAction): BindEntry | undefined {
-	const entry = activeBinds.get(actionStorageKey(actionKey));
-	return entry === undefined ? undefined : cloneBind(entry);
+	return activeBinds.get(actionMapKey(actionKey));
 }
 
 export function getDefaultBind(actionKey: KeybindAction): BindEntry | undefined {
-	const entry = DEFAULT_BINDS.get(actionStorageKey(actionKey));
-	return entry === undefined ? undefined : cloneBind(entry);
+	return DEFAULT_BINDS.get(actionMapKey(actionKey));
 }
 
-// Another action already using this combo, if any.
 export function findBindConflict(
 	actionKey: KeybindAction,
 	bind: BindEntry,
 ): KeybindAction | undefined {
-	const self = actionStorageKey(actionKey);
+	const self = actionMapKey(actionKey);
 	for (const [stored, entry] of activeBinds) {
 		if (stored === self || !bindsMatch(entry, bind)) continue;
 		const conflict = parseStoredAction(stored);
@@ -263,7 +232,7 @@ export function findBindConflict(
 }
 
 export function assignBind(actionKey: KeybindAction, bind: BindEntry) {
-	activeBinds.set(actionStorageKey(actionKey), normalizeBind(bind));
+	activeBinds.set(actionMapKey(actionKey), bind);
 	persistBinds(activeBinds);
 }
 
@@ -273,38 +242,51 @@ export function swapBindAssignment(
 	bind: BindEntry,
 	otherKey: KeybindAction,
 ) {
-	const previous = activeBinds.get(actionStorageKey(actionKey));
-	activeBinds.set(actionStorageKey(actionKey), normalizeBind(bind));
-	const otherStored = actionStorageKey(otherKey);
-	if (previous === undefined) activeBinds.delete(otherStored);
-	else activeBinds.set(otherStored, cloneBind(previous));
+	const oldBind = activeBinds.get(actionMapKey(actionKey));
+	activeBinds.set(actionMapKey(actionKey), bind);
+	const actionToSwap = actionMapKey(otherKey);
+	if (oldBind === undefined) {
+		activeBinds.delete(actionToSwap);
+	} else {
+		activeBinds.set(actionToSwap, oldBind);
+	}
 	persistBinds(activeBinds);
 }
 
 export function clearBind(actionKey: KeybindAction) {
-	activeBinds.delete(actionStorageKey(actionKey));
+	activeBinds.delete(actionMapKey(actionKey));
 	persistBinds(activeBinds);
 }
 
 export function resetBind(actionKey: KeybindAction) {
-	const stored = actionStorageKey(actionKey);
+	const stored = actionMapKey(actionKey);
 	const fallback = DEFAULT_BINDS.get(stored);
-	if (fallback === undefined) activeBinds.delete(stored);
-	else activeBinds.set(stored, cloneBind(fallback));
+	if (fallback === undefined) {
+		activeBinds.delete(stored);
+	} else {
+		activeBinds.set(stored, fallback);
+	}
 	persistBinds(activeBinds);
 }
 
 export function clearHotbarBinds() {
+	// probably a more efficient way to do this (like re-constructing all non-hotbar binds so
+	// we can skip this iteration)
+	// but it's short enough to not really matter
 	for (const stored of [...activeBinds.keys()]) {
 		const action = parseStoredAction(stored);
-		if (action?.kind === "hotbar") activeBinds.delete(stored);
+		if (action?.kind === "hotbar") {
+			activeBinds.delete(stored);
+		}
 	}
 	persistBinds(activeBinds);
 }
 
 export function resetAllBinds() {
 	activeBinds.clear();
-	for (const [id, bind] of DEFAULT_BINDS) activeBinds.set(id, cloneBind(bind));
+	for (const [id, bind] of DEFAULT_BINDS) {
+		activeBinds.set(id, bind);
+	}
 	persistBinds(activeBinds);
 }
 
@@ -312,7 +294,7 @@ export function resetAllBinds() {
 export function formatBind(entry: KeyPress): string {
 	// TODO check modifier order in-game
 	let result = entry.key.toUpperCase();
-	if (entry.shiftKey) result = "\u21E7" + result;
+	if (entry.shiftKey) result = "\u21E7" + result; // unicode up arrow
 	if (entry.altKey) result = "A-" + result;
 	if (entry.ctrlKey) result = "C-" + result;
 	if (entry.metaKey) result = "S-" + result;
@@ -328,7 +310,7 @@ export function getBindByPress(evt: KeyPress): KeybindAction | undefined {
 }
 
 export function getDisplayBind(actionKey: KeybindAction): string | undefined {
-	const entry = activeBinds.get(actionStorageKey(actionKey));
+	const entry = activeBinds.get(actionMapKey(actionKey));
 	return entry === undefined ? undefined : formatBind(entry);
 }
 
@@ -345,8 +327,8 @@ export function getDisplayBindBySlot(hotbar: number, slot: number): string | und
 // optimization, but I was feeling fancy.
 type SerializedHotbar = (number | ActionKey)[];
 
-// Returns a 2d array of ActionKeys for the job, sized to the hotbar maximum.
-// Unassigned slots are NEVER. Rows or slots past the maximum are dropped.
+// Returns a 2d array of ActionKeys for the given job, padded to the hotbar/slot maxima.
+// Unassigned slots are labeled NEVER. Any rows or slots past the maxima are dropped.
 // If no hotbar is saved, returns undefined; the caller should handle populating the default.
 export function loadHotbarForJob(job: ShellJob): ActionKey[][] | undefined {
 	const savedHotbars = getCachedValue(HOTBAR_CACHE_PREFIX + job);

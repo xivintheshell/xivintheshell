@@ -881,12 +881,13 @@ export function dialogOnOpenChangeHandler(open: boolean) {
 
 export function DialogTrigger(props: {
 	handleStyle?: React.CSSProperties;
+	containerStyle?: React.CSSProperties;
 	titleNode: ContentNode;
 	handle?: ContentNode;
 }) {
 	// Don't use a bespoke Clickable component for the expand button, since it suppresses Dialog.Trigger's
 	// built-in dismiss behavior.
-	const triggerRender = <div className="clickable">
+	const triggerRender = <div className="clickable" style={props.containerStyle}>
 		<span style={props.handleStyle}>
 			{props.handle}
 			<span className="clickableLinkLike">{props.titleNode}</span>

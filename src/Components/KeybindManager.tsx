@@ -25,7 +25,7 @@ import {
 	isModifierKey,
 	resetAllBinds,
 	resetBind,
-	sameKeybindAction,
+	keybindActionEq,
 	swapBindAssignment,
 	validateBind,
 	type BindEntry,
@@ -40,16 +40,6 @@ import { ActionKey } from "../Game/Data";
 type HotbarDragOrigin = { kind: "palette" } | { kind: "slot"; bar: number; slot: number };
 
 const EMPTY_MODIFIERS: KeyPress = { key: "" };
-
-function modifiersFrom(e: KeyboardEvent): KeyPress {
-	return {
-		key: "",
-		shiftKey: e.shiftKey,
-		ctrlKey: e.ctrlKey,
-		altKey: e.altKey,
-		metaKey: e.metaKey,
-	};
-}
 
 function bindFromEvent(e: KeyboardEvent): BindEntry {
 	return bindEntryFromPress({
@@ -95,20 +85,39 @@ export function KeybindManager() {
 	const [armedAction, setArmedAction] = useState<KeybindAction | undefined>(undefined);
 	const [heldModifiers, setHeldModifiers] = useState<KeyPress>(EMPTY_MODIFIERS);
 	const armedActionRef = useRef(armedAction);
+	// ref copies state for the benefit of the key listener, which is not part of the react lifecycle
 	armedActionRef.current = armedAction;
+
+	const setEmptyModifiers = () => setHeldModifiers(EMPTY_MODIFIERS);
+	const setHeldModifiersFromKeypress = (e: KeyboardEvent): KeyPress => {
+		return {
+			key: "",
+			shiftKey: e.shiftKey,
+			ctrlKey: e.ctrlKey,
+			altKey: e.altKey,
+			metaKey: e.metaKey,
+		};
+	};
+	const cancelArmedAction = () => {
+		setArmedAction(undefined);
+		setEmptyModifiers();
+	};
 	const setDialogOpen = (open: boolean) => {
 		_setDialogOpen(open);
 		dialogOnOpenChangeHandler(open);
-		if (!open) setArmedAction(undefined);
+		if (!open) {
+			setArmedAction(undefined);
+		}
 	};
 	const publish = () => {
 		controller.onKeybindsChanged();
 		setBindRevision((n) => n + 1);
 	};
+	// return true on a successful keybind update
 	const tryAssign = (actionKey: KeybindAction, bind: BindEntry): boolean => {
 		const reason = validateBind(bind);
 		if (reason !== undefined) {
-			window.alert(reason);
+			window.alert(localize(reason).toString());
 			return false;
 		}
 		const conflict = findBindConflict(actionKey, bind);
@@ -118,7 +127,9 @@ export function KeybindManager() {
 					en: `${formatBind(bind)} is currently bound to ${actionLabel(conflict)}. Swap the two bindings?`,
 				}).toString(),
 			);
-			if (!swap) return false;
+			if (!swap) {
+				return false;
+			}
 			swapBindAssignment(actionKey, bind, conflict);
 		} else {
 			assignBind(actionKey, bind);
@@ -127,39 +138,44 @@ export function KeybindManager() {
 		return true;
 	};
 	useEffect(() => {
-		if (armedAction === undefined) return;
+		if (armedAction === undefined) {
+			return;
+		}
 		const onKeyDown = (e: KeyboardEvent) => {
-			if (e.repeat) return;
+			if (e.repeat) {
+				return;
+			}
 			if (e.key === "Escape") {
 				e.preventDefault();
 				e.stopPropagation();
-				setArmedAction(undefined);
-				setHeldModifiers(EMPTY_MODIFIERS);
+				cancelArmedAction();
 				return;
 			}
 			if (isModifierKey(e.key)) {
-				setHeldModifiers(modifiersFrom(e));
+				setHeldModifiersFromKeypress(e);
 				return;
 			}
 			e.preventDefault();
 			e.stopPropagation();
 			const actionKey = armedActionRef.current;
-			if (actionKey === undefined) return;
+			if (actionKey === undefined) {
+				return;
+			}
 			const bind = bindFromEvent(e);
 			const reason = validateBind(bind);
 			if (reason !== undefined) {
-				window.alert(reason);
-				setArmedAction(undefined);
-				setHeldModifiers(EMPTY_MODIFIERS);
+				window.alert(localize(reason).toString());
+				cancelArmedAction();
 				return;
 			}
 			tryAssign(actionKey, bind);
-			setArmedAction(undefined);
-			setHeldModifiers(EMPTY_MODIFIERS);
+			cancelArmedAction();
 		};
 		const onKeyUp = (e: KeyboardEvent) => {
-			if (!isModifierKey(e.key)) return;
-			setHeldModifiers(modifiersFrom(e));
+			if (!isModifierKey(e.key)) {
+				return;
+			}
+			setHeldModifiersFromKeypress(e);
 		};
 		window.addEventListener("keydown", onKeyDown, true);
 		window.addEventListener("keyup", onKeyUp, true);
@@ -171,7 +187,7 @@ export function KeybindManager() {
 	const lightMode = useContext(ColorThemeContext) === "Light";
 	const colors = getCurrentThemeColors();
 	const renderRow = (actionKey: KeybindAction, label: React.ReactNode) => {
-		const armed = armedAction !== undefined && sameKeybindAction(armedAction, actionKey);
+		const armed = armedAction !== undefined && keybindActionEq(armedAction, actionKey);
 		const shown = armed ? formatBind(heldModifiers) : (getDisplayBind(actionKey) ?? "");
 		return <tr key={rowKey(actionKey)}>
 			<td style={{ padding: "4px 12px 4px 0", textAlign: "left", width: "100%" }}>{label}</td>
@@ -188,17 +204,16 @@ export function KeybindManager() {
 				}}
 				onClick={() => {
 					setArmedAction(actionKey);
-					setHeldModifiers(EMPTY_MODIFIERS);
+					setEmptyModifiers();
 				}}
 				onContextMenu={(e) => {
 					e.preventDefault();
 					clearBind(actionKey);
 					if (
 						armedActionRef.current !== undefined &&
-						sameKeybindAction(armedActionRef.current, actionKey)
+						keybindActionEq(armedActionRef.current, actionKey)
 					) {
-						setArmedAction(undefined);
-						setHeldModifiers(EMPTY_MODIFIERS);
+						cancelArmedAction();
 					}
 					publish();
 				}}
@@ -216,14 +231,12 @@ export function KeybindManager() {
 						}
 						if (findBindConflict(actionKey, fallback) === undefined) {
 							resetBind(actionKey);
-							setArmedAction(undefined);
-							setHeldModifiers(EMPTY_MODIFIERS);
+							cancelArmedAction();
 							publish();
 							return;
 						}
 						tryAssign(actionKey, fallback);
-						setArmedAction(undefined);
-						setHeldModifiers(EMPTY_MODIFIERS);
+						cancelArmedAction();
 					}}
 				>
 					{localize({ en: "reset", zh: "重置" })}
@@ -269,7 +282,11 @@ export function KeybindManager() {
 	</div>;
 	return <>
 		<Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
-			<DialogTrigger titleNode={localize({ en: "edit keybinds" })} handle={"\u2022 "} />
+			<DialogTrigger
+				titleNode={localize({ en: "edit keybinds" })}
+				handle={"\u2022 "}
+				containerStyle={{ marginBlock: 5 }}
+			/>
 			<Dialog.Portal>
 				<Dialog.Backdrop
 					className="Backdrop"
@@ -335,8 +352,7 @@ export function KeybindManager() {
 						<button
 							onClick={() => {
 								resetAllBinds();
-								setArmedAction(undefined);
-								setHeldModifiers(EMPTY_MODIFIERS);
+								cancelArmedAction();
 								publish();
 							}}
 						>
@@ -463,7 +479,9 @@ export function HotbarManager(props: {
 	};
 	const unbindSlot = (bar: number, slot: number) => {
 		const next = controller.hotbarLayout.map((row) => row.slice());
-		if (next[bar - 1]?.[slot - 1] === undefined || next[bar - 1][slot - 1] === "NEVER") return;
+		if (next[bar - 1]?.[slot - 1] === undefined || next[bar - 1][slot - 1] === "NEVER") {
+			return;
+		}
 		next[bar - 1][slot - 1] = "NEVER";
 		controller.saveHotbarLayout(next);
 		setHotbarRevision((n) => n + 1);
@@ -659,7 +677,11 @@ export function HotbarManager(props: {
 			}
 		`}</style>
 		<Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
-			<DialogTrigger titleNode={localize({ en: "edit hotbars" })} handle={"\u2022 "} />
+			<DialogTrigger
+				titleNode={localize({ en: "edit hotbars" })}
+				handle={"\u2022 "}
+				containerStyle={{ marginBlock: 5 }}
+			/>
 			<Dialog.Portal>
 				<Dialog.Backdrop
 					className="Backdrop"
@@ -675,6 +697,7 @@ export function HotbarManager(props: {
 						color: colors.text,
 						overflow: "hidden",
 						maxHeight: "100%",
+						// all skills should show in a single row at this width by default
 						width: "54rem",
 					}}
 				>
