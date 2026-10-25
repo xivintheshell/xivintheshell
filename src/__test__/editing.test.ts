@@ -784,8 +784,8 @@ describe("hotbar keybinds", () => {
 					skillNode("TRANSPOSE", [1]).serialized(),
 					skillNode("BLIZZARD", [1]).serialized(),
 					skillNode("TRIPLECAST", [1]).serialized(),
-				]
-			}
-		])
-	)
+				],
+			},
+		]),
+	);
 });
