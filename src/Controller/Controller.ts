@@ -1186,11 +1186,13 @@ class Controller {
 		hotbarOneOnBottom: boolean;
 		// Actual keybind mappings are handled through KeybindManager
 	}) {
-		const orderChanged = this.hotbarOneOnBottom !== props.hotbarOneOnBottom;
+		const changed =
+			this.keybindEnabled !== props.enabled ||
+			this.hotbarOneOnBottom !== props.hotbarOneOnBottom;
 		this.keybindEnabled = props.enabled;
 		this.hotbarOneOnBottom = props.hotbarOneOnBottom;
-		if (orderChanged) {
-			this.updateSkillButtons(this.game);
+		if (changed) {
+			this.updateSkillButtons(this.getDisplayedGame());
 		}
 	}
 
@@ -2465,6 +2467,9 @@ class Controller {
 	// If an element like an input field does not want this handler to be called while focused,
 	// it should call evt.stopPropagation().
 	handleKeyboardEvent(evt: React.KeyboardEvent) {
+		if (evt.repeat) {
+			return;
+		}
 		if (this.inputLocked) {
 			// never accept shortcuts while we're mid-animation
 			return;
@@ -2494,13 +2499,16 @@ class Controller {
 		} else if (this.keybindEnabled && action?.kind === "hotbar") {
 			const skill = this.game.displayedSkills.getAt(action.hotbar, action.slot);
 			if (skill !== undefined) {
-				this.requestUseSkill({
-					// conditional replacement must be applied here for cases like pressing
-					// Embolden's bind to trigger Vice of Thorns, since the controller would
-					// otherwise attempt to fast-forward to the end of Embolden's cd
-					skillName: getConditionalReplacement(skill, this.game),
-					targetList: this.getTargetList(),
-				});
+				this.requestUseSkill(
+					{
+						// conditional replacement must be applied here for cases like pressing
+						// Embolden's bind to trigger Vice of Thorns, since the controller would
+						// otherwise attempt to fast-forward to the end of Embolden's cd
+						skillName: getConditionalReplacement(skill, this.getDisplayedGame()),
+						targetList: this.getTargetList(),
+					},
+					true,
+				);
 				processed = true;
 			}
 		} else if (evt.key === "z" && ctrlOrCmd) {

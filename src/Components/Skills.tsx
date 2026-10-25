@@ -859,6 +859,7 @@ export function SkillsWindow() {
 					}}
 					value={targetSelected.filter((flag) => flag).length}
 					onChange={onTargetCountChange}
+					onKeyDown={(e) => e.stopPropagation()}
 				/>
 				<TargetSelector
 					style={{
@@ -883,6 +884,7 @@ export function SkillsWindow() {
 								}}
 								value={waitTime}
 								onChange={onWaitTimeChange}
+								onKeyDown={(e) => e.stopPropagation()}
 							/>{" "}
 							second(s) since{" "}
 							<select
@@ -914,6 +916,7 @@ export function SkillsWindow() {
 								}}
 								value={waitTime}
 								onChange={onWaitTimeChange}
+								onKeyDown={(e) => e.stopPropagation()}
 							/>{" "}
 							秒 <input type="submit" value="GO" />
 						</form>,
@@ -939,6 +942,7 @@ export function SkillsWindow() {
 								}}
 								value={waitTime}
 								onChange={onWaitTimeChange}
+								onKeyDown={(e) => e.stopPropagation()}
 							/>
 							秒進む
 							<input type="submit" value="GO" />
@@ -955,6 +959,7 @@ export function SkillsWindow() {
 								}}
 								value={waitUntil}
 								onChange={onWaitUntilChange}
+								onKeyDown={(e) => e.stopPropagation()}
 							/>
 							<input type="submit" value="GO" />
 						</form>,
@@ -968,6 +973,7 @@ export function SkillsWindow() {
 								}}
 								value={waitUntil}
 								onChange={onWaitUntilChange}
+								onKeyDown={(e) => e.stopPropagation()}
 							/>
 							<input type="submit" value="GO" />
 						</form>,
@@ -981,6 +987,7 @@ export function SkillsWindow() {
 								}}
 								value={waitUntil}
 								onChange={onWaitUntilChange}
+								onKeyDown={(e) => e.stopPropagation()}
 							/>
 							<input type="submit" value="GO" />
 						</form>,

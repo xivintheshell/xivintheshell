@@ -1,4 +1,4 @@
-import React, { useState, useContext, useRef, useEffect } from "react";
+import React, { useState, useContext, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Dialog } from "@base-ui/react/dialog";
 import { Tooltip } from "@base-ui/react/tooltip";
@@ -33,8 +33,10 @@ import {
 	type KeyPress,
 } from "../Controller/KeybindManager";
 import { ShellJob, JOBS } from "../Game/Data/Jobs";
-import { GameState } from "../Game/GameState";
 import { ActionKey } from "../Game/Data";
+import { LevelSync } from "../Game/Common";
+import { GameConfig, makeDefaultConfig } from "../Game/GameConfig";
+import { getGameState } from "../Game/Jobs";
 
 // discriminated union for drags from full skill list vs. drag from another slot
 type HotbarDragOrigin = { kind: "palette" } | { kind: "slot"; bar: number; slot: number };
@@ -62,15 +64,23 @@ function actionLabel(actionKey: KeybindAction): string {
 	}).toString();
 }
 
-function captureText(actionKey: KeybindAction): string {
+function captureText(actionKey: KeybindAction) {
 	if (actionKey.kind === "hotbar") {
-		return `Awaiting bind for Hotbar ${actionKey.hotbar}, Slot ${actionKey.slot} (Esc to cancel)`;
+		return localize({
+			en: `Awaiting bind for Hotbar ${actionKey.hotbar}, Slot ${actionKey.slot} (Esc to cancel)`,
+			zh: `正在等待热键栏 ${actionKey.hotbar} 槽位 ${actionKey.slot} 的绑定（按 Esc 取消）`,
+		});
 	}
-	const target =
+	const targetEn =
 		actionKey.command === "deleteLastTimelineAction"
 			? "Remove last timeline entry"
 			: actionKey.command;
-	return `Awaiting bind for "${target}" (Esc to cancel)`;
+	const targetZh =
+		actionKey.command === "deleteLastTimelineAction" ? "删除时间轴最后一项" : actionKey.command;
+	return localize({
+		en: `Awaiting bind for "${targetEn}" (Esc to cancel)`,
+		zh: `正在等待“${targetZh}”的绑定（按 Esc 取消）`,
+	});
 }
 
 function rowKey(actionKey: KeybindAction): string {
@@ -89,14 +99,14 @@ export function KeybindManager() {
 	armedActionRef.current = armedAction;
 
 	const setEmptyModifiers = () => setHeldModifiers(EMPTY_MODIFIERS);
-	const setHeldModifiersFromKeypress = (e: KeyboardEvent): KeyPress => {
-		return {
+	const setHeldModifiersFromKeypress = (e: KeyboardEvent) => {
+		setHeldModifiers({
 			key: "",
 			shiftKey: e.shiftKey,
 			ctrlKey: e.ctrlKey,
 			altKey: e.altKey,
 			metaKey: e.metaKey,
-		};
+		});
 	};
 	const cancelArmedAction = () => {
 		setArmedAction(undefined);
@@ -125,6 +135,7 @@ export function KeybindManager() {
 			const swap = window.confirm(
 				localize({
 					en: `${formatBind(bind)} is currently bound to ${actionLabel(conflict)}. Swap the two bindings?`,
+					zh: `${formatBind(bind)}当前已绑定到${actionLabel(conflict)}。是否交换这两项绑定？`,
 				}).toString(),
 			);
 			if (!swap) {
@@ -247,6 +258,7 @@ export function KeybindManager() {
 	const description = <div style={{ marginBlock: 10 }}>
 		{localize({
 			en: "Click a binding to change it. Right-click to remove.",
+			zh: "点击绑定以更改。右键点击可移除。",
 		})}
 	</div>;
 	// bindRevision is read so a save re-renders the tables from the live bind map.
@@ -283,7 +295,7 @@ export function KeybindManager() {
 	return <>
 		<Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
 			<DialogTrigger
-				titleNode={localize({ en: "edit keybinds" })}
+				titleNode={localize({ en: "edit keybinds", zh: "编辑按键绑定" })}
 				handle={"\u2022 "}
 				containerStyle={{ marginBlock: 5 }}
 			/>
@@ -305,7 +317,9 @@ export function KeybindManager() {
 						width: "32rem",
 					}}
 				>
-					<Dialog.Title render={<h3>{localize({ en: "Edit keybinds" })}</h3>} />
+					<Dialog.Title
+						render={<h3>{localize({ en: "Edit keybinds", zh: "编辑按键绑定" })}</h3>}
+					/>
 					<DialogClose />
 					<Dialog.Description className="Description" render={description} />
 					<ScrollArea.Root className="Body" style={{ maxHeight: "80%" }}>
@@ -375,10 +389,7 @@ export function KeybindManager() {
 export function HotbarManager(props: {
 	activeJob: ShellJob;
 	hotbarOneOnBottom: boolean;
-	// Passing in the whole GameState handle just for a reference to DisplayedSkills is less than
-	// ideal, but DisplayedSkills needs the state object to compute skill replacements and refactoring
-	// it would be a pain.
-	state: Readonly<GameState>;
+	level: LevelSync;
 }) {
 	const [dialogOpen, _setDialogOpen] = useState(false);
 	// Hotbar slot under the pointer. Set only while a skill icon is being dragged.
@@ -388,6 +399,13 @@ export function HotbarManager(props: {
 	// dragGhost is needed to render the skill icon being dragged, as we suppress the native
 	// browser image drag event.
 	const [dragGhost, setDragGhost] = useState<ActionKey | undefined>(undefined);
+	// A dummy state for this job and level, with no timeline resources. This ensures we don't
+	// accidentally assign bindings for transient skills that do not have bi-directional replaceIf
+	// conditions, e.g. binding RDM's Embolden can trigger Vice of Thorns but not vice versa.
+	const dummyState = useMemo(
+		() => getGameState(new GameConfig(makeDefaultConfig(props.activeJob, props.level))),
+		[props.activeJob, props.level],
+	);
 	const skillToBind = useRef<ActionKey | undefined>(undefined);
 	const dragOrigin = useRef<HotbarDragOrigin | undefined>(undefined);
 	const bindTargetRef = useRef<[number, number] | undefined>(undefined);
@@ -525,9 +543,7 @@ export function HotbarManager(props: {
 		setHotbarRevision((n) => n + 1);
 	};
 	const resetHotbars = () => {
-		controller.saveHotbarLayout(
-			props.state.displayedSkills.getDefaultHotbarLayout(props.state),
-		);
+		controller.saveHotbarLayout(dummyState.displayedSkills.getDefaultHotbarLayout(dummyState));
 		setHotbarRevision((n) => n + 1);
 	};
 	const lightMode = useContext(ColorThemeContext) === "Light";
@@ -535,6 +551,7 @@ export function HotbarManager(props: {
 	const description = <div>
 		{localize({
 			en: "Drag a skill icon to a slot to assign or move it. Right-click a slot to unassign it.",
+			zh: "将技能图标拖到槽位上以分配或移动。右键点击槽位可取消分配。",
 		})}
 	</div>;
 	const tooltipAnchorRef = useRef<HTMLDivElement>(null);
@@ -544,7 +561,7 @@ export function HotbarManager(props: {
 				? [...Array(MAX_NUM_HOTBARS).keys()].reverse()
 				: [...Array(MAX_NUM_HOTBARS).keys()]
 			).map((i) => <div key={`hotbarManager-bar-${i + 1}`}>
-				<h4>{localize({ en: "Hotbar " + (i + 1).toString() })}</h4>
+				<h4>{localize({ en: "Hotbar " + (i + 1).toString(), zh: `热键栏 ${i + 1}` })}</h4>
 				{[...Array(MAX_HOTBAR_SLOTS).keys()].map((j) => {
 					const assigned = controller.hotbarLayout[i]?.[j];
 					const hasBind = !(assigned === undefined || assigned === "NEVER");
@@ -552,7 +569,7 @@ export function HotbarManager(props: {
 					const displayedSkill =
 						boundSkill === undefined
 							? undefined
-							: getConditionalReplacement(boundSkill, props.state);
+							: getConditionalReplacement(boundSkill, dummyState);
 					const keybind = controller.keybindEnabled
 						? controller.getKeybindForHotbarSlot(i + 1, j + 1)
 						: undefined;
@@ -648,7 +665,7 @@ export function HotbarManager(props: {
 		</div>
 	</div>;
 	const allSkills = <div style={{ marginBlock: 10 }}>
-		<h3>{localize({ en: "All skills" })}</h3>
+		<h3>{localize({ en: "All skills", zh: "所有技能" })}</h3>
 		<div
 			style={{
 				display: "grid",
@@ -657,7 +674,7 @@ export function HotbarManager(props: {
 				width: `min(100%, ${MAX_HOTBAR_SLOTS * 48}px)`,
 			}}
 		>
-			{getAllAssignableSkillNames(props.state).map((actionKey, i) => <Tooltip.Root
+			{getAllAssignableSkillNames(dummyState).map((actionKey, i) => <Tooltip.Root
 				disableHoverablePopup={true}
 				key={`hotbarManager-allSkills-${i}`}
 			>
@@ -718,7 +735,7 @@ export function HotbarManager(props: {
 		`}</style>
 		<Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
 			<DialogTrigger
-				titleNode={localize({ en: "edit hotbars" })}
+				titleNode={localize({ en: "edit hotbars", zh: "设计热键栏" })}
 				handle={"\u2022 "}
 				containerStyle={{ marginBlock: 5 }}
 			/>
@@ -815,7 +832,7 @@ export function HotbarManager(props: {
 						activeJob={props.activeJob}
 						skillName={
 							dragOrigin.current?.kind === "slot"
-								? getConditionalReplacement(dragGhost, props.state)
+								? getConditionalReplacement(dragGhost, dummyState)
 								: dragGhost
 						}
 					/>

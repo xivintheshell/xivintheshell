@@ -782,7 +782,12 @@ export function LoadJsonFromFileOrUrl(props: LoadJsonFromFileOrUrlProps) {
 		{props.allowLoadFromUrl ? (
 			<form>
 				<span>{localize({ en: "Load from URL: ", zh: "从URL导入：" })}</span>
-				<input defaultValue={loadUrl} style={longInputStyle} onChange={onLoadUrlChange} />
+				<input
+					defaultValue={loadUrl}
+					style={longInputStyle}
+					onChange={onLoadUrlChange}
+					onKeyDown={(e) => e.stopPropagation()}
+				/>
 				<span> </span>
 				<button
 					type={"submit"}

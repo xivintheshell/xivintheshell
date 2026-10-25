@@ -817,6 +817,7 @@ export function MarkerLoadSaveWidget() {
 		type={"text"}
 		value={loadTrackDest}
 		onChange={(e) => setLoadTrackDest(e.target.value)}
+		onKeyDown={(e) => e.stopPropagation()}
 	/>;
 	const individualTrackLabel = localize({
 		en: <span>Load into individual track {individualTrackInput}: </span>,

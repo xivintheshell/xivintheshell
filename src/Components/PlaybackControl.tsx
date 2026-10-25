@@ -850,17 +850,17 @@ export function TimeControl() {
 			onChange={(val) => setRoundCooldownUp(val)}
 		/>
 		<br />
-		{header({ en: "Hotbar Settings" })}
+		{header({ en: "Hotbar Settings", zh: "热键栏设置" })}
 		<Checkbox
 			uniqueName={"keybindEnabled"}
-			label={localize({ en: "enable hotbar keybinds" })}
+			label={localize({ en: "enable hotbar keybinds", zh: "启用热键栏按键绑定" })}
 			defaultChecked={keybindEnabled}
 			onChange={(val) => setKeybindEnabled(val)}
 			style={{ marginBlock: "10px" }}
 		/>
 		<Checkbox
 			uniqueName={"hotbarOneOnBottom"}
-			label={localize({ en: "place hotbar 1 on bottom" })}
+			label={localize({ en: "place hotbar 1 on bottom", zh: "将热键栏 1 置于底部" })}
 			defaultChecked={hotbarOneOnBottom}
 			onChange={(val) => setHotbarOneOnBottom(val)}
 			style={{ marginBlock: "10px" }}
@@ -870,7 +870,7 @@ export function TimeControl() {
 		<HotbarManager
 			activeJob={controller.game.job}
 			hotbarOneOnBottom={hotbarOneOnBottom}
-			state={controller.game}
+			level={controller.game.config.level}
 		/>
 	</div>;
 }
