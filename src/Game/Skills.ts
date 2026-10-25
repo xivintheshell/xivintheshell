@@ -959,9 +959,9 @@ function defaultDisplayedSkillNames(job: ShellJob, level: LevelSync): ActionKey[
 
 // Every skill that can be placed on a hotbar, in the default order, after checking conditional replacements.
 export function getAllAssignableSkillNames<T extends GameState>(state: Readonly<T>): ActionKey[] {
-	return defaultDisplayedSkillNames(state.job, state.config.level).map((skillName) =>
-		getConditionalReplacement(skillName, state),
-	);
+	return defaultDisplayedSkillNames(state.job, state.config.level)
+		.filter((skillName) => !(skillName in PHANTOM_ACTIONS))
+		.map((skillName) => getConditionalReplacement(skillName, state));
 }
 
 export class DisplayedSkills {

@@ -1,4 +1,11 @@
-import React, { useContext, useEffect, useState, useSyncExternalStore, FormEvent, ReactElement } from "react";
+import React, {
+	useContext,
+	useEffect,
+	useState,
+	useSyncExternalStore,
+	FormEvent,
+	ReactElement,
+} from "react";
 import { Tooltip } from "@base-ui/react/tooltip";
 import { Clickable, ContentNode, Help, parseTime, ValueChangeEvent } from "./Common";
 import { Debug, SkillReadyStatus, SkillUnavailableReason } from "../Game/Common";
@@ -215,8 +222,9 @@ type SkillButtonProps = {
 	cdProgress: number;
 	secondaryCdProgress?: number;
 	activeJob: ShellJob;
-	hotbar: number;
-	slot: number;
+	// Absent for phantom actions, which are not hotbar slots.
+	hotbar?: number;
+	slot?: number;
 };
 
 export const iconStyle: React.CSSProperties = {
@@ -403,9 +411,10 @@ function SkillButton(props: SkillButtonProps) {
 	} else {
 		stacksOverlay = <></>;
 	}
-	const keybind = controller.keybindEnabled
-		? controller.getKeybindForHotbarSlot(props.hotbar, props.slot)
-		: undefined;
+	const keybind =
+		controller.keybindEnabled && props.hotbar !== undefined && props.slot !== undefined
+			? controller.getKeybindForHotbarSlot(props.hotbar, props.slot)
+			: undefined;
 	const keybindOverlay = keybind === undefined ? null : <KeybindOverlay label={keybind} />;
 	let cooldownOverlay: React.ReactNode = null;
 	const cooldownDisplayMode = controller.cooldownDisplayMode;

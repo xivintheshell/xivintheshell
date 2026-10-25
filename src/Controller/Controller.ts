@@ -1073,11 +1073,7 @@ class Controller {
 		const buttons: SkillButtonViewInfo[] = [];
 		this.hotbarLayout.forEach((row, bar) => {
 			row.forEach((skillName, slot) => {
-				if (skillName === "NEVER") {
-					return;
-				}
-				const pjob = PJOB_ABILITY_MAP.get(skillName);
-				if (!(pjob === undefined || pjob === PhantomJob.Freelancer || pjob === this.gameConfig.phantomJob)) {
+				if (skillName === "NEVER" || PJOB_ABILITY_MAP.has(skillName)) {
 					return;
 				}
 				const displayedSkill = getConditionalReplacement(skillName, game);
@@ -1088,6 +1084,19 @@ class Controller {
 				});
 			});
 		});
+		// Phantom actions are not hotbar slots. Show the selected phantom job's actions after the bars.
+		const phantomJob = this.gameConfig.phantomJob;
+		if (phantomJob !== undefined) {
+			for (const [skillName, pjob] of PJOB_ABILITY_MAP) {
+				if (pjob !== phantomJob || !getSkill(game.job, skillName).startOnHotbar) {
+					continue;
+				}
+				const displayedSkill = getConditionalReplacement(skillName, game);
+				buttons.push({
+					...game.getSkillAvailabilityStatus(displayedSkill),
+				});
+			}
+		}
 		updateSkillButtons(buttons);
 	}
 
