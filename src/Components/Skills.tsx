@@ -235,6 +235,27 @@ export const iconImgStyle: React.CSSProperties = {
 	marginLeft: -20,
 };
 
+// Top-left shortcut label drawn over a 48px skill slot.
+export function KeybindOverlay(props: { label: string }) {
+	const fontSizePx = 48 / Math.max(props.label.length, 4) + 3;
+	return <span
+		style={{
+			position: "absolute",
+			top: 0,
+			left: 0,
+			pointerEvents: "none",
+			zIndex: 3, // must render above shading circle
+			fontFamily: "XIVShell Defaults",
+			color: "white",
+			fontSize: `${fontSizePx}px`,
+			textShadow: "0 0 4px black, 0 0 8px black",
+			textAlign: "center",
+		}}
+	>
+		{props.label}
+	</span>;
+}
+
 function SkillButton(props: SkillButtonProps) {
 	const [skillDescription, setSkillDescription] = useState(<div />);
 	const colorContext = useContext(ColorThemeContext);
@@ -385,29 +406,7 @@ function SkillButton(props: SkillButtonProps) {
 	const keybind = controller.keybindEnabled
 		? controller.getKeybindForHotbarSlot(props.hotbar, props.slot)
 		: undefined;
-	let keybindOverlay: React.ReactNode = null;
-	if (keybind !== undefined) {
-		const fontSizePx = skillBoxPx / Math.max(keybind.length, 4) + 3;
-		const keybindPositionStyle: React.CSSProperties = {
-			position: "absolute",
-			top: 0,
-			left: 0,
-		};
-		keybindOverlay = <span
-			style={{
-				...keybindPositionStyle,
-				pointerEvents: "none",
-				zIndex: 3, // must render above shading circle
-				fontFamily: "XIVShell Defaults",
-				color: "white",
-				fontSize: `${fontSizePx}px`,
-				textShadow: "0 0 4px black, 0 0 8px black",
-				textAlign: "center",
-			}}
-		>
-			{keybind}
-		</span>;
-	}
+	const keybindOverlay = keybind === undefined ? null : <KeybindOverlay label={keybind} />;
 	let cooldownOverlay: React.ReactNode = null;
 	const cooldownDisplayMode = controller.cooldownDisplayMode;
 	if (cooldownDisplayMode !== "disabled" && info.cooldownOverlaySeconds !== undefined) {

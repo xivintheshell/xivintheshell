@@ -6,7 +6,7 @@ import { ScrollArea } from "@base-ui/react/scroll-area";
 import { localize, localizeSkillName } from "./Localization";
 import { DialogTrigger, DialogClose, dialogOnOpenChangeHandler } from "./Common";
 import { ColorThemeContext, getCurrentThemeColors } from "./ColorTheme";
-import { SkillIconImage, iconStyle, iconImgStyle } from "./Skills";
+import { KeybindOverlay, SkillIconImage, iconStyle, iconImgStyle } from "./Skills";
 import { getAllAssignableSkillNames, getConditionalReplacement } from "../Game/Skills";
 import { controller } from "../Controller/Controller";
 import {
@@ -197,10 +197,8 @@ export function KeybindManager() {
 					minWidth: "8em",
 					textAlign: "center",
 					cursor: "pointer",
-					border: `1px solid ${colors.bgHighContrast}`,
-					...(armed
-						? { outline: `2px solid ${colors.dropTarget}`, outlineOffset: -2 }
-						: {}),
+					outline: armed ? `2px solid ${colors.dropTarget}` : `1px solid ${colors.bgHighContrast}`,
+					outlineOffset: -2,
 				}}
 				onClick={() => {
 					setArmedAction(actionKey);
@@ -394,6 +392,8 @@ export function HotbarManager(props: {
 	const ghostRef = useRef<HTMLDivElement>(null);
 	const ghostOffset = useRef({ x: 0, y: 0 });
 	const pointerPos = useRef({ x: 0, y: 0 });
+	const dragCapture = useRef<{ element: HTMLElement; pointerId: number } | undefined>(undefined);
+	const endDragRef = useRef<(commit: boolean) => void>(() => {});
 	const setDialogOpen = (open: boolean) => {
 		_setDialogOpen(open);
 		dialogOnOpenChangeHandler(open);
@@ -420,7 +420,15 @@ export function HotbarManager(props: {
 		if (!node) return;
 		node.style.transform = `translate(${x - ghostOffset.current.x}px, ${y - ghostOffset.current.y}px)`;
 	};
+	const releaseDragCapture = () => {
+		const capture = dragCapture.current;
+		dragCapture.current = undefined;
+		if (capture !== undefined && capture.element.hasPointerCapture(capture.pointerId)) {
+			capture.element.releasePointerCapture(capture.pointerId);
+		}
+	};
 	const endDrag = (commit: boolean) => {
+		releaseDragCapture();
 		const skill = skillToBind.current;
 		const target = bindTargetRef.current;
 		const origin = dragOrigin.current;
@@ -444,16 +452,32 @@ export function HotbarManager(props: {
 		setDragGhost(undefined);
 		setDragTarget(undefined);
 	};
+	endDragRef.current = endDrag;
+	// While the primary button is held, a right-click does not deliver a button-2 pointer event to the
+	// capturing element. It does fire contextmenu, which is what currently swallows the browser menu.
+	useEffect(() => {
+		const onContextMenu = () => {
+			if (skillToBind.current === undefined) return;
+			endDragRef.current(false);
+		};
+		window.addEventListener("contextmenu", onContextMenu, true);
+		return () => window.removeEventListener("contextmenu", onContextMenu, true);
+	}, []);
 	const onSkillPointerDown = (
 		e: React.PointerEvent<HTMLDivElement>,
 		skillName: ActionKey,
 		origin: HotbarDragOrigin,
 	) => {
+		if (e.button === 2 && skillToBind.current !== undefined) {
+			endDrag(false);
+			return;
+		}
 		if (e.button !== 0) return;
 		// Suppress native browser image drag, which fires pointerCancel
 		e.preventDefault();
 		const rect = e.currentTarget.getBoundingClientRect();
 		ghostOffset.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+		dragCapture.current = { element: e.currentTarget, pointerId: e.pointerId };
 		e.currentTarget.setPointerCapture(e.pointerId);
 		skillToBind.current = skillName;
 		dragOrigin.current = origin;
@@ -468,6 +492,10 @@ export function HotbarManager(props: {
 	};
 	const onSkillPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
 		if (skillToBind.current === undefined) return;
+		if (e.button !== 0) {
+			endDrag(false);
+			return;
+		}
 		if (e.currentTarget.hasPointerCapture(e.pointerId)) {
 			e.currentTarget.releasePointerCapture(e.pointerId);
 		}
@@ -523,6 +551,9 @@ export function HotbarManager(props: {
 						boundSkill === undefined
 							? undefined
 							: getConditionalReplacement(boundSkill, props.state);
+					const keybind = controller.keybindEnabled
+						? controller.getKeybindForHotbarSlot(i + 1, j + 1)
+						: undefined;
 					const slotNode = <div
 						className={hasBind ? undefined : "clickableLinkLike"}
 						data-hotbar-slot=""
@@ -553,12 +584,18 @@ export function HotbarManager(props: {
 								: {}),
 						}}
 						onDragStart={(e) => e.preventDefault()}
-						onContextMenu={(e) => e.preventDefault()}
+						onContextMenu={(e) => {
+							e.preventDefault();
+							if (skillToBind.current !== undefined) endDrag(false);
+						}}
 						onPointerDown={(e) => {
 							if (e.button === 2) {
+								if (skillToBind.current !== undefined) {
+									endDrag(false);
+									return;
+								}
 								// unbind the skill on right click
 								e.preventDefault();
-								if (skillToBind.current !== undefined) return;
 								unbindSlot(i + 1, j + 1);
 								return;
 							}
@@ -582,6 +619,7 @@ export function HotbarManager(props: {
 								skillName={displayedSkill}
 							/>
 						)}
+						{keybind !== undefined && <KeybindOverlay label={keybind} />}
 					</div>;
 					const key = `hotbarManager-bar-${i + 1}-slot-${j + 1}`;
 					if (displayedSkill === undefined) {

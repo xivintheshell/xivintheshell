@@ -2449,7 +2449,10 @@ class Controller {
 			const skill = this.game.displayedSkills.getAt(action.hotbar, action.slot);
 			if (skill !== undefined) {
 				this.requestUseSkill({
-					skillName: skill,
+					// conditional replacement must be applied here for cases like pressing
+					// Embolden's bind to trigger Vice of Thorns, since the controller would
+					// otherwise attempt to fast-forward to the end of Embolden's cd
+					skillName: getConditionalReplacement(skill, this.game),
 					targetList: [1], // TODO how do we read the target list here?
 				});
 				processed = true;
