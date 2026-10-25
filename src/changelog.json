@@ -1,5 +1,15 @@
 [
 	{
+		"date": "10/24/26",
+		"changes": [
+			"Added keyboard shortcuts for hotbar actions. You can customize these in the Control panel next to the Config tab."
+		],
+		"changes_zh": [
+			"新增了热键栏操作的快捷键设置。您可以在“属性设置”标签页旁边的“操作设置”标签中进行自定义。"
+		],
+		"level": "major"
+	},
+	{
 		"date": "10/22/26",
 		"changes": [
 			"[BLM] Added Scathe."
