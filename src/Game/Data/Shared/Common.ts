@@ -9,6 +9,14 @@ export const COMMON_ACTIONS = ensureRecord<ActionData>()({
 		name: "Tincture",
 		label: { zh: "爆发药", ja: "薬" },
 	},
+	SUPER_ETHER: {
+		name: "Super-Ether",
+		label: { zh: "以太药" },
+	},
+	ULTRA_POTION: {
+		name: "Ultra-Potion",
+		label: { zh: "恢复药" },
+	},
 	SPRINT: {
 		id: 3,
 		name: "Sprint",

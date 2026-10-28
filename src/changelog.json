@@ -1,5 +1,12 @@
 [
 	{
+		"date": "10/27/26",
+		"changes": [
+			"Added Super-Ether and Ultra-Potion actions.",
+			"Fixed a bug where the hotbar edit window would not properly allow scrolling."
+		]
+	},
+	{
 		"date": "10/24/26",
 		"changes": [
 			"Added keyboard shortcuts for hotbar actions. You can customize these in the Control panel next to the Config tab.",

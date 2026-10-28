@@ -300,6 +300,30 @@ makeResourceAbility(ALL_JOBS, "TINCTURE", 1, "cd_TINCTURE", {
 	onConfirm: combineEffects(cancelDualcast, bunny),
 });
 
+makeAbility(
+	ALL_JOBS.filter((job) => JOBS[job].usesMp),
+	"SUPER_ETHER",
+	1,
+	"cd_TINCTURE",
+	{
+		applicationDelay: 0.64, // TODO verify
+		cooldown: 270,
+		assetPath: "General/Super-Ether.png",
+		validateAttempt: notInTCJ,
+		onConfirm: combineEffects(cancelDualcast, bunny, (state) =>
+			state.resources.get("MANA").gain(1800),
+		),
+	},
+);
+
+makeAbility(ALL_JOBS, "ULTRA_POTION", 1, "cd_TINCTURE", {
+	applicationDelay: 0.64, // TODO verify
+	cooldown: 67,
+	assetPath: "General/Ultra-Potion.png",
+	validateAttempt: notInTCJ,
+	onConfirm: combineEffects(cancelDualcast, bunny),
+});
+
 makeResourceAbility(ALL_JOBS, "SPRINT", 1, "cd_SPRINT", {
 	rscType: "SPRINT",
 	applicationDelay: 0.133, // delayed
