@@ -8,6 +8,7 @@ import {
 	ALL_JOBS,
 	JOBS,
 } from "../Data/Jobs";
+import { CooldownKey } from "../Data";
 import {
 	combineEffects,
 	makeAbility,
@@ -15,7 +16,7 @@ import {
 	makeResourceAbility,
 	makeSpell,
 } from "../Skills";
-import { OverTimeBuff, EventTag, makeResource } from "../Resources";
+import { OverTimeBuff, EventTag, makeResource, CoolDown } from "../Resources";
 import type { GameState } from "../GameState";
 import { controller } from "../../Controller/Controller";
 import { SHARED_LIMIT_BREAK_RESOURCES, LimitBreakResourceKey } from "../Data/Shared/LimitBreak";
@@ -39,6 +40,13 @@ const bunny = (state: GameState) => {
 	if (state.job === "NIN" && state.hasResourceAvailable("MUDRA")) {
 		state.gainStatus("BUNNY");
 	}
+};
+
+// Hack for tincture/ether/ultra-pot shared cooldown (copied from the OC branch w/o sps/sks scaling).
+// Our cd stack consumption code is kind of nasty, so this hack should be called onExecute
+// for abilities that have a shared cd with varying duration.
+const adjustCooldown = (state: GameState, baseCd: number, cdName: CooldownKey) => {
+	state.cooldowns.set(new CoolDown(cdName, baseCd, 1, 1));
 };
 
 //#endregion
@@ -297,6 +305,7 @@ makeResourceAbility(ALL_JOBS, "TINCTURE", 1, "cd_TINCTURE", {
 	cooldown: 270,
 	assetPath: "General/Tincture.png",
 	validateAttempt: notInTCJ,
+	onExecute: (state) => adjustCooldown(state, 270, "cd_TINCTURE"),
 	onConfirm: combineEffects(cancelDualcast, bunny),
 });
 
@@ -307,9 +316,9 @@ makeAbility(
 	"cd_TINCTURE",
 	{
 		applicationDelay: 0.64, // TODO verify
-		cooldown: 270,
 		assetPath: "General/Super-Ether.png",
 		validateAttempt: notInTCJ,
+		onExecute: (state) => adjustCooldown(state, 270, "cd_TINCTURE"),
 		onConfirm: combineEffects(cancelDualcast, bunny, (state) =>
 			state.resources.get("MANA").gain(1800),
 		),
@@ -318,9 +327,9 @@ makeAbility(
 
 makeAbility(ALL_JOBS, "ULTRA_POTION", 1, "cd_TINCTURE", {
 	applicationDelay: 0.64, // TODO verify
-	cooldown: 67,
 	assetPath: "General/Ultra-Potion.png",
 	validateAttempt: notInTCJ,
+	onExecute: (state) => adjustCooldown(state, 67, "cd_TINCTURE"),
 	onConfirm: combineEffects(cancelDualcast, bunny),
 });
 

@@ -38,6 +38,7 @@ export const COMMON_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_GCD: { name: "cd_GCD", label: { zh: "GCD" } }, // [0, Constant.gcd]
 
 	cd_TINCTURE: { name: "cd_Tincture" }, // [0, 1x]
+	cd_TINCTURE_DUMMY: { name: "cd_TinctureDummy" },
 	cd_SPRINT: { name: "cd_Sprint" }, // [0, 1x]
 });
 

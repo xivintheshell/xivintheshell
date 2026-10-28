@@ -4,6 +4,10 @@
 		"changes": [
 			"Added Super-Ether and Ultra-Potion actions.",
 			"Fixed a bug where the hotbar edit window would not properly allow scrolling."
+		],
+		"changes_zh": [
+			"新增了【以太药】和【恢复药】。",
+			"修复了“设计热键栏”窗口无法正常滚动的问题。"
 		]
 	},
 	{
@@ -24,7 +28,7 @@
 			"[BLM] Added Scathe."
 		],
 		"changes_zh": [
-			"【黑魔】增加了崩溃"
+			"【黑魔】增加了【崩溃】。"
 		]
 	},
 	{
