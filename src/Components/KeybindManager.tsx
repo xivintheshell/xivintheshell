@@ -312,7 +312,6 @@ export function KeybindManager() {
 						backgroundColor: colors.background,
 						border: "1px solid " + colors.bgMediumContrast,
 						color: colors.text,
-						overflow: "hidden",
 						maxHeight: "100%",
 						width: "32rem",
 					}}
@@ -548,7 +547,7 @@ export function HotbarManager(props: {
 	};
 	const lightMode = useContext(ColorThemeContext) === "Light";
 	const colors = getCurrentThemeColors();
-	const description = <div>
+	const description = <div style={{ flexShrink: 0 }}>
 		{localize({
 			en: "Drag a skill icon to a slot to assign or move it. Right-click a slot to unassign it.",
 			zh: "将技能图标拖到槽位上以分配或移动。右键点击槽位可取消分配。",
@@ -664,8 +663,16 @@ export function HotbarManager(props: {
 			</div>)}
 		</div>
 	</div>;
-	const allSkills = <div style={{ marginBlock: 10 }}>
-		<h3>{localize({ en: "All skills", zh: "所有技能" })}</h3>
+	const allSkills = <div
+		style={{
+			marginBlockEnd: 10,
+			flex: "0 1 auto",
+			minHeight: 0,
+			minWidth: 0,
+			overflowY: "auto",
+		}}
+		className="visibleScrollbar"
+	>
 		<div
 			style={{
 				display: "grid",
@@ -752,15 +759,19 @@ export function HotbarManager(props: {
 						backgroundColor: colors.background,
 						border: "1px solid " + colors.bgMediumContrast,
 						color: colors.text,
+						display: "flex",
+						flexDirection: "column",
 						overflow: "hidden",
 						maxHeight: "100%",
-						// all skills should show in a single row at this width by default
+						// all skills should show in a single row at this width by default,
+						// but a narrower window must still keep the dialog on screen
 						width: "54rem",
+						maxWidth: "100%",
 					}}
 				>
 					<Dialog.Title
 						render={
-							<h3>
+							<h3 style={{ flexShrink: 0 }}>
 								{localize({
 									en: `Edit hotbars (${props.activeJob})`,
 									zh: `设计热键栏（${JOBS[props.activeJob].zh}）`,
@@ -769,12 +780,35 @@ export function HotbarManager(props: {
 						}
 					/>
 					<DialogClose />
-					<div id="hotbarSettingsAnchor" ref={tooltipAnchorRef}>
+					{/* Definite height so the hotbar list can scroll inside short or narrow windows. */}
+					<div
+						id="hotbarSettingsAnchor"
+						ref={tooltipAnchorRef}
+						style={{
+							display: "flex",
+							flexDirection: "column",
+							flex: "1 1 auto",
+							minHeight: 0,
+							minWidth: 0,
+						}}
+					>
 						<Dialog.Description className="Description" render={description} />
-						<ScrollArea.Root className="Body" style={{ maxHeight: "70%" }}>
+						<ScrollArea.Root
+							className="Body"
+							style={{
+								flex: "1 1 auto",
+								flexDirection: "column",
+								minHeight: 0,
+								minWidth: 0,
+							}}
+						>
 							<ScrollArea.Viewport className="BodyViewport">
 								<ScrollArea.Content
-									style={{ display: "flex", flexDirection: "column" }}
+									style={{
+										display: "flex",
+										flexDirection: "column",
+										minWidth: 0,
+									}}
 								>
 									{body}
 								</ScrollArea.Content>
@@ -795,8 +829,9 @@ export function HotbarManager(props: {
 								/>
 							</ScrollArea.Scrollbar>
 						</ScrollArea.Root>
+						<h3>{localize({ en: "All skills", zh: "所有技能" })}</h3>
 						{allSkills}
-						<div style={{ marginBlock: 10 }}>
+						<div style={{ marginBlock: 10, flexShrink: 0 }}>
 							<button onClick={clearHotbars}>
 								{localize({ en: "clear all hotbars", zh: "清空所有热键栏" })}
 							</button>
