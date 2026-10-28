@@ -210,6 +210,10 @@ export class SCHState extends GameState {
 		}
 	}
 
+	override jobSpecificAutoPotencyModifiers(): PotencyModifier[] {
+		return this.hasResourceAvailable("CHAIN_STRATAGEM") ? [Modifiers.ChainStrat] : [];
+	}
+
 	override jobSpecificRegisterRecurringEvents() {
 		// Fey Union, soil regen/mit buff refresh, and Seraphism regen refresh ticks at the server
 		// HoT tick.

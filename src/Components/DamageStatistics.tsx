@@ -30,14 +30,20 @@ export type DamageStatsMainTableEntry = {
 	skillName: ActionKey;
 	displayedModifiers: PotencyModifierType[];
 	basePotency: number;
+	baseDamage: number;
 	calculationModifiers: PotencyModifier[];
 	usageCount: number;
 	hitCount: number;
 	totalPotencyWithoutPot: number;
+	totalDamageWithoutPot: number;
 	showPotency: boolean;
 	potPotency: number;
+	potDamage: number;
+	phantomPotency: number;
 	potCount: number;
 	partyBuffPotency: number;
+	partyBuffDamage: number;
+	partyBuffPhantomPotency: number;
 	targetCount: number;
 	falloff: number;
 };
@@ -70,13 +76,19 @@ export interface DamageStatsDoTTableSummary {
 	dotCoverageTimeFraction: number;
 	totalPotencyWithoutPot: number;
 	totalPotPotency: number;
+	totalPhantomPotency: number;
 	totalPartyBuffPotency: number;
+	totalPartyBuffPhantomPotency: number;
 }
 
 export type SelectedStatisticsData = {
 	totalDuration: number;
 	targetableDuration: number;
 	potency: {
+		applied: number;
+		pending: number;
+	};
+	damage: {
 		applied: number;
 		pending: number;
 	};
@@ -100,6 +112,10 @@ export type DamageStatisticsData = {
 		applied: number;
 		pending: number;
 	};
+	totalDamage: {
+		applied: number;
+		pending: number;
+	};
 	lastDamageApplicationTime: number;
 	gcdSkills: {
 		applied: number;
@@ -110,6 +126,11 @@ export type DamageStatisticsData = {
 		totalPotencyWithoutPot: number;
 		totalPotPotency: number;
 		totalPartyBuffPotency: number;
+		totalPhantomPotency: number;
+		totalPartyBuffPhantomPotency: number;
+		totalDamageWithoutPot: number;
+		totalPotDamage: number;
+		totalPartyBuffDamage: number;
 	};
 	dotTables: Map<ResourceKey, Map<number, DamageStatsDoTTrackingData>>;
 	mode: DamageStatisticsMode;
@@ -185,7 +206,7 @@ function PotencyDisplay(props: {
 	</span>;
 }
 
-function DamageStatsSettings() {
+function DamageStatsSettings(props: { onShowExpectedDamageChange: (show: boolean) => void }) {
 	const [tinctureBuffPercentageStr, setTinctureBuffPercentageStr] = useState("8");
 
 	const setTinctureBuffPercentage = (str: string) => {
@@ -261,6 +282,18 @@ function DamageStatsSettings() {
 				</span>
 			}
 			onChange={(val) => controller.setIncludeAutoAttackDamage(val)}
+		/>
+		<Checkbox
+			uniqueName="showExpectedDamage"
+			label={
+				<span>
+					{localize({
+						en: "show expected damage instead of potency",
+						zh: "显示预期伤害而非威力",
+					})}
+				</span>
+			}
+			onChange={props.onShowExpectedDamageChange}
 		/>
 	</div>;
 }
@@ -556,10 +589,14 @@ function DoTTable(props: {
 }
 
 export class DamageStatistics extends React.Component {
+	state = {
+		showExpectedDamage: getCachedValue("checked: showExpectedDamage") === "1",
+	};
 	selected: SelectedStatisticsData = {
 		totalDuration: 0,
 		targetableDuration: 0,
 		potency: { applied: 0, pending: 0 },
+		damage: { applied: 0, pending: 0 },
 		gcdSkills: { applied: 0, pending: 0 },
 	};
 	data: DamageStatisticsData = {
@@ -567,6 +604,7 @@ export class DamageStatistics extends React.Component {
 		tinctureBuffPercentage: 0,
 		countdown: 0,
 		totalPotency: { applied: 0, pending: 0 },
+		totalDamage: { applied: 0, pending: 0 },
 		lastDamageApplicationTime: 0,
 		gcdSkills: { applied: 0, pending: 0 },
 		mainTable: [],
@@ -574,6 +612,11 @@ export class DamageStatistics extends React.Component {
 			totalPotencyWithoutPot: 0,
 			totalPotPotency: 0,
 			totalPartyBuffPotency: 0,
+			totalPhantomPotency: 0,
+			totalPartyBuffPhantomPotency: 0,
+			totalDamageWithoutPot: 0,
+			totalPotDamage: 0,
+			totalPartyBuffDamage: 0,
 		},
 		dotTables: new Map(),
 		mode: DamageStatisticsMode.Normal,
@@ -611,14 +654,23 @@ export class DamageStatistics extends React.Component {
 			? ""
 			: (localize({ en: " (checked only)", zh: "（勾选部分）" }) as string);
 
+		const showDamage = this.state.showExpectedDamage;
 		const lastDisplay = this.data.lastDamageApplicationTime - this.data.countdown;
 		const targetableDurationTilLastDisplay = getTargetableDurationBetween(0, lastDisplay);
 		const ppsAvailable = this.data.lastDamageApplicationTime > -this.data.countdown;
 		const lastDamageApplicationTimeDisplay = ppsAvailable
 			? lastDisplay.toFixed(3).toString()
 			: "N/A";
-		let potencyStr = localize({ en: "Total potency", zh: "总威力" }) as string;
-		let selectedPotencyStr = localize({ en: "Selected potency", zh: "选中威力" }) as string;
+		let potencyStr = (
+			showDamage
+				? localize({ en: "Total damage", zh: "总伤害" })
+				: localize({ en: "Total potency", zh: "总威力" })
+		) as string;
+		let selectedPotencyStr = (
+			showDamage
+				? localize({ en: "Selected damage", zh: "选中伤害" })
+				: localize({ en: "Selected potency", zh: "选中威力" })
+		) as string;
 		if (this.data.tinctureBuffPercentage > 0) {
 			const s =
 				lparen +
@@ -632,19 +684,32 @@ export class DamageStatistics extends React.Component {
 		potencyStr += checkedOnlyStr;
 		selectedPotencyStr += checkedOnlyStr;
 
-		potencyStr += colon + this.data.totalPotency.applied.toFixed(2);
-		selectedPotencyStr += colon + this.selected.potency.applied.toFixed(2);
-		if (this.data.totalPotency.pending > 0) {
+		const totalApplied = showDamage
+			? this.data.totalDamage.applied
+			: this.data.totalPotency.applied;
+		const totalPending = showDamage
+			? this.data.totalDamage.pending
+			: this.data.totalPotency.pending;
+		const selectedApplied = showDamage
+			? this.selected.damage.applied
+			: this.selected.potency.applied;
+		const selectedPending = showDamage
+			? this.selected.damage.pending
+			: this.selected.potency.pending;
+
+		potencyStr += colon + totalApplied.toFixed(2);
+		selectedPotencyStr += colon + selectedApplied.toFixed(2);
+		if (totalPending > 0) {
 			potencyStr +=
 				lparen +
-				this.data.totalPotency.pending.toFixed(2) +
+				totalPending.toFixed(2) +
 				(localize({ en: " pending", zh: "未结算" }) as string) +
 				rparen;
 		}
-		if (this.selected.potency.pending > 0) {
+		if (selectedPending > 0) {
 			selectedPotencyStr +=
 				lparen +
-				this.selected.potency.pending.toFixed(2) +
+				selectedPending.toFixed(2) +
 				(localize({ en: " pending", zh: "未结算" }) as string) +
 				rparen;
 		}
@@ -740,12 +805,12 @@ export class DamageStatistics extends React.Component {
 				</div>
 				<div>{selectedPotencyStr}</div>
 				<div>
-					{localize({ en: "Selected PPS", zh: "选中部分PPS" })}
+					{showDamage
+						? localize({ en: "Selected DPS", zh: "选中部分DPS" })
+						: localize({ en: "Selected PPS", zh: "选中部分PPS" })}
 					{colon}
 					{selectedPPSAvailable
-						? (
-								this.selected.potency.applied / this.selected.targetableDuration
-							).toFixed(2)
+						? (selectedApplied / this.selected.targetableDuration).toFixed(2)
 						: "N/A"}
 				</div>
 				<div>{selectedGcdStr}</div>
@@ -769,15 +834,19 @@ export class DamageStatistics extends React.Component {
 					</div>
 					<div>{potencyStr}</div>
 					<div>
-						PPS{" "}
+						{showDamage ? "DPS" : "PPS"}{" "}
 						<Help
 							topic={"ppsNotes"}
 							content={
 								<div className={"toolTip"}>
 									<div className="paragraph">
 										{localize({
-											en: "(total applied potency of checked skills) / (total targetable duration from 0s until last damage application time).",
-											zh: "统计表中勾选技能的已结算总威力 / (从0s到最后伤害结算时间 - 不可选中总时长)。",
+											en: showDamage
+												? "(total applied damage of checked skills) / (total targetable duration from 0s until last damage application time)."
+												: "(total applied potency of checked skills) / (total targetable duration from 0s until last damage application time).",
+											zh: showDamage
+												? "统计表中勾选技能的已结算总伤害 / (从0s到最后伤害结算时间 - 不可选中总时长)。"
+												: "统计表中勾选技能的已结算总威力 / (从0s到最后伤害结算时间 - 不可选中总时长)。",
 										})}
 									</div>
 									<div className="paragraph">
@@ -791,17 +860,18 @@ export class DamageStatistics extends React.Component {
 						/>
 						{colon}
 						{ppsAvailable
-							? (
-									this.data.totalPotency.applied /
-									targetableDurationTilLastDisplay
-								).toFixed(2)
+							? (totalApplied / targetableDurationTilLastDisplay).toFixed(2)
 							: "N/A"}
 					</div>
 					<div>{gcdStr}</div>
 					{dotUptime}
 				</div>
 				<div style={{ marginTop: 10 }}>
-					<DamageStatsSettings />
+					<DamageStatsSettings
+						onShowExpectedDamageChange={(val) =>
+							this.setState({ showExpectedDamage: val })
+						}
+					/>
 					<SaveToFile
 						fileFormat={FileFormat.Csv}
 						getContentFn={() => {
@@ -851,12 +921,13 @@ export class DamageStatistics extends React.Component {
 			tags.push(props.row.displayedModifiers.map((tag, i) => <BuffTag key={i} buff={tag} />));
 
 			const includeInStats = getSkillOrDotInclude(props.row.skillName);
+			const isPhantom = props.row.displayedModifiers.includes(PotencyModifierType.PHANTOM);
 
 			// include checkbox
 			const includeCheckboxes: React.ReactNode[] = [];
 			if (
 				!sameAsLast &&
-				props.row.basePotency > 0 &&
+				(props.row.basePotency > 0 || isPhantom) &&
 				!(props.row.skillName in LIMIT_BREAK_ACTIONS)
 			) {
 				includeCheckboxes.push(
@@ -916,7 +987,9 @@ export class DamageStatistics extends React.Component {
 							}}
 						>
 							{isPetTracker(props.row.skillName)
-								? localize({ en: "(pet)", zh: "（宠物）" })
+								? props.row.skillName !== "RAGE"
+									? localize({ en: "(pet)", zh: "（宠物）" })
+									: null
 								: localize({ en: "(DoT)", zh: "（DoT）" })}{" "}
 						</span>
 						<Help
@@ -932,7 +1005,7 @@ export class DamageStatistics extends React.Component {
 
 			// target count node
 			let targetCountNode: React.ReactNode | undefined = undefined;
-			if (props.row.targetCount && props.row.basePotency > 0) {
+			if (props.row.targetCount && (props.row.basePotency > 0 || isPhantom)) {
 				targetCountNode = <span
 					style={{ textDecoration: includeInStats ? "none" : "line-through" }}
 				>
@@ -940,17 +1013,35 @@ export class DamageStatistics extends React.Component {
 				</span>;
 			}
 
-			// potency
+			// per-hit column(s)
 			let potencyNode: React.ReactNode | undefined = undefined;
-			if (props.row.basePotency > 0 && !hidePotency(props.row.skillName)) {
-				potencyNode = <PotencyDisplay
-					includeInStats={includeInStats}
-					basePotency={props.row.basePotency}
-					helpTopic={"mainTable-potencyCalc-" + props.key}
-					calc={props.row.calculationModifiers}
-					falloff={props.row.falloff}
-					targetCount={props.row.targetCount}
-				/>;
+			let phantomPerHitNode: React.ReactNode | undefined = undefined;
+			if (
+				(showDamage ? props.row.baseDamage > 0 : props.row.basePotency > 0) &&
+				!hidePotency(props.row.skillName)
+			) {
+				const perHit = showDamage ? (
+					<span style={{ textDecoration: includeInStats ? "none" : "line-through" }}>
+						{props.row.baseDamage.toFixed(2)}
+					</span>
+				) : (
+					<PotencyDisplay
+						includeInStats={includeInStats}
+						basePotency={props.row.basePotency}
+						helpTopic={"mainTable-potencyCalc-" + props.key}
+						calc={props.row.calculationModifiers}
+						falloff={props.row.falloff}
+						targetCount={props.row.targetCount}
+					/>
+				);
+				if (showDamage) {
+					// When viewing damage, there's no need split phantom and non-phantom potency.
+					potencyNode = perHit;
+				} else if (isPhantom) {
+					phantomPerHitNode = perHit;
+				} else {
+					potencyNode = perHit;
+				}
 			}
 
 			// usage count node
@@ -974,38 +1065,89 @@ export class DamageStatistics extends React.Component {
 				) : undefined}
 			</span>;
 
-			// total potency
+			// total column(s)
 			let totalPotencyNode: React.ReactNode | undefined = undefined;
+			let totalPhantomPotencyNode: React.ReactNode | undefined = undefined;
 			if (props.row.showPotency && !(props.row.skillName in LIMIT_BREAK_ACTIONS)) {
-				totalPotencyNode = <span
-					style={{ textDecoration: includeInStats ? "none" : "line-through" }}
-				>
-					{props.row.totalPotencyWithoutPot.toFixed(2)}
-					{props.row.potPotency > 0 ? (
-						<span
-							style={{
-								color: includeInStats
-									? colors.timeline.potCover
-									: colors.bgHighContrast,
-							}}
-						>
-							{" "}
-							+{props.row.potPotency.toFixed(2)}(
-							{localize({ en: "pot", zh: "爆发药" })})({props.row.potCount})
-						</span>
-					) : undefined}
-					{props.row.partyBuffPotency > 0 ? (
-						<span
-							style={{
-								color: includeInStats ? colors.accent : colors.bgHighContrast,
-							}}
-						>
-							{" "}
-							+{props.row.partyBuffPotency.toFixed(2)}(
-							{localize({ en: "party", zh: "团辅" })})
-						</span>
-					) : undefined}
-				</span>;
+				if (showDamage) {
+					// Combined damage total (phantom and normal share the same fields)
+					totalPotencyNode = <span
+						style={{ textDecoration: includeInStats ? "none" : "line-through" }}
+					>
+						{props.row.totalDamageWithoutPot.toFixed(2)}
+						{props.row.potDamage > 0 ? (
+							<span
+								style={{
+									color: includeInStats
+										? colors.timeline.potCover
+										: colors.bgHighContrast,
+								}}
+							>
+								{" "}
+								+{props.row.potDamage.toFixed(2)}(
+								{localize({ en: "pot", zh: "爆发药" })})({props.row.potCount})
+							</span>
+						) : undefined}
+						{props.row.partyBuffDamage > 0 ? (
+							<span
+								style={{
+									color: includeInStats ? colors.accent : colors.bgHighContrast,
+								}}
+							>
+								{" "}
+								+{props.row.partyBuffDamage.toFixed(2)}(
+								{localize({ en: "party", zh: "团辅" })})
+							</span>
+						) : undefined}
+					</span>;
+				} else if (isPhantom) {
+					totalPhantomPotencyNode = <span
+						style={{ textDecoration: includeInStats ? "none" : "line-through" }}
+					>
+						{props.row.phantomPotency.toFixed(2)}
+						{props.row.partyBuffPhantomPotency > 0 ? (
+							<span
+								style={{
+									color: includeInStats ? colors.accent : colors.bgHighContrast,
+								}}
+							>
+								{" "}
+								+{props.row.partyBuffPhantomPotency.toFixed(2)}(
+								{localize({ en: "party", zh: "团辅" })})
+							</span>
+						) : undefined}
+					</span>;
+				} else {
+					totalPotencyNode = <span
+						style={{ textDecoration: includeInStats ? "none" : "line-through" }}
+					>
+						{props.row.totalPotencyWithoutPot.toFixed(2)}
+						{props.row.potPotency > 0 ? (
+							<span
+								style={{
+									color: includeInStats
+										? colors.timeline.potCover
+										: colors.bgHighContrast,
+								}}
+							>
+								{" "}
+								+{props.row.potPotency.toFixed(2)}(
+								{localize({ en: "pot", zh: "爆发药" })})({props.row.potCount})
+							</span>
+						) : undefined}
+						{props.row.partyBuffPotency > 0 ? (
+							<span
+								style={{
+									color: includeInStats ? colors.accent : colors.bgHighContrast,
+								}}
+							>
+								{" "}
+								+{props.row.partyBuffPotency.toFixed(2)}(
+								{localize({ en: "party", zh: "团辅" })})
+							</span>
+						) : undefined}
+					</span>;
+				}
 			}
 			const rowStyle: CSSProperties = {
 				textAlign: "left",
@@ -1017,12 +1159,14 @@ export class DamageStatistics extends React.Component {
 			}
 			return <div key={props.key} style={rowStyle}>
 				<div style={cell(3)}>{includeCheckboxes}</div>
-				<div style={cell(18)}>{skillNameNode}</div>
-				<div style={cell(8)}>{targetCountNode}</div>
-				<div style={cell(19)}>{tags}</div>
-				<div style={cell(14)}>{potencyNode}</div>
-				<div style={cell(8)}>{usageCountNode}</div>
-				<div style={cell(30)}>{totalPotencyNode}</div>
+				<div style={cell(showDamage ? 20 : 15)}>{skillNameNode}</div>
+				<div style={cell(showDamage ? 8 : 6)}>{targetCountNode}</div>
+				<div style={cell(showDamage ? 16 : 12)}>{tags}</div>
+				<div style={cell(showDamage ? 14 : 10)}>{potencyNode}</div>
+				{showDamage ? undefined : <div style={cell(10)}>{phantomPerHitNode}</div>}
+				<div style={cell(showDamage ? 8 : 6)}>{usageCountNode}</div>
+				<div style={cell(showDamage ? 31 : 19)}>{totalPotencyNode}</div>
+				{showDamage ? undefined : <div style={cell(19)}>{totalPhantomPotencyNode}</div>}
 			</div>;
 		};
 		const tableRows: React.ReactNode[] = [];
@@ -1083,31 +1227,78 @@ export class DamageStatistics extends React.Component {
 			</div>
 			<div style={{ outline: "1px solid " + colors.bgMediumContrast }}>
 				<div>
-					<div style={{ display: "inline-block", width: "21%" }}>
+					<div style={{ display: "inline-block", width: showDamage ? "23%" : "18%" }}>
 						<span style={headerCellStyle}>
 							<b>{localize({ en: "skill", zh: "技能" })}</b>
 						</span>
 					</div>
-					<div style={{ display: "inline-block", width: "27%" }}>
+					<div style={{ display: "inline-block", width: showDamage ? "24%" : "18%" }}>
 						<span style={headerCellStyle}>
 							<b>{localize({ en: "targets", zh: "目标数" })}</b>
 						</span>
 					</div>
-					<div style={{ display: "inline-block", width: "14%" }}>
+					<div style={{ display: "inline-block", width: showDamage ? "14%" : "10%" }}>
 						<span style={headerCellStyle}>
-							<b>{localize({ en: "potency", zh: "单次威力" })}</b>
+							<b>
+								{showDamage
+									? localize({ en: "damage", zh: "单次伤害" })
+									: localize({ en: "potency", zh: "单次威力" })}
+							</b>
+							{showDamage ? (
+								<>
+									{" "}
+									<Help
+										topic={"expectedDamageColumn"}
+										content={
+											<>
+												<p>
+													The expected damage done by this attack. If
+													numbers appear unreasonable, make sure all
+													combat stats are correctly configured to the
+													right of the skill input window. These formulas
+													have only been tested for BLM (and have not been
+													tested very thoroughly), so use discretion when
+													choosing whether to trust them.
+												</p>
+												<p>
+													Calculations assume 24 phantom mastery and 26 OC
+													special attribute.
+												</p>
+											</>
+										}
+									/>
+								</>
+							) : undefined}
 						</span>
 					</div>
-					<div style={{ display: "inline-block", width: "8%" }}>
+					{showDamage ? undefined : (
+						<div style={{ display: "inline-block", width: "10%" }}>
+							<span style={headerCellStyle}>
+								<b>{localize({ en: "ph. potency", zh: "幻影威力" })}</b>
+							</span>
+						</div>
+					)}
+					<div style={{ display: "inline-block", width: showDamage ? "8%" : "6%" }}>
 						<span style={headerCellStyle}>
 							<b>{localize({ en: "count", zh: "数量" })}</b>
 						</span>
 					</div>
-					<div style={{ display: "inline-block", width: "30%" }}>
+					<div style={{ display: "inline-block", width: showDamage ? "31%" : "19%" }}>
 						<span style={headerCellStyle}>
-							<b>{localize({ en: "total", zh: "总威力" })}</b>
+							<b>
+								{showDamage
+									? localize({ en: "total", zh: "总伤害" })
+									: localize({ en: "total", zh: "总威力" })}
+							</b>
 						</span>
 					</div>
+					{showDamage ? undefined : (
+						<div style={{ display: "inline-block", width: "19%" }}>
+							<span style={headerCellStyle}>
+								<b>{localize({ en: "total ph. potency", zh: "幻影总威力" })}</b>
+							</span>
+						</div>
+					)}
 				</div>
 				{tableRows}
 				<div
@@ -1117,14 +1308,23 @@ export class DamageStatistics extends React.Component {
 						borderTop: "1px solid " + colors.bgMediumContrast,
 					}}
 				>
-					<div style={cell(70)} />
-					<div style={cell(30)}>
+					<div style={cell(showDamage ? 69 : 62)} />
+					<div style={cell(showDamage ? 31 : 19)}>
 						<span>
-							{this.data.mainTableSummary.totalPotencyWithoutPot.toFixed(2)}
-							{this.data.mainTableSummary.totalPotPotency > 0 ? (
+							{(showDamage
+								? this.data.mainTableSummary.totalDamageWithoutPot
+								: this.data.mainTableSummary.totalPotencyWithoutPot
+							).toFixed(2)}
+							{(showDamage
+								? this.data.mainTableSummary.totalPotDamage
+								: this.data.mainTableSummary.totalPotPotency) > 0 ? (
 								<span style={{ color: colors.timeline.potCover }}>
 									{" "}
-									+{this.data.mainTableSummary.totalPotPotency.toFixed(2)}
+									+
+									{(showDamage
+										? this.data.mainTableSummary.totalPotDamage
+										: this.data.mainTableSummary.totalPotPotency
+									).toFixed(2)}
 									{localize({
 										en: " (pot +" + this.data.tinctureBuffPercentage + "%)",
 										zh: "(爆发药 +" + this.data.tinctureBuffPercentage + "%)",
@@ -1132,15 +1332,44 @@ export class DamageStatistics extends React.Component {
 								</span>
 							) : undefined}
 
-							{this.data.mainTableSummary.totalPartyBuffPotency > 0 ? (
+							{(showDamage
+								? this.data.mainTableSummary.totalPartyBuffDamage
+								: this.data.mainTableSummary.totalPartyBuffPotency) > 0 ? (
 								<span style={{ color: colors.accent }}>
 									{" "}
-									+{this.data.mainTableSummary.totalPartyBuffPotency.toFixed(2)}(
-									{localize({ en: "party", zh: "团辅" })})
+									+
+									{(showDamage
+										? this.data.mainTableSummary.totalPartyBuffDamage
+										: this.data.mainTableSummary.totalPartyBuffPotency
+									).toFixed(2)}
+									({localize({ en: "party", zh: "团辅" })})
 								</span>
 							) : undefined}
 						</span>
 					</div>
+					{showDamage ? undefined : (
+						<div style={cell(19)}>
+							<span>
+								{this.data.mainTableSummary.totalPhantomPotency > 0 ||
+								this.data.mainTableSummary.totalPartyBuffPhantomPotency > 0 ? (
+									<>
+										{this.data.mainTableSummary.totalPhantomPotency.toFixed(2)}
+										{this.data.mainTableSummary.totalPartyBuffPhantomPotency >
+										0 ? (
+											<span style={{ color: colors.accent }}>
+												{" "}
+												+
+												{this.data.mainTableSummary.totalPartyBuffPhantomPotency.toFixed(
+													2,
+												)}
+												({localize({ en: "party", zh: "团辅" })})
+											</span>
+										) : undefined}
+									</>
+								) : undefined}
+							</span>
+						</div>
+					)}
 				</div>
 			</div>
 		</div>;

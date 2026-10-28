@@ -79,6 +79,23 @@ buffIcons.set(BuffType.Dissipation, "Buffs/SCH/Dissipation.png");
 buffIcons.set(BuffType.Protraction, "Buffs/SCH/Protraction.png");
 buffIcons.set(BuffType.Recitation, "Buffs/SCH/Recitation.png");
 
+// Unique phantom stuff
+buffIcons.set(BuffType.OffensiveAria, "Buffs/Phantom/Offensive Aria.png");
+buffIcons.set(BuffType.HerosRime, "Buffs/Phantom/Hero's Rime.png");
+buffIcons.set(BuffType.BattleHigh, "Buffs/Phantom/Battle High.png");
+buffIcons.set(BuffType.Vigilance, "Buffs/Phantom/Vigilance.png");
+buffIcons.set(BuffType.OccultQuick, "Buffs/Phantom/Occult Quick.png");
+buffIcons.set(BuffType.PhantomKick, "Buffs/Phantom/Phantom Kick.png");
+buffIcons.set(BuffType.DeadlyPhantomAim, "Buffs/Phantom/Deadly Phantom Aim.png");
+buffIcons.set(BuffType.BattlesClangor1, "Buffs/Phantom/Battle's Clangor.png");
+buffIcons.set(BuffType.BattlesClangor2, "Buffs/Phantom/Battle's Clangor2.png");
+buffIcons.set(BuffType.BattlesClangor3, "Buffs/Phantom/Battle's Clangor3.png");
+buffIcons.set(BuffType.BattlesClangor4, "Buffs/Phantom/Battle's Clangor4.png");
+buffIcons.set(BuffType.BattlesClangor5, "Buffs/Phantom/Battle's Clangor5.png");
+buffIcons.set(BuffType.BattlesClangor6, "Buffs/Phantom/Battle's Clangor6.png");
+buffIcons.set(BuffType.BattlesClangor7, "Buffs/Phantom/Battle's Clangor7.png");
+buffIcons.set(BuffType.BattlesClangor8, "Buffs/Phantom/Battle's Clangor8.png");
+
 export const buffIconImages: Map<BuffType, HTMLImageElement> = new Map();
 buffIcons.forEach((path, skillName) => {
 	const imgObj = new Image();

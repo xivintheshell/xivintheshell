@@ -100,9 +100,14 @@ import { ActionKey, ACTIONS, ResourceKey, RESOURCES } from "../Game/Data";
 import { getGameState } from "../Game/Jobs";
 import { getSkill } from "../Game/Skills";
 import { localizeSkillName } from "../Components/Localization";
+import { PhantomJob } from "../Game/Data/Shared/Phantom";
+import { PJOB_ABILITY_MAP } from "../Game/Jobs/Phantom";
 
 // Ensure role actions are imported after job-specific ones to protect hotbar ordering
 import "../Game/Jobs/RoleActions";
+
+// Ensure phantom actions are imported last
+import "../Game/Jobs/Phantom";
 
 type Fixme = any;
 
@@ -1068,7 +1073,7 @@ class Controller {
 		const buttons: SkillButtonViewInfo[] = [];
 		this.hotbarLayout.forEach((row, bar) => {
 			row.forEach((skillName, slot) => {
-				if (skillName === "NEVER") {
+				if (skillName === "NEVER" || PJOB_ABILITY_MAP.has(skillName)) {
 					return;
 				}
 				const displayedSkill = getConditionalReplacement(skillName, game);
@@ -1079,6 +1084,19 @@ class Controller {
 				});
 			});
 		});
+		// Phantom actions are not hotbar slots. Show the selected phantom job's actions after the bars.
+		const phantomJob = this.gameConfig.phantomJob;
+		if (phantomJob !== undefined) {
+			for (const [skillName, pjob] of PJOB_ABILITY_MAP) {
+				if (pjob !== phantomJob || !getSkill(game.job, skillName).startOnHotbar) {
+					continue;
+				}
+				const displayedSkill = getConditionalReplacement(skillName, game);
+				buttons.push({
+					...game.getSkillAvailabilityStatus(displayedSkill),
+				});
+			}
+		}
 		updateSkillButtons(buttons);
 	}
 
@@ -1199,6 +1217,7 @@ class Controller {
 	setConfigAndRestart(
 		props: {
 			job: ShellJob;
+			phantomJob?: PhantomJob;
 			level: LevelSync;
 			main: number;
 			wd: number;

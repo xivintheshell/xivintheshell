@@ -99,6 +99,11 @@ export const buffInfos = [
 	new BuffInfo(BuffType.StarryMuse, MarkerColor.Purple, 3685, 20.5, 1.05, 0, 0, "PCT"),
 	new BuffInfo(BuffType.TechnicalFinish, MarkerColor.Blue, 1822, 20, 1.05, 0, 0, "DNC"),
 	new BuffInfo(BuffType.WanderersMinuet, MarkerColor.Green, 2216, 45, 1, 0.02, 0, "BRD"),
+	// Unique phantom stuff (hacked in as BLU since we'll never be BLU in OC)
+	new BuffInfo(BuffType.OffensiveAria, MarkerColor.Orange, 4247, 999, 1.04, 0, 0, "BLU"),
+	new BuffInfo(BuffType.HerosRime, MarkerColor.Red, 4249, 20, 1.1, 0, 0, "BLU"),
+	new BuffInfo(BuffType.BattleHigh, MarkerColor.Green, 4229, 20, 1, 0.5, 0.5, "BLU"),
+	new BuffInfo(BuffType.Vigilance, MarkerColor.Red, 4277, 20, 1, 0.6, 0, "BLU"),
 ];
 
 const buffInfosMap: Map<BuffType, BuffInfo> = new Map();
@@ -123,6 +128,11 @@ const RADIANT_FINALE_BUFF_TYPES: ReadonlySet<BuffType> = new Set([
 	BuffType.RadiantFinale3,
 ]);
 
+const PHANTOM_BARD_BUFF_TYPES: ReadonlySet<BuffType> = new Set([
+	BuffType.OffensiveAria,
+	BuffType.HerosRime,
+]);
+
 // Render all mutually exclusive buffs on a single track.
 export function buffTrackBinKey(buffType: BuffType): BuffType {
 	if (BRD_SONG_BUFF_TYPES.has(buffType)) {
@@ -130,6 +140,9 @@ export function buffTrackBinKey(buffType: BuffType): BuffType {
 	}
 	if (RADIANT_FINALE_BUFF_TYPES.has(buffType)) {
 		return BuffType.RadiantFinale1;
+	}
+	if (PHANTOM_BARD_BUFF_TYPES.has(buffType)) {
+		return BuffType.OffensiveAria;
 	}
 	return buffType;
 }
