@@ -1209,6 +1209,7 @@ class Controller {
 			determination: number;
 			piety: number;
 			tenacity: number;
+			partyBonus: number;
 			animationLock: number;
 			fps: number;
 			gcdSkillCorrection: number;
@@ -2063,6 +2064,7 @@ class Controller {
 			level: this.gameConfig.level,
 			wd: this.gameConfig.wd,
 			main_stat: this.gameConfig.main,
+			num_roles_in_party: this.gameConfig.partyBonus,
 		};
 		if (autoStrengths[this.gameConfig.level].has(job)) {
 			statsDict = {

@@ -1,5 +1,12 @@
 [
 	{
+		"date": "11/1/26",
+		"changes": [
+			"Fixed a bug where stats could not be imported from certain xivgear links.",
+			"Edited export for Ama's combat sim to account for party bonus. Please re-import configs from xivgear if you use this feature."
+		]
+	},
+	{
 		"date": "10/27/26",
 		"changes": [
 			"Added Super-Ether and Ultra-Potion actions.",

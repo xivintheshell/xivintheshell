@@ -14,7 +14,6 @@ import {
 import { KeybindManager, HotbarManager } from "./KeybindManager";
 import { ConfigApply } from "../Controller/UndoStack";
 import { getCachedValue, setCachedValue, ShellVersion, TickMode } from "../Controller/Common";
-// import { updateBind, resetAllBinds } from "../Controller/KeybindManager";
 import { LevelSync, ProcMode } from "../Game/Common";
 import { getAllResources, getResourceInfo, ResourceOverrideData } from "../Game/Resources";
 import {
@@ -898,6 +897,7 @@ type ConfigFields = {
 	tenacity: string;
 	wd: string;
 	main: string;
+	partyBonus: string;
 	// not actually serialized state, but makes the reducer easier to manage
 	dirty: boolean;
 };
@@ -1005,14 +1005,22 @@ function GearImport(props: {
 					throw new Error("etro load failed (please check your link)");
 				}
 			} else if (url && url.hostname === "xivgear.app") {
+				// xivgear set links has a few different formats:
+				// - current, single-set export: https://xivgear.app/sl/a5a57d96-12cf-4b04-9108-e78834035790
+				// - "legacy" encoding: https://xivgear.app/?page=sl|a5a57d96-12cf-4b04-9108-e78834035790
+				// legacy encoding can also omit the `sl|` prefix entirely
+				const pathSegments = url.pathname.split("/").filter((x) => x.length > 0);
 				const pageParam = url.searchParams.get("page");
-				if (!pageParam) {
+				if (!pageParam && !(pathSegments.length === 2 && pathSegments.at(-2) === "sl")) {
 					throw new Error(
 						"xivgear link must be to a specific set (hover ? in URL input box for details)",
 					);
 				}
-				// strip the "sl|" url-encoded characters at the start of the link
-				const setId = pageParam.startsWith("sl|") ? pageParam.substr(3) : pageParam;
+				const setId = pageParam
+					? pageParam.startsWith("sl|")
+						? pageParam.substr(3)
+						: pageParam
+					: pathSegments.at(-1);
 				headers.append("Content-Type", "application/json");
 				const response = await fetch("https://api.xivgear.app/fulldata/" + setId, {
 					method: "GET",
@@ -1029,12 +1037,18 @@ function GearImport(props: {
 						);
 					}
 					const stats = body["sets"][0]["computedStats"];
+					const gearStats = stats["gearStats"];
+					// ama's combat sim expects main stats to be passed in as the base value without
+					// party bonus, so we must read main stat from gearStats (which does not account
+					// for party bonus multiplier) rather than computedStats
+					const partyBonusNumber = parseInt(body["partyBonus"]);
+					const partyBonus = isNaN(partyBonusNumber) ? 5 : partyBonusNumber;
 					// just assume the highest main stat/wd field is the correct one
 					const mainStat = Math.max(
 						...["strength", "dexterity", "intelligence", "mind"].map(
-							(field) => stats[field] ?? 0,
+							(field) => gearStats[field] ?? 0,
 						),
-					).toString();
+					);
 					const wd = Math.max(stats["wdPhys"] ?? 0, stats["wdMag"] ?? 0).toString();
 					const fields: Partial<ConfigFields> = {
 						job: body["job"],
@@ -1047,7 +1061,8 @@ function GearImport(props: {
 						piety: stats["piety"],
 						tenacity: stats["tenacity"],
 						wd,
-						main: mainStat,
+						main: mainStat.toString(),
+						partyBonus: partyBonus.toString(),
 					};
 					props.dispatch(fields);
 					// @ts-expect-error compiler can't be sure that Object.keys matches ConfigFields
@@ -1180,8 +1195,8 @@ function GearImport(props: {
 						{localize({
 							en:
 								'xivgear: At the top of the page, click "Export" -> "Selected Set" -> "Link to This Set" -> "Generate"' +
-								" (example: https://xivgear.app/?page=sl%7C143f3245-c35b-4391-8b2b-db5cc1a8de9a)",
-							zh: 'xivgear：从页面顶端点击 "Export" -> "Selected Set" -> "Link to This Set" -> "Generate"（例：https://xivgear.app/?page=sl%7C143f3245-c35b-4391-8b2b-db5cc1a8de9a）',
+								" (example: https://xivgear.app/sl/56784e45-c7f6-484d-bb56-94754108d6f3)",
+							zh: 'xivgear：从页面顶端点击 "Export" -> "Selected Set" -> "Link to This Set" -> "Generate"（例：https://xivgear.app/sl/56784e45-c7f6-484d-bb56-94754108d6f3）',
 						})}
 					</p>
 					<p>
@@ -1409,6 +1424,7 @@ export function Config() {
 		tenacity: "0",
 		wd: "0",
 		main: "0",
+		partyBonus: "0",
 		dirty: false,
 	});
 	const setDirty = (b: boolean) => configFieldDispatch({ dirty: b });
@@ -1576,6 +1592,7 @@ export function Config() {
 				"main",
 				"piety",
 				"tenacity",
+				"partyBonus",
 			];
 			if (
 				numericFields

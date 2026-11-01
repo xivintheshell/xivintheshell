@@ -15,12 +15,13 @@ export type ConfigData = {
 	directHit: number;
 	determination: number;
 	piety: number;
-	// TEN, WD, and main stat are hidden because they are not currently used for any purpose in XIV in
-	// the Shell itself.  They were requested by Caro for compatibility with Ama's Combat Sim
-	// export, and can be set either via xivgear import or by manually editing this file.
+	// TEN, WD, main stat, and party bonus are hidden because they are not currently used for any
+	// purpose in XIV in the Shell itself.  They were requested for compatibility with Ama's Combat
+	// Sim export, and can be set either via xivgear import or by manually editing this file.
 	tenacity: number;
 	main: number;
 	wd: number;
+	partyBonus: number;
 	countdown: number;
 	randomSeed: string;
 	fps: number;
@@ -291,6 +292,7 @@ export function makeDefaultConfig(job: ShellJob, level: LevelSync = LevelSync.lv
 		level: level ?? (job === "BLU" ? LevelSync.lvl80 : LevelSync.lvl100),
 		...JOB_DEFAULT_FIELDS[job],
 		wd: CURRENT_BIS_WD,
+		partyBonus: 5,
 		countdown: 5,
 		randomSeed: "sup",
 		fps: 60,
@@ -331,6 +333,7 @@ export class GameConfig {
 	readonly level: LevelSync;
 	readonly wd: number;
 	readonly main: number;
+	readonly partyBonus: number;
 	readonly spellSpeed: number;
 	readonly skillSpeed: number;
 	readonly criticalHit: number;
@@ -354,6 +357,7 @@ export class GameConfig {
 		level: LevelSync;
 		wd?: number;
 		main?: number;
+		partyBonus?: number;
 		spellSpeed: number;
 		skillSpeed: number;
 		criticalHit: number;
@@ -428,6 +432,7 @@ export class GameConfig {
 		this.tenacity = props?.tenacity ?? 420;
 		this.main = props?.main ?? OTHER_MAIN;
 		this.wd = props?.wd ?? CURRENT_BIS_WD;
+		this.partyBonus = props?.partyBonus ?? 5;
 	}
 
 	// Presuming DoT and Hot potency calculations work the same way...
@@ -516,6 +521,7 @@ export class GameConfig {
 			level: this.level,
 			wd: this.wd,
 			main: this.main,
+			partyBonus: this.partyBonus,
 			spellSpeed: this.spellSpeed,
 			skillSpeed: this.skillSpeed,
 			criticalHit: this.criticalHit,
