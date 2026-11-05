@@ -65,13 +65,14 @@ import { XIVMath } from "../Game/XIVMath";
 // - Average damage: 200667.22
 
 const commonStats: [number, number, number, number] = [100, 3214, 1990, 2033]; // level, crit, dh, det
+const autoCDH = { isAutoCrit: true, isAutoDh: true } as const;
 
-const hammerBaseDamage = XIVMath.calculateDamage(...commonStats, 1, 1, 1);
+const hammerBaseDamage = XIVMath.calculateDamage(...commonStats, 1, 0, 0, autoCDH);
 const paintBaseDamage = XIVMath.calculateDamage(...commonStats, 1, 0, 0);
 
 // just Battle Litany
 it("calculates hammer with litany", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1, 1.1, 1);
+	const withBuffs = XIVMath.calculateDamage(...commonStats, 1, 0.1, 0, autoCDH);
 	expect(withBuffs / hammerBaseDamage).toBeCloseTo(1.06, 2);
 });
 
@@ -82,7 +83,7 @@ it("calculates paint with litany", () => {
 
 // just Devilment
 it.fails("calculates hammer with devilment", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1, 1.2, 1.2);
+	const withBuffs = XIVMath.calculateDamage(...commonStats, 1, 0.2, 0.2, autoCDH);
 	expect(withBuffs / hammerBaseDamage).toBeCloseTo(1.17, 2);
 });
 
@@ -93,13 +94,13 @@ it("calculates paint with devilment", () => {
 
 // Battle Litany + Wanderer's Minuet
 it("calculates hammer with litany + wm", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1, 1.12, 1);
+	const withBuffs = XIVMath.calculateDamage(...commonStats, 1, 0.12, 0, autoCDH);
 	expect(withBuffs / hammerBaseDamage).toBeCloseTo(1.072, 2);
 });
 
 // Battle Litany + Chain Stratagem
 it.fails("calculates hammer with litany + chain", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1, 1.2, 1);
+	const withBuffs = XIVMath.calculateDamage(...commonStats, 1, 0.2, 0, autoCDH);
 	expect(withBuffs / hammerBaseDamage).toBeCloseTo(1.102, 2);
 });
 
@@ -110,7 +111,7 @@ it.fails("calculates paint with litany + chain", () => {
 
 // Battle Litany + Devilment
 it.fails("calculates hammer with litany + devilment", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1, 1.3, 1.2);
+	const withBuffs = XIVMath.calculateDamage(...commonStats, 1, 0.3, 0.2, autoCDH);
 	expect(withBuffs / hammerBaseDamage).toBeCloseTo(1.23, 2);
 });
 
@@ -121,7 +122,7 @@ it("calculates paint with litany + devilment", () => {
 
 // Battle Litany + Devilment + Technical Finish
 it.fails("calculates hammer with litany + devilment + tech", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1.05, 1.3, 1.2);
+	const withBuffs = XIVMath.calculateDamage(...commonStats, 1.05, 0.3, 0.2, autoCDH);
 	expect(withBuffs / hammerBaseDamage).toBeCloseTo(1.27, 2);
 });
 
@@ -132,7 +133,7 @@ it.fails("calculates paint with litany + devilment + tech", () => {
 
 // just Technical Finish
 it("calculates hammer with tech", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1.05, 1, 1);
+	const withBuffs = XIVMath.calculateDamage(...commonStats, 1.05, 0, 0, autoCDH);
 	expect(withBuffs / hammerBaseDamage).toBeCloseTo(1.05, 2);
 });
 
@@ -143,11 +144,35 @@ it("calculates paint with tech", () => {
 
 // Army's Paeon + Technical Finish
 it("calculates hammer with AP + tech", () => {
-	const withBuffs = XIVMath.calculateDamage(...commonStats, 1.05, 1, 1.03);
+	const withBuffs = XIVMath.calculateDamage(...commonStats, 1.05, 0, 0.03, autoCDH);
 	expect(withBuffs / hammerBaseDamage).toBeCloseTo(1.058, 2);
 });
 
 it("calculates paint with AP + tech", () => {
 	const withBuffs = XIVMath.calculateDamage(...commonStats, 1.05, 0, 0.03);
 	expect(withBuffs / paintBaseDamage).toBeCloseTo(1.057, 2);
+});
+
+// === LEVEL 70 CHANCE OVERCAP ===
+// Yuyuka reported on QQ that Devilment multipliers were reducing the potencies of RGB casts,
+// caused by the configured DH stat + Devilment overflowing DH chance to >100%.
+// Furthermore, overflowing crit/DH chance does not cause auto-crit/DH multipliers to take effect.
+// The substats in this test provide a base crit of 68.1% and base DH chance 97.9% at level 70.
+// The ratios are taken from estimates from plugging numbers into Ama's combat sim.
+const lvl70OvercapStats: [number, number, number, number] = [70, 3207, 1966, 2769];
+const lvl70BaseDamage = XIVMath.calculateDamage(...lvl70OvercapStats, 1, 0, 0);
+
+it("clamps crit-only chance overcap at level 70", () => {
+	const overcapped = XIVMath.calculateDamage(...lvl70OvercapStats, 1, 0.4, 0);
+	expect(overcapped / lvl70BaseDamage).toBeCloseTo(1.193, 3);
+});
+
+it("clamps DH-only chance overcap at level 70", () => {
+	const overcapped = XIVMath.calculateDamage(...lvl70OvercapStats, 1, 0, 0.2);
+	expect(overcapped / lvl70BaseDamage).toBeCloseTo(1.004, 3);
+});
+
+it("clamps crit and DH overcap without applying auto-DH bonus at level 70", () => {
+	const overcapped = XIVMath.calculateDamage(...lvl70OvercapStats, 1, 0.4, 0.2);
+	expect(overcapped / lvl70BaseDamage).toBeCloseTo(1.198, 3);
 });
