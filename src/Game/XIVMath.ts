@@ -57,19 +57,28 @@ export class XIVMath {
 		damageFactor: number,
 		critBonus: number,
 		dhBonus: number,
+		autoFlags?: { isAutoCrit?: boolean; isAutoDh?: boolean },
 	) {
 		let modifier = damageFactor;
 
-		// We assume that auto-crit/DH abilities have a base critBonus/dhBonus value of 1,
-		// and that any excess is provided from buffs.
-		const critRate =
-			critBonus >= 1
-				? critBonus
-				: critBonus < 0
-					? 0
-					: XIVMath.criticalHitRate(level, crit) + critBonus;
-		const dhRate =
-			dhBonus >= 1 ? dhBonus : dhBonus < 0 ? 0 : XIVMath.#directHitRate(level, dh) + dhBonus;
+		// critBonus/dhBonus are the additive chance from buffs.
+		// This previously was added to 1 in Potency.ts for auto-crit/DH abilities, but
+		// we need separate handling to distinguish between abilities where the "natural" crit
+		// or DH rate exceeds 100%, and auto-crit/DH abilities that may receive additional multipliers.
+		const isAutoCrit = autoFlags?.isAutoCrit ?? false;
+		const isAutoDh = autoFlags?.isAutoDh ?? false;
+		const autoCDH = isAutoCrit && isAutoDh;
+
+		const critRate = isAutoCrit
+			? 1
+			: critBonus < 0
+				? 0
+				: Math.min(1, XIVMath.criticalHitRate(level, crit) + critBonus);
+		const dhRate = isAutoDh
+			? 1
+			: dhBonus < 0
+				? 0
+				: Math.min(1, XIVMath.#directHitRate(level, dh) + dhBonus);
 
 		// If this ability can't crit or direct hit, no need to calculate further modifications
 		if (critRate === 0 && dhRate === 0) {
@@ -78,11 +87,10 @@ export class XIVMath {
 		const critDamageMult = XIVMath.#criticalHitStrength(level, crit);
 		const dhMult = 1.25;
 
-		const autoCDH = critRate >= 1 && dhRate >= 1;
-		const critMod = critRate > 1 ? flp(1 + (critDamageMult - 1) * (critBonus - 1), 3) : 1;
-		const dhMod = dhRate > 1 ? flp(1 + (dhMult - 1) * (dhBonus - 1), 3) : 1;
-		const clampedCritRate = critRate > 1 ? 1 : critRate;
-		const clampedDHRate = dhRate > 1 ? 1 : dhRate;
+		// When crit or DH chance exceeds 100%, the extra stats are turned into a multiplier.
+		const critMod =
+			isAutoCrit && critBonus > 0 ? flp(1 + (critDamageMult - 1) * critBonus, 3) : 1;
+		const dhMod = isAutoDh && dhBonus > 0 ? flp(1 + (dhMult - 1) * dhBonus, 3) : 1;
 
 		if (autoCDH)
 			modifier *= flp(XIVMath.#detMult(level, det) + XIVMath.#autoDHBonus(level, dh), 3);
@@ -91,13 +99,13 @@ export class XIVMath {
 		const critDamage = modifier * critMod * critDamageMult;
 		const dhDamage = modifier * dhMod * dhMult;
 		const critDHDamage = critDamage * dhMod * dhMult;
-		const critDHRate = clampedCritRate * clampedDHRate;
-		const normalRate = 1 - clampedCritRate - clampedDHRate + critDHRate;
+		const critDHRate = critRate * dhRate;
+		const normalRate = 1 - critRate - dhRate + critDHRate;
 
 		return (
 			modifier * normalRate +
-			critDamage * (clampedCritRate - critDHRate) +
-			dhDamage * (clampedDHRate - critDHRate) +
+			critDamage * (critRate - critDHRate) +
+			dhDamage * (dhRate - critDHRate) +
 			critDHDamage * critDHRate
 		);
 	}

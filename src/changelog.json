@@ -1,5 +1,14 @@
 [
 	{
+		"date": "11/4/26",
+		"changes": [
+			"Fixed a bug where the effect of crit and DH buffs were computed incorrectly when crit/DH chance exceeded 100%."
+		],
+		"changes_zh": [
+			"修复了暴击率或直击率超过 100% 时，暴击与直击 buff 效果计算错误的问题。"
+		]
+	},
+	{
 		"date": "11/1/26",
 		"changes": [
 			"Fixed a bug where stats could not be imported from certain xivgear links.",

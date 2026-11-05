@@ -993,8 +993,9 @@ export class Potency {
 			controller.gameConfig.directHit,
 			controller.gameConfig.determination,
 			1,
-			1 + critBonus,
-			1 + dhBonus,
+			critBonus,
+			dhBonus,
+			{ isAutoCrit: true, isAutoDh: true },
 		);
 
 		return buffed / base;
@@ -1017,8 +1018,9 @@ export class Potency {
 			controller.gameConfig.directHit,
 			controller.gameConfig.determination,
 			1,
-			1 + critBonus,
+			critBonus,
 			dhBonus,
+			{ isAutoCrit: true },
 		);
 
 		return buffed / base;
