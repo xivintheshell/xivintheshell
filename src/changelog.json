@@ -1,5 +1,11 @@
 [
 	{
+		"date": "11/10/26",
+		"changes": [
+			"[NIN] Fixed incorrect potencies below level 100 for Armor Crush and Aeolian Edge."
+		]
+	},
+	{
 		"date": "11/4/26",
 		"changes": [
 			"Fixed a bug where the effect of crit and DH buffs were computed incorrectly when crit/DH chance exceeded 100%."

@@ -714,6 +714,22 @@ export function makeAbility<T extends GameState>(
 		(state) => (params.requiresCombat ? state.isInCombat() : true),
 		params.validateAttempt ?? ((state) => true),
 	);
+	const jobPotencyModifiers: PotencyModifierFn<T> = (state) => {
+		const mods = [];
+		if (params.potency && params.positional) {
+			mods.push(
+				...state.computeComboAndPositionalModifiers(
+					getBasePotency(state, params.potency!),
+					undefined,
+					params.positional,
+				),
+			);
+		}
+		if (params.jobPotencyModifiers) {
+			mods.push(...params.jobPotencyModifiers(state));
+		}
+		return mods;
+	};
 	const info: Ability<T> = {
 		kind: "ability",
 		name: name,
@@ -733,7 +749,7 @@ export function makeAbility<T extends GameState>(
 		animationLockFn: (state) => fnify(params.animationLock, state.config.animationLock)(state),
 		manaCostFn: fnify(params.manaCost, 0),
 		potencyFn: (state) => getBasePotency(state, params.potency),
-		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
+		jobPotencyModifiers: jobPotencyModifiers ?? ((state) => []),
 		jobTargetPotencyModifiers: params.jobTargetPotencyModifiers ?? ((state) => new Map()),
 		drawsAggro: params.drawsAggro ?? false,
 		savesTargets: params.savesTargets ?? false,
