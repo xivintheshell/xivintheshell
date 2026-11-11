@@ -2213,6 +2213,10 @@ export class GameState {
 		if (skill.aoeHeal) {
 			node.setHealTargetCount(this.resources.get("PARTY_SIZE").availableAmount());
 		}
+		// Fix for an old bug where Living Muse would drop targets on timeline rearrange.
+		if (skill.savesTargets && node.targetList.length === 0) {
+			node.forceOneTarget();
+		}
 		// Process the remainder of the skills effects dependent on the kind of skill
 		if (skill.kind === "spell" || skill.kind === "weaponskill") {
 			this.useSpellOrWeaponskill(skill, node, actionIndex);

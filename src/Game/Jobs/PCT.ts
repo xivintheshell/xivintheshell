@@ -280,6 +280,7 @@ const makeAbility_PCT = (
 		potency?: number | Array<[TraitKey, number]>;
 		replaceIf?: ConditionalSkillReplace<PCTState>[];
 		requiresCombat?: boolean;
+		savesTargets?: boolean;
 		highlightIf?: StatePredicate<PCTState>;
 		startOnHotbar?: boolean;
 		falloff?: number;
@@ -859,11 +860,15 @@ livingMuseInfos.forEach(([name, level, potencies, applicationDelay, validateAtte
 	makeAbility_PCT(name, level, "cd_LIVING_MUSE", {
 		replaceIf: livingConditions,
 		startOnHotbar: i === 0,
+		// Weird workaround for a bug where moving Living Muse around Pom/Winged Muse etc. would
+		// cause the ability to irreversibly drop targets. This is the same workaround applied
+		// for Earthly Star.
+		savesTargets: true,
 		potency: potencies,
 		falloff: 0.7,
-		applicationDelay: applicationDelay,
+		applicationDelay,
 		cooldown: 40,
-		validateAttempt: validateAttempt,
+		validateAttempt,
 		onConfirm: (state) => {
 			const depictions = state.resources.get("DEPICTIONS");
 			const portraits = state.resources.get("PORTRAIT");
