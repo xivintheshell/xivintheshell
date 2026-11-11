@@ -484,14 +484,12 @@ makeNINWeaponskill("AEOLIAN_EDGE", 26, {
 	potency: [
 		["NEVER", 100],
 		["MELEE_MASTERY_NIN", 140],
-		// according to consolegameswiki,
-		// melee mastery does not affect combo/positional potencies?
-		// TODO verify against tooltips
 		["MELEE_MASTERY_III_NIN", 220],
 	],
 	combo: {
 		potency: [
-			["NEVER", 340],
+			["NEVER", 280],
+			["MELEE_MASTERY_NIN", 320],
 			["MELEE_MASTERY_III_NIN", 400],
 		],
 		resource: "NIN_COMBO_TRACKER",
@@ -504,7 +502,8 @@ makeNINWeaponskill("AEOLIAN_EDGE", 26, {
 			["MELEE_MASTERY_III_NIN", 280],
 		],
 		comboPotency: [
-			["NEVER", 400],
+			["NEVER", 340],
+			["MELEE_MASTERY_NIN", 380],
 			["MELEE_MASTERY_III_NIN", 460],
 		],
 		location: "rear",
@@ -528,8 +527,8 @@ makeNINWeaponskill("ARMOR_CRUSH", 54, {
 	],
 	combo: {
 		potency: [
-			["NEVER", 320],
-			["MELEE_MASTERY_NIN", 360],
+			["NEVER", 300],
+			["MELEE_MASTERY_NIN", 340],
 			["MELEE_MASTERY_III_NIN", 440],
 		],
 		resource: "NIN_COMBO_TRACKER",
@@ -542,8 +541,8 @@ makeNINWeaponskill("ARMOR_CRUSH", 54, {
 			["MELEE_MASTERY_III_NIN", 300],
 		],
 		comboPotency: [
-			["NEVER", 380],
-			["MELEE_MASTERY_NIN", 420],
+			["NEVER", 360],
+			["MELEE_MASTERY_NIN", 400],
 			["MELEE_MASTERY_III_NIN", 500],
 		],
 		location: "flank",

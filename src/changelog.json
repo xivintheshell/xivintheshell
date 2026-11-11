@@ -1,5 +1,18 @@
 [
 	{
+		"date": "11/10/26",
+		"changes": [
+			"[NIN] Fixed incorrect potencies below level 100 for Armor Crush and Aeolian Edge.",
+			"[NIN] Fixed a bug where Trick Attack's positional modifier was not added to calculations.",
+			"[PCT] Fixed a bug where moving Living Muse casts around the timeline would sometimes cause it to drop all its targets."
+		],
+		"changes_zh": [
+			"【忍者】修复了100级以下【强甲破点突】和【旋风刃】威力不正确的问题。",
+			"【忍者】修复了【攻其不备】的身位加成未被计入计算的问题。",
+			"【绘灵法师】修复了在时间轴上移动【动物构想】时有时会丢失全部目标的问题。"
+		]
+	},
+	{
 		"date": "11/4/26",
 		"changes": [
 			"Fixed a bug where the effect of crit and DH buffs were computed incorrectly when crit/DH chance exceeded 100%."
