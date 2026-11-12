@@ -379,8 +379,6 @@ const makeSpell_PLD = (
 		startsAuto?: boolean;
 	},
 ): Spell<PLDState> => {
-	// const baseCastTime = params.baseCastTime ?? 0;
-	// const baseRecastTime = params.baseRecastTime ?? 2.5;
 	const onConfirm: EffectFn<PLDState> = combineEffects((state, node) => {
 		// first try consuming divine might
 		// next try consuming requiescat
@@ -433,17 +431,7 @@ const makeSpell_PLD = (
 			}
 			return mods;
 		},
-		isInstantFn: (state) => {
-			/*
-			if (name !== "CLEMENCY") {
-				return state.hasResourceAvailable("DIVINE_MIGHT") ||
-				state.hasResourceAvailable("REQUIESCAT");
-			} else {
-				return state.hasResourceAvailable("REQUIESCAT");
-			}
-			*/
-			return state.isSpellInstant(name);
-		},
+		isInstantFn: (state) => state.isSpellInstant(name),
 		onConfirm,
 	});
 };

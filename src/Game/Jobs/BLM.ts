@@ -60,8 +60,6 @@ makeBLMResource("TRIPLECAST", 3, { timeout: 15.7 });
 
 // === JOB GAUGE AND STATE ===
 export class BLMState extends GameState {
-	thunderTickOffset: number;
-
 	constructor(config: GameConfig) {
 		super(config);
 
@@ -74,8 +72,6 @@ export class BLMState extends GameState {
 		if (startsWithEno) {
 			this.gainStatus("ENOCHIAN");
 		}
-
-		this.thunderTickOffset = this.nonProcRng() * 3.0;
 
 		const polyglotStacks =
 			(this.hasTraitUnlocked("ENHANCED_POLYGLOT_II") && 3) ||

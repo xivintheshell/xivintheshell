@@ -269,6 +269,7 @@ const makeAbility_WAR = (
 	cdName: CooldownKey,
 	params: {
 		autoUpgrade?: SkillAutoReplace;
+		autoDowngrade?: SkillAutoReplace;
 		requiresCombat?: boolean;
 		potency?: number | Array<[TraitKey, number]>;
 		replaceIf?: ConditionalSkillReplace<WARState>[];
@@ -634,11 +635,21 @@ makeResourceAbility("WAR", "VENGEANCE", 38, "cd_VENGEANCE", {
 	applicationDelay: 0.62,
 });
 
-makeResourceAbility("WAR", "DAMNATION", 92, "cd_VENGEANCE", {
-	rscType: "DAMNATION",
+makeAbility_WAR("DAMNATION", 92, "cd_VENGEANCE", {
 	autoDowngrade: { trait: "VENGEANCE_MASTERY", otherSkill: "VENGEANCE" },
 	cooldown: 120,
 	applicationDelay: 0.62,
+	onConfirm: (state) => {
+		state.gainStatus("DAMNATION");
+		state.resources.addResourceEvent({
+			rscType: "DAMNATION",
+			name: "apply primeval impulse",
+			delay: 15,
+			fnOnRsc: () => {
+				state.gainStatus("PRIMEVAL_IMPULSE");
+			},
+		});
+	},
 });
 
 makeAbility_WAR("RETALIATION", 38, "cd_RETALIATION", {
