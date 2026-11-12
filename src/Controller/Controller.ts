@@ -184,7 +184,6 @@ class Controller {
 	#hotCoverageTimes: Map<ResourceKey, Map<number, Array<OvertimeEffectCoverage>>> = new Map();
 
 	savedHistoricalGame: GameState;
-	savedHistoricalRecord: Record;
 
 	#bInterrupted: boolean = false;
 	// TODO: use an enum for state and model timeline editor state here instead of using a bunch of booleans
@@ -234,7 +233,6 @@ class Controller {
 
 		// meaningless at the beginning
 		this.savedHistoricalGame = this.game;
-		this.savedHistoricalRecord = this.record;
 		this.undoStack = new UndoStack();
 
 		// Capture the default skill order before restart, then let the new GameState copy it.
@@ -306,7 +304,6 @@ class Controller {
 		//============v pop stashed states v============
 		this.#bInSandbox = oldSandbox;
 		this.savedHistoricalGame = this.game;
-		this.savedHistoricalRecord = this.record;
 		this.game = tmpGame;
 		this.record = tmpRecord;
 		this.#lastDamageApplicationTime = tmpLastDamageApplicationTime;
@@ -1049,7 +1046,7 @@ class Controller {
 	}
 
 	updateTimelineDisplay() {
-		this.timeline.setTimeSegment(0, this.game.time);
+		this.timeline.setTimeSegment(this.game.time);
 
 		updateSkillSequencePresetsView();
 		refreshTimelineEditor();
@@ -1840,7 +1837,6 @@ class Controller {
 			}
 		});
 		this.savedHistoricalGame = this.game;
-		this.savedHistoricalRecord = this.record;
 		this.displayCurrentState();
 		setCachedValue("activeSlotIndex", slot.toString());
 	}

@@ -92,9 +92,7 @@ export const BLU_STATUSES = ensureRecord<ResourceData>()({
 	BRUSH_WITH_DEATH: { name: "Brush with Death", label: { zh: "意志薄弱" } },
 });
 
-export const BLU_TRACKERS = ensureRecord<ResourceData>()({
-	SURPANAKHA_LOCKOUT: { name: "Supranakha Lockout", label: { zh: "断罪飞翔" } },
-});
+export const BLU_TRACKERS = ensureRecord<ResourceData>()({});
 
 export const BLU_TRAITS = ensureRecord<TraitData>()({});
 

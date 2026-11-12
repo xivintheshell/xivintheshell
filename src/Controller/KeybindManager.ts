@@ -210,10 +210,6 @@ export function bindEntryFromPress(press: KeyPress): BindEntry {
 	};
 }
 
-export function getBind(actionKey: KeybindAction): BindEntry | undefined {
-	return activeBinds.get(actionMapKey(actionKey));
-}
-
 export function getDefaultBind(actionKey: KeybindAction): BindEntry | undefined {
 	return DEFAULT_BINDS.get(actionMapKey(actionKey));
 }

@@ -161,7 +161,6 @@ export type TimelineElem = SharedTimelineElem | SlotTimelineElem;
 
 export class Timeline {
 	scale: number;
-	startTime: number;
 	elapsedTime: number; // raw time (starts from 0)
 	sharedElements: SharedTimelineElem[];
 	slots: {
@@ -175,7 +174,6 @@ export class Timeline {
 
 	constructor() {
 		this.scale = 0.25;
-		this.startTime = 0;
 		this.elapsedTime = 0;
 		this.sharedElements = [];
 		this.slots = [];
@@ -186,8 +184,7 @@ export class Timeline {
 		this.#load();
 	}
 
-	setTimeSegment(startTime: number, elapsedTime: number) {
-		this.startTime = startTime;
+	setTimeSegment(elapsedTime: number) {
 		this.elapsedTime = elapsedTime;
 	}
 
@@ -528,7 +525,6 @@ export class Timeline {
 	}
 
 	reset() {
-		this.startTime = 0;
 		this.elapsedTime = 0;
 		if (this.slots.length > 0) {
 			this.slots[this.activeSlotIndex].elements = [];

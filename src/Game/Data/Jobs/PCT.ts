@@ -290,10 +290,7 @@ export const PCT_STATUSES = ensureRecord<ResourceData>()({
 	SMUDGE: { name: "Smudge", label: { zh: "速涂" } },
 });
 
-export const PCT_TRACKERS = ensureRecord<ResourceData>()({
-	// Hammer actions are a proper combo, not strictly tied to Hammer Time buff
-	HAMMER_COMBO: { name: "Hammer Combo Counter", label: { zh: "重锤连击数" } }, // [0, 2]
-});
+export const PCT_TRACKERS = ensureRecord<ResourceData>()({});
 
 export const PCT_TRAITS = ensureRecord<TraitData>()({
 	PICTOMANCY_MASTERY_II: { name: "Pictomancy Mastery II", level: 74 },

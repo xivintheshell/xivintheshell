@@ -2,7 +2,7 @@ import { RPRStatusPropsGenerator } from "../../Components/Jobs/RPR";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { ActionNode } from "../../Controller/Record";
 import { Aspect, BuffType } from "../Common";
-import { ActionKey, TraitKey } from "../Data";
+import { TraitKey } from "../Data";
 import { RPRResourceKey, RPRActionKey, RPRCooldownKey } from "../Data/Jobs/RPR";
 import { CommonActionKey } from "../Data/Shared/Common";
 import { RoleActionKey } from "../Data/Shared/Role";
@@ -66,7 +66,6 @@ makeRPRResource("CIRCLE_OF_SACRIFICE", 1, { timeout: 5 });
 makeRPRResource("BLOODSOWN_CIRCLE", 1, { timeout: 6 });
 makeRPRResource("IMMORTAL_SACRIFICE", 8, { timeout: 30 });
 
-makeRPRResource("ARCANE_CREST", 1, { timeout: 5 });
 makeRPRResource("CREST_OF_TIME_BORROWED", 1, { timeout: 5 });
 makeRPRResource("CREST_OF_TIME_RETURNED", 1, { timeout: 15 });
 
@@ -281,45 +280,6 @@ export class RPRState extends GameState {
 			this.setTimedResource("SOUL_REAVER", 2);
 			return;
 		}
-	}
-
-	processGibbetGallows(skill: RPRActionKey) {
-		const soulReavers = this.resources.get("SOUL_REAVER");
-		const executioners = this.resources.get("EXECUTIONER");
-
-		if (
-			!(
-				[
-					"GIBBET",
-					"GALLOWS",
-					"EXECUTIONERS_GIBBET",
-					"EXECUTIONERS_GALLOWS",
-				] as RPRActionKey[]
-			).includes(skill)
-		) {
-			soulReavers.consume(soulReavers.availableAmount());
-			executioners.consume(executioners.availableAmount());
-		}
-		const matchingBuffs = new Map<RPRActionKey, RPRResourceKey>([
-			["GIBBET", "ENHANCED_GIBBET"],
-			["EXECUTIONERS_GIBBET", "ENHANCED_GIBBET"],
-			["GALLOWS", "ENHANCED_GALLOWS"],
-			["EXECUTIONERS_GALLOWS", "ENHANCED_GALLOWS"],
-		]);
-		const otherBuffs = new Map<ActionKey, RPRResourceKey>([
-			["GIBBET", "ENHANCED_GALLOWS"],
-			["EXECUTIONERS_GIBBET", "ENHANCED_GALLOWS"],
-			["GALLOWS", "ENHANCED_GIBBET"],
-			["EXECUTIONERS_GALLOWS", "ENHANCED_GIBBET"],
-		]);
-
-		//Already verified that map lookup will be successful.
-		const matchingBuff = this.resources.get(matchingBuffs.get(skill) as RPRResourceKey);
-		const otherBuff = this.resources.get(otherBuffs.get(skill) as RPRResourceKey);
-
-		matchingBuff.consume(matchingBuff.availableAmount());
-		otherBuff.consume(otherBuff.availableAmount());
-		otherBuff.gain(1);
 	}
 
 	processCircleOfSacrifice(skill: RPRActionKey) {

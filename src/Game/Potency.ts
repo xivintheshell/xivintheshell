@@ -110,7 +110,6 @@ export const enum PotencyModifierType {
 	CONFESSION,
 	ASYLUM,
 	TEMPERANCE,
-	EXTRA_BELL_STACKS,
 
 	HUNTERS_INSTINCT,
 	HONED,

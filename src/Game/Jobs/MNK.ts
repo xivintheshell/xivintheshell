@@ -57,8 +57,6 @@ const makeMNKResource = (
 
 // Gauge resources
 makeMNKResource("CHAKRA", 5, { default: 5 });
-makeMNKResource("BEAST_CHAKRA", 1);
-makeMNKResource("NADI", 1);
 makeMNKResource("OPO_OPOS_FURY", 1, { warnOnOvercap: true });
 makeMNKResource("RAPTORS_FURY", 1, { warnOnOvercap: true });
 makeMNKResource("COEURLS_FURY", 2, { warnOnOvercap: true });
