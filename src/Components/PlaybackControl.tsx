@@ -88,7 +88,9 @@ export function ResourceOverrideDisplay(props: {
 		const lparen = localize({ en: " (", zh: "（" }) as string;
 		const rparen = localize({ en: ") ", zh: "）" }) as string;
 		//const colon = localize({en: ": ", zh: "："}) as string;
-		if (RESOURCES[props.override.type as ResourceKey].mayBeToggled ?? false) {
+		if (!(props.override.type in RESOURCES)) {
+			str = localize({ en: "unknown resource", zh: "未知buff" }) as string;
+		} else if (RESOURCES[props.override.type as ResourceKey].mayBeToggled ?? false) {
 			str +=
 				lparen +
 				(props.override.effectOrTimerEnabled
@@ -488,12 +490,10 @@ export function ConfigSummary(props: { job: ShellJob; dirty: boolean }) {
 		en: "the random time offset of lucid dreaming ticks relative to mp ticks",
 		zh: "醒梦buff期间，每次跳蓝后多久跳醒梦（由随机种子决定）",
 	});
-	// TODO specialize for BLM
-	// TODO (revisit): double check this forced cast
 	const dotTickOffset = controller.game.dotTickOffset.toFixed(3);
 	const offsetDesc = localize({
 		en: "the random time offset of DoT ticks relative to mp ticks",
-		zh: "雷DoT期间，每次跳蓝后多久跳雷（由随机种子决定）", // Akairyu's Note - Needs retranslating after removing the reference to thunder
+		zh: "DoT期间，每次跳蓝后多久跳DoT（由随机种子决定）",
 	});
 	// These fields are deliberately updated only when `dirty` is updated and a re-render of this component is forced.
 	const procMode = controller.gameConfig.procMode;
@@ -564,9 +564,8 @@ export function ConfigSummary(props: { job: ShellJob; dirty: boolean }) {
 			<Help topic={"lucidTickOffset"} content={lucidOffsetDesc} />: {lucidTickOffset}
 		</div>}
 
-		{/* Akairyu's Note: Needs retranslating after removing reference to Thunder*/}
 		{controller.game.dotResources.length > 0 && <div>
-			{localize({ en: "DoT tick offset ", zh: "跳雷&跳蓝时间差 " })}
+			{localize({ en: "DoT tick offset ", zh: "DoT&跳蓝时间差 " })}
 			<Help topic={"dotTickOffset"} content={offsetDesc} />: {dotTickOffset}
 		</div>}
 

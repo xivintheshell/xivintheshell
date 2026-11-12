@@ -57,8 +57,6 @@ const makeMNKResource = (
 
 // Gauge resources
 makeMNKResource("CHAKRA", 5, { default: 5 });
-makeMNKResource("BEAST_CHAKRA", 1);
-makeMNKResource("NADI", 1);
 makeMNKResource("OPO_OPOS_FURY", 1, { warnOnOvercap: true });
 makeMNKResource("RAPTORS_FURY", 1, { warnOnOvercap: true });
 makeMNKResource("COEURLS_FURY", 2, { warnOnOvercap: true });
@@ -74,6 +72,7 @@ makeMNKResource("PERFECT_BALANCE", 3, { timeout: 20 });
 // Begin combat in an indefinite formless fist.
 makeMNKResource("FORMLESS_FIST", 1, { timeout: 30, default: 1 });
 makeMNKResource("RIDDLE_OF_EARTH", 1, { timeout: 10 });
+// TODO: earth's resolve triggers on taking damage, so we'd need to wire it up properly like TBN
 makeMNKResource("EARTHS_RESOLVE", 1, { timeout: 15 });
 makeMNKResource("EARTHS_RUMINATION", 1, { timeout: 30 });
 makeMNKResource("RIDDLE_OF_FIRE", 1, { timeout: 20.72 });

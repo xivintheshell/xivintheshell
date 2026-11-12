@@ -263,7 +263,6 @@ export const RPR_STATUSES = ensureRecord<ResourceData>()({
 });
 
 export const RPR_TRACKERS = ensureRecord<ResourceData>()({
-	ARCANE_CREST: { name: "Arcane Crest", label: { zh: "神秘纹" } }, // [0, 1]
 	HELLS_INGRESS_USED: { name: "Hell's Ingress Used", label: { zh: "地狱入境已使用" } }, // For tracking which ability turns into the return
 
 	// 0 = no combo, 1 = after slice, 2 = after waxing

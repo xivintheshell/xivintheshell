@@ -34,12 +34,6 @@ export interface ParsedLogQueryParams {
 	error?: LocalizedContent;
 }
 
-export interface TargetabilityQueryParams {
-	apiBaseUrl: string;
-	reportCode: ReportCode;
-	fightID: FightID;
-}
-
 export function parseLogURL(urlString: string): ParsedLogQueryParams {
 	// Clicking a fight from the FFLogs web UI adds the ID as a hash instead of a search param.
 	const url = URL.parse(urlString.replace("#", "?"))!;

@@ -398,11 +398,6 @@ export const SGE_STATUSES = ensureRecord<ResourceData>()({
 		name: "Eukrasian Dyskrasia",
 		label: { zh: "均衡失衡" },
 	},
-	PNEUMA: {
-		id: 2623,
-		name: "Pneuma",
-		label: { zh: "魂灵风息" },
-	},
 	HOLOS: {
 		id: 3003,
 		name: "Holos",

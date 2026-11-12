@@ -163,3 +163,24 @@ it("has correct actions after deleting, then adding a new slot", () => {
 		{ length: 0, invalidActions: [] },
 	]);
 });
+
+it("loads invalid resources without crashing", () => {
+	controller.setActiveSlot(3);
+	controller.loadBattleRecordFromFile(
+		JSON.parse(readFileToString("timeline_with_invalid_resources.txt")),
+	);
+	checkAllSlots([
+		...DEFAULT_EXPECTED_SLOTS.slice(0, 3),
+		{
+			length: 3,
+			invalidActions: [
+				{
+					index: 1,
+					// test harness normalizes non-skill nodes to "other"; we don't want to actually codify
+					// expected error behavior at the moment
+					skillName: "other",
+				},
+			],
+		},
+	]);
+});

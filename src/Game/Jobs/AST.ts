@@ -917,6 +917,7 @@ makeASTAbility("CELESTIAL_INTERSECTION", 74, "cd_CELESTIAL_INTERSECTION", {
 	maxCharges: 1,
 	healingPotency: 200,
 	aoeHeal: true,
+	onConfirm: (state) => state.gainStatus("INTERSECTION"),
 });
 
 makeASTResourceAbility("HOROSCOPE", 76, "cd_HOROSCOPE", {

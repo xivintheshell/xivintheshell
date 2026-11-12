@@ -844,7 +844,10 @@ export class GameState {
 		const rsc = this.resources.get(buffName);
 
 		// Ley lines, paint lines, and positionals can be toggled.
-		if (RESOURCES[buffName].mayBeToggled) {
+		if (!(buffName in RESOURCES)) {
+			console.error("timeline attempted to toggle unknown resource:", buffName);
+			return false;
+		} else if (RESOURCES[buffName].mayBeToggled) {
 			if (rsc.available(1)) {
 				// buff exists and enabled
 				rsc.enabled = false;

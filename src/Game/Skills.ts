@@ -333,11 +333,6 @@ export function jobHasSkill(job: ShellJob, skillName: ActionKey): boolean {
 	return skillMap.get(job)!.has(skillName);
 }
 
-// Return the map of all skills for a job.
-export function getAllSkills<T extends GameState>(job: ShellJob): Map<ActionKey, Skill<T>> {
-	return skillMap.get(job)!;
-}
-
 function setSkill<T extends GameState>(job: ShellJob, skillName: ActionKey, skill: Skill<T>) {
 	// Initialize a bunch of different hashmaps for looking up skills by different keys.
 	skillMap.get(job)!.set(skillName, skill as Skill<GameState>);

@@ -58,7 +58,6 @@ export const BRD_COOLDOWNS = ensureRecord<CooldownData>()({
 });
 
 export const BRD_GAUGES = ensureRecord<ResourceData>()({
-	SONG_TIMER: { name: "SongTimer", label: { zh: "歌曲时间" } },
 	SOUL_VOICE: { name: "Soul Voice", label: { zh: "灵魂之声" } },
 	PITCH_PERFECT: { name: "Pitch Perfect", label: { zh: "完美音调" } }, // Yes it's all technically Repertoire, easier to represent this way
 	REPERTOIRE: { name: "Repertoire", label: { zh: "诗心" } }, // Army's Paeon repertoire stacks
