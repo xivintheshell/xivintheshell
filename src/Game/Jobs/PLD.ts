@@ -77,7 +77,7 @@ makePLDResource("PLD_AOE_COMBO_TRACKER", 1, { timeout: 30 });
 
 // PLD Buffs Applied to Party Members
 makePLDResource("INTERVENTION", 1, { timeout: 8 });
-makePLDResource("ARMS_UP", 1);
+makePLDResource("ARMS_UP", 1); // TODO: need to wire PASSAGE_OF_ARMS to actually give this buff
 makePLDResource("COVER", 1, { timeout: 12 });
 
 const PLD_AOE_COMBO_MAP: Map<PLDActionKey, number> = new Map([

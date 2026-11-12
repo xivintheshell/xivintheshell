@@ -1,5 +1,13 @@
 [
 	{
+		"date": "11/11/26",
+		"changes": [
+			"Did a bunch of internal code cleanup, including removing some previously-unused resource declarations. This shouldn't affect any timelines, but please let us know ASAP if anything breaks.",
+			"[AST] Added the Intersection shield to Celestial Intersection.",
+			"[WAR] Added the Primeval Impulse healing buff after Damnation expires."
+		]
+	},
+	{
 		"date": "11/10/26",
 		"changes": [
 			"[NIN] Fixed incorrect potencies below level 100 for Armor Crush and Aeolian Edge.",

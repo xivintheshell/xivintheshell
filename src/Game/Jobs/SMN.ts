@@ -58,6 +58,7 @@ makeSMNResource("FIRE_ATTUNEMENT", 2, { timeout: 30 });
 makeSMNResource("EARTH_ATTUNEMENT", 4, { timeout: 30 });
 makeSMNResource("WIND_ATTUNEMENT", 4, { timeout: 30 });
 makeSMNResource("CRIMSON_STRIKE_READY", 1);
+// TODO: this + undying flame need to be wired up to SUMMON_PHOENIX, but are pet actions and annoying
 makeSMNResource("EVERLASTING_FLIGHT", 1, { timeout: 21 });
 makeSMNResource("FURTHER_RUIN", 1, { timeout: 60 });
 makeSMNResource("GARUDAS_FAVOR", 1);
