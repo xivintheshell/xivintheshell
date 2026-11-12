@@ -435,6 +435,13 @@ export type CoolDownInfo = {
 };
 export type ResourceOrCoolDownInfo = ResourceInfo | CoolDownInfo;
 
+const MISSING_RESOURCE: ResourceInfo = {
+	isCoolDown: false,
+	defaultValue: 0,
+	maxValue: 1,
+	maxTimeout: 1,
+};
+
 const resourceInfos = new Map<ShellJob, Map<ResourceKey | CooldownKey, ResourceOrCoolDownInfo>>();
 
 const enResourceNameMap = new Map<string, ResourceKey>();
@@ -456,6 +463,7 @@ export function getResourceInfo(
 	const map = resourceInfos.get(job)!;
 	if (!map.has(rsc)) {
 		console.error(`no resource info found for ${rsc}`);
+		return MISSING_RESOURCE;
 	}
 	return map.get(rsc)!;
 }
@@ -465,6 +473,7 @@ export function getAllResources(
 ): Map<ResourceKey | CooldownKey, ResourceOrCoolDownInfo> {
 	if (!resourceInfos.has(job)) {
 		console.error("could not find resources for job " + job);
+		return new Map();
 	}
 	return resourceInfos.get(job)!;
 }
@@ -605,7 +614,7 @@ export class ResourceOverride {
 	applyTo(game: GameState) {
 		const info = getAllResources(game.job).get(this.type);
 		if (!info) {
-			console.assert(false, `can't apply override ${this.type} to job ${game.job}`);
+			console.error(`can't apply override ${this.type} to job ${game.job}`);
 			return;
 		}
 

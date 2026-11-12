@@ -5,7 +5,7 @@ import { MdLanguage } from "react-icons/md";
 import { getCurrentThemeColors } from "./ColorTheme";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
 import { controller } from "../Controller/Controller";
-import { ActionKey, ACTIONS, CooldownKey, COOLDOWNS, ResourceKey } from "../Game/Data";
+import { ActionKey, ACTIONS, CooldownKey, COOLDOWNS, ResourceKey, RESOURCES } from "../Game/Data";
 import { Data } from "../Game/Data/Data";
 import { PotencyModifierType } from "../Game/Potency";
 import { ConfigData } from "../Game/GameConfig";
@@ -29,6 +29,7 @@ export type LocalizedContent = {
 	ja?: ContentNode;
 };
 
+// TODO: make this localize<T> so we don't need to cast to string everywhere
 export function localize(content: LocalizedContent) {
 	const currentLang = getCurrentLanguage();
 	if (currentLang === "zh" && content.zh) {
@@ -190,6 +191,13 @@ export function localizeBuffType(text: BuffType): string {
 
 export function localizeResourceType(key: ResourceKey | CooldownKey): string {
 	const currentLang = getCurrentLanguage();
+
+	if (!(key in COOLDOWNS || key in RESOURCES)) {
+		return localize({
+			en: "unknown resource",
+			zh: "未知buff",
+		}).toString();
+	}
 
 	if (key in COOLDOWNS) {
 		// If it's a cooldown, first see if it's localized on the Data object

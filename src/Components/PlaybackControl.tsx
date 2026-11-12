@@ -88,7 +88,9 @@ export function ResourceOverrideDisplay(props: {
 		const lparen = localize({ en: " (", zh: "（" }) as string;
 		const rparen = localize({ en: ") ", zh: "）" }) as string;
 		//const colon = localize({en: ": ", zh: "："}) as string;
-		if (RESOURCES[props.override.type as ResourceKey].mayBeToggled ?? false) {
+		if (!(props.override.type in RESOURCES)) {
+			str = localize({ en: "unknown resource", zh: "未知buff" }) as string;
+		} else if (RESOURCES[props.override.type as ResourceKey].mayBeToggled ?? false) {
 			str +=
 				lparen +
 				(props.override.effectOrTimerEnabled
